@@ -3702,11 +3702,12 @@ function createMainDashboard() {
   const interestLocalCol = getColumnLetter(MEMBER_COLS.INTEREST_LOCAL);
   const interestChapterCol = getColumnLetter(MEMBER_COLS.INTEREST_CHAPTER);
 
+  // Use COUNTIFS starting from row 2 to exclude headers and ensure proper date comparison
   const engagementMetrics = [
-    ["Virtual Mtgs", `=COUNTIF('Member Directory'!${lastVirtualCol}:${lastVirtualCol},">="&TODAY()-30)`],
-    ["In-Person Mtgs", `=COUNTIF('Member Directory'!${lastInPersonCol}:${lastInPersonCol},">="&TODAY()-30)`],
-    ["Local Interest", `=COUNTIF('Member Directory'!${interestLocalCol}:${interestLocalCol},"Yes")`],
-    ["Chapter Interest", `=COUNTIF('Member Directory'!${interestChapterCol}:${interestChapterCol},"Yes")`]
+    ["Virtual Mtgs", `=COUNTIFS('Member Directory'!${lastVirtualCol}2:${lastVirtualCol},">="&TODAY()-30,'Member Directory'!${lastVirtualCol}2:${lastVirtualCol},"<>")`],
+    ["In-Person Mtgs", `=COUNTIFS('Member Directory'!${lastInPersonCol}2:${lastInPersonCol},">="&TODAY()-30,'Member Directory'!${lastInPersonCol}2:${lastInPersonCol},"<>")`],
+    ["Local Interest", `=COUNTIF('Member Directory'!${interestLocalCol}2:${interestLocalCol},"Yes")`],
+    ["Chapter Interest", `=COUNTIF('Member Directory'!${interestChapterCol}2:${interestChapterCol},"Yes")`]
   ];
 
   col = 1;
@@ -3747,12 +3748,13 @@ function createMainDashboard() {
   const lastCol = getColumnLetter(GRIEVANCE_COLS.RESOLUTION); // AB - last column
 
   // Formula to populate upcoming deadlines (open grievances with deadlines in next 14 days, excluding overdue)
+  // Note: Use date comparisons on NEXT_ACTION_DUE column instead of DAYS_TO_DEADLINE which contains text like "DUE TODAY"
   dashboard.getRange("A22").setFormula(
     `=IFERROR(QUERY('Grievance Log'!${grievanceIdCol}:${lastCol}, ` +
     `"SELECT ${grievanceIdCol}, ${firstNameCol}, ${nextActionCol}, ${daysToDeadlineCol}, ${statusCol} ` +
     `WHERE ${statusCol} = 'Open' AND ${nextActionCol} IS NOT NULL ` +
+    `AND ${nextActionCol} >= date '"&TEXT(TODAY(),"yyyy-mm-dd")&"' ` +
     `AND ${nextActionCol} <= date '"&TEXT(TODAY()+14,"yyyy-mm-dd")&"' ` +
-    `AND ${daysToDeadlineCol} >= 0 ` +
     `ORDER BY ${nextActionCol} ASC ` +
     `LIMIT 10", 0), "No upcoming deadlines")`
   );
@@ -3833,17 +3835,16 @@ function refreshDashboardDeadlines() {
   // Clear existing deadline data
   dashboard.getRange("A22:E31").clearContent();
 
-  // New formula: Uses FILTER instead of QUERY for better date handling
-  // Only shows items where Days to Deadline is numeric and >= 0 (future deadlines)
-  // Formats Next Action as date
+  // New formula: Uses date comparisons on NEXT_ACTION_DUE column
+  // Note: DAYS_TO_DEADLINE can contain text like "DUE TODAY" or "OVERDUE 5d", so we filter by date instead
   dashboard.getRange("A22").setFormula(
     `=IFERROR(QUERY('Grievance Log'!A:${lastGrievanceCol}, ` +
     `"SELECT ${grievanceIdCol}, ${firstNameCol}, ${nextActionCol}, ${daysToDeadlineCol}, ${statusCol} ` +
     `WHERE ${statusCol} = 'Open' ` +
-    `AND ${daysToDeadlineCol} IS NOT NULL ` +
-    `AND ${daysToDeadlineCol} >= 0 ` +
-    `AND ${daysToDeadlineCol} <= 14 ` +
-    `ORDER BY ${daysToDeadlineCol} ASC ` +
+    `AND ${nextActionCol} IS NOT NULL ` +
+    `AND ${nextActionCol} >= date '"&TEXT(TODAY(),"yyyy-mm-dd")&"' ` +
+    `AND ${nextActionCol} <= date '"&TEXT(TODAY()+14,"yyyy-mm-dd")&"' ` +
+    `ORDER BY ${nextActionCol} ASC ` +
     `LIMIT 10", 0), "No upcoming deadlines")`
   );
 
