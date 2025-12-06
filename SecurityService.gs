@@ -285,20 +285,6 @@ function requirePermission(permission, action) {
   }
 }
 
-/**
- * Wraps a function with permission check
- * @param {Function} fn - Function to wrap
- * @param {string} requiredPermission - Permission required
- * @param {string} actionDescription - Description of action
- * @returns {Function} Wrapped function
- */
-function withPermission(fn, requiredPermission, actionDescription) {
-  return function(...args) {
-    requirePermission(requiredPermission, actionDescription);
-    return fn.apply(this, args);
-  };
-}
-
 /* --------------------= AUDIT LOGGING --------------------= */
 
 /**
@@ -394,20 +380,6 @@ function createAuditLogSheet() {
   sheet.autoResizeColumns(1, headers.length);
 
   return sheet;
-}
-
-/**
- * Logs data change event
- * @param {string} sheetName - Name of sheet changed
- * @param {string} operation - Operation (INSERT, UPDATE, DELETE)
- * @param {Object} details - Details about the change
- */
-function logDataChange(sheetName, operation, details) {
-  logAudit('DATA_CHANGE', `${operation} in ${sheetName}`, {
-    sheetName: sheetName,
-    operation: operation,
-    ...details
-  });
 }
 
 /**
@@ -541,136 +513,4 @@ function filterGrievanceDataByPermission(grievanceData, userEmail) {
   }
 
   return [grievanceData[0]]; // Return only header for unknown roles
-}
-
-/* --------------------= PROTECTED OPERATIONS --------------------= */
-
-/**
- * Protected version of SEED_MEMBERS - requires admin permission
- */
-function protectedSeedMembers() {
-  requirePermission('seed_data', 'seed member data');
-  logAudit('SEED_DATA', 'Started seeding member data');
-
-  // Call original function
-  return SEED_20K_MEMBERS();
-}
-
-/**
- * Protected version of CLEAR_ALL_DATA - requires admin permission
- */
-function protectedClearAllData() {
-  requirePermission('clear_data', 'clear all data');
-
-  const ui = SpreadsheetApp.getUi();
-  const response = ui.alert(
-    '⚠️ DANGER ZONE ⚠️',
-    'This will permanently delete all member and grievance data!\n\n' +
-    'Are you absolutely sure you want to proceed?',
-    ui.ButtonSet.YES_NO
-  );
-
-  if (response !== ui.Button.YES) {
-    return;
-  }
-
-  logAudit('CLEAR_DATA', 'User confirmed: Clearing all data');
-
-  // Call original clear function
-  return CLEAR_ALL_DATA();
-}
-
-/* --------------------= ADMIN FUNCTIONS --------------------= */
-
-/**
- * Shows the user management dialog (Admin only)
- */
-function showUserManagement() {
-  requirePermission('manage_users', 'manage user roles');
-
-  const ss = SpreadsheetApp.getActiveSpreadsheet();
-  let userRolesSheet = ss.getSheetByName('User Roles');
-
-  if (!userRolesSheet) {
-    userRolesSheet = createUserRolesSheet();
-  }
-
-  userRolesSheet.showSheet();
-  userRolesSheet.activate();
-
-  SpreadsheetApp.getUi().alert(
-    '👥 User Management',
-    'You can now view and edit user roles.\n\n' +
-    'Columns:\n' +
-    '• Email: User email address\n' +
-    '• Role: ADMIN, COORDINATOR, STEWARD, MEMBER, or VIEWER\n' +
-    '• Assigned Date: When role was assigned\n' +
-    '• Assigned By: Who assigned the role\n\n' +
-    'Remember to hide this sheet when done!',
-    SpreadsheetApp.getUi().ButtonSet.OK
-  );
-}
-
-/**
- * Shows the audit log (Admin only)
- */
-function showAuditLog() {
-  requirePermission('view_audit_log', 'view audit log');
-
-  const ss = SpreadsheetApp.getActiveSpreadsheet();
-  let auditSheet = ss.getSheetByName(AUDIT_LOG_CONFIG.LOG_SHEET_NAME);
-
-  if (!auditSheet) {
-    SpreadsheetApp.getUi().alert(ERROR_MESSAGES.SHEET_NOT_FOUND(AUDIT_LOG_CONFIG.LOG_SHEET_NAME));
-    return;
-  }
-
-  auditSheet.showSheet();
-  auditSheet.activate();
-
-  SpreadsheetApp.getUi().alert(
-    '📋 Audit Log',
-    'Showing all system access and change events.\n\n' +
-    'This log tracks:\n' +
-    '• User access\n' +
-    '• Data changes\n' +
-    '• Permission checks\n' +
-    '• Security events\n\n' +
-    `Log is limited to last ${AUDIT_LOG_CONFIG.MAX_ENTRIES.toLocaleString()} events.`,
-    SpreadsheetApp.getUi().ButtonSet.OK
-  );
-}
-
-/**
- * Exports audit log to CSV (Admin only)
- */
-function exportAuditLog() {
-  requirePermission('view_audit_log', 'export audit log');
-
-  const ss = SpreadsheetApp.getActiveSpreadsheet();
-  const auditSheet = ss.getSheetByName(AUDIT_LOG_CONFIG.LOG_SHEET_NAME);
-
-  if (!auditSheet) {
-    SpreadsheetApp.getUi().alert(ERROR_MESSAGES.SHEET_NOT_FOUND(AUDIT_LOG_CONFIG.LOG_SHEET_NAME));
-    return;
-  }
-
-  // This would create a CSV file in Google Drive
-  const data = auditSheet.getDataRange().getValues();
-  const csv = data.map(function(row) { return row.join(','); }).join('\n');
-
-  const folder = DriveApp.getRootFolder();
-  const file = folder.createFile(
-    `Audit_Log_${new Date().toISOString().slice(0, 10)}.csv`,
-    csv,
-    MimeType.CSV
-  );
-
-  logAudit('EXPORT_AUDIT_LOG', 'Exported audit log to CSV');
-
-  SpreadsheetApp.getUi().alert(
-    ERROR_MESSAGES.SUCCESS('Export Complete'),
-    `Audit log exported to:\n${file.getName()}\n\nFile ID: ${file.getId()}`,
-    SpreadsheetApp.getUi().ButtonSet.OK
-  );
 }

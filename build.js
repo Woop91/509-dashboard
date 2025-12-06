@@ -86,7 +86,6 @@ const CORE_MODULES = [
   'BenchmarkTools.gs',
   'EnhancedADHDFeatures.gs',
   'EnhancedHelp.gs',              // Enhanced help system
-  'AddRecommendations.gs',
   'AutomatedNotifications.gs',
   'AutomatedReports.gs',
   'BatchGrievanceRecalc.gs',

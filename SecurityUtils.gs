@@ -114,19 +114,6 @@ function sanitizeHTML(input) {
 }
 
 /**
- * Sanitizes array of values
- *
- * @param {Array} arr - Array to sanitize
- * @returns {Array} Array with sanitized values
- */
-function sanitizeArray(arr) {
-  if (!Array.isArray(arr)) {
-    return [];
-  }
-  return arr.map(function(item) { return sanitizeHTML(item); });
-}
-
-/**
  * Sanitizes object properties recursively
  *
  * @param {Object} obj - Object to sanitize
@@ -415,98 +402,6 @@ function isValidGrievanceId(grievanceId) {
   return grievanceIdRegex.test(grievanceId) && grievanceId.length <= 20;
 }
 
-/**
- * Validates date is not in the future (unless allowed)
- *
- * @param {Date} date - Date to validate
- * @param {boolean} allowFuture - Whether to allow future dates
- * @returns {boolean} True if valid date
- */
-function isValidDate(date, allowFuture = false) {
-  if (!(date instanceof Date) || isNaN(date)) {
-    return false;
-  }
-
-  if (!allowFuture) {
-    const now = new Date();
-    return date <= now;
-  }
-
-  return true;
-}
-
-/**
- * Sanitizes and validates user input
- *
- * @param {string} input - Input to validate
- * @param {string} type - Type of input (email, phone, memberId, text)
- * @param {number} maxLength - Maximum length
- * @returns {Object} {valid: boolean, sanitized: string, error: string}
- */
-function validateInput(input, type, maxLength = 255) {
-  const result = {
-    valid: false,
-    sanitized: '',
-    error: ''
-  };
-
-  // Sanitize first
-  const sanitized = sanitizeHTML(input);
-  result.sanitized = sanitized;
-
-  // Check length
-  if (sanitized.length > maxLength) {
-    result.error = `Input exceeds maximum length of ${maxLength} characters`;
-    return result;
-  }
-
-  // Type-specific validation
-  switch (type) {
-    case 'email':
-      if (!isValidEmail(sanitized)) {
-        result.error = 'Invalid email address format';
-        return result;
-      }
-      break;
-
-    case 'phone':
-      if (!isValidPhone(sanitized)) {
-        result.error = 'Invalid phone number format';
-        return result;
-      }
-      break;
-
-    case 'memberId':
-      if (!isValidMemberId(sanitized)) {
-        result.error = 'Invalid member ID format';
-        return result;
-      }
-      break;
-
-    case 'grievanceId':
-      if (!isValidGrievanceId(sanitized)) {
-        result.error = 'Invalid grievance ID format';
-        return result;
-      }
-      break;
-
-    case 'text':
-      // Already sanitized, just check it's not empty
-      if (!sanitized || sanitized.trim().length === 0) {
-        result.error = 'Input cannot be empty';
-        return result;
-      }
-      break;
-
-    default:
-      result.error = 'Unknown validation type';
-      return result;
-  }
-
-  result.valid = true;
-  return result;
-}
-
 /* --------------------= AUDIT LOGGING --------------------= */
 
 /**
@@ -584,47 +479,6 @@ function logAuditEvent(action, details = {}, level = 'INFO') {
   } catch (e) {
     // Don't let audit logging failures break the app
     Logger.log('Failed to log audit event: ' + e.message);
-  }
-}
-
-/**
- * Gets recent audit log entries
- *
- * @param {number} limit - Maximum number of entries to return
- * @param {string} action - Filter by action (optional)
- * @returns {Array<Object>} Array of audit log entries
- */
-function getAuditLog(limit = 100, action = null) {
-  requireRole('ADMIN', 'View Audit Log');
-
-  try {
-    const ss = SpreadsheetApp.getActiveSpreadsheet();
-    const auditLog = ss.getSheetByName(AUDIT_LOG_CONFIG.LOG_SHEET_NAME);
-
-    if (!auditLog) {
-      return [];
-    }
-
-    const data = auditLog.getDataRange().getValues();
-    const headers = data[0];
-    const rows = data.slice(1).reverse(); // Most recent first
-
-    const filtered = action ? rows.filter(function(row) { return row[AUDIT_LOG_COLS.ACTION - 1] === action; }) : rows;
-
-    const result = filtered.slice(0, limit).map(function(row) { return {
-      timestamp: row[AUDIT_LOG_COLS.TIMESTAMP - 1],
-      userEmail: row[AUDIT_LOG_COLS.USER_EMAIL - 1],
-      userRole: row[AUDIT_LOG_COLS.USER_ROLE - 1],
-      action: row[AUDIT_LOG_COLS.ACTION - 1],
-      level: row[AUDIT_LOG_COLS.LEVEL - 1],
-      details: row[AUDIT_LOG_COLS.DETAILS - 1],
-      ipAddress: row[AUDIT_LOG_COLS.IP_ADDRESS - 1]
-    };});
-
-    return result;
-  } catch (e) {
-    Logger.log('Error getting audit log: ' + e.message);
-    return [];
   }
 }
 
@@ -726,37 +580,6 @@ function isRegisteredEmail(email) {
   }
 }
 
-/**
- * Gets list of all registered member emails
- *
- * @returns {string[]} Array of email addresses
- */
-function getAllMemberEmails() {
-  try {
-    const ss = SpreadsheetApp.getActiveSpreadsheet();
-    const memberSheet = ss.getSheetByName(SHEETS.MEMBER_DIR);
-
-    if (!memberSheet) {
-      return [];
-    }
-
-    const data = memberSheet.getDataRange().getValues();
-    const emails = [];
-
-    for (let i = 1; i < data.length; i++) {
-      const email = data[i][MEMBER_COLS.EMAIL - 1];
-      if (email && isValidEmail(email)) {
-        emails.push(email);
-      }
-    }
-
-    return emails;
-  } catch (e) {
-    Logger.log('Error getting member emails: ' + e.message);
-    return [];
-  }
-}
-
 /* --------------------= SECURITY AUDIT --------------------= */
 
 /**
@@ -851,36 +674,3 @@ function runSecurityAudit() {
   return report;
 }
 
-/**
- * Shows security audit report to admin
- */
-function showSecurityAudit() {
-  try {
-    const report = runSecurityAudit();
-    const ui = SpreadsheetApp.getUi();
-
-    let message = '🔒 SECURITY AUDIT REPORT\n\n';
-    message += `Total Users: ${report.results.totalUsers}\n`;
-    message += `Admins: ${report.results.adminCount}\n`;
-    message += `Stewards: ${report.results.stewardCount}\n`;
-    message += `Members: ${report.results.memberCount}\n\n`;
-    message += `Recent Events (7 days):\n`;
-    message += `- Access Denied: ${report.results.recentAccessDenied}\n`;
-    message += `- Emails Sent: ${report.results.recentEmailsSent}\n\n`;
-    message += `Audit Log Entries: ${report.results.auditLogSize}\n\n`;
-
-    if (report.recommendations.length > 0) {
-      message += 'RECOMMENDATIONS:\n';
-      report.recommendations.forEach(function(rec) {
-        message += `${rec}\n`;
-      });
-    } else {
-      message += '✅ No security issues detected.';
-    }
-
-    ui.alert('Security Audit Report', message, ui.ButtonSet.OK);
-
-  } catch (e) {
-    SpreadsheetApp.getUi().alert('Error', 'Security audit failed: ' + e.message, SpreadsheetApp.getUi().ButtonSet.OK);
-  }
-}

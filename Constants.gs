@@ -759,14 +759,6 @@ function getVersionString() {
   return `${VERSION_INFO.MAJOR}.${VERSION_INFO.MINOR}.${VERSION_INFO.PATCH}`;
 }
 
-/**
- * Gets full version info string
- * @returns {string} Full version string with build info
- */
-function getFullVersionString() {
-  return `v${getVersionString()} (${VERSION_INFO.CODENAME}) - Build ${VERSION_INFO.BUILD}`;
-}
-
 /* --------------------= UTILITY FUNCTIONS --------------------= */
 
 /**
