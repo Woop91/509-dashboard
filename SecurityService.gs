@@ -361,12 +361,27 @@ function logAudit(eventType, description, metadata) {
 }
 
 /**
- * Creates the Audit Log sheet
- * @returns {GoogleAppsScript.Spreadsheet.Sheet} The created sheet
+ * Creates the Audit Log sheet if it doesn't exist
+ * @returns {GoogleAppsScript.Spreadsheet.Sheet} The existing or created sheet
  */
 function createAuditLogSheet() {
   const ss = SpreadsheetApp.getActiveSpreadsheet();
-  const sheet = ss.insertSheet('Audit Log');
+  const sheetName = SHEET_NAMES.AUDIT_LOG || 'Audit Log';
+
+  // Check if sheet already exists
+  let sheet = ss.getSheetByName(sheetName);
+  if (sheet) {
+    return sheet;
+  }
+
+  // Also check for underscore variant
+  sheet = ss.getSheetByName('Audit_Log');
+  if (sheet) {
+    return sheet;
+  }
+
+  // Create new sheet
+  sheet = ss.insertSheet(sheetName);
 
   const headers = ['Timestamp', 'User Email', 'Event Type', 'Description', 'Metadata', 'IP Address'];
   sheet.getRange(1, 1, 1, headers.length).setValues([headers]);
