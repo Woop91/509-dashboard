@@ -2472,6 +2472,13 @@ A comprehensive code review was conducted covering stubs, dead ends, and errors.
    - Fixed `setTimeout(function() { return action, delay; });` → `setTimeout(function() { action; }, delay);`
    - Fixed in EnhancedADHDFeatures.gs, MobileOptimization.gs, ConsolidatedDashboard.gs
 
+4. **Dashboard Widgets Not Populating (CRITICAL)** - FIXED
+   - **Upcoming Deadlines widget:** QUERY formula used `DAYS_TO_DEADLINE >= 0` but column contains text like "DUE TODAY" or "OVERDUE 5d", causing filter to fail
+   - **Fix:** Changed to use date comparisons on `NEXT_ACTION_DUE` column: `AND ${nextActionCol} >= date '...' AND ${nextActionCol} <= date '...'`
+   - **Engagement Metrics widget:** COUNTIF formulas included header row and lacked non-empty check for date comparisons
+   - **Fix:** Changed to COUNTIFS starting from row 2 with `"<>"` condition to exclude empty cells
+   - Fixed in `createMainDashboard()` and `refreshDashboardDeadlines()` in ConsolidatedDashboard.gs
+
 **⚠️ Known Technical Debt (Non-Critical):**
 
 None - All issues resolved!
