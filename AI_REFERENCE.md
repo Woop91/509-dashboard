@@ -1,6 +1,6 @@
 # 509 Dashboard - Complete Feature Reference
 
-**Version:** 2.8
+**Version:** 2.9
 **Last Updated:** 2025-12-06
 **Purpose:** Union grievance tracking and member engagement system for SEIU Local 509
 
@@ -36,7 +36,36 @@
 
 ---
 
-## 🆕 Changelog - Version 2.8 (2025-12-06)
+## 🆕 Changelog - Version 2.9 (2025-12-06)
+
+**UTILITY FUNCTION & ADDITIONAL REFACTORING:**
+
+✅ **Added `getOrCreateSheet()` Utility Function** (`Constants.gs`)
+- Eliminates 75+ repetitive sheet access patterns across the codebase
+- Signature: `getOrCreateSheet(sheetName, ss)` - ss parameter optional, defaults to active spreadsheet
+- Returns existing sheet or creates new one if not found
+- Reduces boilerplate code and potential for typos in sheet names
+
+✅ **`createReportBuilderHTML()` (561 lines → 9 helper functions)** (`CustomReportBuilder.gs`)
+- `getReportBuilderStyles()` - CSS styles for the report builder interface
+- `getReportBuilderDataSourceSection()` - Data source selection (grievances/members)
+- `getReportBuilderFieldsSection()` - Field selection checkboxes
+- `getReportBuilderFiltersSection()` - Filter configuration UI
+- `getReportBuilderSortingSection()` - Sort options
+- `getReportBuilderDateRangeSection()` - Date range picker
+- `getReportBuilderPreviewSection()` - Preview area
+- `getReportBuilderActionsSection()` - Action buttons (export, save, etc.)
+- `getReportBuilderScripts()` - JavaScript functionality
+
+**Files Modified:**
+- `Constants.gs` - Added getOrCreateSheet() utility
+- `CustomReportBuilder.gs` - 1 function refactored (9 new helpers)
+
+**Total:** 1 utility function added, 1 function refactored into 9 helpers
+
+---
+
+## Changelog - Version 2.8 (2025-12-06)
 
 **CODE QUALITY - LARGE FUNCTION REFACTORING:**
 

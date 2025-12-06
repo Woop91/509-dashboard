@@ -29,6 +29,7 @@ function showCustomReportBuilder() {
 
 /**
  * Creates HTML for report builder
+ * Refactored to use helper functions for maintainability
  */
 function createReportBuilderHTML() {
   const grievanceFields = getGrievanceFields();
@@ -39,152 +40,67 @@ function createReportBuilderHTML() {
 <html>
 <head>
   <base target="_top">
-  <style>
-    body {
-      font-family: 'Roboto', Arial, sans-serif;
-      padding: 20px;
-      margin: 0;
-      background: #f5f5f5;
-    }
-    .container {
-      background: white;
-      padding: 25px;
-      border-radius: 8px;
-      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-    }
-    h2 {
-      color: #1a73e8;
-      margin-top: 0;
-      border-bottom: 3px solid #1a73e8;
-      padding-bottom: 10px;
-    }
-    .builder-section {
-      background: #f8f9fa;
-      padding: 20px;
-      margin: 15px 0;
-      border-radius: 8px;
-      border-left: 4px solid #1a73e8;
-    }
-    .section-title {
-      font-weight: bold;
-      font-size: 16px;
-      color: #333;
-      margin-bottom: 15px;
-    }
-    .form-group {
-      margin: 15px 0;
-    }
-    label {
-      display: block;
-      font-weight: 500;
-      margin-bottom: 5px;
-      color: #555;
-    }
-    select, input[type="text"], input[type="date"] {
-      width: 100%;
-      padding: 10px;
-      border: 2px solid #ddd;
-      border-radius: 4px;
-      font-size: 14px;
-      box-sizing: border-box;
-    }
-    select:focus, input:focus {
-      outline: none;
-      border-color: #1a73e8;
-    }
-    .multi-select {
-      height: 150px;
-    }
-    .filter-row {
-      display: grid;
-      grid-template-columns: 2fr 1fr 2fr auto;
-      gap: 10px;
-      margin: 10px 0;
-      align-items: end;
-    }
-    button {
-      background: #1a73e8;
-      color: white;
-      border: none;
-      padding: 12px 24px;
-      font-size: 14px;
-      border-radius: 4px;
-      cursor: pointer;
-      margin: 5px 5px 5px 0;
-    }
-    button:hover {
-      background: #1557b0;
-    }
-    button.secondary {
-      background: #6c757d;
-    }
-    button.secondary:hover {
-      background: #5a6268;
-    }
-    button.small {
-      padding: 8px 16px;
-      font-size: 13px;
-    }
-    button.danger {
-      background: #dc3545;
-    }
-    button.danger:hover {
-      background: #c82333;
-    }
-    .button-group {
-      margin-top: 25px;
-      padding-top: 20px;
-      border-top: 2px solid #e0e0e0;
-    }
-    .info-box {
-      background: #e8f0fe;
-      padding: 15px;
-      border-radius: 4px;
-      margin: 15px 0;
-      border-left: 4px solid #1a73e8;
-    }
-    #preview {
-      max-height: 300px;
-      overflow-y: auto;
-      background: white;
-      padding: 15px;
-      border: 1px solid #ddd;
-      border-radius: 4px;
-      font-size: 12px;
-    }
-    table {
-      width: 100%;
-      border-collapse: collapse;
-    }
-    th {
-      background: #1a73e8;
-      color: white;
-      padding: 8px;
-      text-align: left;
-      font-size: 11px;
-    }
-    td {
-      padding: 6px 8px;
-      border-bottom: 1px solid #e0e0e0;
-      font-size: 11px;
-    }
-    .loading {
-      text-align: center;
-      padding: 40px;
-      color: #666;
-    }
-  </style>
+  <style>${getReportBuilderStyles()}</style>
 </head>
 <body>
   <div class="container">
     <h2>📊 Custom Report Builder</h2>
-
     <div class="info-box">
       <strong>💡 Quick Start:</strong> Select data source, choose fields, add filters, then generate your report.
       You can export to PDF, CSV, or Excel.
     </div>
+${getReportBuilderDataSourceSection()}
+${getReportBuilderFieldsSection(grievanceFields)}
+${getReportBuilderFiltersSection(grievanceFields)}
+${getReportBuilderSortingSection(grievanceFields)}
+${getReportBuilderDateRangeSection()}
+${getReportBuilderPreviewSection()}
+${getReportBuilderActionsSection()}
+  </div>
+  <script>${getReportBuilderScripts(grievanceFields, memberFields)}</script>
+</body>
+</html>
+  `;
+}
 
-    <!-- Data Source -->
+/**
+ * Returns CSS styles for report builder
+ */
+function getReportBuilderStyles() {
+  return `
+    body { font-family: 'Roboto', Arial, sans-serif; padding: 20px; margin: 0; background: #f5f5f5; }
+    .container { background: white; padding: 25px; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); }
+    h2 { color: #1a73e8; margin-top: 0; border-bottom: 3px solid #1a73e8; padding-bottom: 10px; }
+    .builder-section { background: #f8f9fa; padding: 20px; margin: 15px 0; border-radius: 8px; border-left: 4px solid #1a73e8; }
+    .section-title { font-weight: bold; font-size: 16px; color: #333; margin-bottom: 15px; }
+    .form-group { margin: 15px 0; }
+    label { display: block; font-weight: 500; margin-bottom: 5px; color: #555; }
+    select, input[type="text"], input[type="date"] { width: 100%; padding: 10px; border: 2px solid #ddd; border-radius: 4px; font-size: 14px; box-sizing: border-box; }
+    select:focus, input:focus { outline: none; border-color: #1a73e8; }
+    .multi-select { height: 150px; }
+    .filter-row { display: grid; grid-template-columns: 2fr 1fr 2fr auto; gap: 10px; margin: 10px 0; align-items: end; }
+    button { background: #1a73e8; color: white; border: none; padding: 12px 24px; font-size: 14px; border-radius: 4px; cursor: pointer; margin: 5px 5px 5px 0; }
+    button:hover { background: #1557b0; }
+    button.secondary { background: #6c757d; }
+    button.secondary:hover { background: #5a6268; }
+    button.small { padding: 8px 16px; font-size: 13px; }
+    button.danger { background: #dc3545; }
+    button.danger:hover { background: #c82333; }
+    .button-group { margin-top: 25px; padding-top: 20px; border-top: 2px solid #e0e0e0; }
+    .info-box { background: #e8f0fe; padding: 15px; border-radius: 4px; margin: 15px 0; border-left: 4px solid #1a73e8; }
+    #preview { max-height: 300px; overflow-y: auto; background: white; padding: 15px; border: 1px solid #ddd; border-radius: 4px; font-size: 12px; }
+    table { width: 100%; border-collapse: collapse; }
+    th { background: #1a73e8; color: white; padding: 8px; text-align: left; font-size: 11px; }
+    td { padding: 6px 8px; border-bottom: 1px solid #e0e0e0; font-size: 11px; }
+    .loading { text-align: center; padding: 40px; color: #666; }
+  `;
+}
+
+/**
+ * Returns data source section HTML
+ */
+function getReportBuilderDataSourceSection() {
+  return `
     <div class="builder-section">
       <div class="section-title">1. Select Data Source</div>
       <div class="form-group">
@@ -195,115 +111,109 @@ function createReportBuilderHTML() {
           <option value="combined">Combined (Grievances + Members)</option>
         </select>
       </div>
-    </div>
+    </div>`;
+}
 
-    <!-- Field Selection -->
+/**
+ * Returns field selection section HTML
+ */
+function getReportBuilderFieldsSection(fields) {
+  const options = fields.map(function(f) { return '<option value="' + f.key + '">' + f.name + '</option>'; }).join('');
+  return `
     <div class="builder-section">
       <div class="section-title">2. Select Fields to Include</div>
       <div class="form-group">
         <label>Fields (hold Ctrl/Cmd to select multiple):</label>
-        <select id="fields" multiple class="multi-select">
-          ${grievanceFields.map(function(f) { return `<option value="${f.key}">${f.name}</option>`; }).join('')}
-        </select>
+        <select id="fields" multiple class="multi-select">${options}</select>
       </div>
       <button class="small secondary" onclick="selectAllFields()">Select All</button>
       <button class="small secondary" onclick="clearFields()">Clear All</button>
-    </div>
+    </div>`;
+}
 
-    <!-- Filters -->
+/**
+ * Returns filters section HTML
+ */
+function getReportBuilderFiltersSection(fields) {
+  const options = fields.map(function(f) { return '<option value="' + f.key + '">' + f.name + '</option>'; }).join('');
+  return `
     <div class="builder-section">
       <div class="section-title">3. Add Filters (Optional)</div>
       <div id="filters">
         <div class="filter-row">
-          <div>
-            <label>Field:</label>
-            <select id="filter0_field">
-              ${grievanceFields.map(function(f) { return `<option value="${f.key}">${f.name}</option>`; }).join('')}
-            </select>
-          </div>
-          <div>
-            <label>Operator:</label>
-            <select id="filter0_operator">
-              <option value="equals">Equals</option>
-              <option value="not_equals">Not Equals</option>
-              <option value="contains">Contains</option>
-              <option value="starts_with">Starts With</option>
-              <option value="greater_than">Greater Than</option>
-              <option value="less_than">Less Than</option>
-            </select>
-          </div>
-          <div>
-            <label>Value:</label>
-            <input type="text" id="filter0_value" placeholder="Filter value">
-          </div>
-          <div>
-            <button class="small danger" onclick="removeFilter(0)" style="margin-top: 22px;">Remove</button>
-          </div>
+          <div><label>Field:</label><select id="filter0_field">${options}</select></div>
+          <div><label>Operator:</label><select id="filter0_operator">
+            <option value="equals">Equals</option><option value="not_equals">Not Equals</option>
+            <option value="contains">Contains</option><option value="starts_with">Starts With</option>
+            <option value="greater_than">Greater Than</option><option value="less_than">Less Than</option>
+          </select></div>
+          <div><label>Value:</label><input type="text" id="filter0_value" placeholder="Filter value"></div>
+          <div><button class="small danger" onclick="removeFilter(0)" style="margin-top: 22px;">Remove</button></div>
         </div>
       </div>
       <button class="small" onclick="addFilter()">+ Add Filter</button>
-    </div>
+    </div>`;
+}
 
-    <!-- Grouping & Sorting -->
+/**
+ * Returns sorting section HTML
+ */
+function getReportBuilderSortingSection(fields) {
+  const options = fields.map(function(f) { return '<option value="' + f.key + '">' + f.name + '</option>'; }).join('');
+  return `
     <div class="builder-section">
       <div class="section-title">4. Grouping & Sorting</div>
-      <div class="form-group">
-        <label>Group By (optional):</label>
-        <select id="groupBy">
-          <option value="">No Grouping</option>
-          ${grievanceFields.map(function(f) { return `<option value="${f.key}">${f.name}</option>`; }).join('')}
-        </select>
-      </div>
-      <div class="form-group">
-        <label>Sort By:</label>
-        <select id="sortBy">
-          ${grievanceFields.map(function(f) { return `<option value="${f.key}">${f.name}</option>`; }).join('')}
-        </select>
-      </div>
-      <div class="form-group">
-        <label>Sort Order:</label>
-        <select id="sortOrder">
-          <option value="asc">Ascending</option>
-          <option value="desc">Descending</option>
-        </select>
-      </div>
-    </div>
+      <div class="form-group"><label>Group By (optional):</label><select id="groupBy"><option value="">No Grouping</option>${options}</select></div>
+      <div class="form-group"><label>Sort By:</label><select id="sortBy">${options}</select></div>
+      <div class="form-group"><label>Sort Order:</label><select id="sortOrder"><option value="asc">Ascending</option><option value="desc">Descending</option></select></div>
+    </div>`;
+}
 
-    <!-- Date Range -->
+/**
+ * Returns date range section HTML
+ */
+function getReportBuilderDateRangeSection() {
+  return `
     <div class="builder-section">
       <div class="section-title">5. Date Range (Optional)</div>
       <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
-        <div class="form-group">
-          <label>From Date:</label>
-          <input type="date" id="dateFrom">
-        </div>
-        <div class="form-group">
-          <label>To Date:</label>
-          <input type="date" id="dateTo">
-        </div>
+        <div class="form-group"><label>From Date:</label><input type="date" id="dateFrom"></div>
+        <div class="form-group"><label>To Date:</label><input type="date" id="dateTo"></div>
       </div>
-    </div>
+    </div>`;
+}
 
-    <!-- Preview -->
+/**
+ * Returns preview section HTML
+ */
+function getReportBuilderPreviewSection() {
+  return `
     <div class="builder-section">
       <div class="section-title">6. Preview</div>
-      <div id="preview" class="loading">
-        Click "Generate Preview" to see your report
-      </div>
+      <div id="preview" class="loading">Click "Generate Preview" to see your report</div>
       <button class="secondary" onclick="generatePreview()">🔍 Generate Preview</button>
-    </div>
+    </div>`;
+}
 
-    <!-- Actions -->
+/**
+ * Returns actions section HTML
+ */
+function getReportBuilderActionsSection() {
+  return `
     <div class="button-group">
       <button onclick="exportToPDF()">📄 Export to PDF</button>
       <button onclick="exportToCSV()">📑 Export to CSV</button>
       <button onclick="exportToExcel()">📊 Export to Excel</button>
       <button class="secondary" onclick="saveTemplate()">💾 Save Template</button>
       <button class="secondary" onclick="loadTemplate()">📂 Load Template</button>
-    </div>
-  </div>
+    </div>`;
+}
 
-  <script>
+/**
+ * Returns JavaScript for report builder
+ */
+function getReportBuilderScripts(grievanceFields, memberFields) {
+  return `
     let filterCount = 1;
     const grievanceFields = ${JSON.stringify(grievanceFields)};
     const memberFields = ${JSON.stringify(memberFields)};
@@ -311,11 +221,8 @@ function createReportBuilderHTML() {
     function updateFieldOptions() {
       const dataSource = document.getElementById('dataSource').value;
       const fieldsSelect = document.getElementById('fields');
-
       fieldsSelect.innerHTML = '';
-
       const fields = dataSource === 'members' ? memberFields : grievanceFields;
-
       fields.forEach(function(f) {
         const option = document.createElement('option');
         option.value = f.key;
@@ -326,16 +233,12 @@ function createReportBuilderHTML() {
 
     function selectAllFields() {
       const fieldsSelect = document.getElementById('fields');
-      for (let i = 0; i < fieldsSelect.options.length; i++) {
-        fieldsSelect.options[i].selected = true;
-      }
+      for (let i = 0; i < fieldsSelect.options.length; i++) fieldsSelect.options[i].selected = true;
     }
 
     function clearFields() {
       const fieldsSelect = document.getElementById('fields');
-      for (let i = 0; i < fieldsSelect.options.length; i++) {
-        fieldsSelect.options[i].selected = false;
-      }
+      for (let i = 0; i < fieldsSelect.options.length; i++) fieldsSelect.options[i].selected = false;
     }
 
     function addFilter() {
@@ -343,47 +246,26 @@ function createReportBuilderHTML() {
       const newFilter = document.createElement('div');
       newFilter.className = 'filter-row';
       newFilter.id = 'filter' + filterCount;
-      newFilter.innerHTML = \`
-        <div>
-          <label>Field:</label>
-          <select id="filter\${filterCount}_field">
-            \${grievanceFields.map(function(f) { return '<option value="' + f.key + '">' + f.name + '</option>'; }).join('')}
-          </select>
-        </div>
-        <div>
-          <label>Operator:</label>
-          <select id="filter\${filterCount}_operator">
-            <option value="equals">Equals</option>
-            <option value="not_equals">Not Equals</option>
-            <option value="contains">Contains</option>
-            <option value="starts_with">Starts With</option>
-            <option value="greater_than">Greater Than</option>
-            <option value="less_than">Less Than</option>
-          </select>
-        </div>
-        <div>
-          <label>Value:</label>
-          <input type="text" id="filter\${filterCount}_value" placeholder="Filter value">
-        </div>
-        <div>
-          <button class="small danger" onclick="removeFilter(\${filterCount})" style="margin-top: 22px;">Remove</button>
-        </div>
-      \`;
+      newFilter.innerHTML = '<div><label>Field:</label><select id="filter' + filterCount + '_field">' +
+        grievanceFields.map(function(f) { return '<option value="' + f.key + '">' + f.name + '</option>'; }).join('') +
+        '</select></div><div><label>Operator:</label><select id="filter' + filterCount + '_operator">' +
+        '<option value="equals">Equals</option><option value="not_equals">Not Equals</option>' +
+        '<option value="contains">Contains</option><option value="starts_with">Starts With</option>' +
+        '<option value="greater_than">Greater Than</option><option value="less_than">Less Than</option>' +
+        '</select></div><div><label>Value:</label><input type="text" id="filter' + filterCount + '_value" placeholder="Filter value"></div>' +
+        '<div><button class="small danger" onclick="removeFilter(' + filterCount + ')" style="margin-top: 22px;">Remove</button></div>';
       filtersDiv.appendChild(newFilter);
       filterCount++;
     }
 
     function removeFilter(id) {
       const filter = document.getElementById('filter' + id);
-      if (filter) {
-        filter.remove();
-      }
+      if (filter) filter.remove();
     }
 
     function getReportConfig() {
       const fieldsSelect = document.getElementById('fields');
       const selectedFields = Array.from(fieldsSelect.selectedOptions).map(function(opt) { return opt.value; });
-
       const filters = [];
       for (let i = 0; i < filterCount; i++) {
         const fieldElem = document.getElementById('filter' + i + '_field');
@@ -395,7 +277,6 @@ function createReportBuilderHTML() {
           });
         }
       }
-
       return {
         dataSource: document.getElementById('dataSource').value,
         fields: selectedFields,
@@ -410,48 +291,23 @@ function createReportBuilderHTML() {
 
     function generatePreview() {
       const config = getReportConfig();
-
-      if (config.fields.length === 0) {
-        alert('Please select at least one field');
-        return;
-      }
-
+      if (config.fields.length === 0) { alert('Please select at least one field'); return; }
       document.getElementById('preview').innerHTML = '<div class="loading">Generating preview...</div>';
-
-      google.script.run
-        .withSuccessHandler(displayPreview)
-        .withFailureHandler(onError)
-        .generateReportData(config, 10); // Preview first 10 rows
+      google.script.run.withSuccessHandler(displayPreview).withFailureHandler(onError).generateReportData(config, 10);
     }
 
     function displayPreview(data) {
       const preview = document.getElementById('preview');
-
-      if (!data || data.length === 0) {
-        preview.innerHTML = '<div class="loading">No data matches your filters</div>';
-        return;
-      }
-
+      if (!data || data.length === 0) { preview.innerHTML = '<div class="loading">No data matches your filters</div>'; return; }
       let html = '<table><thead><tr>';
-
-      // Headers
-      Object.keys(data[0]).forEach(function(key) {
-        html += '<th>' + key + '</th>';
-      });
+      Object.keys(data[0]).forEach(function(key) { html += '<th>' + key + '</th>'; });
       html += '</tr></thead><tbody>';
-
-      // Data rows
       data.forEach(function(row) {
         html += '<tr>';
-        Object.values(row).forEach(function(value) {
-          html += '<td>' + (value || '') + '</td>';
-        });
+        Object.values(row).forEach(function(value) { html += '<td>' + (value || '') + '</td>'; });
         html += '</tr>';
       });
-
-      html += '</tbody></table>';
-      html += '<div style="margin-top: 10px; color: #666; font-size: 12px;">Showing first ' + data.length + ' rows</div>';
-
+      html += '</tbody></table><div style="margin-top: 10px; color: #666; font-size: 12px;">Showing first ' + data.length + ' rows</div>';
       preview.innerHTML = html;
     }
 
@@ -462,54 +318,22 @@ function createReportBuilderHTML() {
 
     function exportToPDF() {
       const config = getReportConfig();
-
-      if (config.fields.length === 0) {
-        alert('Please select at least one field');
-        return;
-      }
-
+      if (config.fields.length === 0) { alert('Please select at least one field'); return; }
       alert('Generating PDF report... This may take a moment.');
-
-      google.script.run
-        .withSuccessHandler(function() {
-          alert('✅ PDF report generated and saved to Google Drive!');
-        })
-        .withFailureHandler(onError)
-        .exportReportToPDF(config);
+      google.script.run.withSuccessHandler(function() { alert('✅ PDF report generated and saved to Google Drive!'); }).withFailureHandler(onError).exportReportToPDF(config);
     }
 
     function exportToCSV() {
       const config = getReportConfig();
-
-      if (config.fields.length === 0) {
-        alert('Please select at least one field');
-        return;
-      }
-
-      google.script.run
-        .withSuccessHandler(function(csvData) {
-          downloadCSV(csvData);
-        })
-        .withFailureHandler(onError)
-        .exportReportToCSV(config);
+      if (config.fields.length === 0) { alert('Please select at least one field'); return; }
+      google.script.run.withSuccessHandler(function(csvData) { downloadCSV(csvData); }).withFailureHandler(onError).exportReportToCSV(config);
     }
 
     function exportToExcel() {
       const config = getReportConfig();
-
-      if (config.fields.length === 0) {
-        alert('Please select at least one field');
-        return;
-      }
-
+      if (config.fields.length === 0) { alert('Please select at least one field'); return; }
       alert('Generating Excel report... This may take a moment.');
-
-      google.script.run
-        .withSuccessHandler(function() {
-          alert('✅ Excel report generated and saved to Google Drive!');
-        })
-        .withFailureHandler(onError)
-        .exportReportToExcel(config);
+      google.script.run.withSuccessHandler(function() { alert('✅ Excel report generated and saved to Google Drive!'); }).withFailureHandler(onError).exportReportToExcel(config);
     }
 
     function downloadCSV(csvData) {
@@ -525,65 +349,38 @@ function createReportBuilderHTML() {
     function saveTemplate() {
       const config = getReportConfig();
       const name = prompt('Enter template name:');
-
       if (!name) return;
-
-      google.script.run
-        .withSuccessHandler(function() {
-          alert('✅ Template saved: ' + name);
-        })
-        .withFailureHandler(onError)
-        .saveReportTemplate(name, config);
+      google.script.run.withSuccessHandler(function() { alert('✅ Template saved: ' + name); }).withFailureHandler(onError).saveReportTemplate(name, config);
     }
 
     function loadTemplate() {
-      google.script.run
-        .withSuccessHandler(showTemplateList)
-        .withFailureHandler(onError)
-        .getReportTemplates();
+      google.script.run.withSuccessHandler(showTemplateList).withFailureHandler(onError).getReportTemplates();
     }
 
     function showTemplateList(templates) {
-      if (!templates || templates.length === 0) {
-        alert('No saved templates found');
-        return;
-      }
-
+      if (!templates || templates.length === 0) { alert('No saved templates found'); return; }
       const templateNames = templates.map(function(t) { return t.name; }).join('\\n');
       const selected = prompt('Available templates:\\n' + templateNames + '\\n\\nEnter template name to load:');
-
       if (!selected) return;
-
       const template = templates.find(function(t) { return t.name === selected; });
-      if (template) {
-        applyTemplate(template.config);
-      } else {
-        alert('Template not found');
-      }
+      if (template) applyTemplate(template.config);
+      else alert('Template not found');
     }
 
     function applyTemplate(config) {
       document.getElementById('dataSource').value = config.dataSource;
       updateFieldOptions();
-
-      // Select fields
       const fieldsSelect = document.getElementById('fields');
       for (let i = 0; i < fieldsSelect.options.length; i++) {
         fieldsSelect.options[i].selected = config.fields.includes(fieldsSelect.options[i].value);
       }
-
-      // Apply other settings
       document.getElementById('groupBy').value = config.groupBy || '';
       document.getElementById('sortBy').value = config.sortBy || '';
       document.getElementById('sortOrder').value = config.sortOrder || 'asc';
       document.getElementById('dateFrom').value = config.dateFrom || '';
       document.getElementById('dateTo').value = config.dateTo || '';
-
       alert('✅ Template loaded');
     }
-  </script>
-</body>
-</html>
   `;
 }
 

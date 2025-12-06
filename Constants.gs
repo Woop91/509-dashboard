@@ -861,6 +861,21 @@ function validateRequiredSheets() {
   };
 }
 
+/**
+ * Gets a sheet by name, creating it if it doesn't exist
+ * @param {string} sheetName - Name of the sheet to get or create
+ * @param {SpreadsheetApp.Spreadsheet} [ss] - Optional spreadsheet (defaults to active)
+ * @returns {SpreadsheetApp.Sheet} The sheet
+ */
+function getOrCreateSheet(sheetName, ss) {
+  ss = ss || SpreadsheetApp.getActive();
+  let sheet = ss.getSheetByName(sheetName);
+  if (!sheet) {
+    sheet = ss.insertSheet(sheetName);
+  }
+  return sheet;
+}
+
 /* --------------------= INPUT VALIDATION HELPERS --------------------= */
 
 /**
