@@ -2860,7 +2860,11 @@ function clearMemberValidationsForSeed(memberDir, count) {
   const lastRow = Math.max(memberDir.getLastRow(), 2);
   const maxSeedRows = lastRow + count + 100;
   try {
-    const columnsToClean = [4, 5, 6, 7, 12, 13, 14, 16];
+    // Clear validations for all columns that have dropdown values set during seeding
+    // Columns: JOB_TITLE(4), WORK_LOCATION(5), UNIT(6), OFFICE_DAYS(7),
+    //          SUPERVISOR(12), MANAGER(13), IS_STEWARD(14), ASSIGNED_STEWARD(16),
+    //          CONTACT_STEWARD(26)
+    const columnsToClean = [4, 5, 6, 7, 12, 13, 14, 16, 26];
     columnsToClean.forEach(function(col) {
       memberDir.getRange(2, col, maxSeedRows, 1).clearDataValidations();
     });
