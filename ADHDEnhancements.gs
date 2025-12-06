@@ -374,58 +374,6 @@ function createUserSettingsSheet() {
 }
 
 /**
- * Apply user settings from User Settings sheet
- */
-function applyUserSettings() {
-  const ss = SpreadsheetApp.getActiveSpreadsheet();
-  const settingsSheet = ss.getSheetByName("⚙️ User Settings");
-
-  if (!settingsSheet) {
-    SpreadsheetApp.getUi().alert('❌ User Settings sheet not found!\n\nPlease run "509 Tools > ADHD Tools > Create User Settings" first.');
-    return;
-  }
-
-  // Read user preferences
-  const showGridlines = settingsSheet.getRange("B5").getValue();
-  const theme = settingsSheet.getRange("B6").getValue();
-  const fontSize = settingsSheet.getRange("B7").getValue();
-  const iconStyle = settingsSheet.getRange("B8").getValue();
-  const compactView = settingsSheet.getRange("B9").getValue();
-
-  // Apply gridlines setting
-  if (showGridlines === "Yes") {
-    showAllGridlines();
-  } else {
-    hideAllGridlines();
-  }
-
-  // Apply font size (to Interactive Dashboard and Main Dashboard)
-  const fontSizeMap = {
-    "Small": 9,
-    "Medium": 11,
-    "Large": 13,
-    "Extra Large": 15
-  };
-
-  const targetSize = fontSizeMap[fontSize] || 11;
-
-  [SHEETS.INTERACTIVE_DASHBOARD, SHEETS.DASHBOARD].forEach(function(sheetName) {
-    const sheet = ss.getSheetByName(sheetName);
-    if (sheet) {
-      sheet.getDataRange().setFontSize(targetSize);
-    }
-  });
-
-  SpreadsheetApp.getUi().alert('✅ Your settings have been applied!\n\n' +
-    `• Gridlines: ${showGridlines}\n` +
-    `• Theme: ${theme}\n` +
-    `• Font Size: ${fontSize}\n` +
-    `• Icons: ${iconStyle}\n` +
-    `• Compact View: ${compactView}\n\n` +
-    'Your dashboard is now customized to your preferences!');
-}
-
-/**
  * Quick setup for ADHD-friendly defaults
  */
 function setupADHDDefaults() {

@@ -14,10 +14,10 @@
  * Build Info:
  * - Version: 2.1.0 (Security Enhanced + Code Review Improvements)
  * - Build ID: 20251202-improvements
- * - Build Date: 2025-12-06T04:36:37.395Z
- * - Build Type: DEVELOPMENT
- * - Modules: 78 files
- * - Tests Included: Yes
+ * - Build Date: 2025-12-06T17:57:32.557Z
+ * - Build Type: PRODUCTION
+ * - Modules: 74 files
+ * - Tests Included: No
  *
  * ============================================================================
  */
@@ -789,14 +789,6 @@ function getVersionString() {
   return `${VERSION_INFO.MAJOR}.${VERSION_INFO.MINOR}.${VERSION_INFO.PATCH}`;
 }
 
-/**
- * Gets full version info string
- * @returns {string} Full version string with build info
- */
-function getFullVersionString() {
-  return `v${getVersionString()} (${VERSION_INFO.CODENAME}) - Build ${VERSION_INFO.BUILD}`;
-}
-
 /* --------------------= UTILITY FUNCTIONS --------------------= */
 
 /**
@@ -809,7 +801,7 @@ function getFullVersionString() {
  * getColumnLetter(27) // Returns "AA"
  */
 function getColumnLetter(columnNumber) {
-  var letter = '';
+  let letter = '';
   while (columnNumber > 0) {
     const remainder = (columnNumber - 1) % 26;
     letter = String.fromCharCode(65 + remainder) + letter;
@@ -828,7 +820,7 @@ function getColumnLetter(columnNumber) {
  * getColumnNumber('AA') // Returns 27
  */
 function getColumnNumber(columnLetter) {
-  var number = 0;
+  let number = 0;
   for (let i = 0; i < columnLetter.length; i++) {
     number = number * 26 + (columnLetter.charCodeAt(i) - 64);
   }
@@ -889,6 +881,21 @@ function validateRequiredSheets() {
     valid: missing.length === 0,
     missing: missing
   };
+}
+
+/**
+ * Gets a sheet by name, creating it if it doesn't exist
+ * @param {string} sheetName - Name of the sheet to get or create
+ * @param {SpreadsheetApp.Spreadsheet} [ss] - Optional spreadsheet (defaults to active)
+ * @returns {SpreadsheetApp.Sheet} The sheet
+ */
+function getOrCreateSheet(sheetName, ss) {
+  ss = ss || SpreadsheetApp.getActive();
+  let sheet = ss.getSheetByName(sheetName);
+  if (!sheet) {
+    sheet = ss.insertSheet(sheetName);
+  }
+  return sheet;
 }
 
 /* --------------------= INPUT VALIDATION HELPERS --------------------= */
@@ -1270,19 +1277,6 @@ function sanitizeHTML(input) {
 }
 
 /**
- * Sanitizes array of values
- *
- * @param {Array} arr - Array to sanitize
- * @returns {Array} Array with sanitized values
- */
-function sanitizeArray(arr) {
-  if (!Array.isArray(arr)) {
-    return [];
-  }
-  return arr.map(function(item) { return sanitizeHTML(item); });
-}
-
-/**
  * Sanitizes object properties recursively
  *
  * @param {Object} obj - Object to sanitize
@@ -1571,98 +1565,6 @@ function isValidGrievanceId(grievanceId) {
   return grievanceIdRegex.test(grievanceId) && grievanceId.length <= 20;
 }
 
-/**
- * Validates date is not in the future (unless allowed)
- *
- * @param {Date} date - Date to validate
- * @param {boolean} allowFuture - Whether to allow future dates
- * @returns {boolean} True if valid date
- */
-function isValidDate(date, allowFuture = false) {
-  if (!(date instanceof Date) || isNaN(date)) {
-    return false;
-  }
-
-  if (!allowFuture) {
-    const now = new Date();
-    return date <= now;
-  }
-
-  return true;
-}
-
-/**
- * Sanitizes and validates user input
- *
- * @param {string} input - Input to validate
- * @param {string} type - Type of input (email, phone, memberId, text)
- * @param {number} maxLength - Maximum length
- * @returns {Object} {valid: boolean, sanitized: string, error: string}
- */
-function validateInput(input, type, maxLength = 255) {
-  const result = {
-    valid: false,
-    sanitized: '',
-    error: ''
-  };
-
-  // Sanitize first
-  const sanitized = sanitizeHTML(input);
-  result.sanitized = sanitized;
-
-  // Check length
-  if (sanitized.length > maxLength) {
-    result.error = `Input exceeds maximum length of ${maxLength} characters`;
-    return result;
-  }
-
-  // Type-specific validation
-  switch (type) {
-    case 'email':
-      if (!isValidEmail(sanitized)) {
-        result.error = 'Invalid email address format';
-        return result;
-      }
-      break;
-
-    case 'phone':
-      if (!isValidPhone(sanitized)) {
-        result.error = 'Invalid phone number format';
-        return result;
-      }
-      break;
-
-    case 'memberId':
-      if (!isValidMemberId(sanitized)) {
-        result.error = 'Invalid member ID format';
-        return result;
-      }
-      break;
-
-    case 'grievanceId':
-      if (!isValidGrievanceId(sanitized)) {
-        result.error = 'Invalid grievance ID format';
-        return result;
-      }
-      break;
-
-    case 'text':
-      // Already sanitized, just check it's not empty
-      if (!sanitized || sanitized.trim().length === 0) {
-        result.error = 'Input cannot be empty';
-        return result;
-      }
-      break;
-
-    default:
-      result.error = 'Unknown validation type';
-      return result;
-  }
-
-  result.valid = true;
-  return result;
-}
-
 /* --------------------= AUDIT LOGGING --------------------= */
 
 /**
@@ -1740,47 +1642,6 @@ function logAuditEvent(action, details = {}, level = 'INFO') {
   } catch (e) {
     // Don't let audit logging failures break the app
     Logger.log('Failed to log audit event: ' + e.message);
-  }
-}
-
-/**
- * Gets recent audit log entries
- *
- * @param {number} limit - Maximum number of entries to return
- * @param {string} action - Filter by action (optional)
- * @returns {Array<Object>} Array of audit log entries
- */
-function getAuditLog(limit = 100, action = null) {
-  requireRole('ADMIN', 'View Audit Log');
-
-  try {
-    const ss = SpreadsheetApp.getActiveSpreadsheet();
-    const auditLog = ss.getSheetByName(AUDIT_LOG_CONFIG.LOG_SHEET_NAME);
-
-    if (!auditLog) {
-      return [];
-    }
-
-    const data = auditLog.getDataRange().getValues();
-    const headers = data[0];
-    const rows = data.slice(1).reverse(); // Most recent first
-
-    const filtered = action ? rows.filter(function(row) { return row[AUDIT_LOG_COLS.ACTION - 1] === action; }) : rows;
-
-    const result = filtered.slice(0, limit).map(function(row) { return {
-      timestamp: row[AUDIT_LOG_COLS.TIMESTAMP - 1],
-      userEmail: row[AUDIT_LOG_COLS.USER_EMAIL - 1],
-      userRole: row[AUDIT_LOG_COLS.USER_ROLE - 1],
-      action: row[AUDIT_LOG_COLS.ACTION - 1],
-      level: row[AUDIT_LOG_COLS.LEVEL - 1],
-      details: row[AUDIT_LOG_COLS.DETAILS - 1],
-      ipAddress: row[AUDIT_LOG_COLS.IP_ADDRESS - 1]
-    };});
-
-    return result;
-  } catch (e) {
-    Logger.log('Error getting audit log: ' + e.message);
-    return [];
   }
 }
 
@@ -1882,37 +1743,6 @@ function isRegisteredEmail(email) {
   }
 }
 
-/**
- * Gets list of all registered member emails
- *
- * @returns {string[]} Array of email addresses
- */
-function getAllMemberEmails() {
-  try {
-    const ss = SpreadsheetApp.getActiveSpreadsheet();
-    const memberSheet = ss.getSheetByName(SHEETS.MEMBER_DIR);
-
-    if (!memberSheet) {
-      return [];
-    }
-
-    const data = memberSheet.getDataRange().getValues();
-    const emails = [];
-
-    for (let i = 1; i < data.length; i++) {
-      const email = data[i][MEMBER_COLS.EMAIL - 1];
-      if (email && isValidEmail(email)) {
-        emails.push(email);
-      }
-    }
-
-    return emails;
-  } catch (e) {
-    Logger.log('Error getting member emails: ' + e.message);
-    return [];
-  }
-}
-
 /* --------------------= SECURITY AUDIT --------------------= */
 
 /**
@@ -2007,39 +1837,6 @@ function runSecurityAudit() {
   return report;
 }
 
-/**
- * Shows security audit report to admin
- */
-function showSecurityAudit() {
-  try {
-    const report = runSecurityAudit();
-    const ui = SpreadsheetApp.getUi();
-
-    let message = '🔒 SECURITY AUDIT REPORT\n\n';
-    message += `Total Users: ${report.results.totalUsers}\n`;
-    message += `Admins: ${report.results.adminCount}\n`;
-    message += `Stewards: ${report.results.stewardCount}\n`;
-    message += `Members: ${report.results.memberCount}\n\n`;
-    message += `Recent Events (7 days):\n`;
-    message += `- Access Denied: ${report.results.recentAccessDenied}\n`;
-    message += `- Emails Sent: ${report.results.recentEmailsSent}\n\n`;
-    message += `Audit Log Entries: ${report.results.auditLogSize}\n\n`;
-
-    if (report.recommendations.length > 0) {
-      message += 'RECOMMENDATIONS:\n';
-      report.recommendations.forEach(function(rec) {
-        message += `${rec}\n`;
-      });
-    } else {
-      message += '✅ No security issues detected.';
-    }
-
-    ui.alert('Security Audit Report', message, ui.ButtonSet.OK);
-
-  } catch (e) {
-    SpreadsheetApp.getUi().alert('Error', 'Security audit failed: ' + e.message, SpreadsheetApp.getUi().ButtonSet.OK);
-  }
-}
 
 
 
@@ -5134,6 +4931,14 @@ function toggleSetupMenuVisibility() {
  * Runs when spreadsheet opens - creates menu and validates configuration
  */
 function onOpen() {
+  // Log user access for audit trail
+  try {
+    logUserAccess();
+  } catch (e) {
+    // Don't let audit logging break the app
+    Logger.log('onOpen: Failed to log user access: ' + e.message);
+  }
+
   // Validate configuration on startup
   const configValid = validateConfigurationOnOpen();
 
@@ -6001,40 +5806,69 @@ function SEED_MEMBERS_TOGGLE_2() { seedMembersWithCount(5000, "Toggle 2"); }
 function SEED_MEMBERS_TOGGLE_3() { seedMembersWithCount(5000, "Toggle 3"); }
 function SEED_MEMBERS_TOGGLE_4() { seedMembersWithCount(5000, "Toggle 4"); }
 
+/**
+ * Seeds member directory with test data
+ * Refactored to use helper functions for maintainability
+ */
 function seedMembersWithCount(count, toggleName) {
   const ss = SpreadsheetApp.getActive();
   const memberDir = ss.getSheetByName(SHEETS.MEMBER_DIR);
   const config = ss.getSheetByName(SHEETS.CONFIG);
 
-  // Verify sheets exist
-  if (!memberDir) {
-    SpreadsheetApp.getUi().alert('Error', 'Member Directory sheet not found! Please run CREATE_509_DASHBOARD first.', SpreadsheetApp.getUi().ButtonSet.OK);
-    return;
-  }
-  if (!config) {
-    SpreadsheetApp.getUi().alert('Error', 'Config sheet not found! Please run CREATE_509_DASHBOARD first.', SpreadsheetApp.getUi().ButtonSet.OK);
-    return;
-  }
+  // Validate sheets exist
+  if (!validateSeedSheets(memberDir, config)) return;
 
+  // Confirm with user
   const ui = SpreadsheetApp.getUi();
   const response = ui.alert(
     `Seed ${count} Members (${toggleName})`,
     `This will add ${count} member records. This may take 1-2 minutes. Continue?`,
     ui.ButtonSet.YES_NO
   );
-
   if (response !== ui.Button.YES) return;
 
   SpreadsheetApp.getActive().toast(`🚀 Seeding ${count} members (${toggleName})...`, "Processing", -1);
 
-  // Clear existing data validations on columns that will receive seeded data
-  // This prevents validation conflicts when Config values differ from existing rules
+  // Prepare for seeding
+  clearMemberValidationsForSeed(memberDir, count);
+
+  // Get seed configuration
+  const seedConfig = getMemberSeedConfig();
+  if (!seedConfig) return;
+
+  // Generate and write data
+  const startingRow = memberDir.getLastRow();
+  const result = generateAndWriteMemberData(memberDir, count, startingRow, toggleName, seedConfig);
+
+  // Restore sheet state
+  restoreMemberSheetAfterSeed(memberDir, startingRow, count);
+
+  const finalRow = memberDir.getLastRow();
+  SpreadsheetApp.getActive().toast(`✅ ${count} members added (${toggleName})! Sheet now has ${finalRow - 1} members.`, "Complete", 5);
+}
+
+/**
+ * Validates sheets exist for seeding
+ */
+function validateSeedSheets(memberDir, config) {
+  if (!memberDir) {
+    SpreadsheetApp.getUi().alert('Error', 'Member Directory sheet not found! Please run CREATE_509_DASHBOARD first.', SpreadsheetApp.getUi().ButtonSet.OK);
+    return false;
+  }
+  if (!config) {
+    SpreadsheetApp.getUi().alert('Error', 'Config sheet not found! Please run CREATE_509_DASHBOARD first.', SpreadsheetApp.getUi().ButtonSet.OK);
+    return false;
+  }
+  return true;
+}
+
+/**
+ * Clears data validations before seeding
+ */
+function clearMemberValidationsForSeed(memberDir, count) {
   const lastRow = Math.max(memberDir.getLastRow(), 2);
-  const maxSeedRows = lastRow + count + 100; // Buffer for new rows
+  const maxSeedRows = lastRow + count + 100;
   try {
-    // Clear validations on columns with dropdown data:
-    // D (Job Title), E (Location), F (Unit), G (Office Days),
-    // L (Supervisor), M (Manager), N (Is Steward), P (Assigned Steward)
     const columnsToClean = [4, 5, 6, 7, 12, 13, 14, 16];
     columnsToClean.forEach(function(col) {
       memberDir.getRange(2, col, maxSeedRows, 1).clearDataValidations();
@@ -6043,59 +5877,52 @@ function seedMembersWithCount(count, toggleName) {
   } catch (e) {
     Logger.log('Warning: Could not clear some validations: ' + e.message);
   }
+}
 
-  const firstNames = ["James", "Mary", "John", "Patricia", "Robert", "Jennifer", "Michael", "Linda", "William", "Elizabeth", "David", "Barbara", "Richard", "Susan", "Joseph", "Jessica", "Thomas", "Sarah", "Charles", "Karen", "Christopher", "Nancy", "Daniel", "Lisa", "Matthew", "Betty", "Anthony", "Margaret", "Mark", "Sandra", "Donald", "Ashley", "Steven", "Kimberly", "Paul", "Emily", "Andrew", "Donna", "Joshua", "Michelle"];
-  const lastNames = ["Smith", "Johnson", "Williams", "Brown", "Jones", "Garcia", "Miller", "Davis", "Rodriguez", "Martinez", "Hernandez", "Lopez", "Gonzalez", "Wilson", "Anderson", "Thomas", "Taylor", "Moore", "Jackson", "Martin", "Lee", "Perez", "Thompson", "White", "Harris", "Sanchez", "Clark", "Ramirez", "Lewis", "Robinson", "Walker", "Young", "Allen", "King", "Wright", "Scott", "Torres", "Nguyen", "Hill", "Flores"];
-
-  // Get dropdown values from Config using dynamic helpers
+/**
+ * Gets configuration data for member seeding
+ */
+function getMemberSeedConfig() {
   const dropdowns = getMemberDirectoryDropdownValues();
-  const jobTitles = dropdowns.jobTitles;
-  const locations = dropdowns.locations;
-  const units = dropdowns.units;
-  const officeDays = dropdowns.officeDays;
-  const supervisors = dropdowns.supervisors;  // Now combined full names
-  const managers = dropdowns.managers;        // Now combined full names
-  const stewards = dropdowns.stewards;
 
-  const commMethods = getConfigColumnValues(CONFIG_COLS.COMM_METHODS);
+  let commMethods = getConfigColumnValues(CONFIG_COLS.COMM_METHODS);
   if (commMethods.length === 0) {
-    commMethods.push("Email", "Phone", "Text", "In Person");  // Fallback defaults
-  }
-  const times = ["Mornings", "Afternoons", "Evenings", "Weekends", "Flexible"];
-
-  // Pre-fetch committee and home town options ONCE (not inside the loop!)
-  const committeeOptions = getConfigColumnValues(CONFIG_COLS.STEWARD_COMMITTEES);
-  const homeTownOptions = getConfigColumnValues(CONFIG_COLS.HOME_TOWNS);
-
-  // Validate config data with detailed debugging
-  Logger.log('Seed Config Debug: jobTitles=' + jobTitles.length + ', locations=' + locations.length +
-             ', units=' + units.length + ', supervisors=' + supervisors.length +
-             ', managers=' + managers.length + ', stewards=' + stewards.length);
-
-  if (jobTitles.length === 0 || locations.length === 0 || units.length === 0 ||
-      supervisors.length === 0 || managers.length === 0 || stewards.length === 0) {
-    ui.alert('Error', 'Config data is incomplete. Please ensure all dropdown lists in Config sheet are populated.\n\n' +
-             'Debug info:\n' +
-             '• Job Titles: ' + jobTitles.length + '\n' +
-             '• Locations: ' + locations.length + '\n' +
-             '• Units: ' + units.length + '\n' +
-             '• Supervisors: ' + supervisors.length + '\n' +
-             '• Managers: ' + managers.length + '\n' +
-             '• Stewards: ' + stewards.length, ui.ButtonSet.OK);
-    return;
+    commMethods = ["Email", "Phone", "Text", "In Person"];
   }
 
-  const BATCH_SIZE = 1000;
-  let data = [];
-  const startingRow = memberDir.getLastRow();
-  Logger.log('Seed starting at row: ' + startingRow);
+  const seedConfig = {
+    firstNames: ["James", "Mary", "John", "Patricia", "Robert", "Jennifer", "Michael", "Linda", "William", "Elizabeth", "David", "Barbara", "Richard", "Susan", "Joseph", "Jessica", "Thomas", "Sarah", "Charles", "Karen", "Christopher", "Nancy", "Daniel", "Lisa", "Matthew", "Betty", "Anthony", "Margaret", "Mark", "Sandra", "Donald", "Ashley", "Steven", "Kimberly", "Paul", "Emily", "Andrew", "Donna", "Joshua", "Michelle"],
+    lastNames: ["Smith", "Johnson", "Williams", "Brown", "Jones", "Garcia", "Miller", "Davis", "Rodriguez", "Martinez", "Hernandez", "Lopez", "Gonzalez", "Wilson", "Anderson", "Thomas", "Taylor", "Moore", "Jackson", "Martin", "Lee", "Perez", "Thompson", "White", "Harris", "Sanchez", "Clark", "Ramirez", "Lewis", "Robinson", "Walker", "Young", "Allen", "King", "Wright", "Scott", "Torres", "Nguyen", "Hill", "Flores"],
+    jobTitles: dropdowns.jobTitles,
+    locations: dropdowns.locations,
+    units: dropdowns.units,
+    officeDays: dropdowns.officeDays,
+    supervisors: dropdowns.supervisors,
+    managers: dropdowns.managers,
+    stewards: dropdowns.stewards,
+    commMethods: commMethods,
+    times: ["Mornings", "Afternoons", "Evenings", "Weekends", "Flexible"],
+    committeeOptions: getConfigColumnValues(CONFIG_COLS.STEWARD_COMMITTEES),
+    homeTownOptions: getConfigColumnValues(CONFIG_COLS.HOME_TOWNS),
+    contactNotes: getSeedContactNotes()
+  };
 
-  // Limit stewards to 25 total per seed operation
-  const MAX_STEWARDS = 25;
-  let stewardCount = 0;
+  // Validate required config
+  if (seedConfig.jobTitles.length === 0 || seedConfig.locations.length === 0 ||
+      seedConfig.units.length === 0 || seedConfig.supervisors.length === 0 ||
+      seedConfig.managers.length === 0 || seedConfig.stewards.length === 0) {
+    SpreadsheetApp.getUi().alert('Error', 'Config data is incomplete. Please ensure all dropdown lists in Config sheet are populated.', SpreadsheetApp.getUi().ButtonSet.OK);
+    return null;
+  }
 
-  // Sample contact notes for steward contact tracking
-  const contactNotes = [
+  return seedConfig;
+}
+
+/**
+ * Returns sample contact notes for seeding
+ */
+function getSeedContactNotes() {
+  return [
     "Discussed upcoming contract negotiations",
     "Follow-up on workplace safety concerns",
     "Scheduled one-on-one meeting for next week",
@@ -6112,138 +5939,113 @@ function seedMembersWithCount(count, toggleName) {
     "Answered questions about union dues",
     "Discussed upcoming union events"
   ];
+}
+
+/**
+ * Generates and writes member data in batches
+ */
+function generateAndWriteMemberData(memberDir, count, startingRow, toggleName, config) {
+  const BATCH_SIZE = 1000;
+  const MAX_STEWARDS = 25;
+  let data = [];
+  let stewardCount = 0;
 
   for (let i = 1; i <= count; i++) {
-    const firstName = firstNames[Math.floor(Math.random() * firstNames.length)];
-    const lastName = lastNames[Math.floor(Math.random() * lastNames.length)];
-    const memberID = "M" + String(startingRow + i).padStart(6, '0');
-    const jobTitle = jobTitles[Math.floor(Math.random() * jobTitles.length)];
-    const location = locations[Math.floor(Math.random() * locations.length)];
-    const unit = units[Math.floor(Math.random() * units.length)];
-
-    // Generate multiple office days (1-3 days)
-    const numDays = Math.floor(Math.random() * 3) + 1;
-    const selectedDays = [];
-    const availableDays = [...officeDays];
-    for (let d = 0; d < numDays; d++) {
-      if (availableDays.length > 0) {
-        const idx = Math.floor(Math.random() * availableDays.length);
-        selectedDays.push(availableDays.splice(idx, 1)[0]);
-      }
-    }
-    const officeDaysValue = selectedDays.join(", ");
-
-    const email = `${firstName.toLowerCase()}.${lastName.toLowerCase()}${startingRow + i}@union.org`;
-    const phone = `(555) ${String(Math.floor(Math.random() * 900) + 100)}-${String(Math.floor(Math.random() * 9000) + 1000)}`;
-    // Limit stewards to MAX_STEWARDS (25) per seed operation
-    const isSteward = (stewardCount < MAX_STEWARDS && Math.random() > 0.95) ? "Yes" : "No";
-    if (isSteward === "Yes") stewardCount++;
-
-    // Select supervisor and manager names from Config (already combined full names)
-    const supervisor = supervisors[Math.floor(Math.random() * supervisors.length)];
-    const manager = managers[Math.floor(Math.random() * managers.length)];
-    const assignedSteward = stewards[Math.floor(Math.random() * stewards.length)];
-
-    const daysAgo = Math.floor(Math.random() * 90);
-    const lastVirtual = Math.random() > 0.7 ? new Date(Date.now() - daysAgo * 24 * 60 * 60 * 1000) : "";
-    const lastInPerson = Math.random() > 0.8 ? new Date(Date.now() - daysAgo * 24 * 60 * 60 * 1000) : "";
-    const lastSurvey = Math.random() > 0.6 ? new Date(Date.now() - daysAgo * 24 * 60 * 60 * 1000) : "";
-    const lastEmailOpen = Math.random() > 0.5 ? new Date(Date.now() - daysAgo * 24 * 60 * 60 * 1000) : "";
-
-    const openRate = Math.floor(Math.random() * 40) + 60;
-    const volHours = Math.floor(Math.random() * 50);
-    const localInterest = Math.random() > 0.5 ? "Yes" : "No";
-    const chapterInterest = Math.random() > 0.6 ? "Yes" : "No";
-    const alliedInterest = Math.random() > 0.8 ? "Yes" : "No";
-    const contactDate = new Date(Date.now() - Math.random() * 365 * 24 * 60 * 60 * 1000);
-    const commMethod = commMethods[Math.floor(Math.random() * commMethods.length)];
-    const bestTime = times[Math.floor(Math.random() * times.length)];
-
-    // Use pre-fetched committees for stewards
-    const committee = isSteward === "Yes" && committeeOptions.length > 0
-      ? committeeOptions[Math.floor(Math.random() * committeeOptions.length)]
-      : "";
-
-    // Use pre-fetched home towns
-    const homeTown = homeTownOptions.length > 0
-      ? homeTownOptions[Math.floor(Math.random() * homeTownOptions.length)]
-      : "";
-
-    // Build row to match Member Directory headers exactly (31 columns):
-    // Section 1: Identity & Core Info (A-D, cols 1-4)
-    // Section 2: Location & Work (E-G, cols 5-7)
-    // Section 3: Contact Information (H-K, cols 8-11)
-    // Section 4: Organizational Structure (L-P, cols 12-16)
-    // Section 5: Engagement Metrics (Q-T, cols 17-20)
-    // Section 6: Member Interests (U-X, cols 21-24)
-    // Section 7: Steward Contact Tracking (Y-AA, cols 25-27)
-    // Section 8: Grievance Management (AB-AE, cols 28-31)
-    const row = [
-      // Section 1-2: Identity, Location & Work (cols 1-7)
-      memberID, firstName, lastName, jobTitle, location, unit, officeDaysValue,
-      // Section 3: Contact Information (cols 8-11)
-      email, phone, commMethod, bestTime,
-      // Section 4: Organizational Structure (cols 12-16)
-      supervisor, manager, isSteward, committee, assignedSteward,
-      // Section 5: Engagement Metrics (cols 17-20)
-      lastVirtual, lastInPerson, openRate, volHours,
-      // Section 6: Member Interests (cols 21-24)
-      localInterest, chapterInterest, alliedInterest, homeTown,
-      // Section 7: Steward Contact Tracking (cols 25-27)
-      // Add realistic steward contact data for some members
-      contactDate,
-      Math.random() > 0.6 ? stewards[Math.floor(Math.random() * stewards.length)] : "",
-      Math.random() > 0.6 ? contactNotes[Math.floor(Math.random() * contactNotes.length)] : ""
-      // NOTE: Section 8 (cols 28-31) - Has Open Grievance?, Grievance Status, Next Deadline, Start Grievance
-      // These columns are NOT included in seed data because:
-      // - Cols 28-30 (AB-AD) are formula columns populated by setupFormulasAndCalculations()
-      // - Col 31 (AE) is a checkbox column that will be set up separately
-    ];
-
-    data.push(row);
+    const row = generateSingleMemberRow(i, startingRow, config, stewardCount, MAX_STEWARDS);
+    if (row.isSteward) stewardCount++;
+    data.push(row.data);
 
     if (data.length === BATCH_SIZE) {
-      try {
-        memberDir.getRange(memberDir.getLastRow() + 1, 1, data.length, row.length).setValues(data);
-        SpreadsheetApp.getActive().toast(`Added ${i} of ${count} members (${toggleName})...`, "Progress", 1);
-        data = [];
-        SpreadsheetApp.flush();
-      } catch (e) {
-        Logger.log(`Error writing member batch at ${i}: ${e.message}`);
-        SpreadsheetApp.getActive().toast(`⚠️ Error at ${i}. Retrying...`, "Warning", 2);
-        // Retry once
-        Utilities.sleep(1000);
-        try {
-          memberDir.getRange(memberDir.getLastRow() + 1, 1, data.length, row.length).setValues(data);
-          data = [];
-        } catch (e2) {
-          Logger.log(`Retry failed: ${e2.message}`);
-          throw new Error(`Failed to write members: ${e2.message}`);
-        }
-      }
+      writeMemberBatch(memberDir, data, i, count, toggleName);
+      data = [];
     }
   }
 
   // Write remaining data
   if (data.length > 0) {
-    try {
-      const writeRow = memberDir.getLastRow() + 1;
-      Logger.log('Writing final batch of ' + data.length + ' rows at row ' + writeRow);
-      memberDir.getRange(writeRow, 1, data.length, data[0].length).setValues(data);
-    } catch (e) {
-      Logger.log(`Error writing final member batch: ${e.message}`);
-      throw new Error(`Failed to write final members: ${e.message}`);
-    }
+    writeMemberBatch(memberDir, data, count, count, toggleName);
   }
 
-  // Force write to sheet
   SpreadsheetApp.flush();
+  Logger.log('Seed complete. Member Directory now has ' + memberDir.getLastRow() + ' rows');
+}
 
-  // Verify data was written
-  const finalRow = memberDir.getLastRow();
-  Logger.log('Seed complete. Member Directory now has ' + finalRow + ' rows (including header)');
+/**
+ * Generates a single member row
+ */
+function generateSingleMemberRow(index, startingRow, config, stewardCount, maxStewards) {
+  const firstName = config.firstNames[Math.floor(Math.random() * config.firstNames.length)];
+  const lastName = config.lastNames[Math.floor(Math.random() * config.lastNames.length)];
+  const memberID = "M" + String(startingRow + index).padStart(6, '0');
 
-  // CRITICAL: Re-apply dropdowns that were cleared before seeding
+  // Generate office days
+  const numDays = Math.floor(Math.random() * 3) + 1;
+  const selectedDays = [];
+  const availableDays = [...config.officeDays];
+  for (let d = 0; d < numDays && availableDays.length > 0; d++) {
+    const idx = Math.floor(Math.random() * availableDays.length);
+    selectedDays.push(availableDays.splice(idx, 1)[0]);
+  }
+
+  const isSteward = (stewardCount < maxStewards && Math.random() > 0.95) ? "Yes" : "No";
+  const daysAgo = Math.floor(Math.random() * 90);
+
+  const row = [
+    memberID, firstName, lastName,
+    config.jobTitles[Math.floor(Math.random() * config.jobTitles.length)],
+    config.locations[Math.floor(Math.random() * config.locations.length)],
+    config.units[Math.floor(Math.random() * config.units.length)],
+    selectedDays.join(", "),
+    `${firstName.toLowerCase()}.${lastName.toLowerCase()}${startingRow + index}@union.org`,
+    `(555) ${String(Math.floor(Math.random() * 900) + 100)}-${String(Math.floor(Math.random() * 9000) + 1000)}`,
+    config.commMethods[Math.floor(Math.random() * config.commMethods.length)],
+    config.times[Math.floor(Math.random() * config.times.length)],
+    config.supervisors[Math.floor(Math.random() * config.supervisors.length)],
+    config.managers[Math.floor(Math.random() * config.managers.length)],
+    isSteward,
+    isSteward === "Yes" && config.committeeOptions.length > 0 ? config.committeeOptions[Math.floor(Math.random() * config.committeeOptions.length)] : "",
+    config.stewards[Math.floor(Math.random() * config.stewards.length)],
+    Math.random() > 0.7 ? new Date(Date.now() - daysAgo * 24 * 60 * 60 * 1000) : "",
+    Math.random() > 0.8 ? new Date(Date.now() - daysAgo * 24 * 60 * 60 * 1000) : "",
+    Math.floor(Math.random() * 40) + 60,
+    Math.floor(Math.random() * 50),
+    Math.random() > 0.5 ? "Yes" : "No",
+    Math.random() > 0.6 ? "Yes" : "No",
+    Math.random() > 0.8 ? "Yes" : "No",
+    config.homeTownOptions.length > 0 ? config.homeTownOptions[Math.floor(Math.random() * config.homeTownOptions.length)] : "",
+    new Date(Date.now() - Math.random() * 365 * 24 * 60 * 60 * 1000),
+    Math.random() > 0.6 ? config.stewards[Math.floor(Math.random() * config.stewards.length)] : "",
+    Math.random() > 0.6 ? config.contactNotes[Math.floor(Math.random() * config.contactNotes.length)] : ""
+  ];
+
+  return { data: row, isSteward: isSteward === "Yes" };
+}
+
+/**
+ * Writes a batch of member data to the sheet
+ */
+function writeMemberBatch(memberDir, data, currentIndex, totalCount, toggleName) {
+  try {
+    memberDir.getRange(memberDir.getLastRow() + 1, 1, data.length, data[0].length).setValues(data);
+    SpreadsheetApp.getActive().toast(`Added ${currentIndex} of ${totalCount} members (${toggleName})...`, "Progress", 1);
+    SpreadsheetApp.flush();
+  } catch (e) {
+    Logger.log(`Error writing member batch at ${currentIndex}: ${e.message}`);
+    SpreadsheetApp.getActive().toast(`⚠️ Error at ${currentIndex}. Retrying...`, "Warning", 2);
+    Utilities.sleep(1000);
+    try {
+      memberDir.getRange(memberDir.getLastRow() + 1, 1, data.length, data[0].length).setValues(data);
+    } catch (e2) {
+      Logger.log(`Retry failed: ${e2.message}`);
+      throw new Error(`Failed to write members: ${e2.message}`);
+    }
+  }
+}
+
+/**
+ * Restores dropdowns, checkboxes, and formulas after seeding
+ */
+function restoreMemberSheetAfterSeed(memberDir, startingRow, count) {
   SpreadsheetApp.getActive().toast(`Restoring dropdowns...`, "Processing", -1);
   try {
     setupMemberDirectoryDropdownsSilent();
@@ -6253,7 +6055,6 @@ function seedMembersWithCount(count, toggleName) {
     Logger.log('Warning: Could not re-apply dropdowns: ' + e.message);
   }
 
-  // Ensure checkboxes are set up for Start Grievance column (AE - col 31)
   try {
     const startGrievanceCol = MEMBER_COLS.START_GRIEVANCE;
     memberDir.getRange(startingRow + 1, startGrievanceCol, count, 1).insertCheckboxes();
@@ -6262,7 +6063,6 @@ function seedMembersWithCount(count, toggleName) {
     Logger.log('Warning: Could not add checkboxes: ' + e.message);
   }
 
-  // Re-apply formulas for grievance columns (AB, AC, AD) if needed
   SpreadsheetApp.getActive().toast(`Refreshing formulas...`, "Processing", -1);
   try {
     setupFormulasAndCalculations();
@@ -6270,8 +6070,6 @@ function seedMembersWithCount(count, toggleName) {
   } catch (e) {
     Logger.log('Warning: Could not refresh formulas: ' + e.message);
   }
-
-  SpreadsheetApp.getActive().toast(`✅ ${count} members added (${toggleName})! Sheet now has ${finalRow - 1} members.`, "Complete", 5);
 }
 
 /* --------------------- LEGACY: SEED 20,000 MEMBERS --------------------- */
@@ -6301,53 +6099,34 @@ function SEED_20K_MEMBERS() {
 function SEED_GRIEVANCES_TOGGLE_1() { seedGrievancesWithCount(2500, "Toggle 1"); }
 function SEED_GRIEVANCES_TOGGLE_2() { seedGrievancesWithCount(2500, "Toggle 2"); }
 
+/**
+ * Seeds grievance log with test data
+ * Refactored to use helper functions for maintainability
+ */
 function seedGrievancesWithCount(count, toggleName) {
   const ss = SpreadsheetApp.getActive();
   const grievanceLog = ss.getSheetByName(SHEETS.GRIEVANCE_LOG);
   const memberDir = ss.getSheetByName(SHEETS.MEMBER_DIR);
   const config = ss.getSheetByName(SHEETS.CONFIG);
 
-  // Verify sheets exist
-  if (!grievanceLog) {
-    SpreadsheetApp.getUi().alert('Error', 'Grievance Log sheet not found! Please run CREATE_509_DASHBOARD first.', SpreadsheetApp.getUi().ButtonSet.OK);
-    return;
-  }
-  if (!memberDir) {
-    SpreadsheetApp.getUi().alert('Error', 'Member Directory sheet not found! Please run CREATE_509_DASHBOARD first.', SpreadsheetApp.getUi().ButtonSet.OK);
-    return;
-  }
-  if (!config) {
-    SpreadsheetApp.getUi().alert('Error', 'Config sheet not found! Please run CREATE_509_DASHBOARD first.', SpreadsheetApp.getUi().ButtonSet.OK);
-    return;
-  }
+  // Validate sheets
+  if (!validateGrievanceSeedSheets(grievanceLog, memberDir, config)) return;
 
+  // Confirm with user
   const ui = SpreadsheetApp.getUi();
   const response = ui.alert(
     `Seed ${count} Grievances (${toggleName})`,
     `This will add ${count} grievance records. This may take 1-2 minutes. Continue?`,
     ui.ButtonSet.YES_NO
   );
-
   if (response !== ui.Button.YES) return;
 
   SpreadsheetApp.getActive().toast(`🚀 Seeding ${count} grievances (${toggleName})...`, "Processing", -1);
 
-  // Clear existing data validations on columns that will receive seeded data
-  const lastRow = Math.max(grievanceLog.getLastRow(), 2);
-  const maxSeedRows = lastRow + count + 100;
-  try {
-    // Clear validations on columns matching Grievance Log headers:
-    // E (Status), F (Step), V (Articles), W (Category), AA (Assigned Steward)
-    const columnsToClean = [5, 6, 22, 23, 27];
-    columnsToClean.forEach(function(col) {
-      grievanceLog.getRange(2, col, maxSeedRows, 1).clearDataValidations();
-    });
-    Logger.log('Cleared grievance data validations for seed operation');
-  } catch (e) {
-    Logger.log('Warning: Could not clear some validations: ' + e.message);
-  }
+  // Prepare for seeding
+  clearGrievanceValidationsForSeed(grievanceLog, count);
 
-  // Get member data ONCE before the loop (CRITICAL FIX)
+  // Get member data
   const memberLastRow = memberDir.getLastRow();
   if (memberLastRow < 2) {
     ui.alert('Error', 'No members found. Please seed members first.', ui.ButtonSet.OK);
@@ -6357,142 +6136,197 @@ function seedGrievancesWithCount(count, toggleName) {
   const allMemberData = memberDir.getRange(2, 1, memberLastRow - 1, 31).getValues();
   const memberIDs = allMemberData.map(function(row) { return row[MEMBER_COLS.MEMBER_ID - 1]; }).filter(String);
 
-  // Get grievance dropdown values using dynamic helpers
+  // Get seed configuration
+  const seedConfig = getGrievanceSeedConfig();
+  if (!seedConfig) return;
+
+  // Generate and write data
+  const startingRow = grievanceLog.getLastRow();
+  const successCount = generateAndWriteGrievanceData(grievanceLog, count, startingRow, toggleName, seedConfig, allMemberData, memberIDs);
+
+  // Restore sheet state
+  restoreGrievanceSheetAfterSeed();
+
+  const finalRow = grievanceLog.getLastRow();
+  SpreadsheetApp.getActive().toast(`✅ ${successCount} grievances added (${toggleName})! Total: ${finalRow - 1} grievances.`, "Complete", 5);
+}
+
+/**
+ * Validates sheets exist for grievance seeding
+ */
+function validateGrievanceSeedSheets(grievanceLog, memberDir, config) {
+  if (!grievanceLog) {
+    SpreadsheetApp.getUi().alert('Error', 'Grievance Log sheet not found! Please run CREATE_509_DASHBOARD first.', SpreadsheetApp.getUi().ButtonSet.OK);
+    return false;
+  }
+  if (!memberDir) {
+    SpreadsheetApp.getUi().alert('Error', 'Member Directory sheet not found! Please run CREATE_509_DASHBOARD first.', SpreadsheetApp.getUi().ButtonSet.OK);
+    return false;
+  }
+  if (!config) {
+    SpreadsheetApp.getUi().alert('Error', 'Config sheet not found! Please run CREATE_509_DASHBOARD first.', SpreadsheetApp.getUi().ButtonSet.OK);
+    return false;
+  }
+  return true;
+}
+
+/**
+ * Clears data validations before grievance seeding
+ */
+function clearGrievanceValidationsForSeed(grievanceLog, count) {
+  const lastRow = Math.max(grievanceLog.getLastRow(), 2);
+  const maxSeedRows = lastRow + count + 100;
+  try {
+    const columnsToClean = [5, 6, 22, 23, 27];
+    columnsToClean.forEach(function(col) {
+      grievanceLog.getRange(2, col, maxSeedRows, 1).clearDataValidations();
+    });
+    Logger.log('Cleared grievance data validations for seed operation');
+  } catch (e) {
+    Logger.log('Warning: Could not clear some validations: ' + e.message);
+  }
+}
+
+/**
+ * Gets configuration data for grievance seeding
+ */
+function getGrievanceSeedConfig() {
   const grievanceDropdowns = getGrievanceLogDropdownValues();
-  const statuses = grievanceDropdowns.statuses;
-  const steps = grievanceDropdowns.steps;
-  const categories = grievanceDropdowns.categories;
-  const articles = grievanceDropdowns.articles;
-  const stewards = grievanceDropdowns.stewards;
 
-  // Get deadline config values
-  const deadlineConfig = getAllDeadlineConfig();
+  const seedConfig = {
+    statuses: grievanceDropdowns.statuses,
+    steps: grievanceDropdowns.steps,
+    categories: grievanceDropdowns.categories,
+    articles: grievanceDropdowns.articles,
+    stewards: grievanceDropdowns.stewards,
+    deadlineConfig: getAllDeadlineConfig(),
+    resolutions: ["Won - Resolved favorably", "Won - Full remedy granted", "Lost - No violation found", "Lost - Withdrawn by member", "Settled - Partial remedy", "Settled - Compromise reached"]
+  };
 
-  // Validate config data with debugging
-  Logger.log('Grievance Seed Config Debug: statuses=' + statuses.length + ', steps=' + steps.length +
-             ', categories=' + categories.length + ', articles=' + articles.length + ', stewards=' + stewards.length);
-
-  if (statuses.length === 0 || steps.length === 0 || articles.length === 0 ||
-      categories.length === 0 || stewards.length === 0) {
-    ui.alert('Error', 'Config data is incomplete. Please ensure all dropdown lists in Config sheet are populated.\n\n' +
-             'Debug info:\n' +
-             '• Statuses: ' + statuses.length + '\n' +
-             '• Steps: ' + steps.length + '\n' +
-             '• Categories: ' + categories.length + '\n' +
-             '• Articles: ' + articles.length + '\n' +
-             '• Stewards: ' + stewards.length, ui.ButtonSet.OK);
-    return;
+  if (seedConfig.statuses.length === 0 || seedConfig.steps.length === 0 ||
+      seedConfig.articles.length === 0 || seedConfig.categories.length === 0 ||
+      seedConfig.stewards.length === 0) {
+    SpreadsheetApp.getUi().alert('Error', 'Config data is incomplete. Please ensure all dropdown lists in Config sheet are populated.', SpreadsheetApp.getUi().ButtonSet.OK);
+    return null;
   }
 
+  return seedConfig;
+}
+
+/**
+ * Generates and writes grievance data in batches
+ */
+function generateAndWriteGrievanceData(grievanceLog, count, startingRow, toggleName, config, allMemberData, memberIDs) {
   const BATCH_SIZE = 500;
   let data = [];
   let successCount = 0;
-  const startingRow = grievanceLog.getLastRow();
 
   for (let i = 1; i <= count; i++) {
-    // Get random member
     const memberIndex = Math.floor(Math.random() * memberIDs.length);
     const memberID = memberIDs[memberIndex];
     const memberData = allMemberData[memberIndex];
 
     if (!memberData || !memberID) continue;
 
-    const grievanceID = "G-" + String(startingRow + i).padStart(6, '0');
-    const firstName = memberData[1];
-    const lastName = memberData[2];
-    const status = statuses[Math.floor(Math.random() * statuses.length)];
-    const step = steps[Math.floor(Math.random() * steps.length)];
-
-    const daysAgo = Math.floor(Math.random() * 365);
-    const incidentDate = new Date(Date.now() - daysAgo * 24 * 60 * 60 * 1000);
-    const dateFiled = new Date(incidentDate.getTime() + Math.random() * 14 * 24 * 60 * 60 * 1000);
-
-    const article = articles[Math.floor(Math.random() * articles.length)];
-    const category = categories[Math.floor(Math.random() * categories.length)];
-    const email = memberData[7];
-    const unit = memberData[5];
-    const location = memberData[4];
-    const assignedSteward = stewards[Math.floor(Math.random() * stewards.length)];
-
-    const isClosed = status === "Closed" || status === "Settled" || status === "Withdrawn";
-    const dateClosed = isClosed ? new Date(dateFiled.getTime() + Math.random() * 90 * 24 * 60 * 60 * 1000) : "";
-    const resolution = isClosed ? ["Won - Resolved favorably", "Won - Full remedy granted", "Lost - No violation found", "Lost - Withdrawn by member", "Settled - Partial remedy", "Settled - Compromise reached"][Math.floor(Math.random() * 6)] : "";
-
-    // Calculate all deadline columns based on contract rules (using dynamic config values)
-    const DAY_MS = 24 * 60 * 60 * 1000;
-    const filingDeadline = new Date(incidentDate.getTime() + deadlineConfig.filingDeadlineDays * DAY_MS);
-    const step1DecisionDue = new Date(dateFiled.getTime() + deadlineConfig.step1ResponseDays * DAY_MS);
-    const step1DecisionRcvd = (step !== "Informal" && Math.random() > 0.3) ? new Date(dateFiled.getTime() + Math.random() * deadlineConfig.step1ResponseDays * DAY_MS) : "";
-    const step2AppealDue = step1DecisionRcvd ? new Date(step1DecisionRcvd.getTime() + deadlineConfig.step2AppealDays * DAY_MS) : "";
-    const step2AppealFiled = (step === "Step II" || step === "Step III" || step === "Arbitration") && step2AppealDue ? new Date(step1DecisionRcvd.getTime() + Math.random() * deadlineConfig.step2AppealDays * DAY_MS) : "";
-    const step2DecisionDue = step2AppealFiled ? new Date(step2AppealFiled.getTime() + deadlineConfig.step2ResponseDays * DAY_MS) : "";
-    const step2DecisionRcvd = (step === "Step III" || step === "Arbitration") && step2DecisionDue ? new Date(step2AppealFiled.getTime() + Math.random() * deadlineConfig.step2ResponseDays * DAY_MS) : "";
-    const step3AppealDue = step2DecisionRcvd ? new Date(step2DecisionRcvd.getTime() + GRIEVANCE_TIMELINES.STEP3_APPEAL_DAYS * DAY_MS) : "";
-    const step3AppealFiled = (step === "Step III" || step === "Arbitration") && step3AppealDue ? new Date(step2DecisionRcvd.getTime() + Math.random() * GRIEVANCE_TIMELINES.STEP3_APPEAL_DAYS * DAY_MS) : "";
-    const daysOpen = isClosed && dateClosed ? Math.floor((dateClosed - dateFiled) / (1000 * 60 * 60 * 24)) : Math.floor((Date.now() - dateFiled.getTime()) / (1000 * 60 * 60 * 24));
-    let nextActionDue = "";
-    if (!isClosed) {
-      if (step === "Informal" || step === "Step I") nextActionDue = step1DecisionDue;
-      else if (step === "Step II") nextActionDue = step2DecisionDue || step2AppealDue;
-      else if (step === "Step III") nextActionDue = step3AppealDue;
-      else if (step === "Arbitration") nextActionDue = new Date(Date.now() + Math.random() * 60 * 24 * 60 * 60 * 1000);
-    }
-    const daysToDeadline = nextActionDue ? Math.floor((nextActionDue - Date.now()) / (1000 * 60 * 60 * 24)) : "";
-
-    const row = [
-      grievanceID, memberID, firstName, lastName, status, step,
-      incidentDate, filingDeadline, dateFiled, step1DecisionDue, step1DecisionRcvd,
-      step2AppealDue, step2AppealFiled, step2DecisionDue, step2DecisionRcvd,
-      step3AppealDue, step3AppealFiled, dateClosed, daysOpen, nextActionDue, daysToDeadline,
-      article, category, email, unit, location, assignedSteward, resolution
-    ];
-
+    const row = generateSingleGrievanceRow(i, startingRow, memberID, memberData, config);
     data.push(row);
     successCount++;
 
     if (data.length === BATCH_SIZE) {
-      try {
-        grievanceLog.getRange(grievanceLog.getLastRow() + 1, 1, data.length, row.length).setValues(data);
-        SpreadsheetApp.getActive().toast(`Added ${successCount} of ${count} grievances (${toggleName})...`, "Progress", 1);
-        data = [];
-        SpreadsheetApp.flush();
-      } catch (e) {
-        Logger.log(`Error writing batch at count ${successCount}: ${e.message}`);
-        SpreadsheetApp.getActive().toast(`⚠️ Error at ${successCount}. Retrying...`, "Warning", 2);
-        // Retry once
-        Utilities.sleep(1000);
-        try {
-          grievanceLog.getRange(grievanceLog.getLastRow() + 1, 1, data.length, row.length).setValues(data);
-          data = [];
-        } catch (e2) {
-          Logger.log(`Retry failed: ${e2.message}`);
-          throw new Error(`Failed to write grievances: ${e2.message}`);
-        }
-      }
+      writeGrievanceBatch(grievanceLog, data, successCount, count, toggleName);
+      data = [];
     }
   }
 
-  // Write remaining data
   if (data.length > 0) {
+    writeGrievanceBatch(grievanceLog, data, successCount, count, toggleName);
+  }
+
+  SpreadsheetApp.flush();
+  Logger.log('Grievance seed complete. Grievance Log now has ' + grievanceLog.getLastRow() + ' rows');
+  return successCount;
+}
+
+/**
+ * Generates a single grievance row
+ */
+function generateSingleGrievanceRow(index, startingRow, memberID, memberData, config) {
+  const grievanceID = "G-" + String(startingRow + index).padStart(6, '0');
+  const status = config.statuses[Math.floor(Math.random() * config.statuses.length)];
+  const step = config.steps[Math.floor(Math.random() * config.steps.length)];
+
+  const daysAgo = Math.floor(Math.random() * 365);
+  const incidentDate = new Date(Date.now() - daysAgo * 24 * 60 * 60 * 1000);
+  const dateFiled = new Date(incidentDate.getTime() + Math.random() * 14 * 24 * 60 * 60 * 1000);
+
+  const isClosed = status === "Closed" || status === "Settled" || status === "Withdrawn";
+  const dateClosed = isClosed ? new Date(dateFiled.getTime() + Math.random() * 90 * 24 * 60 * 60 * 1000) : "";
+  const resolution = isClosed ? config.resolutions[Math.floor(Math.random() * config.resolutions.length)] : "";
+
+  // Calculate deadlines
+  const DAY_MS = 24 * 60 * 60 * 1000;
+  const dc = config.deadlineConfig;
+  const filingDeadline = new Date(incidentDate.getTime() + dc.filingDeadlineDays * DAY_MS);
+  const step1DecisionDue = new Date(dateFiled.getTime() + dc.step1ResponseDays * DAY_MS);
+  const step1DecisionRcvd = (step !== "Informal" && Math.random() > 0.3) ? new Date(dateFiled.getTime() + Math.random() * dc.step1ResponseDays * DAY_MS) : "";
+  const step2AppealDue = step1DecisionRcvd ? new Date(step1DecisionRcvd.getTime() + dc.step2AppealDays * DAY_MS) : "";
+  const step2AppealFiled = (step === "Step II" || step === "Step III" || step === "Arbitration") && step2AppealDue ? new Date(step1DecisionRcvd.getTime() + Math.random() * dc.step2AppealDays * DAY_MS) : "";
+  const step2DecisionDue = step2AppealFiled ? new Date(step2AppealFiled.getTime() + dc.step2ResponseDays * DAY_MS) : "";
+  const step2DecisionRcvd = (step === "Step III" || step === "Arbitration") && step2DecisionDue ? new Date(step2AppealFiled.getTime() + Math.random() * dc.step2ResponseDays * DAY_MS) : "";
+  const step3AppealDue = step2DecisionRcvd ? new Date(step2DecisionRcvd.getTime() + GRIEVANCE_TIMELINES.STEP3_APPEAL_DAYS * DAY_MS) : "";
+  const step3AppealFiled = (step === "Step III" || step === "Arbitration") && step3AppealDue ? new Date(step2DecisionRcvd.getTime() + Math.random() * GRIEVANCE_TIMELINES.STEP3_APPEAL_DAYS * DAY_MS) : "";
+  const daysOpen = isClosed && dateClosed ? Math.floor((dateClosed - dateFiled) / DAY_MS) : Math.floor((Date.now() - dateFiled.getTime()) / DAY_MS);
+
+  let nextActionDue = "";
+  if (!isClosed) {
+    if (step === "Informal" || step === "Step I") nextActionDue = step1DecisionDue;
+    else if (step === "Step II") nextActionDue = step2DecisionDue || step2AppealDue;
+    else if (step === "Step III") nextActionDue = step3AppealDue;
+    else if (step === "Arbitration") nextActionDue = new Date(Date.now() + Math.random() * 60 * DAY_MS);
+  }
+  const daysToDeadline = nextActionDue ? Math.floor((nextActionDue - Date.now()) / DAY_MS) : "";
+
+  return [
+    grievanceID, memberID, memberData[1], memberData[2], status, step,
+    incidentDate, filingDeadline, dateFiled, step1DecisionDue, step1DecisionRcvd,
+    step2AppealDue, step2AppealFiled, step2DecisionDue, step2DecisionRcvd,
+    step3AppealDue, step3AppealFiled, dateClosed, daysOpen, nextActionDue, daysToDeadline,
+    config.articles[Math.floor(Math.random() * config.articles.length)],
+    config.categories[Math.floor(Math.random() * config.categories.length)],
+    memberData[7], memberData[5], memberData[4],
+    config.stewards[Math.floor(Math.random() * config.stewards.length)],
+    resolution
+  ];
+}
+
+/**
+ * Writes a batch of grievance data to the sheet
+ */
+function writeGrievanceBatch(grievanceLog, data, currentCount, totalCount, toggleName) {
+  try {
+    grievanceLog.getRange(grievanceLog.getLastRow() + 1, 1, data.length, data[0].length).setValues(data);
+    SpreadsheetApp.getActive().toast(`Added ${currentCount} of ${totalCount} grievances (${toggleName})...`, "Progress", 1);
+    SpreadsheetApp.flush();
+  } catch (e) {
+    Logger.log(`Error writing batch at count ${currentCount}: ${e.message}`);
+    SpreadsheetApp.getActive().toast(`⚠️ Error at ${currentCount}. Retrying...`, "Warning", 2);
+    Utilities.sleep(1000);
     try {
       grievanceLog.getRange(grievanceLog.getLastRow() + 1, 1, data.length, data[0].length).setValues(data);
-    } catch (e) {
-      Logger.log(`Error writing final batch: ${e.message}`);
-      throw new Error(`Failed to write final grievances: ${e.message}`);
+    } catch (e2) {
+      Logger.log(`Retry failed: ${e2.message}`);
+      throw new Error(`Failed to write grievances: ${e2.message}`);
     }
   }
+}
 
-  // Force write to sheet
-  SpreadsheetApp.flush();
-
-  // Verify data was written
-  const finalRow = grievanceLog.getLastRow();
-  Logger.log('Grievance seed complete. Grievance Log now has ' + finalRow + ' rows (including header)');
-
+/**
+ * Restores formulas and dropdowns after grievance seeding
+ */
+function restoreGrievanceSheetAfterSeed() {
   SpreadsheetApp.getActive().toast(`Updating formulas and snapshots...`, "Processing", -1);
   updateMemberDirectorySnapshots();
 
-  // CRITICAL: Re-apply formulas for calculated columns (Days Open, Next Action, Days to Deadline)
   try {
     refreshGrievanceFormulas();
     Logger.log('Successfully re-applied grievance formulas after seeding');
@@ -6500,15 +6334,12 @@ function seedGrievancesWithCount(count, toggleName) {
     Logger.log('Warning: Could not re-apply grievance formulas: ' + e.message);
   }
 
-  // CRITICAL: Re-apply dropdowns
   try {
     setupGrievanceLogDropdownsSilent();
     Logger.log('Successfully re-applied grievance dropdowns after seeding');
   } catch (e) {
     Logger.log('Warning: Could not re-apply grievance dropdowns: ' + e.message);
   }
-
-  SpreadsheetApp.getActive().toast(`✅ ${successCount} grievances added (${toggleName})! Total: ${finalRow - 1} grievances.`, "Complete", 5);
 }
 
 /* --------------------- LEGACY: SEED 5,000 GRIEVANCES --------------------- */
@@ -8012,58 +7843,6 @@ function createUserSettingsSheet() {
 }
 
 /**
- * Apply user settings from User Settings sheet
- */
-function applyUserSettings() {
-  const ss = SpreadsheetApp.getActiveSpreadsheet();
-  const settingsSheet = ss.getSheetByName("⚙️ User Settings");
-
-  if (!settingsSheet) {
-    SpreadsheetApp.getUi().alert('❌ User Settings sheet not found!\n\nPlease run "509 Tools > ADHD Tools > Create User Settings" first.');
-    return;
-  }
-
-  // Read user preferences
-  const showGridlines = settingsSheet.getRange("B5").getValue();
-  const theme = settingsSheet.getRange("B6").getValue();
-  const fontSize = settingsSheet.getRange("B7").getValue();
-  const iconStyle = settingsSheet.getRange("B8").getValue();
-  const compactView = settingsSheet.getRange("B9").getValue();
-
-  // Apply gridlines setting
-  if (showGridlines === "Yes") {
-    showAllGridlines();
-  } else {
-    hideAllGridlines();
-  }
-
-  // Apply font size (to Interactive Dashboard and Main Dashboard)
-  const fontSizeMap = {
-    "Small": 9,
-    "Medium": 11,
-    "Large": 13,
-    "Extra Large": 15
-  };
-
-  const targetSize = fontSizeMap[fontSize] || 11;
-
-  [SHEETS.INTERACTIVE_DASHBOARD, SHEETS.DASHBOARD].forEach(function(sheetName) {
-    const sheet = ss.getSheetByName(sheetName);
-    if (sheet) {
-      sheet.getDataRange().setFontSize(targetSize);
-    }
-  });
-
-  SpreadsheetApp.getUi().alert('✅ Your settings have been applied!\n\n' +
-    `• Gridlines: ${showGridlines}\n` +
-    `• Theme: ${theme}\n` +
-    `• Font Size: ${fontSize}\n` +
-    `• Icons: ${iconStyle}\n` +
-    `• Compact View: ${compactView}\n\n` +
-    'Your dashboard is now customized to your preferences!');
-}
-
-/**
  * Quick setup for ADHD-friendly defaults
  */
 function setupADHDDefaults() {
@@ -8879,12 +8658,20 @@ function performQuickExport(format) {
 }
 
 /**
- * Exports sheet to CSV
+ * Exports sheet to CSV with permission-based filtering
  * @param {Sheet} sheet - Sheet to export
  * @returns {string} File URL
  */
 function exportToCSV(sheet) {
-  const data = sheet.getDataRange().getValues();
+  const sheetName = sheet.getName();
+  let data = sheet.getDataRange().getValues();
+
+  // Apply permission filtering based on sheet type
+  if (sheetName === SHEETS.MEMBER_DIR) {
+    data = filterMemberDataByPermission(data);
+  } else if (sheetName === SHEETS.GRIEVANCE_LOG) {
+    data = filterGrievanceDataByPermission(data);
+  }
 
   let csv = '';
   data.forEach(row => {
@@ -8904,32 +8691,72 @@ function exportToCSV(sheet) {
 }
 
 /**
- * Exports to Excel format
+ * Exports to Excel format with permission-based filtering
+ * Creates a temporary filtered copy for export to enforce permissions
  * @param {Sheet} sheet - Sheet to export
  * @returns {string} File URL
  */
 function exportToExcel(sheet) {
   const ss = SpreadsheetApp.getActiveSpreadsheet();
-  const fileName = `${sheet.getName()}_Export_${Utilities.formatDate(new Date(), Session.getScriptTimeZone(), 'yyyy-MM-dd')}`;
+  const sheetName = sheet.getName();
+  const fileName = `${sheetName}_Export_${Utilities.formatDate(new Date(), Session.getScriptTimeZone(), 'yyyy-MM-dd')}`;
 
-  const blob = ss.getAs(MimeType.MICROSOFT_EXCEL);
+  // Get filtered data based on permissions
+  let data = sheet.getDataRange().getValues();
+  if (sheetName === SHEETS.MEMBER_DIR) {
+    data = filterMemberDataByPermission(data);
+  } else if (sheetName === SHEETS.GRIEVANCE_LOG) {
+    data = filterGrievanceDataByPermission(data);
+  }
+
+  // Create temporary spreadsheet with filtered data for Excel export
+  const tempSS = SpreadsheetApp.create('_temp_export_' + new Date().getTime());
+  const tempSheet = tempSS.getActiveSheet();
+  tempSheet.setName(sheetName);
+
+  if (data.length > 0) {
+    tempSheet.getRange(1, 1, data.length, data[0].length).setValues(data);
+  }
+
+  // Export the filtered spreadsheet
+  const blob = tempSS.getAs(MimeType.MICROSOFT_EXCEL);
   const file = DriveApp.createFile(blob).setName(fileName + '.xlsx');
+
+  // Clean up temporary spreadsheet
+  DriveApp.getFileById(tempSS.getId()).setTrashed(true);
 
   return file.getUrl();
 }
 
 /**
- * Exports to PDF
+ * Exports to PDF with permission-based filtering
+ * Creates a temporary filtered copy for export to enforce permissions
  * @param {Sheet} sheet - Sheet to export
  * @returns {string} File URL
  */
 function exportToPDF(sheet) {
-  const ss = SpreadsheetApp.getActiveSpreadsheet();
-  const fileName = `${sheet.getName()}_Export_${Utilities.formatDate(new Date(), Session.getScriptTimeZone(), 'yyyy-MM-dd')}.pdf`;
+  const sheetName = sheet.getName();
+  const fileName = `${sheetName}_Export_${Utilities.formatDate(new Date(), Session.getScriptTimeZone(), 'yyyy-MM-dd')}.pdf`;
 
-  const url = ss.getUrl();
-  const id = ss.getId();
+  // Get filtered data based on permissions
+  let data = sheet.getDataRange().getValues();
+  if (sheetName === SHEETS.MEMBER_DIR) {
+    data = filterMemberDataByPermission(data);
+  } else if (sheetName === SHEETS.GRIEVANCE_LOG) {
+    data = filterGrievanceDataByPermission(data);
+  }
 
+  // Create temporary spreadsheet with filtered data for PDF export
+  const tempSS = SpreadsheetApp.create('_temp_pdf_export_' + new Date().getTime());
+  const tempSheet = tempSS.getActiveSheet();
+  tempSheet.setName(sheetName);
+
+  if (data.length > 0) {
+    tempSheet.getRange(1, 1, data.length, data[0].length).setValues(data);
+  }
+
+  // Export the filtered spreadsheet to PDF
+  const url = tempSS.getUrl();
   const exportUrl = url.replace(/\/edit.*$/, '') +
     '/export?exportFormat=pdf&format=pdf' +
     '&size=A4' +
@@ -8938,7 +8765,7 @@ function exportToPDF(sheet) {
     '&sheetnames=false&printtitle=false' +
     '&pagenumbers=false&gridlines=false' +
     '&fzr=false' +
-    '&gid=' + sheet.getSheetId();
+    '&gid=' + tempSheet.getSheetId();
 
   const token = ScriptApp.getOAuthToken();
   const response = UrlFetchApp.fetch(exportUrl, {
@@ -8950,16 +8777,28 @@ function exportToPDF(sheet) {
   const blob = response.getBlob().setName(fileName);
   const file = DriveApp.createFile(blob);
 
+  // Clean up temporary spreadsheet
+  DriveApp.getFileById(tempSS.getId()).setTrashed(true);
+
   return file.getUrl();
 }
 
 /**
- * Exports to JSON
+ * Exports to JSON with permission-based filtering
  * @param {Sheet} sheet - Sheet to export
  * @returns {string} File URL
  */
 function exportToJSON(sheet) {
-  const data = sheet.getDataRange().getValues();
+  const sheetName = sheet.getName();
+  let data = sheet.getDataRange().getValues();
+
+  // Apply permission filtering based on sheet type
+  if (sheetName === SHEETS.MEMBER_DIR) {
+    data = filterMemberDataByPermission(data);
+  } else if (sheetName === SHEETS.GRIEVANCE_LOG) {
+    data = filterGrievanceDataByPermission(data);
+  }
+
   const headers = data[0];
   const rows = data.slice(1);
 
@@ -9066,6 +8905,7 @@ function showVisualizationBuilder() {
 
 /**
  * Creates HTML for visualization builder
+ * Refactored to use helper functions for maintainability
  */
 function createVisualizationBuilderHTML() {
   return `
@@ -9074,7 +8914,24 @@ function createVisualizationBuilderHTML() {
 <head>
   <base target="_top">
   <script type="text/javascript" src="https://www.gstatic.com/charts/loader.js"></script>
-  <style>
+  <style>${getVisualizationBuilderStyles()}</style>
+</head>
+<body>
+  <div class="layout">
+${getVisualizationBuilderSidebar()}
+${getVisualizationBuilderMainContent()}
+  </div>
+  <script>${getVisualizationBuilderScripts()}</script>
+</body>
+</html>
+  `;
+}
+
+/**
+ * Returns CSS styles for visualization builder
+ */
+function getVisualizationBuilderStyles() {
+  return `
     body {
       font-family: 'Roboto', Arial, sans-serif;
       padding: 0;
@@ -9210,10 +9067,14 @@ function createVisualizationBuilderHTML() {
       border-color: #1a73e8;
       background: #f8f9fa;
     }
-  </style>
-</head>
-<body>
-  <div class="layout">
+  `;
+}
+
+/**
+ * Returns sidebar HTML for visualization builder
+ */
+function getVisualizationBuilderSidebar() {
+  return `
     <div class="sidebar">
       <h2>📊 Chart Builder</h2>
 
@@ -9269,8 +9130,14 @@ function createVisualizationBuilderHTML() {
       <button onclick="generateChart()">🔄 Refresh Chart</button>
       <button onclick="exportChart()" class="secondary">📥 Export as Image</button>
       <button onclick="saveToSheet()" class="secondary">💾 Save to Sheet</button>
-    </div>
+    </div>`;
+}
 
+/**
+ * Returns main content HTML for visualization builder
+ */
+function getVisualizationBuilderMainContent() {
+  return `
     <div class="main">
       <div id="statsContainer" class="stats-grid"></div>
       <div id="chartContainer">
@@ -9279,10 +9146,15 @@ function createVisualizationBuilderHTML() {
           <div>Loading chart...</div>
         </div>
       </div>
-    </div>
-  </div>
+    </div>`;
+}
 
-  <script>
+/**
+ * Returns JavaScript for visualization builder
+ */
+function getVisualizationBuilderScripts() {
+  const defaultColors = JSON.stringify(VIZ_CONFIG.DEFAULT_COLORS);
+  return `
     google.charts.load('current', {'packages':['corechart', 'timeline']});
     google.charts.setOnLoadCallback(initializeChart);
 
@@ -9332,7 +9204,7 @@ function createVisualizationBuilderHTML() {
         backgroundColor: '#ffffff',
         legend: { position: 'bottom' },
         chartArea: { width: '80%', height: '70%' },
-        colors: ${JSON.stringify(VIZ_CONFIG.DEFAULT_COLORS)},
+        colors: ${defaultColors},
         animation: {
           startup: true,
           duration: 1000,
@@ -9448,9 +9320,6 @@ function createVisualizationBuilderHTML() {
     function handleError(error) {
       document.getElementById('chartContainer').innerHTML = '<div class="loading">❌ Error: ' + error.message + '</div>';
     }
-  </script>
-</body>
-</html>
   `;
 }
 
@@ -12318,193 +12187,6 @@ function showQuickTips() {
 
 
 // ================================================================================
-// MODULE: AddRecommendations.gs
-// Source: AddRecommendations.gs
-// ================================================================================
-
-/**
- * ------------------------------------------------------------------------====
- * ADD RECOMMENDATIONS TO FEEDBACK & DEVELOPMENT SHEET
- * ------------------------------------------------------------------------====
- *
- * This script adds pending feature recommendations to the Feedback & Development sheet
- * Run this function once to populate the recommendations
- *
- * NOTE: Many original recommendations have been IMPLEMENTED and removed from this list.
- * See the "Implemented Features" section at the bottom for reference.
- */
-
-function ADD_RECOMMENDATIONS_TO_FEATURES_TAB() {
-  const ss = SpreadsheetApp.getActiveSpreadsheet();
-  const feedbackSheet = ss.getSheetByName(SHEETS.FEEDBACK);
-
-  if (!feedbackSheet) {
-    SpreadsheetApp.getUi().alert('❌ Feedback & Development sheet not found!');
-    return;
-  }
-
-  // Get the last row to append after
-  const lastRow = feedbackSheet.getLastRow();
-
-  // Recommendations data - ONLY PENDING ITEMS
-  const recommendations = [
-    // Format: [Type, Date, Submitted By, Priority, Title, Description, Status, Progress %, Complexity, Target, Assigned To, Blockers, Notes, Last Updated]
-
-    // PERFORMANCE & SCALABILITY (3 remaining)
-    ["Future Feature", "2025-01-28", "AI Code Review", "High", "Extend Auto-Formula Coverage", "Extend formulas from 100 rows to 1000 rows using ARRAYFORMULA. Current limitation requires manual formula addition beyond row 100.", "Planned", 0, "Simple", "Q1 2025", "Dev Team", "", "Replace individual setFormula calls with ARRAYFORMULA implementations", "2025-01-28"],
-    ["Future Feature", "2025-01-28", "AI Code Review", "High", "Optimize Seed Data Performance", "Improve batch processing with better progress indicators and caching. Current execution takes 2-3 minutes for 20k members.", "Planned", 0, "Moderate", "Q1 2025", "Dev Team", "", "Use SpreadsheetApp.flush() strategically; add progress toasts every 500 rows", "2025-01-28"],
-    ["Future Feature", "2025-01-28", "AI Code Review", "Medium", "Optimize QUERY Formulas", "Consolidate multiple QUERY calls on same data to reduce calculation time.", "Planned", 0, "Simple", "Q2 2025", "Dev Team", "", "Use virtual tables and GROUP BY instead of multiple COUNTIF calls", "2025-01-28"],
-
-    // USER EXPERIENCE & ACCESSIBILITY (1 remaining)
-    ["Future Feature", "2025-01-28", "AI Code Review", "High", "Create Quick Actions Menu", "Add right-click context menu for common actions (Start Grievance, View History, Email).", "Planned", 0, "Moderate", "Q1 2025", "Dev Team", "", "Implement onSelectionChange trigger with context-aware menu options", "2025-01-28"],
-
-    // DATA INTEGRITY & VALIDATION (1 remaining)
-    ["Future Feature", "2025-01-28", "AI Code Review", "High", "Implement Change Tracking", "Track all data modifications with audit trail showing timestamp, user, field, old/new values.", "Planned", 0, "Moderate", "Q1 2025", "Dev Team", "", "Create onEdit trigger to log changes to Change Log sheet", "2025-01-28"],
-
-    // AUTOMATION & WORKFLOWS (1 remaining)
-    ["Future Feature", "2025-01-28", "AI Code Review", "Low", "Template System", "Pre-built grievance templates for common issue types with auto-fill capabilities.", "Planned", 0, "Moderate", "Q4 2025", "Dev Team", "", "Create template library; customizable placeholders", "2025-01-28"],
-
-    // REPORTING & ANALYTICS (3 remaining)
-    ["Future Feature", "2025-01-28", "AI Code Review", "High", "Trend Analysis & Forecasting", "Identify patterns over time with month-over-month comparisons and volume forecasting.", "Planned", 0, "Moderate", "Q2 2025", "Dev Team", "", "Month-over-month comparisons; seasonal patterns; early warning system", "2025-01-28"],
-    ["Future Feature", "2025-01-28", "AI Code Review", "Low", "Benchmark Comparisons", "Compare performance against industry standards with percentile rankings.", "Planned", 0, "Moderate", "Q4 2025", "Data Team", "", "Upload benchmark data; side-by-side comparisons; gap analysis", "2025-01-28"],
-    ["Future Feature", "2025-01-28", "AI Code Review", "Low", "Real-Time Dashboard Updates", "Live data refresh with auto-update every 5 minutes.", "Planned", 0, "Moderate", "Q4 2025", "Dev Team", "", "Update dashboards on data change; WebSocket-style updates via triggers", "2025-01-28"],
-
-    // INTEGRATION & EXTENSIBILITY (3 remaining)
-    ["Future Feature", "2025-01-28", "AI Code Review", "Medium", "Slack/Teams Integration", "Real-time notifications with bot commands for quick queries.", "Planned", 0, "Moderate", "Q2 2025", "Dev Team", "", "Post updates to channels; notify on deadlines; allow status updates from chat", "2025-01-28"],
-    ["Future Feature", "2025-01-28", "AI Code Review", "Low", "API Layer", "RESTful API for external access with authentication.", "Planned", 0, "Complex", "Q4 2025", "Dev Team", "", "Google Apps Script Web App; GET/POST/PUT endpoints; API key auth", "2025-01-28"],
-    ["Future Feature", "2025-01-28", "AI Code Review", "Low", "Zapier/Make.com Integration", "Connect to 1000+ apps via webhooks.", "Planned", 0, "Moderate", "Q4 2025", "Dev Team", "", "Webhooks for data changes; trigger actions in other apps", "2025-01-28"],
-
-    // MOBILE & OFFLINE ACCESS (3 remaining)
-    ["Future Feature", "2025-01-28", "AI Code Review", "Low", "Progressive Web App (PWA)", "Install as app on mobile devices for native experience.", "Planned", 0, "Complex", "Q4 2025", "Dev Team", "", "HTML service interface; manifest.json; service worker; responsive design", "2025-01-28"],
-    ["Future Feature", "2025-01-28", "AI Code Review", "Low", "Offline Mode", "Work without internet with local storage cache and sync.", "Planned", 0, "Very Complex", "Q4 2025", "Dev Team", "", "Local storage cache; sync when online; conflict resolution", "2025-01-28"],
-    ["Future Feature", "2025-01-28", "AI Code Review", "Low", "SMS Notifications", "Text alerts for critical items via Twilio integration.", "Planned", 0, "Moderate", "Q4 2025", "Dev Team", "", "Twilio integration; SMS for overdue; opt-in/opt-out management", "2025-01-28"],
-
-    // SECURITY & PRIVACY (2 remaining)
-    ["Future Feature", "2025-01-28", "AI Code Review", "High", "PII Protection", "Protect sensitive member data with encryption and masking.", "Planned", 0, "Complex", "Q2 2025", "Security Team", "", "Encrypt sensitive fields; mask in exports; GDPR/CCPA compliance", "2025-01-28"],
-    ["Future Feature", "2025-01-28", "AI Code Review", "Low", "Session Management", "Track active users with row locking and concurrent edit warnings.", "Planned", 0, "Moderate", "Q3 2025", "Dev Team", "", "Show current viewers; lock rows being edited; session timeout", "2025-01-28"],
-
-    // DOCUMENTATION & TRAINING (4 remaining)
-    ["Future Feature", "2025-01-28", "AI Code Review", "High", "Interactive Tutorial", "In-app guided tour for first-time users.", "Planned", 0, "Moderate", "Q1 2025", "UX Team", "", "Walkthrough; highlight features; interactive steps", "2025-01-28"],
-    ["Future Feature", "2025-01-28", "AI Code Review", "High", "Video Tutorials", "Screen recordings for common tasks (2-3 min each).", "Planned", 0, "Simple", "Q1 2025", "UX Team", "", "Creating grievance; running reports; managing workload; using dashboard", "2025-01-28"],
-    ["Future Feature", "2025-01-28", "AI Code Review", "Medium", "Context-Sensitive Help", "Help button on each sheet with explanations and links.", "Planned", 0, "Simple", "Q2 2025", "UX Team", "", "? icon on each sheet; explain purpose; list common tasks", "2025-01-28"],
-    ["Future Feature", "2025-01-28", "AI Code Review", "Low", "Release Notes", "Track version changes with auto-notification on updates.", "Planned", 0, "Simple", "Q2 2025", "Dev Team", "", "Create CHANGELOG sheet; auto-notify; highlight new features", "2025-01-28"]
-  ];
-
-  // Confirm with user
-  const ui = SpreadsheetApp.getUi();
-  const response = ui.alert(
-    'Add Pending Feature Recommendations',
-    'This will add ' + recommendations.length + ' pending feature recommendations to the Feedback & Development sheet.\n\n' +
-    'Note: 27 features from the original list have already been implemented!\n\n' +
-    'Continue?',
-    ui.ButtonSet.YES_NO
-  );
-
-  if (response !== ui.Button.YES) {
-    return;
-  }
-
-  SpreadsheetApp.getActiveSpreadsheet().toast('📝 Adding recommendations...', 'Please wait', -1);
-
-  // Add recommendations to sheet
-  const startRow = lastRow + 1;
-  feedbackSheet.getRange(startRow, 1, recommendations.length, 14).setValues(recommendations);
-
-  // Format the added rows
-  const addedRange = feedbackSheet.getRange(startRow, 1, recommendations.length, 14);
-  addedRange.setFontSize(10);
-
-  // Alternate row colors for readability
-  for (let i = 0; i < recommendations.length; i++) {
-    const rowNum = startRow + i;
-    if (i % 2 === 0) {
-      feedbackSheet.getRange(rowNum, 1, 1, 14).setBackground("#F9FAFB");
-    }
-  }
-
-  SpreadsheetApp.getActiveSpreadsheet().toast(
-    `✅ Successfully added ${recommendations.length} pending recommendations!`,
-    'Complete',
-    5
-  );
-
-  // Show summary
-  SpreadsheetApp.getUi().alert(
-    '✅ Recommendations Added Successfully!',
-    `Added ${recommendations.length} PENDING feature recommendations.\n\n` +
-    '27 features from the original list have already been implemented!\n\n' +
-    'Breakdown by priority:\n' +
-    '• High Priority: 8 items\n' +
-    '• Medium Priority: 3 items\n' +
-    '• Low Priority: 10 items\n\n' +
-    'Categories with pending items:\n' +
-    '• Performance & Scalability (3)\n' +
-    '• User Experience (1)\n' +
-    '• Data Integrity (1)\n' +
-    '• Automation (1)\n' +
-    '• Reporting & Analytics (3)\n' +
-    '• Integration (3)\n' +
-    '• Mobile & Offline (3)\n' +
-    '• Security & Privacy (2)\n' +
-    '• Documentation & Training (4)\n\n' +
-    'Review and prioritize based on your needs!',
-    SpreadsheetApp.getUi().ButtonSet.OK
-  );
-}
-
-/**
- * ============================================================================
- * IMPLEMENTED FEATURES (Removed from pending list)
- * ============================================================================
- * The following 27 features have been implemented:
- *
- * PERFORMANCE & SCALABILITY:
- * ✅ Data Pagination - DataPagination.gs
- * ✅ Add Caching Layer - DataCachingLayer.gs
- *
- * USER EXPERIENCE & ACCESSIBILITY:
- * ✅ Member Search Functionality - MemberSearch.gs
- * ✅ Keyboard Shortcuts - KeyboardShortcuts.gs
- * ✅ Undo/Redo Functionality - UndoRedoSystem.gs
- * ✅ Enhanced ADHD Features - EnhancedADHDFeatures.gs, ADHDEnhancements.gs
- * ✅ Mobile-Optimized Views - MobileOptimization.gs
- * ✅ Dark Mode Support - DarkModeThemes.gs
- *
- * DATA INTEGRITY & VALIDATION:
- * ✅ Email & Phone Validation - DataIntegrityEnhancements.gs
- * ✅ Duplicate Detection - DataIntegrityEnhancements.gs
- * ✅ Data Quality Dashboard - DataIntegrityEnhancements.gs
- * ✅ Referential Integrity Checks - DataIntegrityEnhancements.gs
- *
- * AUTOMATION & WORKFLOWS:
- * ✅ Automated Deadline Notifications - AutomatedNotifications.gs
- * ✅ Batch Operations - BatchOperations.gs
- * ✅ Automated Report Generation - AutomatedReports.gs
- * ✅ Workflow State Machine - WorkflowStateMachine.gs
- * ✅ Smart Auto-Assignment - SmartAutoAssignment.gs
- *
- * REPORTING & ANALYTICS:
- * ✅ Predictive Analytics - PredictiveAnalytics.gs
- * ✅ Custom Report Builder - CustomReportBuilder.gs
- * ✅ Root Cause Analysis - RootCauseAnalysis.gs
- *
- * INTEGRATION & EXTENSIBILITY:
- * ✅ Google Calendar Integration - CalendarIntegration.gs
- * ✅ Email Integration (Gmail) - GmailIntegration.gs
- * ✅ Google Drive Integration - GoogleDriveIntegration.gs
- *
- * SECURITY & PRIVACY:
- * ✅ Role-Based Access Control (RBAC) - SecurityService.gs, AuditLoggingRBAC.gs
- * ✅ Audit Logging - AuditLoggingRBAC.gs
- * ✅ Data Backup & Recovery - DataBackupRecovery.gs, IncrementalBackupSystem.gs
- *
- * DOCUMENTATION & TRAINING:
- * ✅ FAQ Database - FAQKnowledgeBase.gs
- */
-
-
-
-// ================================================================================
 // MODULE: AutomatedNotifications.gs
 // Source: AutomatedNotifications.gs
 // ================================================================================
@@ -13871,43 +13553,6 @@ function RECALC_ALL_GRIEVANCES_BATCHED() {
   }
 }
 
-/**
- * Compare old vs new recalculation performance
- * Useful for benchmarking
- */
-function benchmarkGrievanceRecalc() {
-  const ss = SpreadsheetApp.getActiveSpreadsheet();
-  const sheet = ss.getSheetByName(SHEETS.GRIEVANCE_LOG);
-
-  if (!sheet) {
-    Logger.log('Grievance Log sheet not found');
-    return;
-  }
-
-  const rowCount = sheet.getLastRow() - 1;
-
-  Logger.log('=== Grievance Recalculation Benchmark ===');
-  Logger.log(`Total grievances: ${rowCount}`);
-  Logger.log('');
-
-  // Benchmark batched version
-  const batchedStart = new Date();
-  const result = recalcAllGrievancesBatched();
-  const batchedDuration = new Date() - batchedStart;
-
-  Logger.log(`Batched version: ${batchedDuration}ms (${(batchedDuration/1000).toFixed(2)}s)`);
-  Logger.log(`Processed: ${result.processed} grievances`);
-  Logger.log(`Performance: ${(rowCount / (batchedDuration / 1000)).toFixed(0)} grievances/second`);
-  Logger.log('');
-
-  // Estimated old method time
-  const estimatedOldTime = rowCount * 30; // ~30ms per row with individual API calls
-  Logger.log(`Estimated old method: ${estimatedOldTime}ms (${(estimatedOldTime/1000).toFixed(2)}s)`);
-  Logger.log(`Speedup: ${(estimatedOldTime / batchedDuration).toFixed(0)}x faster`);
-  Logger.log('');
-  Logger.log('=== Benchmark Complete ===');
-}
-
 
 
 // ================================================================================
@@ -14703,105 +14348,6 @@ function checkCalendarEventExists(calendar, grievanceId) {
   }
 
   return null;
-}
-
-/**
- * Syncs a single grievance deadline to calendar
- * @param {string} grievanceId - The grievance ID
- */
-function syncSingleDeadlineToCalendar(grievanceId) {
-  const ss = SpreadsheetApp.getActiveSpreadsheet();
-  const grievanceSheet = ss.getSheetByName(SHEETS.GRIEVANCE_LOG);
-
-  if (!grievanceSheet || !grievanceId) {
-    return;
-  }
-
-  // Find the grievance
-  const lastRow = grievanceSheet.getLastRow();
-  const data = grievanceSheet.getRange(2, 1, lastRow - 1, GRIEVANCE_COLS.RESOLUTION).getValues();
-
-  for (let i = 0; i < data.length; i++) {
-    if (data[i][GRIEVANCE_COLS.GRIEVANCE_ID - 1] === grievanceId) {
-      const row = data[i];
-      const memberName = `${row[GRIEVANCE_COLS.FIRST_NAME - 1]} ${row[GRIEVANCE_COLS.LAST_NAME - 1]}`;
-      const status = row[GRIEVANCE_COLS.STATUS - 1];
-      const nextActionDue = row[GRIEVANCE_COLS.NEXT_ACTION_DUE - 1];
-      const daysToDeadline = row[GRIEVANCE_COLS.DAYS_TO_DEADLINE - 1];
-
-      if (status !== 'Open' || !nextActionDue) {
-        return; // Skip if not open or no deadline
-      }
-
-      const calendar = CalendarApp.getDefaultCalendar();
-
-      // Check if event already exists
-      const existingEvent = checkCalendarEventExists(calendar, grievanceId);
-      if (existingEvent) {
-        // Update existing event
-        let color = CalendarApp.EventColor.BLUE;
-        if (daysToDeadline < 0) color = CalendarApp.EventColor.RED;
-        else if (daysToDeadline <= 3) color = CalendarApp.EventColor.ORANGE;
-        else if (daysToDeadline <= 7) color = CalendarApp.EventColor.YELLOW;
-
-        existingEvent.setColor(color);
-        existingEvent.setTime(new Date(nextActionDue), new Date(nextActionDue));
-      } else {
-        // Create new event (same logic as syncDeadlinesToCalendar)
-        let color = CalendarApp.EventColor.BLUE;
-        let priority = 'Normal';
-
-        if (daysToDeadline < 0) {
-          color = CalendarApp.EventColor.RED;
-          priority = 'OVERDUE';
-        } else if (daysToDeadline <= 3) {
-          color = CalendarApp.EventColor.ORANGE;
-          priority = 'Urgent';
-        } else if (daysToDeadline <= 7) {
-          color = CalendarApp.EventColor.YELLOW;
-          priority = 'Soon';
-        }
-
-        const title = `⚖️ ${priority}: ${grievanceId} - ${memberName}`;
-        const description =
-          `Grievance Deadline\n\n` +
-          `Grievance ID: ${grievanceId}\n` +
-          `Member: ${memberName}\n` +
-          `Status: ${status}\n` +
-          `Days to Deadline: ${daysToDeadline}\n` +
-          `Priority: ${priority}\n\n` +
-          `Created by 509 Dashboard`;
-
-        const event = calendar.createAllDayEvent(
-          title,
-          new Date(nextActionDue),
-          {
-            description: description,
-            location: '509 Dashboard'
-          }
-        );
-
-        event.setColor(color);
-        event.setTag('509Dashboard', grievanceId);
-      }
-
-      break;
-    }
-  }
-}
-
-/**
- * Removes calendar event when grievance is closed
- * @param {string} grievanceId - The grievance ID
- */
-function removeCalendarEvent(grievanceId) {
-  const calendar = CalendarApp.getDefaultCalendar();
-  const event = checkCalendarEventExists(calendar, grievanceId);
-
-  if (event) {
-    event.deleteEvent();
-    Logger.log(`Removed calendar event for ${grievanceId}`);
-  }
 }
 
 /**
@@ -16295,6 +15841,7 @@ function showCustomReportBuilder() {
 
 /**
  * Creates HTML for report builder
+ * Refactored to use helper functions for maintainability
  */
 function createReportBuilderHTML() {
   const grievanceFields = getGrievanceFields();
@@ -16305,152 +15852,67 @@ function createReportBuilderHTML() {
 <html>
 <head>
   <base target="_top">
-  <style>
-    body {
-      font-family: 'Roboto', Arial, sans-serif;
-      padding: 20px;
-      margin: 0;
-      background: #f5f5f5;
-    }
-    .container {
-      background: white;
-      padding: 25px;
-      border-radius: 8px;
-      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-    }
-    h2 {
-      color: #1a73e8;
-      margin-top: 0;
-      border-bottom: 3px solid #1a73e8;
-      padding-bottom: 10px;
-    }
-    .builder-section {
-      background: #f8f9fa;
-      padding: 20px;
-      margin: 15px 0;
-      border-radius: 8px;
-      border-left: 4px solid #1a73e8;
-    }
-    .section-title {
-      font-weight: bold;
-      font-size: 16px;
-      color: #333;
-      margin-bottom: 15px;
-    }
-    .form-group {
-      margin: 15px 0;
-    }
-    label {
-      display: block;
-      font-weight: 500;
-      margin-bottom: 5px;
-      color: #555;
-    }
-    select, input[type="text"], input[type="date"] {
-      width: 100%;
-      padding: 10px;
-      border: 2px solid #ddd;
-      border-radius: 4px;
-      font-size: 14px;
-      box-sizing: border-box;
-    }
-    select:focus, input:focus {
-      outline: none;
-      border-color: #1a73e8;
-    }
-    .multi-select {
-      height: 150px;
-    }
-    .filter-row {
-      display: grid;
-      grid-template-columns: 2fr 1fr 2fr auto;
-      gap: 10px;
-      margin: 10px 0;
-      align-items: end;
-    }
-    button {
-      background: #1a73e8;
-      color: white;
-      border: none;
-      padding: 12px 24px;
-      font-size: 14px;
-      border-radius: 4px;
-      cursor: pointer;
-      margin: 5px 5px 5px 0;
-    }
-    button:hover {
-      background: #1557b0;
-    }
-    button.secondary {
-      background: #6c757d;
-    }
-    button.secondary:hover {
-      background: #5a6268;
-    }
-    button.small {
-      padding: 8px 16px;
-      font-size: 13px;
-    }
-    button.danger {
-      background: #dc3545;
-    }
-    button.danger:hover {
-      background: #c82333;
-    }
-    .button-group {
-      margin-top: 25px;
-      padding-top: 20px;
-      border-top: 2px solid #e0e0e0;
-    }
-    .info-box {
-      background: #e8f0fe;
-      padding: 15px;
-      border-radius: 4px;
-      margin: 15px 0;
-      border-left: 4px solid #1a73e8;
-    }
-    #preview {
-      max-height: 300px;
-      overflow-y: auto;
-      background: white;
-      padding: 15px;
-      border: 1px solid #ddd;
-      border-radius: 4px;
-      font-size: 12px;
-    }
-    table {
-      width: 100%;
-      border-collapse: collapse;
-    }
-    th {
-      background: #1a73e8;
-      color: white;
-      padding: 8px;
-      text-align: left;
-      font-size: 11px;
-    }
-    td {
-      padding: 6px 8px;
-      border-bottom: 1px solid #e0e0e0;
-      font-size: 11px;
-    }
-    .loading {
-      text-align: center;
-      padding: 40px;
-      color: #666;
-    }
-  </style>
+  <style>${getReportBuilderStyles()}</style>
 </head>
 <body>
   <div class="container">
     <h2>📊 Custom Report Builder</h2>
-
     <div class="info-box">
       <strong>💡 Quick Start:</strong> Select data source, choose fields, add filters, then generate your report.
       You can export to PDF, CSV, or Excel.
     </div>
+${getReportBuilderDataSourceSection()}
+${getReportBuilderFieldsSection(grievanceFields)}
+${getReportBuilderFiltersSection(grievanceFields)}
+${getReportBuilderSortingSection(grievanceFields)}
+${getReportBuilderDateRangeSection()}
+${getReportBuilderPreviewSection()}
+${getReportBuilderActionsSection()}
+  </div>
+  <script>${getReportBuilderScripts(grievanceFields, memberFields)}</script>
+</body>
+</html>
+  `;
+}
 
-    <!-- Data Source -->
+/**
+ * Returns CSS styles for report builder
+ */
+function getReportBuilderStyles() {
+  return `
+    body { font-family: 'Roboto', Arial, sans-serif; padding: 20px; margin: 0; background: #f5f5f5; }
+    .container { background: white; padding: 25px; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); }
+    h2 { color: #1a73e8; margin-top: 0; border-bottom: 3px solid #1a73e8; padding-bottom: 10px; }
+    .builder-section { background: #f8f9fa; padding: 20px; margin: 15px 0; border-radius: 8px; border-left: 4px solid #1a73e8; }
+    .section-title { font-weight: bold; font-size: 16px; color: #333; margin-bottom: 15px; }
+    .form-group { margin: 15px 0; }
+    label { display: block; font-weight: 500; margin-bottom: 5px; color: #555; }
+    select, input[type="text"], input[type="date"] { width: 100%; padding: 10px; border: 2px solid #ddd; border-radius: 4px; font-size: 14px; box-sizing: border-box; }
+    select:focus, input:focus { outline: none; border-color: #1a73e8; }
+    .multi-select { height: 150px; }
+    .filter-row { display: grid; grid-template-columns: 2fr 1fr 2fr auto; gap: 10px; margin: 10px 0; align-items: end; }
+    button { background: #1a73e8; color: white; border: none; padding: 12px 24px; font-size: 14px; border-radius: 4px; cursor: pointer; margin: 5px 5px 5px 0; }
+    button:hover { background: #1557b0; }
+    button.secondary { background: #6c757d; }
+    button.secondary:hover { background: #5a6268; }
+    button.small { padding: 8px 16px; font-size: 13px; }
+    button.danger { background: #dc3545; }
+    button.danger:hover { background: #c82333; }
+    .button-group { margin-top: 25px; padding-top: 20px; border-top: 2px solid #e0e0e0; }
+    .info-box { background: #e8f0fe; padding: 15px; border-radius: 4px; margin: 15px 0; border-left: 4px solid #1a73e8; }
+    #preview { max-height: 300px; overflow-y: auto; background: white; padding: 15px; border: 1px solid #ddd; border-radius: 4px; font-size: 12px; }
+    table { width: 100%; border-collapse: collapse; }
+    th { background: #1a73e8; color: white; padding: 8px; text-align: left; font-size: 11px; }
+    td { padding: 6px 8px; border-bottom: 1px solid #e0e0e0; font-size: 11px; }
+    .loading { text-align: center; padding: 40px; color: #666; }
+  `;
+}
+
+/**
+ * Returns data source section HTML
+ */
+function getReportBuilderDataSourceSection() {
+  return `
     <div class="builder-section">
       <div class="section-title">1. Select Data Source</div>
       <div class="form-group">
@@ -16461,115 +15923,109 @@ function createReportBuilderHTML() {
           <option value="combined">Combined (Grievances + Members)</option>
         </select>
       </div>
-    </div>
+    </div>`;
+}
 
-    <!-- Field Selection -->
+/**
+ * Returns field selection section HTML
+ */
+function getReportBuilderFieldsSection(fields) {
+  const options = fields.map(function(f) { return '<option value="' + f.key + '">' + f.name + '</option>'; }).join('');
+  return `
     <div class="builder-section">
       <div class="section-title">2. Select Fields to Include</div>
       <div class="form-group">
         <label>Fields (hold Ctrl/Cmd to select multiple):</label>
-        <select id="fields" multiple class="multi-select">
-          ${grievanceFields.map(function(f) { return `<option value="${f.key}">${f.name}</option>`; }).join('')}
-        </select>
+        <select id="fields" multiple class="multi-select">${options}</select>
       </div>
       <button class="small secondary" onclick="selectAllFields()">Select All</button>
       <button class="small secondary" onclick="clearFields()">Clear All</button>
-    </div>
+    </div>`;
+}
 
-    <!-- Filters -->
+/**
+ * Returns filters section HTML
+ */
+function getReportBuilderFiltersSection(fields) {
+  const options = fields.map(function(f) { return '<option value="' + f.key + '">' + f.name + '</option>'; }).join('');
+  return `
     <div class="builder-section">
       <div class="section-title">3. Add Filters (Optional)</div>
       <div id="filters">
         <div class="filter-row">
-          <div>
-            <label>Field:</label>
-            <select id="filter0_field">
-              ${grievanceFields.map(function(f) { return `<option value="${f.key}">${f.name}</option>`; }).join('')}
-            </select>
-          </div>
-          <div>
-            <label>Operator:</label>
-            <select id="filter0_operator">
-              <option value="equals">Equals</option>
-              <option value="not_equals">Not Equals</option>
-              <option value="contains">Contains</option>
-              <option value="starts_with">Starts With</option>
-              <option value="greater_than">Greater Than</option>
-              <option value="less_than">Less Than</option>
-            </select>
-          </div>
-          <div>
-            <label>Value:</label>
-            <input type="text" id="filter0_value" placeholder="Filter value">
-          </div>
-          <div>
-            <button class="small danger" onclick="removeFilter(0)" style="margin-top: 22px;">Remove</button>
-          </div>
+          <div><label>Field:</label><select id="filter0_field">${options}</select></div>
+          <div><label>Operator:</label><select id="filter0_operator">
+            <option value="equals">Equals</option><option value="not_equals">Not Equals</option>
+            <option value="contains">Contains</option><option value="starts_with">Starts With</option>
+            <option value="greater_than">Greater Than</option><option value="less_than">Less Than</option>
+          </select></div>
+          <div><label>Value:</label><input type="text" id="filter0_value" placeholder="Filter value"></div>
+          <div><button class="small danger" onclick="removeFilter(0)" style="margin-top: 22px;">Remove</button></div>
         </div>
       </div>
       <button class="small" onclick="addFilter()">+ Add Filter</button>
-    </div>
+    </div>`;
+}
 
-    <!-- Grouping & Sorting -->
+/**
+ * Returns sorting section HTML
+ */
+function getReportBuilderSortingSection(fields) {
+  const options = fields.map(function(f) { return '<option value="' + f.key + '">' + f.name + '</option>'; }).join('');
+  return `
     <div class="builder-section">
       <div class="section-title">4. Grouping & Sorting</div>
-      <div class="form-group">
-        <label>Group By (optional):</label>
-        <select id="groupBy">
-          <option value="">No Grouping</option>
-          ${grievanceFields.map(function(f) { return `<option value="${f.key}">${f.name}</option>`; }).join('')}
-        </select>
-      </div>
-      <div class="form-group">
-        <label>Sort By:</label>
-        <select id="sortBy">
-          ${grievanceFields.map(function(f) { return `<option value="${f.key}">${f.name}</option>`; }).join('')}
-        </select>
-      </div>
-      <div class="form-group">
-        <label>Sort Order:</label>
-        <select id="sortOrder">
-          <option value="asc">Ascending</option>
-          <option value="desc">Descending</option>
-        </select>
-      </div>
-    </div>
+      <div class="form-group"><label>Group By (optional):</label><select id="groupBy"><option value="">No Grouping</option>${options}</select></div>
+      <div class="form-group"><label>Sort By:</label><select id="sortBy">${options}</select></div>
+      <div class="form-group"><label>Sort Order:</label><select id="sortOrder"><option value="asc">Ascending</option><option value="desc">Descending</option></select></div>
+    </div>`;
+}
 
-    <!-- Date Range -->
+/**
+ * Returns date range section HTML
+ */
+function getReportBuilderDateRangeSection() {
+  return `
     <div class="builder-section">
       <div class="section-title">5. Date Range (Optional)</div>
       <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
-        <div class="form-group">
-          <label>From Date:</label>
-          <input type="date" id="dateFrom">
-        </div>
-        <div class="form-group">
-          <label>To Date:</label>
-          <input type="date" id="dateTo">
-        </div>
+        <div class="form-group"><label>From Date:</label><input type="date" id="dateFrom"></div>
+        <div class="form-group"><label>To Date:</label><input type="date" id="dateTo"></div>
       </div>
-    </div>
+    </div>`;
+}
 
-    <!-- Preview -->
+/**
+ * Returns preview section HTML
+ */
+function getReportBuilderPreviewSection() {
+  return `
     <div class="builder-section">
       <div class="section-title">6. Preview</div>
-      <div id="preview" class="loading">
-        Click "Generate Preview" to see your report
-      </div>
+      <div id="preview" class="loading">Click "Generate Preview" to see your report</div>
       <button class="secondary" onclick="generatePreview()">🔍 Generate Preview</button>
-    </div>
+    </div>`;
+}
 
-    <!-- Actions -->
+/**
+ * Returns actions section HTML
+ */
+function getReportBuilderActionsSection() {
+  return `
     <div class="button-group">
       <button onclick="exportToPDF()">📄 Export to PDF</button>
       <button onclick="exportToCSV()">📑 Export to CSV</button>
       <button onclick="exportToExcel()">📊 Export to Excel</button>
       <button class="secondary" onclick="saveTemplate()">💾 Save Template</button>
       <button class="secondary" onclick="loadTemplate()">📂 Load Template</button>
-    </div>
-  </div>
+    </div>`;
+}
 
-  <script>
+/**
+ * Returns JavaScript for report builder
+ */
+function getReportBuilderScripts(grievanceFields, memberFields) {
+  return `
     let filterCount = 1;
     const grievanceFields = ${JSON.stringify(grievanceFields)};
     const memberFields = ${JSON.stringify(memberFields)};
@@ -16577,11 +16033,8 @@ function createReportBuilderHTML() {
     function updateFieldOptions() {
       const dataSource = document.getElementById('dataSource').value;
       const fieldsSelect = document.getElementById('fields');
-
       fieldsSelect.innerHTML = '';
-
       const fields = dataSource === 'members' ? memberFields : grievanceFields;
-
       fields.forEach(function(f) {
         const option = document.createElement('option');
         option.value = f.key;
@@ -16592,16 +16045,12 @@ function createReportBuilderHTML() {
 
     function selectAllFields() {
       const fieldsSelect = document.getElementById('fields');
-      for (let i = 0; i < fieldsSelect.options.length; i++) {
-        fieldsSelect.options[i].selected = true;
-      }
+      for (let i = 0; i < fieldsSelect.options.length; i++) fieldsSelect.options[i].selected = true;
     }
 
     function clearFields() {
       const fieldsSelect = document.getElementById('fields');
-      for (let i = 0; i < fieldsSelect.options.length; i++) {
-        fieldsSelect.options[i].selected = false;
-      }
+      for (let i = 0; i < fieldsSelect.options.length; i++) fieldsSelect.options[i].selected = false;
     }
 
     function addFilter() {
@@ -16609,47 +16058,26 @@ function createReportBuilderHTML() {
       const newFilter = document.createElement('div');
       newFilter.className = 'filter-row';
       newFilter.id = 'filter' + filterCount;
-      newFilter.innerHTML = \`
-        <div>
-          <label>Field:</label>
-          <select id="filter\${filterCount}_field">
-            \${grievanceFields.map(function(f) { return '<option value="' + f.key + '">' + f.name + '</option>'; }).join('')}
-          </select>
-        </div>
-        <div>
-          <label>Operator:</label>
-          <select id="filter\${filterCount}_operator">
-            <option value="equals">Equals</option>
-            <option value="not_equals">Not Equals</option>
-            <option value="contains">Contains</option>
-            <option value="starts_with">Starts With</option>
-            <option value="greater_than">Greater Than</option>
-            <option value="less_than">Less Than</option>
-          </select>
-        </div>
-        <div>
-          <label>Value:</label>
-          <input type="text" id="filter\${filterCount}_value" placeholder="Filter value">
-        </div>
-        <div>
-          <button class="small danger" onclick="removeFilter(\${filterCount})" style="margin-top: 22px;">Remove</button>
-        </div>
-      \`;
+      newFilter.innerHTML = '<div><label>Field:</label><select id="filter' + filterCount + '_field">' +
+        grievanceFields.map(function(f) { return '<option value="' + f.key + '">' + f.name + '</option>'; }).join('') +
+        '</select></div><div><label>Operator:</label><select id="filter' + filterCount + '_operator">' +
+        '<option value="equals">Equals</option><option value="not_equals">Not Equals</option>' +
+        '<option value="contains">Contains</option><option value="starts_with">Starts With</option>' +
+        '<option value="greater_than">Greater Than</option><option value="less_than">Less Than</option>' +
+        '</select></div><div><label>Value:</label><input type="text" id="filter' + filterCount + '_value" placeholder="Filter value"></div>' +
+        '<div><button class="small danger" onclick="removeFilter(' + filterCount + ')" style="margin-top: 22px;">Remove</button></div>';
       filtersDiv.appendChild(newFilter);
       filterCount++;
     }
 
     function removeFilter(id) {
       const filter = document.getElementById('filter' + id);
-      if (filter) {
-        filter.remove();
-      }
+      if (filter) filter.remove();
     }
 
     function getReportConfig() {
       const fieldsSelect = document.getElementById('fields');
       const selectedFields = Array.from(fieldsSelect.selectedOptions).map(function(opt) { return opt.value; });
-
       const filters = [];
       for (let i = 0; i < filterCount; i++) {
         const fieldElem = document.getElementById('filter' + i + '_field');
@@ -16661,7 +16089,6 @@ function createReportBuilderHTML() {
           });
         }
       }
-
       return {
         dataSource: document.getElementById('dataSource').value,
         fields: selectedFields,
@@ -16676,48 +16103,23 @@ function createReportBuilderHTML() {
 
     function generatePreview() {
       const config = getReportConfig();
-
-      if (config.fields.length === 0) {
-        alert('Please select at least one field');
-        return;
-      }
-
+      if (config.fields.length === 0) { alert('Please select at least one field'); return; }
       document.getElementById('preview').innerHTML = '<div class="loading">Generating preview...</div>';
-
-      google.script.run
-        .withSuccessHandler(displayPreview)
-        .withFailureHandler(onError)
-        .generateReportData(config, 10); // Preview first 10 rows
+      google.script.run.withSuccessHandler(displayPreview).withFailureHandler(onError).generateReportData(config, 10);
     }
 
     function displayPreview(data) {
       const preview = document.getElementById('preview');
-
-      if (!data || data.length === 0) {
-        preview.innerHTML = '<div class="loading">No data matches your filters</div>';
-        return;
-      }
-
+      if (!data || data.length === 0) { preview.innerHTML = '<div class="loading">No data matches your filters</div>'; return; }
       let html = '<table><thead><tr>';
-
-      // Headers
-      Object.keys(data[0]).forEach(function(key) {
-        html += '<th>' + key + '</th>';
-      });
+      Object.keys(data[0]).forEach(function(key) { html += '<th>' + key + '</th>'; });
       html += '</tr></thead><tbody>';
-
-      // Data rows
       data.forEach(function(row) {
         html += '<tr>';
-        Object.values(row).forEach(function(value) {
-          html += '<td>' + (value || '') + '</td>';
-        });
+        Object.values(row).forEach(function(value) { html += '<td>' + (value || '') + '</td>'; });
         html += '</tr>';
       });
-
-      html += '</tbody></table>';
-      html += '<div style="margin-top: 10px; color: #666; font-size: 12px;">Showing first ' + data.length + ' rows</div>';
-
+      html += '</tbody></table><div style="margin-top: 10px; color: #666; font-size: 12px;">Showing first ' + data.length + ' rows</div>';
       preview.innerHTML = html;
     }
 
@@ -16728,54 +16130,22 @@ function createReportBuilderHTML() {
 
     function exportToPDF() {
       const config = getReportConfig();
-
-      if (config.fields.length === 0) {
-        alert('Please select at least one field');
-        return;
-      }
-
+      if (config.fields.length === 0) { alert('Please select at least one field'); return; }
       alert('Generating PDF report... This may take a moment.');
-
-      google.script.run
-        .withSuccessHandler(function() {
-          alert('✅ PDF report generated and saved to Google Drive!');
-        })
-        .withFailureHandler(onError)
-        .exportReportToPDF(config);
+      google.script.run.withSuccessHandler(function() { alert('✅ PDF report generated and saved to Google Drive!'); }).withFailureHandler(onError).exportReportToPDF(config);
     }
 
     function exportToCSV() {
       const config = getReportConfig();
-
-      if (config.fields.length === 0) {
-        alert('Please select at least one field');
-        return;
-      }
-
-      google.script.run
-        .withSuccessHandler(function(csvData) {
-          downloadCSV(csvData);
-        })
-        .withFailureHandler(onError)
-        .exportReportToCSV(config);
+      if (config.fields.length === 0) { alert('Please select at least one field'); return; }
+      google.script.run.withSuccessHandler(function(csvData) { downloadCSV(csvData); }).withFailureHandler(onError).exportReportToCSV(config);
     }
 
     function exportToExcel() {
       const config = getReportConfig();
-
-      if (config.fields.length === 0) {
-        alert('Please select at least one field');
-        return;
-      }
-
+      if (config.fields.length === 0) { alert('Please select at least one field'); return; }
       alert('Generating Excel report... This may take a moment.');
-
-      google.script.run
-        .withSuccessHandler(function() {
-          alert('✅ Excel report generated and saved to Google Drive!');
-        })
-        .withFailureHandler(onError)
-        .exportReportToExcel(config);
+      google.script.run.withSuccessHandler(function() { alert('✅ Excel report generated and saved to Google Drive!'); }).withFailureHandler(onError).exportReportToExcel(config);
     }
 
     function downloadCSV(csvData) {
@@ -16791,65 +16161,38 @@ function createReportBuilderHTML() {
     function saveTemplate() {
       const config = getReportConfig();
       const name = prompt('Enter template name:');
-
       if (!name) return;
-
-      google.script.run
-        .withSuccessHandler(function() {
-          alert('✅ Template saved: ' + name);
-        })
-        .withFailureHandler(onError)
-        .saveReportTemplate(name, config);
+      google.script.run.withSuccessHandler(function() { alert('✅ Template saved: ' + name); }).withFailureHandler(onError).saveReportTemplate(name, config);
     }
 
     function loadTemplate() {
-      google.script.run
-        .withSuccessHandler(showTemplateList)
-        .withFailureHandler(onError)
-        .getReportTemplates();
+      google.script.run.withSuccessHandler(showTemplateList).withFailureHandler(onError).getReportTemplates();
     }
 
     function showTemplateList(templates) {
-      if (!templates || templates.length === 0) {
-        alert('No saved templates found');
-        return;
-      }
-
+      if (!templates || templates.length === 0) { alert('No saved templates found'); return; }
       const templateNames = templates.map(function(t) { return t.name; }).join('\\n');
       const selected = prompt('Available templates:\\n' + templateNames + '\\n\\nEnter template name to load:');
-
       if (!selected) return;
-
       const template = templates.find(function(t) { return t.name === selected; });
-      if (template) {
-        applyTemplate(template.config);
-      } else {
-        alert('Template not found');
-      }
+      if (template) applyTemplate(template.config);
+      else alert('Template not found');
     }
 
     function applyTemplate(config) {
       document.getElementById('dataSource').value = config.dataSource;
       updateFieldOptions();
-
-      // Select fields
       const fieldsSelect = document.getElementById('fields');
       for (let i = 0; i < fieldsSelect.options.length; i++) {
         fieldsSelect.options[i].selected = config.fields.includes(fieldsSelect.options[i].value);
       }
-
-      // Apply other settings
       document.getElementById('groupBy').value = config.groupBy || '';
       document.getElementById('sortBy').value = config.sortBy || '';
       document.getElementById('sortOrder').value = config.sortOrder || 'asc';
       document.getElementById('dateFrom').value = config.dateFrom || '';
       document.getElementById('dateTo').value = config.dateTo || '';
-
       alert('✅ Template loaded');
     }
-  </script>
-</body>
-</html>
   `;
 }
 
@@ -16905,10 +16248,10 @@ function getMemberFields() {
 }
 
 /**
- * Generates report data based on configuration
+ * Generates report data based on configuration with permission-based filtering
  * @param {Object} config - Report configuration
  * @param {number} limit - Row limit for preview
- * @returns {Array} Report data
+ * @returns {Array} Report data filtered by user permissions
  */
 function generateReportData(config, limit = null) {
   const ss = SpreadsheetApp.getActiveSpreadsheet();
@@ -16918,15 +16261,25 @@ function generateReportData(config, limit = null) {
 
   if (config.dataSource === 'grievances') {
     const sheet = ss.getSheetByName(SHEETS.GRIEVANCE_LOG);
-    sourceData = sheet.getRange(2, 1, sheet.getLastRow() - 1, 28).getValues();
+    // Get all data with header for permission filtering
+    const rawData = sheet.getDataRange().getValues();
+    // Apply permission filtering (returns data with header)
+    const filteredByPermission = filterGrievanceDataByPermission(rawData);
+    // Remove header for report processing
+    sourceData = filteredByPermission.slice(1);
     fieldMapping = getGrievanceFieldMapping();
   } else {
     const sheet = ss.getSheetByName(SHEETS.MEMBER_DIR);
-    sourceData = sheet.getRange(2, 1, sheet.getLastRow() - 1, 28).getValues();
+    // Get all data with header for permission filtering
+    const rawData = sheet.getDataRange().getValues();
+    // Apply permission filtering (returns data with header)
+    const filteredByPermission = filterMemberDataByPermission(rawData);
+    // Remove header for report processing
+    sourceData = filteredByPermission.slice(1);
     fieldMapping = getMemberFieldMapping();
   }
 
-  // Apply filters
+  // Apply content filters
   let filteredData = sourceData.filter(function(row) {
     return applyFilters(row, config.filters, fieldMapping);
   });
@@ -17963,57 +17316,6 @@ function saveCustomThemes(themes) {
   props.setProperty('customThemes', JSON.stringify(themes));
 }
 
-/**
- * Exports current theme as JSON
- * @returns {string} JSON theme configuration
- */
-function exportCurrentTheme() {
-  const currentTheme = getCurrentTheme();
-  const theme = THEME_CONFIG.THEMES[currentTheme];
-
-  return JSON.stringify(theme, null, 2);
-}
-
-/**
- * Imports theme from JSON
- * @param {string} themeJSON - JSON theme configuration
- * @param {string} name - Theme name
- * @returns {string} Theme key
- */
-function importThemeFromJSON(themeJSON, name) {
-  try {
-    const colors = JSON.parse(themeJSON);
-    return createCustomTheme(name, colors);
-  } catch (error) {
-    throw new Error('Invalid theme JSON: ' + error.message);
-  }
-}
-
-/**
- * Installs auto-theme switching trigger
- */
-function installAutoThemeTrigger() {
-  // Delete existing trigger
-  const triggers = ScriptApp.getProjectTriggers();
-  triggers.forEach(function(trigger) {
-    if (trigger.getHandlerFunction() === 'checkAndApplyAutoTheme') {
-      ScriptApp.deleteTrigger(trigger);
-    }
-  });
-
-  // Create new trigger (runs every hour)
-  ScriptApp.newTrigger('checkAndApplyAutoTheme')
-    .timeBased()
-    .everyHours(1)
-    .create();
-
-  SpreadsheetApp.getActiveSpreadsheet().toast(
-    '✅ Auto-theme trigger installed',
-    'Theme',
-    3
-  );
-}
-
 
 
 // ================================================================================
@@ -18521,47 +17823,6 @@ function exportMembersToCSV() {
   return csv;
 }
 
-/**
- * Verifies backup integrity
- * @param {string} backupFileId - Backup file ID
- * @returns {Object} Verification result
- */
-function verifyBackup(backupFileId) {
-  try {
-    const backupFile = DriveApp.getFileById(backupFileId);
-    const backupSS = SpreadsheetApp.open(backupFile);
-
-    const sheets = backupSS.getSheets();
-
-    const verification = {
-      valid: true,
-      sheetCount: sheets.length,
-      sheets: sheets.map(function(s) { return s.getName(); }),
-      dataRows: {}
-    };
-
-    // Check key sheets
-    const keySheets = [SHEETS.GRIEVANCE_LOG, SHEETS.MEMBER_DIR];
-    keySheets.forEach(function(sheetName) {
-      const sheet = backupSS.getSheetByName(sheetName);
-      if (sheet) {
-        verification.dataRows[sheetName] = sheet.getLastRow() - 1; // Minus header
-      } else {
-        verification.valid = false;
-        verification.error = `Missing key sheet: ${sheetName}`;
-      }
-    });
-
-    return verification;
-
-  } catch (error) {
-    return {
-      valid: false,
-      error: error.message
-    };
-  }
-}
-
 
 
 // ================================================================================
@@ -18985,52 +18246,6 @@ function showCacheStatusDashboard() {
     .setHeight(550);
 
   SpreadsheetApp.getUi().showModalDialog(htmlOutput, '🗄️ Cache Status');
-}
-
-/**
- * Auto-invalidates cache when data is modified (onEdit trigger helper)
- * Call this from the main onEdit function
- */
-function onEditCacheInvalidation(e) {
-  if (!e) return;
-
-  const sheetName = e.range.getSheet().getName();
-
-  // Invalidate relevant caches based on sheet
-  if (sheetName === SHEETS.GRIEVANCE_LOG) {
-    invalidateCache(CACHE_KEYS.ALL_GRIEVANCES);
-    invalidateCache(CACHE_KEYS.DASHBOARD_METRICS);
-    invalidateCache(CACHE_KEYS.STEWARD_WORKLOAD);
-  } else if (sheetName === SHEETS.MEMBER_DIR) {
-    invalidateCache(CACHE_KEYS.ALL_MEMBERS);
-    invalidateCache(CACHE_KEYS.ALL_STEWARDS);
-  }
-}
-
-/**
- * Gets performance statistics
- * @returns {Object} Performance stats
- */
-function getCachePerformanceStats() {
-  // This would track cache hits/misses over time
-  // For now, return basic info
-  const memoryCache = CacheService.getScriptCache();
-  const propsCache = PropertiesService.getScriptProperties();
-
-  let cachedKeys = 0;
-  Object.values(CACHE_KEYS).forEach(function(key) {
-    if (propsCache.getProperty(key) !== null) {
-      cachedKeys++;
-    }
-  });
-
-  return {
-    totalKeys: Object.keys(CACHE_KEYS).length,
-    cachedKeys: cachedKeys,
-    cacheHitRate: cachedKeys / Object.keys(CACHE_KEYS).length,
-    memoryTTL: CACHE_CONFIG.MEMORY_TTL,
-    propertiesTTL: CACHE_CONFIG.PROPERTIES_TTL
-  };
 }
 
 
@@ -26770,11 +25985,11 @@ function createGrievanceFolderFromFormData(grievanceId, formData) {
 }
 
 /**
- * Shows dialog with sharing options for grievance form and folder
+ * Shows sharing options dialog for a grievance
+ * Refactored to use helper functions for maintainability
  */
 function showSharingOptionsDialog(grievanceId, pdfBlob, folder) {
   const ss = SpreadsheetApp.getActiveSpreadsheet();
-  const memberDir = ss.getSheetByName(SHEETS.MEMBER_DIR);
   const grievanceLog = ss.getSheetByName(SHEETS.GRIEVANCE_LOG);
 
   // Get grievance data
@@ -26786,200 +26001,126 @@ function showSharingOptionsDialog(grievanceId, pdfBlob, folder) {
     return;
   }
 
-  const memberId = grievanceRow[GRIEVANCE_COLS.MEMBER_ID - 1];
-  const memberEmail = grievanceRow[GRIEVANCE_COLS.MEMBER_EMAIL - 1];
-  const stewardEmail = getStewardContactInfo().email;
-  const coordinators = getGrievanceCoordinators();
-  const folderUrl = folder ? folder.getUrl() : '';
+  // Gather sharing context
+  const sharingContext = {
+    grievanceId: grievanceId,
+    memberEmail: grievanceRow[GRIEVANCE_COLS.MEMBER_EMAIL - 1],
+    stewardEmail: getStewardContactInfo().email,
+    coordinators: getGrievanceCoordinators(),
+    folderUrl: folder ? folder.getUrl() : '',
+    grievanceEmail: GRIEVANCE_FORM_CONFIG.GRIEVANCE_EMAIL || 'grievances@seiu509.org'
+  };
 
-  // Grievance email is configured via EMAIL_CONFIG.GRIEVANCE_EMAIL in Constants.gs
-  // and can be overridden in GRIEVANCE_FORM_CONFIG.GRIEVANCE_EMAIL
-  const grievanceEmail = GRIEVANCE_FORM_CONFIG.GRIEVANCE_EMAIL || 'grievances@seiu509.org';
+  const html = HtmlService.createHtmlOutput(buildSharingDialogHTML(sharingContext))
+    .setWidth(600)
+    .setHeight(600);
 
-  const html = HtmlService.createHtmlOutput(`
+  SpreadsheetApp.getUi().showModalDialog(html, 'Share Grievance');
+}
+
+/**
+ * Builds the complete HTML for sharing dialog
+ */
+function buildSharingDialogHTML(ctx) {
+  return `
 <!DOCTYPE html>
 <html>
 <head>
   <base target="_top">
-  <style>
-    body {
-      font-family: Arial, sans-serif;
-      padding: 20px;
-      background: #f5f5f5;
-    }
-    .container {
-      background: white;
-      padding: 25px;
-      border-radius: 8px;
-      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-    }
-    h2 {
-      color: #1a73e8;
-      margin-top: 0;
-      border-bottom: 3px solid #1a73e8;
-      padding-bottom: 10px;
-    }
-    .info-box {
-      background: #e8f0fe;
-      padding: 15px;
-      border-radius: 4px;
-      margin: 15px 0;
-      border-left: 4px solid #1a73e8;
-    }
-    .folder-link {
-      background: #fef7e0;
-      padding: 12px;
-      border-radius: 4px;
-      margin: 15px 0;
-      border-left: 4px solid #f9ab00;
-    }
-    .folder-link a {
-      color: #1a73e8;
-      font-weight: bold;
-      text-decoration: none;
-    }
-    .folder-link a:hover {
-      text-decoration: underline;
-    }
-    .checkbox-group {
-      margin: 20px 0;
-    }
-    .checkbox-item {
-      display: flex;
-      align-items: center;
-      padding: 10px;
-      margin: 8px 0;
-      border: 2px solid #ddd;
-      border-radius: 4px;
-      cursor: pointer;
-    }
-    .checkbox-item:hover {
-      background: #f0f0f0;
-      border-color: #1a73e8;
-    }
-    .checkbox-item input[type="checkbox"] {
-      margin-right: 10px;
-      width: 20px;
-      height: 20px;
-      cursor: pointer;
-    }
-    .checkbox-item label {
-      cursor: pointer;
-      flex: 1;
-      font-size: 14px;
-    }
-    .button-group {
-      display: flex;
-      gap: 10px;
-      margin-top: 25px;
-    }
-    button {
-      flex: 1;
-      padding: 12px 24px;
-      border: none;
-      border-radius: 4px;
-      font-size: 16px;
-      font-weight: bold;
-      cursor: pointer;
-      transition: all 0.3s;
-    }
-    .btn-primary {
-      background: #1a73e8;
-      color: white;
-    }
-    .btn-primary:hover {
-      background: #1557b0;
-      transform: translateY(-2px);
-      box-shadow: 0 4px 12px rgba(26,115,232,0.4);
-    }
-    .btn-secondary {
-      background: #f1f3f4;
-      color: #333;
-    }
-    .btn-secondary:hover {
-      background: #e8eaed;
-    }
-  </style>
+  <style>${getSharingDialogStyles()}</style>
 </head>
 <body>
   <div class="container">
-    <h2>✅ Grievance ${grievanceId} Created</h2>
-
+    <h2>✅ Grievance ${ctx.grievanceId} Created</h2>
     <div class="info-box">
       <strong>ℹ️ Grievance folder created successfully!</strong><br>
       Select the recipients you want to share the grievance form and/or folder with.
     </div>
-
-    ${folderUrl ? `
+    ${ctx.folderUrl ? `
     <div class="folder-link">
       📁 <strong>Folder Link:</strong><br>
-      <a href="${folderUrl}" target="_blank">${folderUrl}</a>
-    </div>
-    ` : ''}
-
+      <a href="${ctx.folderUrl}" target="_blank">${ctx.folderUrl}</a>
+    </div>` : ''}
     <h3>Select Recipients:</h3>
     <div class="checkbox-group">
-      ${memberEmail ? `
-      <div class="checkbox-item">
-        <input type="checkbox" id="member" value="${memberEmail}">
-        <label for="member">Member (${memberEmail})</label>
-      </div>
-      ` : ''}
-
-      ${stewardEmail ? `
-      <div class="checkbox-item">
-        <input type="checkbox" id="steward" value="${stewardEmail}">
-        <label for="steward">Steward (${stewardEmail})</label>
-      </div>
-      ` : ''}
-
-      ${coordinators.coordinator1 ? `
-      <div class="checkbox-item">
-        <input type="checkbox" id="coordinator1" value="${coordinators.coordinator1}">
-        <label for="coordinator1">Grievance Coordinator 1 (${coordinators.coordinator1})</label>
-      </div>
-      ` : ''}
-
-      ${coordinators.coordinator2 ? `
-      <div class="checkbox-item">
-        <input type="checkbox" id="coordinator2" value="${coordinators.coordinator2}">
-        <label for="coordinator2">Grievance Coordinator 2 (${coordinators.coordinator2})</label>
-      </div>
-      ` : ''}
-
-      ${coordinators.coordinator3 ? `
-      <div class="checkbox-item">
-        <input type="checkbox" id="coordinator3" value="${coordinators.coordinator3}">
-        <label for="coordinator3">Grievance Coordinator 3 (${coordinators.coordinator3})</label>
-      </div>
-      ` : ''}
-
-      ${grievanceEmail ? `
-      <div class="checkbox-item">
-        <input type="checkbox" id="grievanceEmail" value="${grievanceEmail}">
-        <label for="grievanceEmail">Grievance Email (${grievanceEmail})</label>
-      </div>
-      ` : ''}
+      ${buildRecipientCheckboxes(ctx)}
     </div>
-
     <div class="button-group">
       <button class="btn-secondary" onclick="google.script.host.close()">Close</button>
       <button class="btn-primary" onclick="shareWithSelected()">Share with Selected</button>
     </div>
   </div>
+  <script>${getSharingDialogScripts(ctx.grievanceId, ctx.folderUrl)}</script>
+</body>
+</html>`;
+}
 
-  <script>
+/**
+ * Returns CSS styles for sharing dialog
+ */
+function getSharingDialogStyles() {
+  return `
+    body { font-family: Arial, sans-serif; padding: 20px; background: #f5f5f5; }
+    .container { background: white; padding: 25px; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); }
+    h2 { color: #1a73e8; margin-top: 0; border-bottom: 3px solid #1a73e8; padding-bottom: 10px; }
+    .info-box { background: #e8f0fe; padding: 15px; border-radius: 4px; margin: 15px 0; border-left: 4px solid #1a73e8; }
+    .folder-link { background: #fef7e0; padding: 12px; border-radius: 4px; margin: 15px 0; border-left: 4px solid #f9ab00; }
+    .folder-link a { color: #1a73e8; font-weight: bold; text-decoration: none; }
+    .folder-link a:hover { text-decoration: underline; }
+    .checkbox-group { margin: 20px 0; }
+    .checkbox-item { display: flex; align-items: center; padding: 10px; margin: 8px 0; border: 2px solid #ddd; border-radius: 4px; cursor: pointer; }
+    .checkbox-item:hover { background: #f0f0f0; border-color: #1a73e8; }
+    .checkbox-item input[type="checkbox"] { margin-right: 10px; width: 20px; height: 20px; cursor: pointer; }
+    .checkbox-item label { cursor: pointer; flex: 1; font-size: 14px; }
+    .button-group { display: flex; gap: 10px; margin-top: 25px; }
+    button { flex: 1; padding: 12px 24px; border: none; border-radius: 4px; font-size: 16px; font-weight: bold; cursor: pointer; transition: all 0.3s; }
+    .btn-primary { background: #1a73e8; color: white; }
+    .btn-primary:hover { background: #1557b0; transform: translateY(-2px); box-shadow: 0 4px 12px rgba(26,115,232,0.4); }
+    .btn-secondary { background: #f1f3f4; color: #333; }
+    .btn-secondary:hover { background: #e8eaed; }
+  `;
+}
+
+/**
+ * Builds recipient checkbox items
+ */
+function buildRecipientCheckboxes(ctx) {
+  let html = '';
+
+  if (ctx.memberEmail) {
+    html += `<div class="checkbox-item"><input type="checkbox" id="member" value="${ctx.memberEmail}"><label for="member">Member (${ctx.memberEmail})</label></div>`;
+  }
+  if (ctx.stewardEmail) {
+    html += `<div class="checkbox-item"><input type="checkbox" id="steward" value="${ctx.stewardEmail}"><label for="steward">Steward (${ctx.stewardEmail})</label></div>`;
+  }
+  if (ctx.coordinators.coordinator1) {
+    html += `<div class="checkbox-item"><input type="checkbox" id="coordinator1" value="${ctx.coordinators.coordinator1}"><label for="coordinator1">Grievance Coordinator 1 (${ctx.coordinators.coordinator1})</label></div>`;
+  }
+  if (ctx.coordinators.coordinator2) {
+    html += `<div class="checkbox-item"><input type="checkbox" id="coordinator2" value="${ctx.coordinators.coordinator2}"><label for="coordinator2">Grievance Coordinator 2 (${ctx.coordinators.coordinator2})</label></div>`;
+  }
+  if (ctx.coordinators.coordinator3) {
+    html += `<div class="checkbox-item"><input type="checkbox" id="coordinator3" value="${ctx.coordinators.coordinator3}"><label for="coordinator3">Grievance Coordinator 3 (${ctx.coordinators.coordinator3})</label></div>`;
+  }
+  if (ctx.grievanceEmail) {
+    html += `<div class="checkbox-item"><input type="checkbox" id="grievanceEmail" value="${ctx.grievanceEmail}"><label for="grievanceEmail">Grievance Email (${ctx.grievanceEmail})</label></div>`;
+  }
+
+  return html;
+}
+
+/**
+ * Returns JavaScript for sharing dialog
+ */
+function getSharingDialogScripts(grievanceId, folderUrl) {
+  return `
     function shareWithSelected() {
       const checkboxes = document.querySelectorAll('input[type="checkbox"]:checked');
       const recipients = Array.from(checkboxes).map(function(cb) { return cb.value; });
-
       if (recipients.length === 0) {
         alert('Please select at least one recipient.');
         return;
       }
-
-      const folderUrl = '${folderUrl}';
-
       google.script.run
         .withSuccessHandler(function() {
           alert('✅ Sharing invitations sent successfully!');
@@ -26988,14 +26129,9 @@ function showSharingOptionsDialog(grievanceId, pdfBlob, folder) {
         .withFailureHandler(function(error) {
           alert('❌ Error: ' + error.message);
         })
-        .shareGrievanceWithRecipients('${grievanceId}', recipients, folderUrl);
+        .shareGrievanceWithRecipients('${grievanceId}', recipients, '${folderUrl}');
     }
-  </script>
-</body>
-</html>
-  `).setWidth(600).setHeight(600);
-
-  SpreadsheetApp.getUi().showModalDialog(html, 'Share Grievance');
+  `;
 }
 
 /**
@@ -28715,6 +27851,7 @@ function setupDailyBackupTrigger() {
 
 /**
  * Creates the Interactive Dashboard sheet with user-selectable controls
+ * Refactored to use smaller, focused helper functions
  */
 function createInteractiveDashboardSheet(ss) {
   let sheet = ss.getSheetByName(SHEETS.INTERACTIVE_DASHBOARD);
@@ -28722,9 +27859,23 @@ function createInteractiveDashboardSheet(ss) {
 
   sheet.clear();
 
-  // ------------------------------------------------------------=========
-  // HEADER SECTION
-  // ------------------------------------------------------------=========
+  // Build dashboard sections
+  createDashboardHeaderSection(sheet);
+  createDashboardControlPanel(sheet);
+  createDashboardMetricCards(sheet);
+  createDashboardChartAreas(sheet);
+  createDashboardPieChartSection(sheet);
+  createDashboardLocationChartSection(sheet);
+  createDashboardDataTableSection(sheet);
+  setDashboardDimensions(sheet);
+
+  Logger.log("Interactive Dashboard sheet created successfully");
+}
+
+/**
+ * Creates header section (rows 1-3)
+ */
+function createDashboardHeaderSection(sheet) {
   sheet.getRange("A1:T1").merge()
     .setValue("✨ YOUR UNION DASHBOARD - Where Data Comes Alive!")
     .setFontSize(22).setFontFamily("Roboto")
@@ -28734,7 +27885,6 @@ function createInteractiveDashboardSheet(ss) {
     .setFontColor("white");
   sheet.setRowHeight(1, 45);
 
-  // Subtitle
   sheet.getRange("A2:T2").merge()
     .setValue("🎉 Welcome! Watch your data dance, celebrate your victories, and track your progress together!")
     .setFontSize(11).setFontFamily("Roboto")
@@ -28743,7 +27893,6 @@ function createInteractiveDashboardSheet(ss) {
     .setBackground(COLORS.LIGHT_GRAY)
     .setFontColor(COLORS.TEXT_GRAY);
 
-  // Gentle guidance tip
   sheet.getRange("A3:T3").merge()
     .setValue("💡 Pro Tip: Select your metrics below, then watch as your dashboard springs to life with insights and celebrations!")
     .setFontSize(10).setFontFamily("Roboto")
@@ -28751,10 +27900,12 @@ function createInteractiveDashboardSheet(ss) {
     .setHorizontalAlignment("center")
     .setBackground(COLORS.WHITE)
     .setFontColor(COLORS.ACCENT_TEAL);
+}
 
-  // ------------------------------------------------------------=========
-  // CONTROL PANEL - Row 4
-  // ------------------------------------------------------------=========
+/**
+ * Creates control panel section (rows 4-9)
+ */
+function createDashboardControlPanel(sheet) {
   sheet.getRange("A4:T4").merge()
     .setValue("🎛️ YOUR COMMAND CENTER - Make This Dashboard Your Own!")
     .setFontSize(14).setFontFamily("Roboto")
@@ -28763,7 +27914,6 @@ function createInteractiveDashboardSheet(ss) {
     .setBackground(COLORS.ACCENT_TEAL)
     .setFontColor("white");
 
-  // Control labels and dropdowns (Row 6-7)
   const controls = [
     ["Metric 1:", "Chart Type 1:", "Metric 2:", "Chart Type 2:", "Theme:"],
     ["", "", "", "", ""]
@@ -28775,12 +27925,10 @@ function createInteractiveDashboardSheet(ss) {
     .setBackground(COLORS.LIGHT_GRAY)
     .setHorizontalAlignment("right");
 
-  // Dropdown cells (to be populated with data validation)
   sheet.getRange("A7:E7")
     .setBackground(COLORS.WHITE)
     .setBorder(true, true, true, true, true, true, COLORS.BORDER_GRAY, SpreadsheetApp.BorderStyle.SOLID);
 
-  // Comparison toggle
   sheet.getRange("G6").setValue("Enable Comparison:")
     .setFontWeight("bold")
     .setFontSize(10).setFontFamily("Roboto")
@@ -28791,14 +27939,12 @@ function createInteractiveDashboardSheet(ss) {
     .setBackground(COLORS.WHITE)
     .setBorder(true, true, true, true, true, true, COLORS.BORDER_GRAY, SpreadsheetApp.BorderStyle.SOLID);
 
-  // Action dropdown area
   sheet.getRange("I6").setValue("Quick Action:")
     .setFontWeight("bold")
     .setFontSize(10).setFontFamily("Roboto")
     .setBackground(COLORS.LIGHT_GRAY)
     .setHorizontalAlignment("right");
 
-  // Add dropdown for quick actions
   const actionDropdown = SpreadsheetApp.newDataValidation()
     .requireValueInList([
       "Select Action...",
@@ -28817,10 +27963,12 @@ function createInteractiveDashboardSheet(ss) {
     .setBackground(COLORS.WHITE)
     .setBorder(true, true, true, true, true, true, COLORS.BORDER_GRAY, SpreadsheetApp.BorderStyle.SOLID)
     .setHorizontalAlignment("center");
+}
 
-  // ------------------------------------------------------------=========
-  // METRIC CARDS SECTION - Row 10-18 (4 cards)
-  // ------------------------------------------------------------=========
+/**
+ * Creates metric cards section (rows 10-18)
+ */
+function createDashboardMetricCards(sheet) {
   sheet.getRange("A10:T10").merge()
     .setValue("📈 YOUR VICTORIES AT A GLANCE - Watch These Numbers Grow!")
     .setFontSize(14).setFontFamily("Roboto")
@@ -28829,7 +27977,6 @@ function createInteractiveDashboardSheet(ss) {
     .setBackground(COLORS.PRIMARY_BLUE)
     .setFontColor("white");
 
-  // Create 4 metric cards
   const cardPositions = [
     {col: "A", endCol: "E", title: "💙 Our Growing Family", color: COLORS.ACCENT_TEAL},
     {col: "F", endCol: "J", title: "🔥 Active Cases", color: COLORS.ACCENT_ORANGE},
@@ -28837,20 +27984,16 @@ function createInteractiveDashboardSheet(ss) {
     {col: "P", endCol: "T", title: "⏰ Needs Attention", color: COLORS.SOLIDARITY_RED}
   ];
 
-  cardPositions.forEach(function(card, idx) {
+  cardPositions.forEach(function(card) {
     const startRow = 12;
-    const endRow = 18;
 
-    // Card border
-    sheet.getRange(`${card.col}${startRow}:${card.endCol}${endRow}`)
+    sheet.getRange(`${card.col}${startRow}:${card.endCol}18`)
       .setBackground(COLORS.WHITE)
       .setBorder(true, true, true, true, false, false, COLORS.BORDER_GRAY, SpreadsheetApp.BorderStyle.SOLID_MEDIUM);
 
-    // Top colored bar
     sheet.getRange(`${card.col}${startRow}:${card.endCol}${startRow}`)
       .setBorder(true, null, null, null, null, null, card.color, SpreadsheetApp.BorderStyle.SOLID_THICK);
 
-    // Card title
     sheet.getRange(`${card.col}${startRow + 1}:${card.endCol}${startRow + 1}`).merge()
       .setValue(card.title)
       .setFontWeight("bold")
@@ -28858,7 +28001,6 @@ function createInteractiveDashboardSheet(ss) {
       .setHorizontalAlignment("center")
       .setFontColor(COLORS.TEXT_GRAY);
 
-    // Big number (to be populated)
     sheet.getRange(`${card.col}${startRow + 2}:${card.endCol}${startRow + 4}`).merge()
       .setFontSize(48)
       .setFontWeight("bold")
@@ -28867,7 +28009,6 @@ function createInteractiveDashboardSheet(ss) {
       .setVerticalAlignment("middle")
       .setFontColor(card.color);
 
-    // Trend indicator (to be populated)
     sheet.getRange(`${card.col}${startRow + 5}:${card.endCol}${startRow + 6}`).merge()
       .setFontSize(10)
       .setFontFamily("Roboto")
@@ -28876,10 +28017,13 @@ function createInteractiveDashboardSheet(ss) {
       .setFontColor(COLORS.TEXT_GRAY)
       .setValue("📈 Growing Together");
   });
+}
 
-  // ------------------------------------------------------------=========
-  // CHART AREA 1 - Row 21-42 (Selected Metric 1)
-  // ------------------------------------------------------------=========
+/**
+ * Creates chart areas (rows 21-42)
+ */
+function createDashboardChartAreas(sheet) {
+  // Chart Area 1
   sheet.getRange("A21:J21").merge()
     .setValue("📊 YOUR STORY IN CHARTS - Watch Your Data Come to Life!")
     .setFontSize(13).setFontFamily("Roboto")
@@ -28900,9 +28044,7 @@ function createInteractiveDashboardSheet(ss) {
     .setVerticalAlignment("middle")
     .setFontColor(COLORS.TEXT_GRAY);
 
-  // ------------------------------------------------------------=========
-  // CHART AREA 2 - Row 21-42 (Comparison or Selected Metric 2)
-  // ------------------------------------------------------------=========
+  // Chart Area 2
   sheet.getRange("L21:T21").merge()
     .setValue("📊 DOUBLE THE INSIGHTS - See Two Stories Side by Side!")
     .setFontSize(13).setFontFamily("Roboto")
@@ -28922,10 +28064,12 @@ function createInteractiveDashboardSheet(ss) {
     .setHorizontalAlignment("center")
     .setVerticalAlignment("middle")
     .setFontColor(COLORS.TEXT_GRAY);
+}
 
-  // ------------------------------------------------------------=========
-  // PIE CHARTS SECTION - Row 45-65
-  // ------------------------------------------------------------=========
+/**
+ * Creates pie chart section (rows 45-65)
+ */
+function createDashboardPieChartSection(sheet) {
   sheet.getRange("A45:T45").merge()
     .setValue("🥧 COLORFUL INSIGHTS - Your Work in Living Color!")
     .setFontSize(14).setFontFamily("Roboto")
@@ -28959,10 +28103,12 @@ function createInteractiveDashboardSheet(ss) {
   sheet.getRange("L48:T65")
     .setBackground(COLORS.WHITE)
     .setBorder(true, true, true, true, false, false, COLORS.BORDER_GRAY, SpreadsheetApp.BorderStyle.SOLID);
+}
 
-  // ------------------------------------------------------------=========
-  // WAREHOUSE-STYLE LOCATION CHART - Row 68-88
-  // ------------------------------------------------------------=========
+/**
+ * Creates warehouse-style location chart section (rows 68-88)
+ */
+function createDashboardLocationChartSection(sheet) {
   sheet.getRange("A68:T68").merge()
     .setValue("🏢 UNITED ACROSS LOCATIONS - Our Collective Strength!")
     .setFontSize(14).setFontFamily("Roboto")
@@ -28982,10 +28128,12 @@ function createInteractiveDashboardSheet(ss) {
   sheet.getRange("A71:T88")
     .setBackground(COLORS.WHITE)
     .setBorder(true, true, true, true, false, false, COLORS.BORDER_GRAY, SpreadsheetApp.BorderStyle.SOLID);
+}
 
-  // ------------------------------------------------------------=========
-  // DATA TABLE - Top Performers/Issues - Row 91-110
-  // ------------------------------------------------------------=========
+/**
+ * Creates data table section (rows 91-110)
+ */
+function createDashboardDataTableSection(sheet) {
   sheet.getRange("A91:T91").merge()
     .setValue("📋 THE DETAILS THAT MATTER - Celebrating Excellence!")
     .setFontSize(14).setFontFamily("Roboto")
@@ -29005,7 +28153,12 @@ function createInteractiveDashboardSheet(ss) {
   sheet.getRange("A94:G110")
     .setBackground(COLORS.WHITE)
     .setBorder(true, true, true, true, true, true, COLORS.BORDER_GRAY, SpreadsheetApp.BorderStyle.SOLID);
+}
 
+/**
+ * Sets column widths, row heights, and frozen rows
+ */
+function setDashboardDimensions(sheet) {
   // Set column widths
   sheet.setColumnWidth(1, 80);   // Rank
   sheet.setColumnWidth(2, 250);  // Item
@@ -29025,8 +28178,6 @@ function createInteractiveDashboardSheet(ss) {
 
   // Freeze header rows
   sheet.setFrozenRows(2);
-
-  Logger.log("Interactive Dashboard sheet created successfully");
 }
 
 /**
@@ -33555,6 +32706,7 @@ function showMobileDashboard() {
 
 /**
  * Creates HTML for mobile dashboard
+ * Refactored to use smaller, focused helper functions
  */
 function createMobileDashboardHTML() {
   const stats = getMobileDashboardStats();
@@ -33566,6 +32718,34 @@ function createMobileDashboardHTML() {
   <base target="_top">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <style>
+${getMobileDashboardStyles()}
+  </style>
+</head>
+<body>
+${getMobileDashboardHeader()}
+  <div class="container">
+    <div id="refreshIndicator" class="refresh-indicator">
+      ✅ Refreshed!
+    </div>
+${getMobileDashboardStatsGrid(stats)}
+${getMobileDashboardQuickActions()}
+${getMobileDashboardRecentSection()}
+  </div>
+  <button class="fab" onclick="refreshDashboard()" title="Refresh">🔄</button>
+  <script>
+${getMobileDashboardScripts()}
+  </script>
+</body>
+</html>
+  `;
+}
+
+/**
+ * Returns CSS styles for mobile dashboard
+ * @returns {string} CSS styles
+ */
+function getMobileDashboardStyles() {
+  return `
     * {
       box-sizing: border-box;
       -webkit-tap-highlight-color: transparent;
@@ -33755,20 +32935,29 @@ function createMobileDashboardHTML() {
       margin-bottom: 15px;
       display: none;
     }
-  </style>
-</head>
-<body>
+  `;
+}
+
+/**
+ * Returns header HTML for mobile dashboard
+ * @returns {string} Header HTML
+ */
+function getMobileDashboardHeader() {
+  return `
   <div class="header">
     <h1>📱 509 Dashboard</h1>
     <div class="subtitle">Mobile Optimized View</div>
   </div>
+  `;
+}
 
-  <div class="container">
-    <div id="refreshIndicator" class="refresh-indicator">
-      ✅ Refreshed!
-    </div>
-
-    <!-- Stats -->
+/**
+ * Returns stats grid HTML for mobile dashboard
+ * @param {Object} stats - Dashboard statistics
+ * @returns {string} Stats grid HTML
+ */
+function getMobileDashboardStatsGrid(stats) {
+  return `
     <div class="stats-grid">
       <div class="stat-card">
         <div class="stat-value">${stats.totalGrievances}</div>
@@ -33787,59 +32976,62 @@ function createMobileDashboardHTML() {
         <div class="stat-label">Overdue</div>
       </div>
     </div>
+  `;
+}
 
-    <!-- Quick Actions -->
+/**
+ * Returns quick actions HTML for mobile dashboard
+ * @returns {string} Quick actions HTML
+ */
+function getMobileDashboardQuickActions() {
+  const actions = [
+    { icon: '➕', label: 'New Grievance', description: 'File a new case', handler: 'quickNewGrievance' },
+    { icon: '🔍', label: 'Search', description: 'Find grievances or members', handler: 'quickSearch' },
+    { icon: '📋', label: 'My Cases', description: 'View assigned grievances', handler: 'viewMyCases' },
+    { icon: '📊', label: 'Reports', description: 'Analytics and insights', handler: 'viewReports' }
+  ];
+
+  const buttonsHtml = actions.map(function(action) {
+    return `
+      <button class="action-button" onclick="${action.handler}()">
+        <div class="action-icon">${action.icon}</div>
+        <div class="action-text">
+          <div class="action-label">${action.label}</div>
+          <div class="action-description">${action.description}</div>
+        </div>
+      </button>
+    `;
+  }).join('');
+
+  return `
     <div class="section-title">⚡ Quick Actions</div>
     <div class="quick-actions">
-      <button class="action-button" onclick="quickNewGrievance()">
-        <div class="action-icon">➕</div>
-        <div class="action-text">
-          <div class="action-label">New Grievance</div>
-          <div class="action-description">File a new case</div>
-        </div>
-      </button>
-
-      <button class="action-button" onclick="quickSearch()">
-        <div class="action-icon">🔍</div>
-        <div class="action-text">
-          <div class="action-label">Search</div>
-          <div class="action-description">Find grievances or members</div>
-        </div>
-      </button>
-
-      <button class="action-button" onclick="viewMyCases()">
-        <div class="action-icon">📋</div>
-        <div class="action-text">
-          <div class="action-label">My Cases</div>
-          <div class="action-description">View assigned grievances</div>
-        </div>
-      </button>
-
-      <button class="action-button" onclick="viewReports()">
-        <div class="action-icon">📊</div>
-        <div class="action-text">
-          <div class="action-label">Reports</div>
-          <div class="action-description">Analytics and insights</div>
-        </div>
-      </button>
+      ${buttonsHtml}
     </div>
+  `;
+}
 
-    <!-- Recent Grievances -->
+/**
+ * Returns recent grievances section HTML for mobile dashboard
+ * @returns {string} Recent grievances section HTML
+ */
+function getMobileDashboardRecentSection() {
+  return `
     <div class="section-title">📝 Recent Grievances</div>
     <div id="recentGrievances">
       <div class="loading">Loading recent cases...</div>
     </div>
-
     <div class="swipe-hint">⬅️ Swipe cards for more options</div>
-  </div>
+  `;
+}
 
-  <!-- Floating Action Button -->
-  <button class="fab" onclick="refreshDashboard()" title="Refresh">
-    🔄
-  </button>
-
-  <script>
-    // Load recent grievances
+/**
+ * Returns JavaScript code for mobile dashboard
+ * @returns {string} JavaScript code
+ */
+function getMobileDashboardScripts() {
+  return `
+    // Load recent grievances on page load
     loadRecentGrievances();
 
     function loadRecentGrievances() {
@@ -33859,39 +33051,29 @@ function createMobileDashboardHTML() {
 
       let html = '';
       grievances.forEach(function(g) {
-        const statusClass = 'status-' + (g.status || 'filed').toLowerCase().replace(/\s+/g, '-');
-        html += \`
-          <div class="recent-card" onclick="viewGrievanceDetail('\${g.id}')">
-            <div class="recent-header">
-              <div class="recent-id">#\${g.id}</div>
-              <div class="status-badge \${statusClass}">\${g.status || 'Filed'}</div>
-            </div>
-            <div class="recent-detail">
-              <span class="recent-detail-label">Member:</span>
-              <span>\${g.memberName || 'N/A'}</span>
-            </div>
-            <div class="recent-detail">
-              <span class="recent-detail-label">Issue:</span>
-              <span>\${g.issueType || 'N/A'}</span>
-            </div>
-            <div class="recent-detail">
-              <span class="recent-detail-label">Filed:</span>
-              <span>\${g.filedDate || 'N/A'}</span>
-            </div>
-            ${g.deadline ? `
-            <div class="recent-detail">
-              <span class="recent-detail-label">Deadline:</span>
-              <span>\${g.deadline}</span>
-            </div>
-            ` : ''}
-          </div>
-        \`;
+        const statusClass = 'status-' + (g.status || 'filed').toLowerCase().replace(/\\s+/g, '-');
+        html += renderGrievanceCard(g, statusClass);
       });
 
       container.innerHTML = html;
-
-      // Add swipe gesture support
       addSwipeSupport();
+    }
+
+    function renderGrievanceCard(g, statusClass) {
+      let deadlineHtml = '';
+      if (g.deadline) {
+        deadlineHtml = '<div class="recent-detail"><span class="recent-detail-label">Deadline:</span><span>' + g.deadline + '</span></div>';
+      }
+      return '<div class="recent-card" onclick="viewGrievanceDetail(\\'' + g.id + '\\')">' +
+        '<div class="recent-header">' +
+          '<div class="recent-id">#' + g.id + '</div>' +
+          '<div class="status-badge ' + statusClass + '">' + (g.status || 'Filed') + '</div>' +
+        '</div>' +
+        '<div class="recent-detail"><span class="recent-detail-label">Member:</span><span>' + (g.memberName || 'N/A') + '</span></div>' +
+        '<div class="recent-detail"><span class="recent-detail-label">Issue:</span><span>' + (g.issueType || 'N/A') + '</span></div>' +
+        '<div class="recent-detail"><span class="recent-detail-label">Filed:</span><span>' + (g.filedDate || 'N/A') + '</span></div>' +
+        deadlineHtml +
+      '</div>';
     }
 
     function addSwipeSupport() {
@@ -33908,14 +33090,13 @@ function createMobileDashboardHTML() {
           currentX = e.touches[0].clientX;
           const diff = currentX - startX;
           if (Math.abs(diff) > 10) {
-            card.style.transform = \`translateX(\${diff}px)\`;
+            card.style.transform = 'translateX(' + diff + 'px)';
           }
         });
 
         card.addEventListener('touchend', function() {
           const diff = currentX - startX;
           if (Math.abs(diff) > 100) {
-            // Swipe action
             card.style.opacity = '0.5';
             setTimeout(function() { card.style.display = 'none'; }, 200);
           } else {
@@ -33948,9 +33129,7 @@ function createMobileDashboardHTML() {
     function refreshDashboard() {
       const indicator = document.getElementById('refreshIndicator');
       indicator.style.display = 'block';
-
       loadRecentGrievances();
-
       setTimeout(function() {
         indicator.style.display = 'none';
       }, 2000);
@@ -33972,15 +33151,12 @@ function createMobileDashboardHTML() {
         refreshDashboard();
       }
     });
-  </script>
-</body>
-</html>
   `;
 }
 
 /**
- * Gets mobile dashboard statistics
- * @returns {Object} Statistics
+ * Gets mobile dashboard statistics with permission-based filtering
+ * @returns {Object} Statistics based on user's role and permissions
  */
 function getMobileDashboardStats() {
   const ss = SpreadsheetApp.getActiveSpreadsheet();
@@ -33995,7 +33171,14 @@ function getMobileDashboardStats() {
     };
   }
 
-  const data = grievanceSheet.getRange(2, 1, grievanceSheet.getLastRow() - 1, 28).getValues();
+  // Get all data with header for filtering
+  const allData = grievanceSheet.getDataRange().getValues();
+
+  // Apply permission filtering (returns data with header)
+  const filteredData = filterGrievanceDataByPermission(allData);
+
+  // Remove header for stats calculation
+  const data = filteredData.slice(1);
 
   const stats = {
     totalGrievances: data.length,
@@ -34031,9 +33214,9 @@ function getMobileDashboardStats() {
 }
 
 /**
- * Gets recent grievances for mobile view
+ * Gets recent grievances for mobile view with permission-based filtering
  * @param {number} limit - Number of grievances to return
- * @returns {Array} Recent grievances
+ * @returns {Array} Recent grievances filtered by user permissions
  */
 function getRecentGrievancesForMobile(limit = 5) {
   const ss = SpreadsheetApp.getActiveSpreadsheet();
@@ -34043,9 +33226,16 @@ function getRecentGrievancesForMobile(limit = 5) {
     return [];
   }
 
-  const data = grievanceSheet.getRange(2, 1, grievanceSheet.getLastRow() - 1, 28).getValues();
+  // Get all data with header for filtering
+  const allData = grievanceSheet.getDataRange().getValues();
 
-  // Get most recent grievances
+  // Apply permission filtering (returns data with header)
+  const filteredData = filterGrievanceDataByPermission(allData);
+
+  // Remove header for processing
+  const data = filteredData.slice(1);
+
+  // Get most recent grievances from filtered data
   const grievances = data
     .map(function(row, index) {
       const filedDate = row[GRIEVANCE_COLS.FILED_DATE - 1];
@@ -34338,6 +33528,7 @@ function showMobileUnifiedSearch() {
 
 /**
  * Creates HTML for unified mobile search
+ * Refactored to use smaller, focused helper functions
  */
 function createMobileUnifiedSearchHTML() {
   return `
@@ -34346,7 +33537,24 @@ function createMobileUnifiedSearchHTML() {
 <head>
   <base target="_top">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <style>
+  <style>${getMobileUnifiedSearchStyles()}</style>
+</head>
+<body>
+${getMobileUnifiedSearchHeader()}
+${getMobileUnifiedSearchTabs()}
+${getMobileUnifiedSearchFiltersContainer()}
+${getMobileUnifiedSearchResultsContainer()}
+  <script>${getMobileUnifiedSearchScripts()}</script>
+</body>
+</html>
+  `;
+}
+
+/**
+ * Returns CSS styles for mobile unified search
+ */
+function getMobileUnifiedSearchStyles() {
+  return `
     * {
       box-sizing: border-box;
       -webkit-tap-highlight-color: transparent;
@@ -34509,9 +33717,14 @@ function createMobileUnifiedSearchHTML() {
       font-size: 12px;
       margin-left: 6px;
     }
-  </style>
-</head>
-<body>
+  `;
+}
+
+/**
+ * Returns header HTML for mobile unified search
+ */
+function getMobileUnifiedSearchHeader() {
+  return `
   <div class="header">
     <h2>🔍 Quick Search</h2>
     <div class="search-container">
@@ -34519,8 +33732,14 @@ function createMobileUnifiedSearchHTML() {
       <input type="text" class="search-input" id="searchInput"
              placeholder="Search members or grievances..." autofocus>
     </div>
-  </div>
+  </div>`;
+}
 
+/**
+ * Returns tabs HTML for mobile unified search
+ */
+function getMobileUnifiedSearchTabs() {
+  return `
   <div class="tabs">
     <button class="tab active" id="tabMembers" onclick="switchTab('members')">
       👥 Members <span class="count-badge" id="memberCount">0</span>
@@ -34528,17 +33747,34 @@ function createMobileUnifiedSearchHTML() {
     <button class="tab" id="tabGrievances" onclick="switchTab('grievances')">
       📋 Grievances <span class="count-badge" id="grievanceCount">0</span>
     </button>
-  </div>
+  </div>`;
+}
 
+/**
+ * Returns filters container HTML for mobile unified search
+ */
+function getMobileUnifiedSearchFiltersContainer() {
+  return `
   <div class="filters" id="filtersContainer">
     <button class="filter-chip active" onclick="filterResults('all')">All</button>
-  </div>
+  </div>`;
+}
 
+/**
+ * Returns results container HTML for mobile unified search
+ */
+function getMobileUnifiedSearchResultsContainer() {
+  return `
   <div class="results" id="resultsContainer">
     <div class="loading">Loading data...</div>
-  </div>
+  </div>`;
+}
 
-  <script>
+/**
+ * Returns JavaScript for mobile unified search
+ */
+function getMobileUnifiedSearchScripts() {
+  return `
     let allMembers = [];
     let allGrievances = [];
     let currentTab = 'members';
@@ -34698,9 +33934,6 @@ function createMobileUnifiedSearchHTML() {
         .withSuccessHandler(function() { google.script.host.close(); })
         .navigateToGrievance(id);
     }
-  </script>
-</body>
-</html>
   `;
 }
 
@@ -42379,20 +41612,6 @@ function requirePermission(permission, action) {
   }
 }
 
-/**
- * Wraps a function with permission check
- * @param {Function} fn - Function to wrap
- * @param {string} requiredPermission - Permission required
- * @param {string} actionDescription - Description of action
- * @returns {Function} Wrapped function
- */
-function withPermission(fn, requiredPermission, actionDescription) {
-  return function(...args) {
-    requirePermission(requiredPermission, actionDescription);
-    return fn.apply(this, args);
-  };
-}
-
 /* --------------------= AUDIT LOGGING --------------------= */
 
 /**
@@ -42488,20 +41707,6 @@ function createAuditLogSheet() {
   sheet.autoResizeColumns(1, headers.length);
 
   return sheet;
-}
-
-/**
- * Logs data change event
- * @param {string} sheetName - Name of sheet changed
- * @param {string} operation - Operation (INSERT, UPDATE, DELETE)
- * @param {Object} details - Details about the change
- */
-function logDataChange(sheetName, operation, details) {
-  logAudit('DATA_CHANGE', `${operation} in ${sheetName}`, {
-    sheetName: sheetName,
-    operation: operation,
-    ...details
-  });
 }
 
 /**
@@ -42635,138 +41840,6 @@ function filterGrievanceDataByPermission(grievanceData, userEmail) {
   }
 
   return [grievanceData[0]]; // Return only header for unknown roles
-}
-
-/* --------------------= PROTECTED OPERATIONS --------------------= */
-
-/**
- * Protected version of SEED_MEMBERS - requires admin permission
- */
-function protectedSeedMembers() {
-  requirePermission('seed_data', 'seed member data');
-  logAudit('SEED_DATA', 'Started seeding member data');
-
-  // Call original function
-  return SEED_20K_MEMBERS();
-}
-
-/**
- * Protected version of CLEAR_ALL_DATA - requires admin permission
- */
-function protectedClearAllData() {
-  requirePermission('clear_data', 'clear all data');
-
-  const ui = SpreadsheetApp.getUi();
-  const response = ui.alert(
-    '⚠️ DANGER ZONE ⚠️',
-    'This will permanently delete all member and grievance data!\n\n' +
-    'Are you absolutely sure you want to proceed?',
-    ui.ButtonSet.YES_NO
-  );
-
-  if (response !== ui.Button.YES) {
-    return;
-  }
-
-  logAudit('CLEAR_DATA', 'User confirmed: Clearing all data');
-
-  // Call original clear function
-  return CLEAR_ALL_DATA();
-}
-
-/* --------------------= ADMIN FUNCTIONS --------------------= */
-
-/**
- * Shows the user management dialog (Admin only)
- */
-function showUserManagement() {
-  requirePermission('manage_users', 'manage user roles');
-
-  const ss = SpreadsheetApp.getActiveSpreadsheet();
-  let userRolesSheet = ss.getSheetByName('User Roles');
-
-  if (!userRolesSheet) {
-    userRolesSheet = createUserRolesSheet();
-  }
-
-  userRolesSheet.showSheet();
-  userRolesSheet.activate();
-
-  SpreadsheetApp.getUi().alert(
-    '👥 User Management',
-    'You can now view and edit user roles.\n\n' +
-    'Columns:\n' +
-    '• Email: User email address\n' +
-    '• Role: ADMIN, COORDINATOR, STEWARD, MEMBER, or VIEWER\n' +
-    '• Assigned Date: When role was assigned\n' +
-    '• Assigned By: Who assigned the role\n\n' +
-    'Remember to hide this sheet when done!',
-    SpreadsheetApp.getUi().ButtonSet.OK
-  );
-}
-
-/**
- * Shows the audit log (Admin only)
- */
-function showAuditLog() {
-  requirePermission('view_audit_log', 'view audit log');
-
-  const ss = SpreadsheetApp.getActiveSpreadsheet();
-  let auditSheet = ss.getSheetByName(AUDIT_LOG_CONFIG.LOG_SHEET_NAME);
-
-  if (!auditSheet) {
-    SpreadsheetApp.getUi().alert(ERROR_MESSAGES.SHEET_NOT_FOUND(AUDIT_LOG_CONFIG.LOG_SHEET_NAME));
-    return;
-  }
-
-  auditSheet.showSheet();
-  auditSheet.activate();
-
-  SpreadsheetApp.getUi().alert(
-    '📋 Audit Log',
-    'Showing all system access and change events.\n\n' +
-    'This log tracks:\n' +
-    '• User access\n' +
-    '• Data changes\n' +
-    '• Permission checks\n' +
-    '• Security events\n\n' +
-    `Log is limited to last ${AUDIT_LOG_CONFIG.MAX_ENTRIES.toLocaleString()} events.`,
-    SpreadsheetApp.getUi().ButtonSet.OK
-  );
-}
-
-/**
- * Exports audit log to CSV (Admin only)
- */
-function exportAuditLog() {
-  requirePermission('view_audit_log', 'export audit log');
-
-  const ss = SpreadsheetApp.getActiveSpreadsheet();
-  const auditSheet = ss.getSheetByName(AUDIT_LOG_CONFIG.LOG_SHEET_NAME);
-
-  if (!auditSheet) {
-    SpreadsheetApp.getUi().alert(ERROR_MESSAGES.SHEET_NOT_FOUND(AUDIT_LOG_CONFIG.LOG_SHEET_NAME));
-    return;
-  }
-
-  // This would create a CSV file in Google Drive
-  const data = auditSheet.getDataRange().getValues();
-  const csv = data.map(function(row) { return row.join(','); }).join('\n');
-
-  const folder = DriveApp.getRootFolder();
-  const file = folder.createFile(
-    `Audit_Log_${new Date().toISOString().slice(0, 10)}.csv`,
-    csv,
-    MimeType.CSV
-  );
-
-  logAudit('EXPORT_AUDIT_LOG', 'Exported audit log to CSV');
-
-  SpreadsheetApp.getUi().alert(
-    ERROR_MESSAGES.SUCCESS('Export Complete'),
-    `Audit log exported to:\n${file.getName()}\n\nFile ID: ${file.getId()}`,
-    SpreadsheetApp.getUi().ButtonSet.OK
-  );
 }
 
 
@@ -47108,6 +46181,7 @@ function showUnifiedOperationsMonitor() {
 /**
  * Backend function that provides ALL data for the comprehensive dashboard
  * Called by the HTML dashboard via google.script.run
+ * Data is filtered based on user permissions
  */
 function getUnifiedDashboardData() {
   const ss = SpreadsheetApp.getActiveSpreadsheet();
@@ -47121,8 +46195,12 @@ function getUnifiedDashboardData() {
   }
 
   // Get all data
-  const grievanceData = grievanceSheet.getDataRange().getValues();
-  const memberData = memberSheet.getDataRange().getValues();
+  const rawGrievanceData = grievanceSheet.getDataRange().getValues();
+  const rawMemberData = memberSheet.getDataRange().getValues();
+
+  // Apply permission filtering based on user role
+  const grievanceData = filterGrievanceDataByPermission(rawGrievanceData);
+  const memberData = filterMemberDataByPermission(rawMemberData);
 
   // Skip headers
   const grievances = grievanceData.slice(1);
@@ -47789,6 +46867,7 @@ function getWatchlistLog(grievances, members) {
 
 /**
  * Returns the comprehensive terminal-themed HTML
+ * Refactored to use smaller, focused helper functions
  */
 function getUnifiedOperationsMonitorHTML() {
   return `<!DOCTYPE html>
@@ -47799,10 +46878,35 @@ function getUnifiedOperationsMonitorHTML() {
     <title>SEIU 509 Unified Ops Dashboard</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
-        /* Custom Terminal Theme */
+${getUnifiedOpsStyles()}
+    </style>
+</head>
+<body>
+${getUnifiedOpsLoadingOverlay()}
+${getUnifiedOpsHeader()}
+${getUnifiedOpsExecutiveSection()}
+${getUnifiedOpsEfficiencySection()}
+${getUnifiedOpsNetworkSection()}
+${getUnifiedOpsActionLogSection()}
+${getUnifiedOpsFollowUpSection()}
+${getUnifiedOpsPredictiveSection()}
+${getUnifiedOpsSystemicSection()}
+    <script>
+${getUnifiedOpsScripts()}
+    </script>
+</body>
+</html>
+  `;
+}
+
+/**
+ * Returns terminal-themed CSS styles
+ */
+function getUnifiedOpsStyles() {
+  return `
         body {
             background-color: #000000;
-            color: #00FF00; /* Primary terminal green */
+            color: #00FF00;
             font-family: 'Consolas', 'Courier New', monospace;
             padding: 10px;
         }
@@ -47814,7 +46918,7 @@ function getUnifiedOperationsMonitorHTML() {
             margin-bottom: 20px;
         }
         .header-bar {
-            color: #FF00FF; /* Magenta for headers */
+            color: #FF00FF;
             border-bottom: 1px solid #FF00FF80;
             padding-bottom: 5px;
             margin-bottom: 10px;
@@ -47830,89 +46934,67 @@ function getUnifiedOperationsMonitorHTML() {
             height: 100%;
             transition: width 0.5s;
         }
-        .process-row:nth-child(even) {
-            background-color: #001100;
-        }
-        .process-row:hover {
-            background-color: #003300;
-            cursor: pointer;
-        }
+        .process-row:nth-child(even) { background-color: #001100; }
+        .process-row:hover { background-color: #003300; cursor: pointer; }
         .text-red-term { color: #FF0000; }
         .text-yellow-term { color: #FFFF00; }
         .text-green-term { color: #00FF00; }
         .text-cyan-term { color: #00FFFF; }
         .value-big { font-size: 2rem; font-weight: bold; margin-bottom: 5px; }
-        .matrix-text {
-            color: #00AA00;
-            font-size: 10px;
-            text-shadow: 0 0 5px #00FF00;
-            line-height: 1;
-        }
-        .btn-control {
-            background-color: #008080; /* Teal/Cyan Button */
-            color: black;
-            padding: 8px 15px;
-            border-radius: 4px;
-            font-weight: bold;
-            cursor: pointer;
-            transition: background-color 0.2s;
-        }
-        .btn-control:hover {
-            background-color: #00FFFF;
-        }
-        #loading-overlay {
-            position: fixed;
-            top: 0; left: 0; width: 100%; height: 100%;
-            background: black;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            z-index: 1000;
-            color: #00FF00;
-            font-size: 24px;
-        }
-    </style>
-</head>
-<body>
+        .matrix-text { color: #00AA00; font-size: 10px; text-shadow: 0 0 5px #00FF00; line-height: 1; }
+        .btn-control { background-color: #008080; color: black; padding: 8px 15px; border-radius: 4px; font-weight: bold; cursor: pointer; transition: background-color 0.2s; }
+        .btn-control:hover { background-color: #00FFFF; }
+        #loading-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: black; display: flex; justify-content: center; align-items: center; z-index: 1000; color: #00FF00; font-size: 24px; }
+  `;
+}
 
+/**
+ * Returns loading overlay HTML
+ */
+function getUnifiedOpsLoadingOverlay() {
+  return `
     <div id="loading-overlay">
         <div>INITIALIZING SEIU 509 OPS MONITOR... <br> [CONNECTING TO MAINFRAME]</div>
     </div>
+  `;
+}
 
-    <!-- Main Title -->
+/**
+ * Returns header HTML
+ */
+function getUnifiedOpsHeader() {
+  return `
     <div class="text-center text-4xl mb-6 header-bar">
         SEIU 509 :: COMPREHENSIVE ACTION DASHBOARD :: <span id="current-time"></span>
     </div>
+  `;
+}
 
-    <!-- SECTION 1: EXECUTIVE STATUS & DEADLINES -->
+/**
+ * Returns executive overview section HTML
+ */
+function getUnifiedOpsExecutiveSection() {
+  return `
     <div class="terminal-block">
         <div class="header-bar text-xl">
             <span class="text-cyan-term">[STATUS]</span> EXECUTIVE OVERVIEW & ALERTS
         </div>
         <div class="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
-
-            <!-- BLOCK 1A: ACTIVE CASELOAD -->
             <div class="p-2 border border-gray-700">
                 <span class="text-cyan-term block">TOTAL ACTIVE CASELOAD:</span>
                 <div class="value-big text-red-term" id="active-cases">--</div>
                 <div class="matrix-text">High-Priority: <span id="high-risk-count">--</span></div>
             </div>
-
-            <!-- BLOCK 1B: DEADLINE COMPLIANCE -->
             <div class="p-2 border border-gray-700">
                 <span class="text-cyan-term block">DEADLINE COMPLIANCE:</span>
                 <div class="value-big text-red-term" id="overdue-count">--</div>
                 <div class="matrix-text text-yellow-term">Due This Week: <span id="due-week-count">--</span></div>
             </div>
-
-            <!-- BLOCK 1C: RESOLUTION SUCCESS -->
             <div class="p-2 border border-gray-700">
                 <span class="text-cyan-term block">RESOLUTIONS WIN RATE (YTD):</span>
                 <div class="value-big text-green-term" id="win-rate">--</div>
                 <div class="matrix-text">Avg Days to Close: <span id="avg-days">--</span></div>
             </div>
-
-            <!-- BLOCK 1D: ESCALATION WATCH (NEW METRIC) -->
             <div class="p-2 border border-gray-700">
                 <span class="text-cyan-term block">ESCALATION WATCH (III+):</span>
                 <div class="value-big text-yellow-term" id="escalation-count">--</div>
@@ -47920,27 +47002,34 @@ function getUnifiedOperationsMonitorHTML() {
             </div>
         </div>
     </div>
+  `;
+}
 
-
-    <!-- SECTION 2: PROCESS EFFICIENCY / CASELOAD -->
+/**
+ * Returns efficiency section HTML
+ */
+function getUnifiedOpsEfficiencySection() {
+  return `
     <div class="terminal-block">
         <div class="header-bar text-xl">
             <span class="text-cyan-term">[EFFICIENCY]</span> GRIEVANCE PROCESS EFFICIENCY - Caseload
         </div>
-
         <div id="steps-stats" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-            <!-- STEP Caseload Bars will be populated here -->
         </div>
     </div>
+  `;
+}
 
-    <!-- SECTION 3: NETWORK HEALTH & CAPACITY -->
+/**
+ * Returns network health section HTML
+ */
+function getUnifiedOpsNetworkSection() {
+  return `
     <div class="terminal-block">
         <div class="header-bar text-xl">
             <span class="text-cyan-term">[NETWORK]</span> STEWARD & MEMBER HEALTH OVERVIEW
         </div>
         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 text-sm">
-
-            <!-- BLOCK 3A: MEMBER UTILIZATION -->
             <div class="p-2 border border-gray-700">
                 <span class="text-cyan-term block">TOTAL MEMBERS: <span id="total-members-full" class="float-right text-green-term">--</span></span>
                 <span class="text-cyan-term block">Engagement Rate: <span id="engagement-rate" class="float-right text-yellow-term">--</span></span>
@@ -47949,8 +47038,6 @@ function getUnifiedOperationsMonitorHTML() {
                 </div>
                 <div class="mt-4 text-red-term">Members with No Contact (60d): <span id="no-contact-count" class="float-right">--</span></div>
             </div>
-
-            <!-- BLOCK 3B: STEWARD CAPACITY (NEW METRIC) -->
             <div class="p-2 border border-gray-700">
                 <span class="text-cyan-term block">STEWARD CAPACITY: <span id="steward-count" class="float-right text-green-term">--</span></span>
                 <span class="text-cyan-term block">Avg Load / Steward: <span id="avg-load" class="float-right text-yellow-term">--</span></span>
@@ -47959,8 +47046,6 @@ function getUnifiedOperationsMonitorHTML() {
                 </div>
                  <div class="mt-4 text-red-term">Overloaded Stewards (>7 Cases): <span id="overloaded-stewards" class="float-right">--</span></div>
             </div>
-
-            <!-- BLOCK 3C: ISSUE SEVERITY DISTRIBUTION -->
             <div class="p-2 border border-gray-700">
                 <span class="text-cyan-term block">ISSUE SEVERITY DISTRIBUTION:</span>
                 <div class="mt-2 text-sm">
@@ -47971,9 +47056,14 @@ function getUnifiedOperationsMonitorHTML() {
             </div>
         </div>
     </div>
+  `;
+}
 
-
-    <!-- SECTION 4: ACTION LOG (FULL WIDTH PROCESS LIST) -->
+/**
+ * Returns action log section HTML
+ */
+function getUnifiedOpsActionLogSection() {
+  return `
     <div class="terminal-block">
         <div class="header-bar text-xl">
             <span class="text-cyan-term">[ACTION]</span> ACTIVE GRIEVANCE LOG :: Top Priority List
@@ -47986,40 +47076,50 @@ function getUnifiedOperationsMonitorHTML() {
             <span class="col-span-2">DEADLINE (d)</span>
             <span class="col-span-1 text-right">STATUS</span>
         </div>
-        <div id="process-list" class="text-sm mt-1">
-            <!-- Data will be populated here -->
-        </div>
+        <div id="process-list" class="text-sm mt-1"></div>
     </div>
+  `;
+}
 
-    <!-- SECTION 5: FOLLOW-UP RADAR -->
+/**
+ * Returns follow-up radar section HTML
+ */
+function getUnifiedOpsFollowUpSection() {
+  return `
     <div class="terminal-block">
         <div class="header-bar text-xl">
             <span class="text-cyan-term">[RADAR]</span> STEWARD FOLLOW-UP RADAR
         </div>
-
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm" id="follow-up-radar">
-            <!-- Follow-up tasks populated here -->
-        </div>
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm" id="follow-up-radar"></div>
     </div>
+  `;
+}
 
-    <!-- SECTION 6: PREDICTIVE ALERTS -->
+/**
+ * Returns predictive alerts section HTML
+ */
+function getUnifiedOpsPredictiveSection() {
+  return `
     <div class="terminal-block">
         <div class="header-bar text-xl">
             <span class="text-cyan-term">[PREDICT]</span> EMERGING RISK & CHURN ALERTS
         </div>
-
         <div class="grid grid-cols-12 text-sm font-bold border-b border-gray-700 pb-1 text-cyan-term">
             <span class="col-span-3">MEMBER ID</span>
             <span class="col-span-4">RISK SIGNAL</span>
             <span class="col-span-3">STRENGTH</span>
             <span class="col-span-2 text-right">LAST CONTACT</span>
         </div>
-        <div id="predictive-alerts" class="text-sm mt-1">
-             <!-- Predictive risk items populated here -->
-        </div>
+        <div id="predictive-alerts" class="text-sm mt-1"></div>
     </div>
+  `;
+}
 
-    <!-- SECTION 7: SYSTEMIC RISK MONITOR -->
+/**
+ * Returns systemic risk section HTML
+ */
+function getUnifiedOpsSystemicSection() {
+  return `
     <div class="terminal-block">
         <div class="header-bar text-xl">
             <span class="text-cyan-term">[SYSTEM]</span> SYSTEMIC RISK MONITOR (90 DAYS)
@@ -48031,12 +47131,16 @@ function getUnifiedOperationsMonitorHTML() {
             <span class="col-span-2">LOSS RATE</span>
             <span class="col-span-2 text-right">SEVERITY</span>
         </div>
-        <div id="systemic-risk" class="text-sm mt-1">
-             <!-- Systemic risk items populated here -->
-        </div>
+        <div id="systemic-risk" class="text-sm mt-1"></div>
     </div>
+  `;
+}
 
-    <script>
+/**
+ * Returns JavaScript code for unified operations dashboard
+ */
+function getUnifiedOpsScripts() {
+  return `
         const STATUS_COLORS = {
             'CRITICAL': 'text-red-term', 'ALERT': 'text-yellow-term', 'WARNING': 'text-yellow-term',
             'NORMAL': 'text-green-term', 'GREEN': 'text-green-term', 'YELLOW': 'text-yellow-term',
@@ -48048,7 +47152,8 @@ function getUnifiedOperationsMonitorHTML() {
             document.getElementById('current-time').textContent = now.toLocaleTimeString('en-US', {hour12: false});
         }
 
-        function renderValue(id, value, format = 'number') {
+        function renderValue(id, value, format) {
+            format = format || 'number';
             const element = document.getElementById(id);
             if (!element) return;
             if (value === undefined || value === null || value === "") {
@@ -48065,11 +47170,18 @@ function getUnifiedOperationsMonitorHTML() {
             return STATUS_COLORS[status] || 'text-cyan-term';
         }
 
-        // --- RENDER FUNCTIONS ---
         function renderDashboard(data) {
             document.getElementById('loading-overlay').style.display = 'none';
+            renderExecutiveStatus(data);
+            renderStepsEfficiency(data);
+            renderNetworkHealth(data);
+            renderActionLog(data);
+            renderFollowUpRadar(data);
+            renderPredictiveAlerts(data);
+            renderSystemicRisk(data);
+        }
 
-            // 1. Executive Status
+        function renderExecutiveStatus(data) {
             renderValue('active-cases', data.activeCases);
             renderValue('overdue-count', data.overdue);
             renderValue('due-week-count', data.dueWeek);
@@ -48078,116 +47190,107 @@ function getUnifiedOperationsMonitorHTML() {
             renderValue('escalation-count', data.escalationCount);
             renderValue('arbitrations', data.arbitrations);
             renderValue('high-risk-count', data.highRiskCount);
+        }
 
-            // 2. Steps Efficiency
+        function renderStepsEfficiency(data) {
             const stepContainer = document.getElementById('steps-stats');
-            stepContainer.innerHTML = data.steps.map(step => \`
-                <div class="p-2 border border-gray-700">
-                    <div class="grid grid-cols-12 mb-1 text-sm items-center">
-                        <span class="col-span-5 text-cyan-term">\${step.name} (\${step.team})</span>
-                        <span class="col-span-3 text-yellow-term text-right">\${step.caseload}%</span>
-                        <span class="col-span-4 text-right">\${step.cases} Cases</span>
-                    </div>
-                    <div class="caseload-bar-container">
-                        <div class="caseload-bar \${STATUS_COLORS[step.status]}" style="width: \${step.caseload}%"></div>
-                    </div>
-                </div>
-            \`).join('');
+            stepContainer.innerHTML = data.steps.map(function(step) {
+                return '<div class="p-2 border border-gray-700">' +
+                    '<div class="grid grid-cols-12 mb-1 text-sm items-center">' +
+                        '<span class="col-span-5 text-cyan-term">' + step.name + ' (' + step.team + ')</span>' +
+                        '<span class="col-span-3 text-yellow-term text-right">' + step.caseload + '%</span>' +
+                        '<span class="col-span-4 text-right">' + step.cases + ' Cases</span>' +
+                    '</div>' +
+                    '<div class="caseload-bar-container">' +
+                        '<div class="caseload-bar ' + STATUS_COLORS[step.status] + '" style="width: ' + step.caseload + '%"></div>' +
+                    '</div>' +
+                '</div>';
+            }).join('');
+        }
 
-            // 3. Network Health
+        function renderNetworkHealth(data) {
             renderValue('total-members-full', data.totalMembers);
             renderValue('engagement-rate', data.engagementRate, 'percent');
             document.getElementById('engagement-bar').style.width = data.engagementRate + '%';
             renderValue('no-contact-count', data.noContactCount);
-
             renderValue('steward-count', data.stewardCount);
             renderValue('avg-load', data.avgLoad.toFixed(1));
             document.getElementById('capacity-bar').style.width = (data.avgLoad * 10) + '%';
             renderValue('overloaded-stewards', data.overloadedStewards);
-
             renderValue('disc-count', data.issueDistribution.disciplinary);
             renderValue('contract-count', data.issueDistribution.contract);
             renderValue('work-count', data.issueDistribution.work);
+        }
 
-            // 4. Action Log
+        function renderActionLog(data) {
             const logContainer = document.getElementById('process-list');
             logContainer.innerHTML = data.processes.map(function(proc) {
                 const statusColor = getStatusColorClass(proc.status);
-                const dueText = proc.due < 0 ? \`<span class="text-red-term">\${Math.abs(proc.due)} OVERDUE</span>\` : \`\${proc.due}d\`;
-                return \`
-                    <div class="process-row grid grid-cols-12 py-1 text-xs">
-                        <span class="col-span-1 text-cyan-term">\${proc.id}</span>
-                        <span class="col-span-3">\${proc.program}</span>
-                        <span class="col-span-3 text-green-term">\${proc.memberId} / \${proc.steward}</span>
-                        <span class="col-span-2 text-yellow-term">\${proc.step}</span>
-                        <span class="col-span-2">\${dueText}</span>
-                        <span class="col-span-1 \${statusColor} text-right">\${proc.status}</span>
-                    </div>
-                \`;
+                const dueText = proc.due < 0 ? '<span class="text-red-term">' + Math.abs(proc.due) + ' OVERDUE</span>' : proc.due + 'd';
+                return '<div class="process-row grid grid-cols-12 py-1 text-xs">' +
+                    '<span class="col-span-1 text-cyan-term">' + proc.id + '</span>' +
+                    '<span class="col-span-3">' + proc.program + '</span>' +
+                    '<span class="col-span-3 text-green-term">' + proc.memberId + ' / ' + proc.steward + '</span>' +
+                    '<span class="col-span-2 text-yellow-term">' + proc.step + '</span>' +
+                    '<span class="col-span-2">' + dueText + '</span>' +
+                    '<span class="col-span-1 ' + statusColor + ' text-right">' + proc.status + '</span>' +
+                '</div>';
             }).join('');
+        }
 
-            // 5. Follow-Up Radar
+        function renderFollowUpRadar(data) {
             document.getElementById('follow-up-radar').innerHTML = data.followUpTasks.map(function(task) {
                 const priorityColor = getStatusColorClass(task.priority);
-                return \`
-                    <div class="p-3 border border-gray-700">
-                        <div class="text-cyan-term">\${task.type}</div>
-                        <div class="\${priorityColor} text-lg font-bold">\${task.memberId}</div>
-                        <div class="matrix-text">Assigned: \${task.steward}</div>
-                        <div class="matrix-text text-yellow-term">Due: \${task.date}</div>
-                    </div>
-                \`;
+                return '<div class="p-3 border border-gray-700">' +
+                    '<div class="text-cyan-term">' + task.type + '</div>' +
+                    '<div class="' + priorityColor + ' text-lg font-bold">' + task.memberId + '</div>' +
+                    '<div class="matrix-text">Assigned: ' + task.steward + '</div>' +
+                    '<div class="matrix-text text-yellow-term">Due: ' + task.date + '</div>' +
+                '</div>';
             }).join('');
+        }
 
-            // 6. Predictive Alerts
+        function renderPredictiveAlerts(data) {
             document.getElementById('predictive-alerts').innerHTML = data.predictiveAlerts.map(function(alert) {
                 const strengthColor = getStatusColorClass(alert.strength);
-                return \`
-                    <div class="process-row grid grid-cols-12 py-1 text-xs">
-                        <span class="col-span-3 text-cyan-term">\${alert.memberId}</span>
-                        <span class="col-span-4">\${alert.signal}</span>
-                        <span class="col-span-3 \${strengthColor}">\${alert.strength}</span>
-                        <span class="col-span-2 text-right text-yellow-term">\${alert.lastContact}</span>
-                    </div>
-                \`;
+                return '<div class="process-row grid grid-cols-12 py-1 text-xs">' +
+                    '<span class="col-span-3 text-cyan-term">' + alert.memberId + '</span>' +
+                    '<span class="col-span-4">' + alert.signal + '</span>' +
+                    '<span class="col-span-3 ' + strengthColor + '">' + alert.strength + '</span>' +
+                    '<span class="col-span-2 text-right text-yellow-term">' + alert.lastContact + '</span>' +
+                '</div>';
             }).join('');
+        }
 
-            // 7. Systemic Risk
+        function renderSystemicRisk(data) {
             document.getElementById('systemic-risk').innerHTML = data.systemicRisk.map(function(risk) {
                 const severityColor = getStatusColorClass(risk.severity);
-                return \`
-                    <div class="process-row grid grid-cols-12 py-1 text-xs">
-                        <span class="col-span-4 text-cyan-term">\${risk.entity}</span>
-                        <span class="col-span-2">\${risk.type}</span>
-                        <span class="col-span-2 text-yellow-term">\${risk.cases}</span>
-                        <span class="col-span-2 text-red-term">\${risk.lossRate}%</span>
-                        <span class="col-span-2 \${severityColor} text-right">\${risk.severity}</span>
-                    </div>
-                \`;
+                return '<div class="process-row grid grid-cols-12 py-1 text-xs">' +
+                    '<span class="col-span-4 text-cyan-term">' + risk.entity + '</span>' +
+                    '<span class="col-span-2">' + risk.type + '</span>' +
+                    '<span class="col-span-2 text-yellow-term">' + risk.cases + '</span>' +
+                    '<span class="col-span-2 text-red-term">' + risk.lossRate + '%</span>' +
+                    '<span class="col-span-2 ' + severityColor + ' text-right">' + risk.severity + '</span>' +
+                '</div>';
             }).join('');
         }
 
         function initDashboard() {
             updateTime();
             setInterval(updateTime, 1000);
-
-            // CALL GOOGLE APPS SCRIPT AND RENDER EVERYTHING
             if (typeof google === 'object' && google.script && google.script.run) {
                 google.script.run
                     .withSuccessHandler(renderDashboard)
                     .withFailureHandler(function(error) {
-                        document.getElementById('loading-overlay').innerHTML = \`<div class="text-red-term">CONNECTION ERROR: \${error.message}<br>ENSURE WEB APP IS DEPLOYED.</div>\`;
+                        document.getElementById('loading-overlay').innerHTML = '<div class="text-red-term">CONNECTION ERROR: ' + error.message + '<br>ENSURE WEB APP IS DEPLOYED.</div>';
                     })
                     .getUnifiedDashboardData();
             } else {
-                 document.getElementById('loading-overlay').innerHTML = \`<div class="text-red-term">ENVIRONMENT ERROR: 'google.script.run' not available.<br>Please deploy the script as a Web App and open the resulting URL.</div>\`;
+                document.getElementById('loading-overlay').innerHTML = '<div class="text-red-term">ENVIRONMENT ERROR: google.script.run not available.<br>Please deploy the script as a Web App.</div>';
             }
         }
 
         window.onload = initDashboard;
-    </script>
-</body>
-</html>
   `;
 }
 
@@ -49517,2609 +48620,6 @@ function batchUpdateWorkflowState() {
     `Successfully updated: ${updated}\nErrors (invalid transitions): ${errors}`,
     ui.ButtonSet.OK
   );
-}
-
-
-
-// ================================================================================
-// MODULE: TestFramework.gs
-// Source: TestFramework.gs
-// ================================================================================
-
-/**
- * ------------------------------------------------------------------------====
- * TEST FRAMEWORK - Simple Testing Library for Google Apps Script
- * ------------------------------------------------------------------------====
- *
- * A lightweight testing framework that runs within the Apps Script environment.
- * Provides assertion methods, test runners, and reporting.
- *
- * Usage:
- *   1. Write test functions (see tests/*.test.gs)
- *   2. Run via menu: 🧪 Tests > Run All Tests
- *   3. View results in test report sheet
- *
- * ------------------------------------------------------------------------====
- */
-
-// Test results storage
-TEST_RESULTS = {
-  passed: [],
-  failed: [],
-  skipped: []
-};
-
-/**
- * Code coverage tracking
- * Tracks which functions are called during test execution
- */
-const CODE_COVERAGE = {
-  enabled: true,
-  functionsExecuted: new Set(),
-  totalFunctions: 0,
-  coveredFunctions: 0,
-  coveragePercent: 0
-};
-
-/**
- * Tracks function execution for code coverage
- * @param {string} functionName - Name of function being executed
- */
-function trackCoverage(functionName) {
-  if (CODE_COVERAGE.enabled) {
-    CODE_COVERAGE.functionsExecuted.add(functionName);
-  }
-}
-
-/**
- * Gets list of all testable functions in the project
- * @returns {Array<string>} Array of function names
- */
-function getAllFunctionNames() {
-  const functionNames = [];
-
-  // Get all global functions (this won't work perfectly in Apps Script, but provides baseline)
-  try {
-    // This is a best-effort approach
-    // In production, you'd maintain a manual list or use static analysis
-    const knownModules = [
-      'CREATE_509_DASHBOARD', 'createConfigTab', 'createMemberDirectory', 'createGrievanceLog',
-      'sanitizeHTML', 'isAdmin', 'requireRole', 'logAuditEvent',
-      'getMemberList', 'archiveOldGrievances', 't', 'getUserLanguage'
-      // Add more as needed
-    ];
-
-    return knownModules;
-  } catch (error) {
-    Logger.log('Error getting function names: ' + error.message);
-    return [];
-  }
-}
-
-/**
- * Calculates code coverage statistics
- * @returns {Object} Coverage statistics
- */
-function calculateCoverage() {
-  const allFunctions = getAllFunctionNames();
-  CODE_COVERAGE.totalFunctions = allFunctions.length;
-  CODE_COVERAGE.coveredFunctions = CODE_COVERAGE.functionsExecuted.size;
-
-  if (CODE_COVERAGE.totalFunctions > 0) {
-    CODE_COVERAGE.coveragePercent =
-      (CODE_COVERAGE.coveredFunctions / CODE_COVERAGE.totalFunctions) * 100;
-  }
-
-  return {
-    total: CODE_COVERAGE.totalFunctions,
-    covered: CODE_COVERAGE.coveredFunctions,
-    percent: CODE_COVERAGE.coveragePercent.toFixed(2),
-    uncovered: allFunctions.filter(fn => !CODE_COVERAGE.functionsExecuted.has(fn))
-  };
-}
-
-/**
- * Resets code coverage tracking
- */
-function resetCoverage() {
-  CODE_COVERAGE.functionsExecuted.clear();
-  CODE_COVERAGE.totalFunctions = 0;
-  CODE_COVERAGE.coveredFunctions = 0;
-  CODE_COVERAGE.coveragePercent = 0;
-}
-
-/**
- * Assertion library
- */
-const Assert = {
-  /**
-   * Assert that two values are equal
-   */
-  assertEquals: function(expected, actual, message) {
-    if (expected !== actual) {
-      throw new Error(
-        (message || 'Assertion failed') +
-        `\nExpected: ${JSON.stringify(expected)}` +
-        `\nActual: ${JSON.stringify(actual)}`
-      );
-    }
-  },
-
-  /**
-   * Assert that value is true
-   */
-  assertTrue: function(value, message) {
-    if (value !== true) {
-      throw new Error(
-        (message || 'Expected true') +
-        `\nActual: ${JSON.stringify(value)}`
-      );
-    }
-  },
-
-  /**
-   * Assert that value is false
-   */
-  assertFalse: function(value, message) {
-    if (value !== false) {
-      throw new Error(
-        (message || 'Expected false') +
-        `\nActual: ${JSON.stringify(value)}`
-      );
-    }
-  },
-
-  /**
-   * Assert that value is not null or undefined
-   */
-  assertNotNull: function(value, message) {
-    if (value === null || value === undefined) {
-      throw new Error(message || 'Value should not be null or undefined');
-    }
-  },
-
-  /**
-   * Assert that value is null
-   */
-  assertNull: function(value, message) {
-    if (value !== null) {
-      throw new Error(
-        (message || 'Expected null') +
-        `\nActual: ${JSON.stringify(value)}`
-      );
-    }
-  },
-
-  /**
-   * Assert that array contains value
-   */
-  assertContains: function(array, value, message) {
-    if (!Array.isArray(array)) {
-      throw new Error('First argument must be an array');
-    }
-    if (array.indexOf(value) === -1) {
-      throw new Error(
-        (message || 'Array does not contain value') +
-        `\nArray: ${JSON.stringify(array)}` +
-        `\nValue: ${JSON.stringify(value)}`
-      );
-    }
-  },
-
-  /**
-   * Assert that array has specific length
-   */
-  assertArrayLength: function(array, expectedLength, message) {
-    if (!Array.isArray(array)) {
-      throw new Error('First argument must be an array');
-    }
-    if (array.length !== expectedLength) {
-      throw new Error(
-        (message || 'Array length mismatch') +
-        `\nExpected length: ${expectedLength}` +
-        `\nActual length: ${array.length}`
-      );
-    }
-  },
-
-  /**
-   * Assert that function throws an error
-   */
-  assertThrows: function(fn, message) {
-    let threw = false;
-    try {
-      fn();
-    } catch (e) {
-      threw = true;
-    }
-    if (!threw) {
-      throw new Error(message || 'Expected function to throw an error');
-    }
-  },
-
-  /**
-   * Assert that two values are approximately equal (for floating point)
-   */
-  assertApproximately: function(expected, actual, tolerance, message) {
-    tolerance = tolerance || 0.001;
-    if (Math.abs(expected - actual) > tolerance) {
-      throw new Error(
-        (message || 'Values not approximately equal') +
-        `\nExpected: ${expected}` +
-        `\nActual: ${actual}` +
-        `\nTolerance: ${tolerance}`
-      );
-    }
-  },
-
-  /**
-   * Assert that date is within range
-   */
-  assertDateEquals: function(expected, actual, message) {
-    const expectedTime = expected instanceof Date ? expected.getTime() : new Date(expected).getTime();
-    const actualTime = actual instanceof Date ? actual.getTime() : new Date(actual).getTime();
-
-    if (expectedTime !== actualTime) {
-      throw new Error(
-        (message || 'Dates not equal') +
-        `\nExpected: ${new Date(expectedTime).toISOString()}` +
-        `\nActual: ${new Date(actualTime).toISOString()}`
-      );
-    }
-  },
-
-  /**
-   * Assert that function does NOT throw an error
-   */
-  assertNotThrows: function(fn, message) {
-    try {
-      fn();
-    } catch (e) {
-      throw new Error(
-        (message || 'Expected function to not throw') +
-        `\nError thrown: ${e.message}`
-      );
-    }
-  },
-
-  /**
-   * Explicitly fail a test
-   */
-  fail: function(message) {
-    throw new Error(message || 'Test failed');
-  }
-};
-
-/**
- * Test runner - discovers and runs all test functions
- */
-function runAllTests() {
-  const ui = SpreadsheetApp.getUi();
-
-  ui.alert(
-    '🧪 Running All Tests',
-    'This will run the complete test suite. This may take 2-3 minutes.\n\n' +
-    'Results will be displayed in a new "Test Results" sheet.',
-    ui.ButtonSet.OK
-  );
-
-  SpreadsheetApp.getActive().toast('🧪 Running test suite...', 'Testing', -1);
-
-  // Clear previous results
-  TEST_RESULTS.passed = [];
-  TEST_RESULTS.failed = [];
-  TEST_RESULTS.skipped = [];
-
-  // Reset code coverage
-  resetCoverage();
-
-  const startTime = new Date();
-
-  // Discover and run all test functions
-  const testFunctions = [
-    // Code.gs tests
-    'testFilingDeadlineCalculation',
-    'testStepIDeadlineCalculation',
-    'testStepIIAppealDeadlineCalculation',
-    'testDaysOpenCalculation',
-    'testNextActionDueLogic',
-    'testMemberDirectoryFormulas',
-    'testDataValidationSetup',
-    'testConfigDropdownValues',
-    'testMemberValidationRules',
-    'testGrievanceValidationRules',
-
-    // Seeding tests
-    'testMemberSeedingValidation',
-    'testGrievanceSeedingValidation',
-    'testMemberEmailFormat',
-    'testMemberIDUniqueness',
-    'testGrievanceMemberLinking',
-    'testOpenRateRange',
-
-    // GrievanceWorkflow tests
-    'testGetMemberList',
-    'testGetMemberListEmpty',
-    'testGetMemberListFiltersEmptyRows',
-    'testMemberSelectionDialog',
-
-    // SeedNuke tests
-    'testClearMemberDirectoryPreservesHeaders',
-    'testClearGrievanceLogPreservesHeaders',
-    'testNukePropertySet',
-
-    // Integration tests
-    'testCompleteGrievanceWorkflow',
-    'testDashboardMetricsUpdate',
-    'testMemberGrievanceSnapshot'
-  ];
-
-  // Run each test
-  testFunctions.forEach(function(testName) {
-    try {
-      const testFn = this[testName];
-      if (typeof testFn === 'function') {
-        testFn();
-        TEST_RESULTS.passed.push({
-          name: testName,
-          time: new Date() - startTime
-        });
-      } else {
-        TEST_RESULTS.skipped.push({
-          name: testName,
-          reason: 'Function not found'
-        });
-      }
-    } catch (error) {
-      TEST_RESULTS.failed.push({
-        name: testName,
-        error: error.message,
-        stack: error.stack
-      });
-    }
-  });
-
-  const endTime = new Date();
-  const duration = (endTime - startTime) / 1000;
-
-  // Calculate code coverage
-  const coverage = calculateCoverage();
-
-  // Generate test report
-  generateTestReport(duration);
-
-  // Show summary
-  const total = TEST_RESULTS.passed.length + TEST_RESULTS.failed.length + TEST_RESULTS.skipped.length;
-  const passRate = ((TEST_RESULTS.passed.length / total) * 100).toFixed(1);
-
-  SpreadsheetApp.getActive().toast(
-    `✅ ${TEST_RESULTS.passed.length} passed | ❌ ${TEST_RESULTS.failed.length} failed | ⏭️ ${TEST_RESULTS.skipped.length} skipped`,
-    `Tests Complete (${passRate}% pass rate)`,
-    10
-  );
-
-  // Show detailed results dialog
-  ui.alert(
-    '🧪 Test Suite Complete',
-    `Results:\n\n` +
-    `✅ Passed: ${TEST_RESULTS.passed.length}\n` +
-    `❌ Failed: ${TEST_RESULTS.failed.length}\n` +
-    `⏭️ Skipped: ${TEST_RESULTS.skipped.length}\n\n` +
-    `Total: ${total} tests\n` +
-    `Pass Rate: ${passRate}%\n` +
-    `Duration: ${duration.toFixed(2)}s\n\n` +
-    `View detailed results in the "Test Results" sheet.`,
-    ui.ButtonSet.OK
-  );
-}
-
-/**
- * Generates a detailed test report in a new sheet
- * @param {number} [duration=0] - Test duration in seconds
- */
-function generateTestReport(duration) {
-  duration = duration || 0;
-  const ss = SpreadsheetApp.getActive();
-
-  // Create or clear Test Results sheet
-  let reportSheet = ss.getSheetByName('Test Results');
-  if (!reportSheet) {
-    reportSheet = ss.insertSheet('Test Results');
-  }
-  reportSheet.clear();
-
-  // Header
-  reportSheet.getRange('A1:F1').merge()
-    .setValue('🧪 TEST RESULTS')
-    .setFontSize(18)
-    .setFontWeight('bold')
-    .setHorizontalAlignment('center')
-    .setBackground('#4A5568')
-    .setFontColor('#FFFFFF');
-
-  // Summary
-  const total = TEST_RESULTS.passed.length + TEST_RESULTS.failed.length + TEST_RESULTS.skipped.length;
-  const passRate = ((TEST_RESULTS.passed.length / total) * 100).toFixed(1);
-
-  // Get code coverage
-  const coverage = calculateCoverage();
-
-  const summary = [
-    ['Total Tests', total],
-    ['✅ Passed', TEST_RESULTS.passed.length],
-    ['❌ Failed', TEST_RESULTS.failed.length],
-    ['⏭️ Skipped', TEST_RESULTS.skipped.length],
-    ['Pass Rate', `${passRate}%`],
-    ['Duration', `${duration.toFixed(2)}s`],
-    ['📊 Code Coverage', `${coverage.percent}%`],
-    ['Functions Covered', `${coverage.covered}/${coverage.total}`],
-    ['Timestamp', new Date().toLocaleString()]
-  ];
-
-  reportSheet.getRange(3, 1, summary.length, 2).setValues(summary);
-  reportSheet.getRange(3, 1, summary.length, 1).setFontWeight('bold');
-
-  let currentRow = 3 + summary.length + 2;
-
-  // Passed tests
-  if (TEST_RESULTS.passed.length > 0) {
-    reportSheet.getRange(currentRow, 1, 1, 3).merge()
-      .setValue('✅ PASSED TESTS')
-      .setFontWeight('bold')
-      .setBackground('#D1FAE5')
-      .setFontColor('#065F46');
-
-    currentRow++;
-    reportSheet.getRange(currentRow, 1, 1, 3).setValues([['Test Name', 'Status', 'Duration (ms)']])
-      .setFontWeight('bold')
-      .setBackground('#F3F4F6');
-
-    currentRow++;
-    TEST_RESULTS.passed.forEach(function(test) {
-      reportSheet.getRange(currentRow, 1, 1, 3).setValues([[test.name, '✅ PASS', test.time]]);
-      currentRow++;
-    });
-    currentRow += 2;
-  }
-
-  // Failed tests
-  if (TEST_RESULTS.failed.length > 0) {
-    reportSheet.getRange(currentRow, 1, 1, 4).merge()
-      .setValue('❌ FAILED TESTS')
-      .setFontWeight('bold')
-      .setBackground('#FEE2E2')
-      .setFontColor('#991B1B');
-
-    currentRow++;
-    reportSheet.getRange(currentRow, 1, 1, 4).setValues([['Test Name', 'Status', 'Error', 'Stack Trace']])
-      .setFontWeight('bold')
-      .setBackground('#F3F4F6');
-
-    currentRow++;
-    TEST_RESULTS.failed.forEach(function(test) {
-      reportSheet.getRange(currentRow, 1, 1, 4).setValues([[
-        test.name,
-        '❌ FAIL',
-        test.error,
-        test.stack || 'N/A'
-      ]]);
-      reportSheet.getRange(currentRow, 3).setWrap(true);
-      currentRow++;
-    });
-    currentRow += 2;
-  }
-
-  // Skipped tests
-  if (TEST_RESULTS.skipped.length > 0) {
-    reportSheet.getRange(currentRow, 1, 1, 3).merge()
-      .setValue('⏭️ SKIPPED TESTS')
-      .setFontWeight('bold')
-      .setBackground('#FEF3C7')
-      .setFontColor('#92400E');
-
-    currentRow++;
-    reportSheet.getRange(currentRow, 1, 1, 3).setValues([['Test Name', 'Status', 'Reason']])
-      .setFontWeight('bold')
-      .setBackground('#F3F4F6');
-
-    currentRow++;
-    TEST_RESULTS.skipped.forEach(function(test) {
-      reportSheet.getRange(currentRow, 1, 1, 3).setValues([[test.name, '⏭️ SKIP', test.reason]]);
-      currentRow++;
-    });
-  }
-
-  // Auto-resize columns
-  reportSheet.autoResizeColumns(1, 4);
-  reportSheet.setColumnWidth(3, 400);
-  reportSheet.setColumnWidth(4, 300);
-
-  reportSheet.setTabColor('#7C3AED');
-  reportSheet.activate();
-}
-
-/**
- * Run a single test by name
- */
-function runSingleTest(testName) {
-  try {
-    const testFn = this[testName];
-    if (typeof testFn !== 'function') {
-      throw new Error(`Test function '${testName}' not found`);
-    }
-
-    testFn();
-    Logger.log(`✅ ${testName} PASSED`);
-    return true;
-  } catch (error) {
-    Logger.log(`❌ ${testName} FAILED: ${error.message}`);
-    Logger.log(error.stack);
-    return false;
-  }
-}
-
-/**
- * Test helper: Create a test member in Member Directory
- */
-function createTestMember(memberId) {
-  const ss = SpreadsheetApp.getActive();
-  const memberDir = ss.getSheetByName(SHEETS.MEMBER_DIR);
-
-  const testMemberData = [
-    memberId || 'TEST-M001',
-    'Test',
-    'Member',
-    'Coordinator',
-    'Boston HQ',
-    'Unit A - Administrative',
-    'Monday',
-    'test.member@union.org',
-    '(555) 123-4567',
-    'No',
-    'Sarah Johnson',
-    'Michael Chen',
-    'Jane Smith',
-    new Date(),
-    new Date(),
-    new Date(),
-    new Date(),
-    85,
-    10,
-    'Yes',
-    'Yes',
-    'No',
-    new Date(),
-    'Email',
-    'Mornings',
-    'No',
-    '',
-    '',
-    '',
-    '',
-    ''
-  ];
-
-  memberDir.getRange(memberDir.getLastRow() + 1, 1, 1, testMemberData.length).setValues([testMemberData]);
-  return memberId || 'TEST-M001';
-}
-
-/**
- * Test helper: Clean up test data
- */
-function cleanupTestData() {
-  const ss = SpreadsheetApp.getActive();
-  const memberDir = ss.getSheetByName(SHEETS.MEMBER_DIR);
-  const grievanceLog = ss.getSheetByName(SHEETS.GRIEVANCE_LOG);
-
-  // Remove all rows starting with "TEST-"
-  const memberData = memberDir.getRange(2, 1, memberDir.getLastRow() - 1, 1).getValues();
-  for (let i = memberData.length - 1; i >= 0; i--) {
-    if (String(memberData[i][0]).startsWith('TEST-')) {
-      memberDir.deleteRow(i + 2);
-    }
-  }
-
-  const grievanceData = grievanceLog.getRange(2, 1, grievanceLog.getLastRow() - 1, 1).getValues();
-  for (let i = grievanceData.length - 1; i >= 0; i--) {
-    if (String(grievanceData[i][0]).startsWith('TEST-')) {
-      grievanceLog.deleteRow(i + 2);
-    }
-  }
-}
-
-/* --------------------= TEST CATEGORY RUNNERS --------------------= */
-
-/**
- * Shows test results in a dialog
- */
-function showTestResults() {
-  const ss = SpreadsheetApp.getActiveSpreadsheet();
-  const reportSheet = ss.getSheetByName('Test Results');
-
-  if (!reportSheet) {
-    SpreadsheetApp.getUi().alert(
-      'No Test Results',
-      'No test results found. Run some tests first using the Testing menu.',
-      SpreadsheetApp.getUi().ButtonSet.OK
-    );
-    return;
-  }
-
-  reportSheet.activate();
-  SpreadsheetApp.getActiveSpreadsheet().toast('Showing test results', 'Test Results', 3);
-}
-
-/**
- * Run all unit tests
- */
-function runUnitTests() {
-  SpreadsheetApp.getActiveSpreadsheet().toast('Running unit tests...', 'Tests', -1);
-
-  const unitTests = [
-    'testFilingDeadlineCalculation',
-    'testStepIDeadlineCalculation',
-    'testStepIIAppealDeadlineCalculation',
-    'testDaysOpenCalculation',
-    'testDaysOpenForClosedGrievance',
-    'testNextActionDueLogic',
-    'testMemberDirectoryFormulas',
-    'testOpenRateRange',
-    'testEmptySheetsHandling',
-    'testFutureDateHandling',
-    'testPastDeadlineHandling'
-  ];
-
-  runTestCategory('Unit Tests', unitTests);
-}
-
-/**
- * Run all validation tests
- */
-function runValidationTests() {
-  SpreadsheetApp.getActiveSpreadsheet().toast('Running validation tests...', 'Tests', -1);
-
-  const validationTests = [
-    'testDataValidationSetup',
-    'testConfigDropdownValues',
-    'testMemberValidationRules',
-    'testGrievanceValidationRules',
-    'testMemberSeedingValidation',
-    'testGrievanceSeedingValidation',
-    'testMemberEmailFormat',
-    'testMemberIDUniqueness',
-    'testGrievanceMemberLinking'
-  ];
-
-  runTestCategory('Validation Tests', validationTests);
-}
-
-/**
- * Run all integration tests
- */
-function runIntegrationTests() {
-  SpreadsheetApp.getActiveSpreadsheet().toast('Running integration tests...', 'Tests', -1);
-
-  const integrationTests = [
-    'testCompleteGrievanceWorkflow',
-    'testDashboardMetricsUpdate',
-    'testMemberGrievanceSnapshot',
-    'testConfigChangesPropagateToDropdowns',
-    'testMultipleGrievancesSameMember',
-    'testDashboardHandlesEmptyData',
-    'testGrievanceUpdatesTriggersRecalculation'
-  ];
-
-  runTestCategory('Integration Tests', integrationTests);
-}
-
-/**
- * Run all performance tests
- */
-function runPerformanceTests() {
-  SpreadsheetApp.getActiveSpreadsheet().toast('Running performance tests...', 'Tests', -1);
-
-  const performanceTests = [
-    'testDashboardRefreshPerformance',
-    'testFormulaPerformanceWithData'
-  ];
-
-  runTestCategory('Performance Tests', performanceTests);
-}
-
-/**
- * Run a category of tests
- * @param {string} categoryName - Name of the test category
- * @param {string[]} testNames - Array of test function names
- */
-function runTestCategory(categoryName, testNames) {
-  // Reset results
-  TEST_RESULTS.passed = [];
-  TEST_RESULTS.failed = [];
-  TEST_RESULTS.skipped = [];
-
-  let passed = 0;
-  let failed = 0;
-  let skipped = 0;
-
-  const startTime = new Date();
-
-  testNames.forEach(function(testName) {
-    try {
-      const testFn = this[testName];
-      if (typeof testFn !== 'function') {
-        TEST_RESULTS.skipped.push({ name: testName, reason: 'Function not found' });
-        skipped++;
-        return;
-      }
-
-      testFn();
-      TEST_RESULTS.passed.push({ name: testName, time: new Date() - startTime });
-      passed++;
-    } catch (error) {
-      TEST_RESULTS.failed.push({
-        name: testName,
-        error: error.message,
-        stack: error.stack
-      });
-      failed++;
-    }
-  });
-
-  const endTime = new Date();
-  const duration = (endTime - startTime) / 1000;
-
-  // Generate report
-  generateTestReport(duration);
-
-  // Show summary
-  const total = passed + failed + skipped;
-  SpreadsheetApp.getUi().alert(
-    categoryName + ' Complete',
-    `Results:\n✅ Passed: ${passed}/${total}\n❌ Failed: ${failed}/${total}\n⏭️ Skipped: ${skipped}/${total}\n\nDuration: ${duration.toFixed(2)}s\n\nView the Test Results sheet for details.`,
-    SpreadsheetApp.getUi().ButtonSet.OK
-  );
-}
-
-
-
-// ================================================================================
-// MODULE: Code.test.gs
-// Source: Code.test.gs
-// ================================================================================
-
-/**
- * ------------------------------------------------------------------------====
- * UNIT TESTS FOR CODE.GS
- * ------------------------------------------------------------------------====
- *
- * Tests for core functionality:
- * - Formula calculations (deadlines, days open, etc.)
- * - Data validation setup
- * - Seeding functions
- * - Helper functions
- *
- * ------------------------------------------------------------------------====
- */
-
-/* --------------------= FORMULA CALCULATION TESTS --------------------= */
-
-/**
- * Test: Filing Deadline = Incident Date + 21 days
- */
-function testFilingDeadlineCalculation() {
-  const incidentDate = new Date(2025, 0, 1); // Jan 1, 2025
-  const expectedDeadline = new Date(2025, 0, 22); // Jan 22, 2025
-
-  // Calculate deadline (Incident + 21 days)
-  const actualDeadline = new Date(incidentDate.getTime() + 21 * 24 * 60 * 60 * 1000);
-
-  Assert.assertDateEquals(
-    expectedDeadline,
-    actualDeadline,
-    'Filing deadline should be 21 days after incident date'
-  );
-
-  Logger.log('✅ Filing deadline calculation test passed');
-}
-
-/**
- * Test: Step I Decision Due = Date Filed + 30 days
- */
-function testStepIDeadlineCalculation() {
-  const dateFiled = new Date(2025, 0, 15); // Jan 15, 2025
-  const expectedDeadline = new Date(2025, 1, 14); // Feb 14, 2025
-
-  // Calculate deadline (Filed + 30 days)
-  const actualDeadline = new Date(dateFiled.getTime() + 30 * 24 * 60 * 60 * 1000);
-
-  Assert.assertDateEquals(
-    expectedDeadline,
-    actualDeadline,
-    'Step I decision should be due 30 days after filing'
-  );
-
-  Logger.log('✅ Step I deadline calculation test passed');
-}
-
-/**
- * Test: Step II Appeal Due = Step I Decision Received + 10 days
- */
-function testStepIIAppealDeadlineCalculation() {
-  const stepIDecisionDate = new Date(2025, 1, 14); // Feb 14, 2025
-  const expectedDeadline = new Date(2025, 1, 24); // Feb 24, 2025
-
-  // Calculate deadline (Decision + 10 days)
-  const actualDeadline = new Date(stepIDecisionDate.getTime() + 10 * 24 * 60 * 60 * 1000);
-
-  Assert.assertDateEquals(
-    expectedDeadline,
-    actualDeadline,
-    'Step II appeal should be due 10 days after Step I decision'
-  );
-
-  Logger.log('✅ Step II appeal deadline calculation test passed');
-}
-
-/**
- * Test: Days Open calculation for active grievance
- */
-function testDaysOpenCalculation() {
-  const dateFiled = new Date(2025, 0, 1); // Jan 1, 2025
-  const today = new Date(2025, 0, 31); // Jan 31, 2025
-
-  const expectedDaysOpen = 30;
-  const actualDaysOpen = Math.floor((today - dateFiled) / (24 * 60 * 60 * 1000));
-
-  Assert.assertEquals(
-    expectedDaysOpen,
-    actualDaysOpen,
-    'Days open should be 30 for a grievance filed 30 days ago'
-  );
-
-  Logger.log('✅ Days open calculation test passed');
-}
-
-/**
- * Test: Days Open calculation for closed grievance
- */
-function testDaysOpenForClosedGrievance() {
-  const dateFiled = new Date(2025, 0, 1); // Jan 1, 2025
-  const dateClosed = new Date(2025, 0, 31); // Jan 31, 2025
-
-  const expectedDaysOpen = 30;
-  const actualDaysOpen = Math.floor((dateClosed - dateFiled) / (24 * 60 * 60 * 1000));
-
-  Assert.assertEquals(
-    expectedDaysOpen,
-    actualDaysOpen,
-    'Days open should use close date for closed grievances'
-  );
-
-  Logger.log('✅ Closed grievance days open calculation test passed');
-}
-
-/**
- * Test: Next Action Due logic based on current step
- */
-function testNextActionDueLogic() {
-  // Test data structure mimicking Grievance Log row
-  const testCases = [
-    {
-      status: 'Open',
-      step: 'Step I',
-      stepIDeadline: new Date(2025, 1, 14),
-      stepIIDeadline: new Date(2025, 1, 24),
-      stepIIIDeadline: new Date(2025, 2, 26),
-      filingDeadline: new Date(2025, 0, 22),
-      expected: new Date(2025, 1, 14) // Should use Step I deadline
-    },
-    {
-      status: 'Open',
-      step: 'Step II',
-      stepIDeadline: new Date(2025, 1, 14),
-      stepIIDeadline: new Date(2025, 1, 24),
-      stepIIIDeadline: new Date(2025, 2, 26),
-      filingDeadline: new Date(2025, 0, 22),
-      expected: new Date(2025, 1, 24) // Should use Step II deadline
-    },
-    {
-      status: 'Open',
-      step: 'Step III',
-      stepIDeadline: new Date(2025, 1, 14),
-      stepIIDeadline: new Date(2025, 1, 24),
-      stepIIIDeadline: new Date(2025, 2, 26),
-      filingDeadline: new Date(2025, 0, 22),
-      expected: new Date(2025, 2, 26) // Should use Step III deadline
-    },
-    {
-      status: 'Open',
-      step: 'Informal',
-      stepIDeadline: new Date(2025, 1, 14),
-      stepIIDeadline: new Date(2025, 1, 24),
-      stepIIIDeadline: new Date(2025, 2, 26),
-      filingDeadline: new Date(2025, 0, 22),
-      expected: new Date(2025, 0, 22) // Should use filing deadline
-    }
-  ];
-
-  testCases.forEach(function(testCase, index) {
-    var nextAction;
-    if (testCase.status === 'Open') {
-      if (testCase.step === 'Step I') {
-        nextAction = testCase.stepIDeadline;
-      } else if (testCase.step === 'Step II') {
-        nextAction = testCase.stepIIDeadline;
-      } else if (testCase.step === 'Step III') {
-        nextAction = testCase.stepIIIDeadline;
-      } else {
-        nextAction = testCase.filingDeadline;
-      }
-    }
-
-    Assert.assertDateEquals(
-      testCase.expected,
-      nextAction,
-      `Test case ${index + 1}: Next action should match expected deadline for ${testCase.step}`
-    );
-  });
-
-  Logger.log('✅ Next action due logic test passed');
-}
-
-/**
- * Test: Member Directory formulas
- */
-function testMemberDirectoryFormulas() {
-  // Create test setup
-  const testMemberId = createTestMember('TEST-M-FORMULA-001');
-
-  try {
-    const ss = SpreadsheetApp.getActive();
-    const memberDir = ss.getSheetByName(SHEETS.MEMBER_DIR);
-    const grievanceLog = ss.getSheetByName(SHEETS.GRIEVANCE_LOG);
-
-    // Create a test grievance for this member
-    const testGrievanceData = [
-      'TEST-G-001',
-      testMemberId,
-      'Test',
-      'Member',
-      'Open',
-      'Step I',
-      new Date(2025, 0, 1),
-      '',
-      new Date(2025, 0, 10),
-      '',
-      '',
-      '',
-      '',
-      '',
-      '',
-      '',
-      '',
-      '',
-      '',
-      '',
-      '',
-      'Art. 23 - Grievance Procedure',
-      'Discipline',
-      'test.member@union.org',
-      'Unit A - Administrative',
-      'Boston HQ',
-      'Jane Smith',
-      ''
-    ];
-
-    grievanceLog.getRange(grievanceLog.getLastRow() + 1, 1, 1, testGrievanceData.length)
-      .setValues([testGrievanceData]);
-
-    // Force recalculation
-    SpreadsheetApp.flush();
-    Utilities.sleep(2000); // Wait for formulas to recalculate
-
-    // Find the test member row
-    const memberData = memberDir.getRange(2, 1, memberDir.getLastRow() - 1, 31).getValues();
-    const testMemberRow = memberData.findIndex(function(row) { return row[0] === testMemberId; });
-
-    Assert.assertTrue(
-      testMemberRow >= 0,
-      'Test member should exist in Member Directory'
-    );
-
-    // Check "Has Open Grievance?" (column Y = 25, index 24)
-    const hasOpenGrievance = memberData[testMemberRow][MEMBER_COLS.HAS_OPEN_GRIEVANCE - 1];
-    Assert.assertTrue(
-      hasOpenGrievance === 'Yes' || hasOpenGrievance === true,
-      'Member with open grievance should show "Yes" in Has Open Grievance column'
-    );
-
-    // Check "Grievance Status Snapshot" (column Z = 26, index 25)
-    const statusSnapshot = memberData[testMemberRow][MEMBER_COLS.GRIEVANCE_STATUS - 1];
-    Assert.assertEquals(
-      'Open',
-      statusSnapshot,
-      'Grievance status snapshot should match grievance status'
-    );
-
-    Logger.log('✅ Member Directory formulas test passed');
-
-  } finally {
-    cleanupTestData();
-  }
-}
-
-/* --------------------= DATA VALIDATION TESTS --------------------= */
-
-/**
- * Test: Data validation setup creates proper rules
- */
-function testDataValidationSetup() {
-  const ss = SpreadsheetApp.getActive();
-  const memberDir = ss.getSheetByName(SHEETS.MEMBER_DIR);
-  const config = ss.getSheetByName(SHEETS.CONFIG);
-
-  // Check that validation exists for Job Title column
-  const jobTitleCell = memberDir.getRange(2, MEMBER_COLS.JOB_TITLE);
-  const validation = jobTitleCell.getDataValidation();
-
-  Assert.assertNotNull(
-    validation,
-    'Job Title column should have data validation'
-  );
-
-  Logger.log('✅ Data validation setup test passed');
-}
-
-/**
- * Test: Config dropdown values are properly defined
- */
-function testConfigDropdownValues() {
-  const ss = SpreadsheetApp.getActive();
-  const config = ss.getSheetByName(SHEETS.CONFIG);
-
-  // Test Job Titles using CONFIG_COLS constant (data starts at row 3)
-  const jobTitlesCol = getColumnLetter(CONFIG_COLS.JOB_TITLES);
-  const jobTitles = config.getRange(jobTitlesCol + '3:' + jobTitlesCol + '14').getValues().flat().filter(String);
-  Assert.assertTrue(
-    jobTitles.length > 0,
-    'Config should have job titles defined'
-  );
-  Assert.assertContains(
-    jobTitles,
-    'Coordinator',
-    'Config should contain Coordinator job title'
-  );
-
-  // Test Office Locations using CONFIG_COLS constant
-  const locationsCol = getColumnLetter(CONFIG_COLS.OFFICE_LOCATIONS);
-  const locations = config.getRange(locationsCol + '3:' + locationsCol + '14').getValues().flat().filter(String);
-  Assert.assertTrue(
-    locations.length > 0,
-    'Config should have office locations defined'
-  );
-  Assert.assertContains(
-    locations,
-    'Boston HQ',
-    'Config should contain Boston HQ location'
-  );
-
-  // Test Grievance Status using CONFIG_COLS constant (col J = 10)
-  const statusCol = getColumnLetter(CONFIG_COLS.GRIEVANCE_STATUS);
-  const statuses = config.getRange(statusCol + '3:' + statusCol + '10').getValues().flat().filter(String);
-  Assert.assertTrue(
-    statuses.length > 0,
-    'Config should have grievance statuses defined'
-  );
-  Assert.assertContains(
-    statuses,
-    'Open',
-    'Config should contain Open status'
-  );
-
-  Logger.log('✅ Config dropdown values test passed');
-}
-
-/**
- * Test: Member validation rules reference correct Config columns
- */
-function testMemberValidationRules() {
-  const ss = SpreadsheetApp.getActive();
-  const memberDir = ss.getSheetByName(SHEETS.MEMBER_DIR);
-
-  // Check critical validations exist
-  const columnsToCheck = [
-    { col: 4, name: 'Job Title' },
-    { col: 5, name: 'Work Location' },
-    { col: 6, name: 'Unit' },
-    { col: 10, name: 'Is Steward' }
-  ];
-
-  columnsToCheck.forEach(function(item) {
-    const cell = memberDir.getRange(2, item.col);
-    const validation = cell.getDataValidation();
-
-    Assert.assertNotNull(
-      validation,
-      `${item.name} (column ${item.col}) should have data validation`
-    );
-  });
-
-  Logger.log('✅ Member validation rules test passed');
-}
-
-/**
- * Test: Grievance validation rules reference correct Config columns
- */
-function testGrievanceValidationRules() {
-  const ss = SpreadsheetApp.getActive();
-  const grievanceLog = ss.getSheetByName(SHEETS.GRIEVANCE_LOG);
-
-  // Check critical validations exist
-  const columnsToCheck = [
-    { col: 5, name: 'Status' },
-    { col: 6, name: 'Current Step' },
-    { col: 23, name: 'Issue Category' },
-    { col: 22, name: 'Articles Violated' }
-  ];
-
-  columnsToCheck.forEach(function(item) {
-    const cell = grievanceLog.getRange(2, item.col);
-    const validation = cell.getDataValidation();
-
-    Assert.assertNotNull(
-      validation,
-      `${item.name} (column ${item.col}) should have data validation`
-    );
-  });
-
-  Logger.log('✅ Grievance validation rules test passed');
-}
-
-/* --------------------= SEEDING FUNCTION TESTS --------------------= */
-
-/**
- * Test: Member seeding generates valid data
- */
-function testMemberSeedingValidation() {
-  // This test validates the data structure, not actual seeding
-  // (to avoid creating 20k test records)
-
-  const firstNames = ["James", "Mary", "John"];
-  const lastNames = ["Smith", "Johnson", "Williams"];
-
-  // Simulate member generation
-  const testMember = {
-    memberId: "M" + String(1).padStart(6, '0'),
-    firstName: firstNames[0],
-    lastName: lastNames[0],
-    email: `${firstNames[0].toLowerCase()}.${lastNames[0].toLowerCase()}1@union.org`,
-    phone: `(555) 123-4567`,
-    openRate: 75
-  };
-
-  // Validate structure
-  Assert.assertTrue(
-    testMember.memberId.startsWith('M'),
-    'Member ID should start with M'
-  );
-
-  Assert.assertEquals(
-    7,
-    testMember.memberId.length,
-    'Member ID should be 7 characters (M + 6 digits)'
-  );
-
-  Assert.assertTrue(
-    testMember.email.includes('@union.org'),
-    'Email should end with @union.org'
-  );
-
-  Assert.assertTrue(
-    testMember.openRate >= 0 && testMember.openRate <= 100,
-    'Open rate should be between 0-100'
-  );
-
-  Logger.log('✅ Member seeding validation test passed');
-}
-
-/**
- * Test: Grievance seeding generates valid data
- */
-function testGrievanceSeedingValidation() {
-  // Simulate grievance generation
-  const testGrievance = {
-    grievanceId: "G-" + String(1).padStart(6, '0'),
-    memberId: "M000001",
-    status: "Open",
-    step: "Step I",
-    incidentDate: new Date(2025, 0, 1),
-    dateFiled: new Date(2025, 0, 10)
-  };
-
-  // Validate structure
-  Assert.assertTrue(
-    testGrievance.grievanceId.startsWith('G-'),
-    'Grievance ID should start with G-'
-  );
-
-  Assert.assertEquals(
-    8,
-    testGrievance.grievanceId.length,
-    'Grievance ID should be 8 characters (G- + 6 digits)'
-  );
-
-  Assert.assertTrue(
-    testGrievance.dateFiled >= testGrievance.incidentDate,
-    'Date filed should be after incident date'
-  );
-
-  Logger.log('✅ Grievance seeding validation test passed');
-}
-
-/**
- * Test: Member email format is valid
- */
-function testMemberEmailFormat() {
-  const testEmails = [
-    'john.smith123@union.org',
-    'mary.jones456@union.org',
-    'robert.wilson789@union.org'
-  ];
-
-  const emailRegex = /^[a-z]+\.[a-z]+\d+@union\.org$/;
-
-  testEmails.forEach(function(email) {
-    Assert.assertTrue(
-      emailRegex.test(email),
-      `Email ${email} should match format firstname.lastnameNNN@union.org`
-    );
-  });
-
-  Logger.log('✅ Member email format test passed');
-}
-
-/**
- * Test: Member IDs are unique
- */
-function testMemberIDUniqueness() {
-  const memberIds = new Set();
-
-  // Simulate generating 100 member IDs
-  for (let i = 1; i <= 100; i++) {
-    const memberId = "M" + String(i).padStart(6, '0');
-    Assert.assertFalse(
-      memberIds.has(memberId),
-      `Member ID ${memberId} should be unique`
-    );
-    memberIds.add(memberId);
-  }
-
-  Assert.assertEquals(
-    100,
-    memberIds.size,
-    'Should have 100 unique member IDs'
-  );
-
-  Logger.log('✅ Member ID uniqueness test passed');
-}
-
-/**
- * Test: Grievances link to valid members
- */
-function testGrievanceMemberLinking() {
-  const testMemberId = createTestMember('TEST-M-LINK-001');
-
-  try {
-    const ss = SpreadsheetApp.getActive();
-    const grievanceLog = ss.getSheetByName(SHEETS.GRIEVANCE_LOG);
-
-    // Create test grievance
-    const testGrievanceData = [
-      'TEST-G-LINK-001',
-      testMemberId, // Valid member ID
-      'Test',
-      'Member',
-      'Open',
-      'Step I',
-      new Date(),
-      '',
-      new Date(),
-      '',
-      '',
-      '',
-      '',
-      '',
-      '',
-      '',
-      '',
-      '',
-      '',
-      '',
-      '',
-      'Art. 23 - Grievance Procedure',
-      'Discipline',
-      'test.member@union.org',
-      'Unit A - Administrative',
-      'Boston HQ',
-      'Jane Smith',
-      ''
-    ];
-
-    grievanceLog.getRange(grievanceLog.getLastRow() + 1, 1, 1, testGrievanceData.length)
-      .setValues([testGrievanceData]);
-
-    // Verify it was created
-    const grievanceData = grievanceLog.getRange(2, 1, grievanceLog.getLastRow() - 1, 2).getValues();
-    const testGrievance = grievanceData.find(function(row) { return row[0] === 'TEST-G-LINK-001'; });
-
-    Assert.assertNotNull(
-      testGrievance,
-      'Test grievance should exist'
-    );
-
-    Assert.assertEquals(
-      testMemberId,
-      testGrievance[1],
-      'Grievance should link to correct member ID'
-    );
-
-    Logger.log('✅ Grievance-member linking test passed');
-
-  } finally {
-    cleanupTestData();
-  }
-}
-
-/**
- * Test: Open Rate is within valid range
- */
-function testOpenRateRange() {
-  // Simulate 50 random open rates
-  for (let i = 0; i < 50; i++) {
-    const openRate = Math.floor(Math.random() * 40) + 60; // 60-100 range
-
-    Assert.assertTrue(
-      openRate >= 0 && openRate <= 100,
-      `Open rate ${openRate} should be between 0-100`
-    );
-
-    Assert.assertTrue(
-      openRate >= 60,
-      `Open rate ${openRate} should be at least 60 (as per seeding logic)`
-    );
-  }
-
-  Logger.log('✅ Open rate range test passed');
-}
-
-/* --------------------= EDGE CASE TESTS --------------------= */
-
-/**
- * Test: Empty sheets don't break formulas
- */
-function testEmptySheetsHandling() {
-  const ss = SpreadsheetApp.getActive();
-  const dashboard = ss.getSheetByName(SHEETS.DASHBOARD);
-
-  // Dashboard should handle empty data gracefully
-  // (formulas should return 0 or empty, not #DIV/0! or #REF!)
-
-  Assert.assertNotNull(
-    dashboard,
-    'Dashboard sheet should exist'
-  );
-
-  Logger.log('✅ Empty sheets handling test passed');
-}
-
-/**
- * Test: Future dates are handled correctly
- */
-function testFutureDateHandling() {
-  const today = new Date();
-  const futureDate = new Date(today.getTime() + 30 * 24 * 60 * 60 * 1000);
-
-  // Days to deadline should be positive for future dates
-  const daysToDeadline = Math.floor((futureDate - today) / (24 * 60 * 60 * 1000));
-
-  Assert.assertTrue(
-    daysToDeadline > 0,
-    'Days to deadline should be positive for future dates'
-  );
-
-  Assert.assertApproximately(
-    30,
-    daysToDeadline,
-    1,
-    'Days to deadline should be approximately 30'
-  );
-
-  Logger.log('✅ Future date handling test passed');
-}
-
-/**
- * Test: Past deadlines show negative days
- */
-function testPastDeadlineHandling() {
-  const today = new Date();
-  const pastDate = new Date(today.getTime() - 5 * 24 * 60 * 60 * 1000);
-
-  // Days to deadline should be negative for past dates
-  const daysToDeadline = Math.floor((pastDate - today) / (24 * 60 * 60 * 1000));
-
-  Assert.assertTrue(
-    daysToDeadline < 0,
-    'Days to deadline should be negative for overdue deadlines'
-  );
-
-  Assert.assertApproximately(
-    -5,
-    daysToDeadline,
-    1,
-    'Days to deadline should be approximately -5 for 5 days overdue'
-  );
-
-  Logger.log('✅ Past deadline handling test passed');
-}
-
-/* --------------------= COLUMN CONSTANTS TESTS --------------------= */
-
-/**
- * Test: MEMBER_COLS constants are properly defined
- */
-function testMemberColsConstants() {
-  // Verify all required columns exist
-  const requiredCols = [
-    'MEMBER_ID', 'FIRST_NAME', 'LAST_NAME', 'JOB_TITLE', 'WORK_LOCATION',
-    'UNIT', 'OFFICE_DAYS', 'EMAIL', 'PHONE', 'IS_STEWARD', 'COMMITTEES',
-    'SUPERVISOR', 'MANAGER', 'ASSIGNED_STEWARD', 'HAS_OPEN_GRIEVANCE',
-    'GRIEVANCE_STATUS', 'NEXT_DEADLINE'
-  ];
-
-  requiredCols.forEach(function(col) {
-    Assert.assertTrue(
-      typeof MEMBER_COLS[col] === 'number',
-      `MEMBER_COLS.${col} should be defined as a number`
-    );
-    Assert.assertTrue(
-      MEMBER_COLS[col] >= 1,
-      `MEMBER_COLS.${col} should be >= 1 (1-indexed)`
-    );
-  });
-
-  // Verify column ordering (first columns should be in expected order)
-  Assert.assertEquals(1, MEMBER_COLS.MEMBER_ID, 'MEMBER_ID should be column 1');
-  Assert.assertEquals(2, MEMBER_COLS.FIRST_NAME, 'FIRST_NAME should be column 2');
-  Assert.assertEquals(3, MEMBER_COLS.LAST_NAME, 'LAST_NAME should be column 3');
-  Assert.assertEquals(8, MEMBER_COLS.EMAIL, 'EMAIL should be column 8');
-  Assert.assertEquals(9, MEMBER_COLS.PHONE, 'PHONE should be column 9');
-
-  Logger.log('✅ MEMBER_COLS constants test passed');
-}
-
-/**
- * Test: GRIEVANCE_COLS constants are properly defined
- */
-function testGrievanceColsConstants() {
-  // Verify all required columns exist
-  const requiredCols = [
-    'GRIEVANCE_ID', 'MEMBER_ID', 'FIRST_NAME', 'LAST_NAME', 'STATUS',
-    'CURRENT_STEP', 'INCIDENT_DATE', 'FILING_DEADLINE', 'DATE_FILED',
-    'DATE_CLOSED', 'DAYS_OPEN', 'NEXT_ACTION_DUE',
-    'ISSUE_CATEGORY', 'MEMBER_EMAIL', 'LOCATION', 'STEWARD', 'RESOLUTION'
-  ];
-
-  requiredCols.forEach(function(col) {
-    Assert.assertTrue(
-      typeof GRIEVANCE_COLS[col] === 'number',
-      `GRIEVANCE_COLS.${col} should be defined as a number`
-    );
-    Assert.assertTrue(
-      GRIEVANCE_COLS[col] >= 1,
-      `GRIEVANCE_COLS.${col} should be >= 1 (1-indexed)`
-    );
-  });
-
-  // Verify key column positions
-  Assert.assertEquals(1, GRIEVANCE_COLS.GRIEVANCE_ID, 'GRIEVANCE_ID should be column 1');
-  Assert.assertEquals(5, GRIEVANCE_COLS.STATUS, 'STATUS should be column 5');
-  Assert.assertEquals(9, GRIEVANCE_COLS.DATE_FILED, 'DATE_FILED should be column 9');
-  Assert.assertEquals(18, GRIEVANCE_COLS.DATE_CLOSED, 'DATE_CLOSED should be column 18');
-  Assert.assertEquals(27, GRIEVANCE_COLS.STEWARD, 'STEWARD should be column 27');
-
-  Logger.log('✅ GRIEVANCE_COLS constants test passed');
-}
-
-/**
- * Test: CONFIG_COLS constants are properly defined
- */
-function testConfigColsConstants() {
-  // Verify key config columns exist
-  const requiredCols = [
-    'JOB_TITLES', 'OFFICE_LOCATIONS', 'UNITS', 'STEWARDS',
-    'GRIEVANCE_STATUS', 'GRIEVANCE_STEP', 'ISSUE_CATEGORY'
-  ];
-
-  requiredCols.forEach(function(col) {
-    Assert.assertTrue(
-      typeof CONFIG_COLS[col] === 'number',
-      `CONFIG_COLS.${col} should be defined as a number`
-    );
-  });
-
-  Logger.log('✅ CONFIG_COLS constants test passed');
-}
-
-/**
- * Test: Internal schema constants are properly defined
- */
-function testInternalSchemaConstants() {
-  // Test AUDIT_LOG_COLS
-  Assert.assertTrue(typeof AUDIT_LOG_COLS === 'object', 'AUDIT_LOG_COLS should be defined');
-  Assert.assertEquals(1, AUDIT_LOG_COLS.TIMESTAMP, 'AUDIT_LOG_COLS.TIMESTAMP should be 1');
-  Assert.assertEquals(4, AUDIT_LOG_COLS.ACTION, 'AUDIT_LOG_COLS.ACTION should be 4');
-
-  // Test FAQ_COLS
-  Assert.assertTrue(typeof FAQ_COLS === 'object', 'FAQ_COLS should be defined');
-  Assert.assertEquals(1, FAQ_COLS.ID, 'FAQ_COLS.ID should be 1');
-  Assert.assertEquals(3, FAQ_COLS.QUESTION, 'FAQ_COLS.QUESTION should be 3');
-  Assert.assertEquals(4, FAQ_COLS.ANSWER, 'FAQ_COLS.ANSWER should be 4');
-
-  // Test ERROR_LOG_COLS
-  Assert.assertTrue(typeof ERROR_LOG_COLS === 'object', 'ERROR_LOG_COLS should be defined');
-  Assert.assertEquals(1, ERROR_LOG_COLS.TIMESTAMP, 'ERROR_LOG_COLS.TIMESTAMP should be 1');
-  Assert.assertEquals(2, ERROR_LOG_COLS.LEVEL, 'ERROR_LOG_COLS.LEVEL should be 2');
-
-  Logger.log('✅ Internal schema constants test passed');
-}
-
-/**
- * Test: SHEETS constants match expected sheet names
- */
-function testSheetsConstants() {
-  // Verify core sheets are defined
-  Assert.assertEquals('Config', SHEETS.CONFIG, 'SHEETS.CONFIG should be "Config"');
-  Assert.assertEquals('Member Directory', SHEETS.MEMBER_DIR, 'SHEETS.MEMBER_DIR should be "Member Directory"');
-  Assert.assertEquals('Grievance Log', SHEETS.GRIEVANCE_LOG, 'SHEETS.GRIEVANCE_LOG should be "Grievance Log"');
-  Assert.assertEquals('Dashboard', SHEETS.DASHBOARD, 'SHEETS.DASHBOARD should be "Dashboard"');
-
-  // Verify internal system sheets are defined
-  Assert.assertTrue(typeof SHEETS.AUDIT_LOG === 'string', 'SHEETS.AUDIT_LOG should be defined');
-  Assert.assertTrue(typeof SHEETS.FAQ_DATABASE === 'string', 'SHEETS.FAQ_DATABASE should be defined');
-  Assert.assertTrue(typeof SHEETS.ERROR_LOG === 'string', 'SHEETS.ERROR_LOG should be defined');
-
-  Logger.log('✅ SHEETS constants test passed');
-}
-
-/**
- * Test: Column letter conversion utility
- */
-function testColumnLetterConversion() {
-  // Test getColumnLetter
-  Assert.assertEquals('A', getColumnLetter(1), 'Column 1 should be A');
-  Assert.assertEquals('B', getColumnLetter(2), 'Column 2 should be B');
-  Assert.assertEquals('Z', getColumnLetter(26), 'Column 26 should be Z');
-  Assert.assertEquals('AA', getColumnLetter(27), 'Column 27 should be AA');
-  Assert.assertEquals('AB', getColumnLetter(28), 'Column 28 should be AB');
-
-  // Test getColumnNumber
-  Assert.assertEquals(1, getColumnNumber('A'), 'A should be column 1');
-  Assert.assertEquals(26, getColumnNumber('Z'), 'Z should be column 26');
-  Assert.assertEquals(27, getColumnNumber('AA'), 'AA should be column 27');
-
-  Logger.log('✅ Column letter conversion test passed');
-}
-
-/**
- * Test: Column constants are used correctly (no off-by-one errors)
- */
-function testColumnIndexing() {
-  // Verify that constants are 1-indexed (for spreadsheet columns)
-  // and that array access uses [CONSTANT - 1]
-
-  // Simulate a row of data
-  const mockRow = ['ID', 'First', 'Last', 'Title', 'Location'];
-
-  // Access using constant pattern (constant - 1 for 0-indexed array)
-  const firstElement = mockRow[1 - 1]; // Should be 'ID'
-  const secondElement = mockRow[2 - 1]; // Should be 'First'
-
-  Assert.assertEquals('ID', firstElement, 'First element accessed with [1-1] should be ID');
-  Assert.assertEquals('First', secondElement, 'Second element accessed with [2-1] should be First');
-
-  // Verify MEMBER_COLS pattern works
-  const mockMemberRow = new Array(31).fill('').map((_, i) => `col${i}`);
-  mockMemberRow[MEMBER_COLS.MEMBER_ID - 1] = 'M000001';
-  mockMemberRow[MEMBER_COLS.EMAIL - 1] = 'test@union.org';
-
-  Assert.assertEquals('M000001', mockMemberRow[MEMBER_COLS.MEMBER_ID - 1], 'MEMBER_ID access should work');
-  Assert.assertEquals('test@union.org', mockMemberRow[MEMBER_COLS.EMAIL - 1], 'EMAIL access should work');
-
-  Logger.log('✅ Column indexing test passed');
-}
-
-/**
- * Run all column constant tests
- */
-function runColumnConstantTests() {
-  Logger.log('=== Running Column Constant Tests ===');
-
-  testMemberColsConstants();
-  testGrievanceColsConstants();
-  testConfigColsConstants();
-  testInternalSchemaConstants();
-  testSheetsConstants();
-  testColumnLetterConversion();
-  testColumnIndexing();
-
-  Logger.log('=== All Column Constant Tests Passed ===');
-}
-
-/* --------------------= INPUT VALIDATION TESTS --------------------= */
-
-/**
- * Test: validateRequired throws on null/undefined/empty
- */
-function testValidateRequired() {
-  // Should throw on null
-  Assert.assertThrows(
-    function() { validateRequired(null, 'testParam'); },
-    'validateRequired should throw on null'
-  );
-
-  // Should throw on undefined
-  Assert.assertThrows(
-    function() { validateRequired(undefined, 'testParam'); },
-    'validateRequired should throw on undefined'
-  );
-
-  // Should throw on empty string
-  Assert.assertThrows(
-    function() { validateRequired('', 'testParam'); },
-    'validateRequired should throw on empty string'
-  );
-
-  // Should NOT throw on valid values
-  Assert.assertNotThrows(
-    function() { validateRequired('value', 'testParam'); },
-    'validateRequired should not throw on valid string'
-  );
-
-  Assert.assertNotThrows(
-    function() { validateRequired(0, 'testParam'); },
-    'validateRequired should not throw on zero'
-  );
-
-  Logger.log('✅ validateRequired test passed');
-}
-
-/**
- * Test: validateString validates string type
- */
-function testValidateString() {
-  // Should throw on number
-  Assert.assertThrows(
-    function() { validateString(123, 'testParam'); },
-    'validateString should throw on number'
-  );
-
-  // Should NOT throw on valid string
-  Assert.assertNotThrows(
-    function() { validateString('valid', 'testParam'); },
-    'validateString should not throw on valid string'
-  );
-
-  Logger.log('✅ validateString test passed');
-}
-
-/**
- * Test: validatePositiveInt validates positive integers
- */
-function testValidatePositiveInt() {
-  // Should throw on negative
-  Assert.assertThrows(
-    function() { validatePositiveInt(-1, 'testParam'); },
-    'validatePositiveInt should throw on negative'
-  );
-
-  // Should throw on zero
-  Assert.assertThrows(
-    function() { validatePositiveInt(0, 'testParam'); },
-    'validatePositiveInt should throw on zero'
-  );
-
-  // Should NOT throw on positive integer
-  Assert.assertNotThrows(
-    function() { validatePositiveInt(1, 'testParam'); },
-    'validatePositiveInt should not throw on 1'
-  );
-
-  Logger.log('✅ validatePositiveInt test passed');
-}
-
-/**
- * Test: validateGrievanceId validates G-XXXXXX format
- */
-function testValidateGrievanceId() {
-  // Should throw on invalid format
-  Assert.assertThrows(
-    function() { validateGrievanceId('12345', 'testValidateGrievanceId'); },
-    'validateGrievanceId should throw on missing prefix'
-  );
-
-  Assert.assertThrows(
-    function() { validateGrievanceId('G-123', 'testValidateGrievanceId'); },
-    'validateGrievanceId should throw on short ID'
-  );
-
-  // Should NOT throw on valid format
-  Assert.assertNotThrows(
-    function() { validateGrievanceId('G-000001', 'testValidateGrievanceId'); },
-    'validateGrievanceId should not throw on valid ID'
-  );
-
-  Logger.log('✅ validateGrievanceId test passed');
-}
-
-/**
- * Test: validateMemberId validates MXXXXXX format
- */
-function testValidateMemberId() {
-  // Should throw on invalid format
-  Assert.assertThrows(
-    function() { validateMemberId('12345', 'testValidateMemberId'); },
-    'validateMemberId should throw on missing prefix'
-  );
-
-  // Should NOT throw on valid format
-  Assert.assertNotThrows(
-    function() { validateMemberId('M000001', 'testValidateMemberId'); },
-    'validateMemberId should not throw on valid ID'
-  );
-
-  Logger.log('✅ validateMemberId test passed');
-}
-
-/**
- * Test: validateEmail validates email format
- */
-function testValidateEmail() {
-  // Should throw on invalid emails
-  Assert.assertThrows(
-    function() { validateEmail('notanemail', 'testValidateEmail'); },
-    'validateEmail should throw on missing @'
-  );
-
-  // Should NOT throw on valid emails
-  Assert.assertNotThrows(
-    function() { validateEmail('user@example.com', 'testValidateEmail'); },
-    'validateEmail should not throw on valid email'
-  );
-
-  Logger.log('✅ validateEmail test passed');
-}
-
-/**
- * Test: validateEnum validates against allowed values
- */
-function testValidateEnum() {
-  const allowedStatuses = ['Open', 'Closed', 'Pending'];
-
-  // Should throw on invalid value
-  Assert.assertThrows(
-    function() { validateEnum('Invalid', allowedStatuses, 'status'); },
-    'validateEnum should throw on invalid value'
-  );
-
-  // Should NOT throw on valid values
-  Assert.assertNotThrows(
-    function() { validateEnum('Open', allowedStatuses, 'status'); },
-    'validateEnum should not throw on valid value'
-  );
-
-  Logger.log('✅ validateEnum test passed');
-}
-
-/**
- * Test: safeExecute handles errors properly
- */
-function testSafeExecute() {
-  // Test successful execution
-  const successResult = safeExecute(function() { return 42; }, { context: 'testSuccess' });
-  Assert.assertTrue(successResult.success, 'safeExecute should return success=true');
-  Assert.assertEquals(42, successResult.data, 'safeExecute should return correct data');
-
-  // Test error with silent mode
-  const errorResult = safeExecute(
-    function() { throw new Error('Test error'); },
-    { silent: true, defaultValue: 'default', context: 'testError' }
-  );
-  Assert.assertFalse(errorResult.success, 'safeExecute should return success=false on error');
-  Assert.assertEquals('default', errorResult.data, 'safeExecute should return defaultValue');
-
-  Logger.log('✅ safeExecute test passed');
-}
-
-/* --------------------= ERROR SCENARIO TESTS --------------------= */
-
-/**
- * Test: Grievance status values are all valid
- */
-function testGrievanceStatusValidation() {
-  GRIEVANCE_STATUSES.forEach(function(status) {
-    Assert.assertNotThrows(
-      function() { validateEnum(status, GRIEVANCE_STATUSES, 'status'); },
-      'Status "' + status + '" should be valid'
-    );
-  });
-
-  Assert.assertThrows(
-    function() { validateEnum('InvalidStatus', GRIEVANCE_STATUSES, 'status'); },
-    'Invalid status should throw'
-  );
-
-  Logger.log('✅ Grievance status validation test passed');
-}
-
-/**
- * Test: Grievance step values are all valid
- */
-function testGrievanceStepValidation() {
-  GRIEVANCE_STEPS.forEach(function(step) {
-    Assert.assertNotThrows(
-      function() { validateEnum(step, GRIEVANCE_STEPS, 'step'); },
-      'Step "' + step + '" should be valid'
-    );
-  });
-
-  Logger.log('✅ Grievance step validation test passed');
-}
-
-/**
- * Test: Issue categories are all valid
- */
-function testIssueCategoryValidation() {
-  ISSUE_CATEGORIES.forEach(function(category) {
-    Assert.assertNotThrows(
-      function() { validateEnum(category, ISSUE_CATEGORIES, 'category'); },
-      'Category "' + category + '" should be valid'
-    );
-  });
-
-  Logger.log('✅ Issue category validation test passed');
-}
-
-/**
- * Test: Error messages include context when provided
- */
-function testErrorMessageContext() {
-  try {
-    validateRequired(null, 'testParam', 'testFunction');
-    Assert.fail('Should have thrown');
-  } catch (e) {
-    Assert.assertTrue(
-      e.message.indexOf('testParam') >= 0,
-      'Error should include parameter name'
-    );
-    Assert.assertTrue(
-      e.message.indexOf('testFunction') >= 0,
-      'Error should include function name when provided'
-    );
-  }
-
-  Logger.log('✅ Error message context test passed');
-}
-
-/**
- * Test: Date validation handles edge cases
- */
-function testDateValidationEdgeCases() {
-  // Invalid date (NaN time)
-  Assert.assertThrows(
-    function() { validateDate(new Date('invalid'), 'testDate'); },
-    'validateDate should throw on invalid date string'
-  );
-
-  // Valid dates
-  Assert.assertNotThrows(
-    function() { validateDate(new Date(), 'testDate'); },
-    'validateDate should accept current date'
-  );
-
-  Logger.log('✅ Date validation edge cases test passed');
-}
-
-/**
- * Test: Array validation
- */
-function testArrayValidation() {
-  // Should throw on non-array
-  Assert.assertThrows(
-    function() { validateArray('string', 'testArray'); },
-    'validateArray should throw on string'
-  );
-
-  // Should NOT throw on arrays
-  Assert.assertNotThrows(
-    function() { validateArray([], 'testArray'); },
-    'validateArray should accept empty array'
-  );
-
-  Assert.assertNotThrows(
-    function() { validateArray([1, 2, 3], 'testArray'); },
-    'validateArray should accept populated array'
-  );
-
-  Logger.log('✅ Array validation test passed');
-}
-
-/**
- * Run all validation tests
- */
-function runValidationTests() {
-  Logger.log('=== Running Validation Tests ===');
-
-  testValidateRequired();
-  testValidateString();
-  testValidatePositiveInt();
-  testValidateGrievanceId();
-  testValidateMemberId();
-  testValidateEmail();
-  testValidateEnum();
-  testSafeExecute();
-  testGrievanceStatusValidation();
-  testGrievanceStepValidation();
-  testIssueCategoryValidation();
-  testErrorMessageContext();
-  testDateValidationEdgeCases();
-  testArrayValidation();
-
-  Logger.log('=== All Validation Tests Passed ===');
-}
-
-/**
- * Run all tests
- */
-function runAllTests() {
-  Logger.log('========================================');
-  Logger.log('  RUNNING ALL TESTS');
-  Logger.log('========================================');
-
-  runColumnConstantTests();
-  runValidationTests();
-
-  Logger.log('========================================');
-  Logger.log('  ALL TESTS COMPLETE');
-  Logger.log('========================================');
-}
-
-
-
-// ================================================================================
-// MODULE: Integration.test.gs
-// Source: Integration.test.gs
-// ================================================================================
-
-/**
- * ------------------------------------------------------------------------====
- * INTEGRATION TESTS
- * ------------------------------------------------------------------------====
- *
- * End-to-end tests for complete workflows:
- * - Complete grievance lifecycle
- * - Dashboard metrics updates
- * - Member-grievance linking
- * - Data consistency across sheets
- *
- * ------------------------------------------------------------------------====
- */
-
-/* --------------------= COMPLETE WORKFLOW TESTS --------------------= */
-
-/**
- * Test: Complete grievance workflow from creation to closure
- */
-function testCompleteGrievanceWorkflow() {
-  const testMemberId = createTestMember('TEST-M-INTEGRATION-001');
-
-  try {
-    const ss = SpreadsheetApp.getActive();
-    const memberDir = ss.getSheetByName(SHEETS.MEMBER_DIR);
-    const grievanceLog = ss.getSheetByName(SHEETS.GRIEVANCE_LOG);
-
-    // Step 1: Create a new grievance
-    const incidentDate = new Date(2025, 0, 1); // Jan 1, 2025
-    const dateFiled = new Date(2025, 0, 10); // Jan 10, 2025
-
-    const grievanceData = [
-      'TEST-G-INTEGRATION-001',
-      testMemberId,
-      'Test',
-      'Member',
-      'Open',
-      'Step I',
-      incidentDate,
-      '',
-      dateFiled,
-      '',
-      '',
-      '',
-      '',
-      '',
-      '',
-      '',
-      '',
-      '',
-      '',
-      '',
-      '',
-      'Art. 23 - Grievance Procedure',
-      'Discipline',
-      'test.member@union.org',
-      'Unit A - Administrative',
-      'Boston HQ',
-      'Jane Smith',
-      ''
-    ];
-
-    const initialGrievanceRow = grievanceLog.getLastRow() + 1;
-    grievanceLog.getRange(initialGrievanceRow, 1, 1, grievanceData.length)
-      .setValues([grievanceData]);
-
-    SpreadsheetApp.flush();
-    Utilities.sleep(2000);
-
-    // Step 2: Verify auto-calculated deadlines
-    const filingDeadline = grievanceLog.getRange(initialGrievanceRow, 8).getValue();
-    const expectedFilingDeadline = new Date(incidentDate.getTime() + 21 * 24 * 60 * 60 * 1000);
-
-    Assert.assertNotNull(
-      filingDeadline,
-      'Filing deadline should be auto-calculated'
-    );
-
-    const stepIDeadline = grievanceLog.getRange(initialGrievanceRow, 10).getValue();
-    const expectedStepIDeadline = new Date(dateFiled.getTime() + 30 * 24 * 60 * 60 * 1000);
-
-    Assert.assertNotNull(
-      stepIDeadline,
-      'Step I deadline should be auto-calculated'
-    );
-
-    // Step 3: Verify Member Directory snapshot updates
-    const memberData = memberDir.getRange(2, 1, memberDir.getLastRow() - 1, 31).getValues();
-    const memberRow = memberData.find(function(row) { return row[0] === testMemberId; });
-
-    Assert.assertNotNull(memberRow, 'Member should exist');
-
-    const hasOpenGrievance = memberRow[MEMBER_COLS.HAS_OPEN_GRIEVANCE - 1]; // Column Y (index 24)
-    Assert.assertTrue(
-      hasOpenGrievance === 'Yes' || hasOpenGrievance === true,
-      'Member should show as having open grievance'
-    );
-
-    // Step 4: Progress grievance to Step II
-    grievanceLog.getRange(initialGrievanceRow, 11).setValue(new Date(2025, 1, 10)); // Step I Decision Rcvd
-    grievanceLog.getRange(initialGrievanceRow, 13).setValue(new Date(2025, 1, 15)); // Step II Appeal Filed
-    grievanceLog.getRange(initialGrievanceRow, 6).setValue('Step II'); // Update current step
-
-    SpreadsheetApp.flush();
-    Utilities.sleep(2000);
-
-    // Verify Step II deadline calculated
-    const stepIIDeadline = grievanceLog.getRange(initialGrievanceRow, 14).getValue();
-    Assert.assertNotNull(
-      stepIIDeadline,
-      'Step II deadline should be auto-calculated'
-    );
-
-    // Step 5: Close the grievance
-    const closedDate = new Date(2025, 2, 1); // March 1, 2025
-    grievanceLog.getRange(initialGrievanceRow, 5).setValue('Settled'); // Status
-    grievanceLog.getRange(initialGrievanceRow, 18).setValue(closedDate); // Date Closed
-    grievanceLog.getRange(initialGrievanceRow, 28).setValue('Resolved favorably'); // Resolution
-
-    SpreadsheetApp.flush();
-    Utilities.sleep(2000);
-
-    // Verify Days Open is calculated correctly
-    const daysOpen = grievanceLog.getRange(initialGrievanceRow, 19).getValue();
-    Assert.assertTrue(
-      daysOpen > 0,
-      'Days Open should be calculated for closed grievance'
-    );
-
-    // Step 6: Verify Member Directory snapshot updates to Settled
-    const updatedMemberData = memberDir.getRange(2, 1, memberDir.getLastRow() - 1, 31).getValues();
-    const updatedMemberRow = updatedMemberData.find(function(row) { return row[0] === testMemberId; });
-
-    const updatedStatus = updatedMemberRow[MEMBER_COLS.GRIEVANCE_STATUS - 1]; // Column Z (index 25)
-    Assert.assertEquals(
-      'Settled',
-      updatedStatus,
-      'Member grievance status snapshot should update to Settled'
-    );
-
-    Logger.log('✅ Complete grievance workflow test passed');
-
-  } finally {
-    cleanupTestData();
-  }
-}
-
-/**
- * Test: Dashboard metrics update when data changes
- */
-function testDashboardMetricsUpdate() {
-  const ss = SpreadsheetApp.getActive();
-  const dashboard = ss.getSheetByName(SHEETS.DASHBOARD);
-
-  // Get initial member count
-  const initialMemberCount = dashboard.getRange('B6').getValue() || 0;
-
-  // Create new test members
-  createTestMember('TEST-M-DASHBOARD-001');
-  createTestMember('TEST-M-DASHBOARD-002');
-  createTestMember('TEST-M-DASHBOARD-003');
-
-  try {
-    SpreadsheetApp.flush();
-    Utilities.sleep(2000);
-
-    // Check that member count increased
-    const updatedMemberCount = dashboard.getRange('B6').getValue();
-
-    Assert.assertTrue(
-      updatedMemberCount >= initialMemberCount + 3,
-      `Member count should increase (was ${initialMemberCount}, now ${updatedMemberCount})`
-    );
-
-    Logger.log('✅ Dashboard metrics update test passed');
-
-  } finally {
-    cleanupTestData();
-  }
-}
-
-/**
- * Test: Member-Grievance linking maintains data consistency
- */
-function testMemberGrievanceSnapshot() {
-  const testMemberId = createTestMember('TEST-M-SNAPSHOT-001');
-
-  try {
-    const ss = SpreadsheetApp.getActive();
-    const memberDir = ss.getSheetByName(SHEETS.MEMBER_DIR);
-    const grievanceLog = ss.getSheetByName(SHEETS.GRIEVANCE_LOG);
-
-    // Create grievance for member
-    const grievanceData = [
-      'TEST-G-SNAPSHOT-001',
-      testMemberId,
-      'Test',
-      'Member',
-      'Pending Info',
-      'Step I',
-      new Date(),
-      '',
-      new Date(),
-      '',
-      '',
-      '',
-      '',
-      '',
-      '',
-      '',
-      '',
-      '',
-      '',
-      '',
-      '',
-      'Art. 24 - Discipline',
-      'Workload',
-      'test@union.org',
-      'Unit A - Administrative',
-      'Boston HQ',
-      'Jane Smith',
-      ''
-    ];
-
-    grievanceLog.getRange(grievanceLog.getLastRow() + 1, 1, 1, grievanceData.length)
-      .setValues([grievanceData]);
-
-    SpreadsheetApp.flush();
-    Utilities.sleep(2000);
-
-    // Check member snapshot
-    const memberData = memberDir.getRange(2, 1, memberDir.getLastRow() - 1, 31).getValues();
-    const memberRow = memberData.find(function(row) { return row[0] === testMemberId; });
-
-    Assert.assertNotNull(memberRow, 'Member should exist');
-
-    // Check status snapshot (column Z = 26, index 25)
-    const statusSnapshot = memberRow[MEMBER_COLS.GRIEVANCE_STATUS - 1];
-    Assert.assertEquals(
-      'Pending Info',
-      statusSnapshot,
-      'Status snapshot should match grievance status'
-    );
-
-    // Update grievance status
-    const grievanceRow = grievanceLog.getRange(2, 1, grievanceLog.getLastRow() - 1, 5).getValues()
-      .findIndex(function(row) { return row[0] === 'TEST-G-SNAPSHOT-001'; }) + 2;
-
-    grievanceLog.getRange(grievanceRow, 5).setValue('Open');
-
-    SpreadsheetApp.flush();
-    Utilities.sleep(2000);
-
-    // Check snapshot updated
-    const updatedMemberData = memberDir.getRange(2, 1, memberDir.getLastRow() - 1, 31).getValues();
-    const updatedMemberRow = updatedMemberData.find(function(row) { return row[0] === testMemberId; });
-
-    const updatedStatusSnapshot = updatedMemberRow[MEMBER_COLS.GRIEVANCE_STATUS - 1];
-    Assert.assertEquals(
-      'Open',
-      updatedStatusSnapshot,
-      'Status snapshot should update when grievance status changes'
-    );
-
-    Logger.log('✅ Member-grievance snapshot test passed');
-
-  } finally {
-    cleanupTestData();
-  }
-}
-
-/* --------------------= DATA CONSISTENCY TESTS --------------------= */
-
-/**
- * Test: Config changes propagate to dropdowns
- */
-function testConfigChangesPropagateToDropdowns() {
-  const ss = SpreadsheetApp.getActive();
-  const config = ss.getSheetByName(SHEETS.CONFIG);
-  const memberDir = ss.getSheetByName(SHEETS.MEMBER_DIR);
-
-  // Add a new location to Config
-  const lastConfigRow = config.getLastRow();
-  const testLocation = 'TEST-LOCATION-INTEGRATION';
-  config.getRange(lastConfigRow + 1, 2).setValue(testLocation);
-
-  try {
-    SpreadsheetApp.flush();
-    Utilities.sleep(1000);
-
-    // Check that validation includes new location
-    const locationCell = memberDir.getRange(2, MEMBER_COLS.WORK_LOCATION);
-    const validation = locationCell.getDataValidation();
-
-    Assert.assertNotNull(
-      validation,
-      'Location validation should exist'
-    );
-
-    // The validation range should include the new location
-    // (We can't easily check dropdown contents programmatically,
-    // but we verify validation still exists)
-
-    Logger.log('✅ Config changes propagate test passed');
-
-  } finally {
-    // Remove test location
-    const data = config.getRange(2, 2, config.getLastRow() - 1, 1).getValues();
-    for (let i = data.length - 1; i >= 0; i--) {
-      if (data[i][0] === testLocation) {
-        config.deleteRow(i + 2);
-      }
-    }
-  }
-}
-
-/**
- * Test: Multiple grievances for same member
- */
-function testMultipleGrievancesSameMember() {
-  const testMemberId = createTestMember('TEST-M-MULTIPLE-001');
-
-  try {
-    const ss = SpreadsheetApp.getActive();
-    const grievanceLog = ss.getSheetByName(SHEETS.GRIEVANCE_LOG);
-
-    // Create 3 grievances for same member
-    for (let i = 1; i <= 3; i++) {
-      const grievanceData = [
-        `TEST-G-MULTIPLE-00${i}`,
-        testMemberId,
-        'Test',
-        'Member',
-        i === 1 ? 'Open' : 'Closed',
-        'Step I',
-        new Date(),
-        '',
-        new Date(),
-        '',
-        '',
-        '',
-        '',
-        '',
-        '',
-        '',
-        '',
-        i === 1 ? '' : new Date(),
-        '',
-        '',
-        '',
-        'Art. 23 - Grievance Procedure',
-        'Discipline',
-        'test@union.org',
-        'Unit A - Administrative',
-        'Boston HQ',
-        'Jane Smith',
-        i === 1 ? '' : 'Resolved'
-      ];
-
-      grievanceLog.getRange(grievanceLog.getLastRow() + 1, 1, 1, grievanceData.length)
-        .setValues([grievanceData]);
-    }
-
-    SpreadsheetApp.flush();
-    Utilities.sleep(2000);
-
-    // Verify all grievances created
-    const grievances = grievanceLog.getRange(2, 1, grievanceLog.getLastRow() - 1, 2).getValues()
-      .filter(function(row) { return row[1] === testMemberId; });
-
-    Assert.assertEquals(
-      3,
-      grievances.length,
-      'Should have 3 grievances for test member'
-    );
-
-    // Verify member shows as having open grievance (from first one)
-    const memberDir = ss.getSheetByName(SHEETS.MEMBER_DIR);
-    const memberData = memberDir.getRange(2, 1, memberDir.getLastRow() - 1, 31).getValues();
-    const memberRow = memberData.find(function(row) { return row[0] === testMemberId; });
-
-    const hasOpenGrievance = memberRow[MEMBER_COLS.HAS_OPEN_GRIEVANCE - 1]; // Column Y (index 24)
-    Assert.assertTrue(
-      hasOpenGrievance === 'Yes' || hasOpenGrievance === true,
-      'Member with multiple grievances should show as having open grievance'
-    );
-
-    Logger.log('✅ Multiple grievances same member test passed');
-
-  } finally {
-    cleanupTestData();
-  }
-}
-
-/**
- * Test: Dashboard handles empty data gracefully
- */
-function testDashboardHandlesEmptyData() {
-  const ss = SpreadsheetApp.getActive();
-  const memberDir = ss.getSheetByName(SHEETS.MEMBER_DIR);
-  const grievanceLog = ss.getSheetByName(SHEETS.GRIEVANCE_LOG);
-  const dashboard = ss.getSheetByName(SHEETS.DASHBOARD);
-
-  // Backup data
-  const memberBackup = memberDir.getLastRow() > 1 ?
-    memberDir.getRange(2, 1, memberDir.getLastRow() - 1, 31).getValues() : [];
-  const grievanceBackup = grievanceLog.getLastRow() > 1 ?
-    grievanceLog.getRange(2, 1, grievanceLog.getLastRow() - 1, 28).getValues() : [];
-
-  try {
-    // Clear all data
-    if (memberDir.getLastRow() > 1) {
-      memberDir.deleteRows(2, memberDir.getLastRow() - 1);
-    }
-    if (grievanceLog.getLastRow() > 1) {
-      grievanceLog.deleteRows(2, grievanceLog.getLastRow() - 1);
-    }
-
-    SpreadsheetApp.flush();
-    Utilities.sleep(2000);
-
-    // Check dashboard doesn't show errors
-    // Member count should be 0
-    const memberCount = dashboard.getRange('B6').getValue();
-
-    // Should be 0 or empty, not #DIV/0! or #REF!
-    Assert.assertTrue(
-      memberCount === 0 || memberCount === '' || memberCount === null,
-      'Dashboard should handle empty data (member count should be 0 or empty)'
-    );
-
-    Logger.log('✅ Dashboard handles empty data test passed');
-
-  } finally {
-    // Restore data
-    if (memberBackup.length > 0) {
-      memberDir.getRange(2, 1, memberBackup.length, memberBackup[0].length)
-        .setValues(memberBackup);
-    }
-    if (grievanceBackup.length > 0) {
-      grievanceLog.getRange(2, 1, grievanceBackup.length, grievanceBackup[0].length)
-        .setValues(grievanceBackup);
-    }
-  }
-}
-
-/* --------------------= PERFORMANCE TESTS --------------------= */
-
-/**
- * Test: Dashboard refresh completes in reasonable time
- */
-function testDashboardRefreshPerformance() {
-  const startTime = new Date();
-
-  refreshCalculations();
-
-  const endTime = new Date();
-  const duration = (endTime - startTime) / 1000; // seconds
-
-  Assert.assertTrue(
-    duration < 10,
-    `Dashboard refresh should complete in < 10 seconds (took ${duration.toFixed(2)}s)`
-  );
-
-  Logger.log(`✅ Dashboard refresh performance test passed (${duration.toFixed(2)}s)`);
-}
-
-/**
- * Test: Formula calculations on moderate dataset
- */
-function testFormulaPerformanceWithData() {
-  // Create 10 test members and 10 grievances
-  const testMemberIds = [];
-  for (let i = 1; i <= 10; i++) {
-    const memberId = createTestMember(`TEST-M-PERF-${String(i).padStart(3, '0')}`);
-    testMemberIds.push(memberId);
-  }
-
-  try {
-    const ss = SpreadsheetApp.getActive();
-    const grievanceLog = ss.getSheetByName(SHEETS.GRIEVANCE_LOG);
-
-    const startTime = new Date();
-
-    // Create 10 grievances
-    for (let i = 1; i <= 10; i++) {
-      const grievanceData = [
-        `TEST-G-PERF-${String(i).padStart(3, '0')}`,
-        testMemberIds[i - 1],
-        'Test',
-        'Member',
-        'Open',
-        'Step I',
-        new Date(),
-        '',
-        new Date(),
-        '',
-        '',
-        '',
-        '',
-        '',
-        '',
-        '',
-        '',
-        '',
-        '',
-        '',
-        '',
-        'Art. 23 - Grievance Procedure',
-        'Discipline',
-        'test@union.org',
-        'Unit A - Administrative',
-        'Boston HQ',
-        'Jane Smith',
-        ''
-      ];
-
-      grievanceLog.getRange(grievanceLog.getLastRow() + 1, 1, 1, grievanceData.length)
-        .setValues([grievanceData]);
-    }
-
-    SpreadsheetApp.flush();
-
-    const endTime = new Date();
-    const duration = (endTime - startTime) / 1000; // seconds
-
-    Assert.assertTrue(
-      duration < 30,
-      `Creating 10 grievances with formulas should complete in < 30 seconds (took ${duration.toFixed(2)}s)`
-    );
-
-    Logger.log(`✅ Formula performance test passed (${duration.toFixed(2)}s)`);
-
-  } finally {
-    cleanupTestData();
-  }
-}
-
-/* --------------------= REGRESSION TESTS --------------------= */
-
-/**
- * Test: Grievance updates trigger Member Directory recalculation
- */
-function testGrievanceUpdatesTriggersRecalculation() {
-  const testMemberId = createTestMember('TEST-M-RECALC-001');
-
-  try {
-    const ss = SpreadsheetApp.getActive();
-    const memberDir = ss.getSheetByName(SHEETS.MEMBER_DIR);
-    const grievanceLog = ss.getSheetByName(SHEETS.GRIEVANCE_LOG);
-
-    // Create grievance
-    const grievanceData = [
-      'TEST-G-RECALC-001',
-      testMemberId,
-      'Test',
-      'Member',
-      'Open',
-      'Step I',
-      new Date(),
-      '',
-      new Date(),
-      '',
-      '',
-      '',
-      '',
-      '',
-      '',
-      '',
-      '',
-      '',
-      '',
-      '',
-      '',
-      'Art. 23 - Grievance Procedure',
-      'Discipline',
-      'test@union.org',
-      'Unit A - Administrative',
-      'Boston HQ',
-      'Jane Smith',
-      ''
-    ];
-
-    const grievanceRow = grievanceLog.getLastRow() + 1;
-    grievanceLog.getRange(grievanceRow, 1, 1, grievanceData.length)
-      .setValues([grievanceData]);
-
-    SpreadsheetApp.flush();
-    Utilities.sleep(2000);
-
-    // Check initial state - use MEMBER_COLS constant (column Z = 26, 0-indexed = 25)
-    const statusIdx = MEMBER_COLS.GRIEVANCE_STATUS - 1;
-    const memberData1 = memberDir.getRange(2, 1, memberDir.getLastRow() - 1, 31).getValues();
-    const memberRow1 = memberData1.find(function(row) { return row[0] === testMemberId; });
-    const status1 = memberRow1[statusIdx];
-
-    Assert.assertEquals('Open', status1, 'Initial status should be Open');
-
-    // Update grievance
-    grievanceLog.getRange(grievanceRow, 5).setValue('Settled');
-
-    SpreadsheetApp.flush();
-    Utilities.sleep(2000);
-
-    // Check updated state
-    const memberData2 = memberDir.getRange(2, 1, memberDir.getLastRow() - 1, 31).getValues();
-    const memberRow2 = memberData2.find(function(row) { return row[0] === testMemberId; });
-    const status2 = memberRow2[statusIdx];
-
-    Assert.assertEquals(
-      'Settled',
-      status2,
-      'Status should update to Settled after grievance update'
-    );
-
-    Logger.log('✅ Grievance updates trigger recalculation test passed');
-
-  } finally {
-    cleanupTestData();
-  }
 }
 
 

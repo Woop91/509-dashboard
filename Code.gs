@@ -1922,6 +1922,14 @@ function toggleSetupMenuVisibility() {
  * Runs when spreadsheet opens - creates menu and validates configuration
  */
 function onOpen() {
+  // Log user access for audit trail
+  try {
+    logUserAccess();
+  } catch (e) {
+    // Don't let audit logging break the app
+    Logger.log('onOpen: Failed to log user access: ' + e.message);
+  }
+
   // Validate configuration on startup
   const configValid = validateConfigurationOnOpen();
 
