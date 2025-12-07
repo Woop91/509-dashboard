@@ -14,7 +14,7 @@
  * Build Info:
  * - Version: 2.1.0 (Security Enhanced + Code Review Improvements)
  * - Build ID: 20251202-improvements
- * - Build Date: 2025-12-07T01:19:25.074Z
+ * - Build Date: 2025-12-07T01:35:14.377Z
  * - Build Type: DEVELOPMENT
  * - Modules: 77 files
  * - Tests Included: Yes
@@ -27919,7 +27919,7 @@ function createDashboardControlPanel(sheet) {
     .setFontColor("white");
 
   const controls = [
-    ["Metric 1:", "Chart Type 1:", "Metric 2:", "Chart Type 2:", "Theme:"],
+    ["Show Metric:", "Chart Style:", "Also Show:", "Breakdown By:", "Theme:"],
     ["", "", "", "", ""]
   ];
 
@@ -27943,7 +27943,7 @@ function createDashboardControlPanel(sheet) {
     .setBackground(COLORS.WHITE)
     .setBorder(true, true, true, true, true, true, COLORS.BORDER_GRAY, SpreadsheetApp.BorderStyle.SOLID);
 
-  sheet.getRange("I6").setValue("Quick Action:")
+  sheet.getRange("I6").setValue("Actions:")
     .setFontWeight("bold")
     .setFontSize(10).setFontFamily("Roboto")
     .setBackground(COLORS.LIGHT_GRAY)
@@ -28274,7 +28274,7 @@ function setupInteractiveDashboardControls() {
     fontWeight: "bold"
   };
 
-  // Metric 1
+  // Show Metric
   sheet.getRange("A7")
     .setDataValidation(metricRule)
     .setValue("Total Members")
@@ -28282,7 +28282,7 @@ function setupInteractiveDashboardControls() {
     .setBorder(true, true, true, true, false, false, dropdownStyle.border, SpreadsheetApp.BorderStyle.SOLID_MEDIUM)
     .setFontWeight(dropdownStyle.fontWeight);
 
-  // Chart Type 1
+  // Chart Style
   sheet.getRange("B7")
     .setDataValidation(chartTypeRule)
     .setValue("Donut Chart")
@@ -28290,7 +28290,7 @@ function setupInteractiveDashboardControls() {
     .setBorder(true, true, true, true, false, false, dropdownStyle.border, SpreadsheetApp.BorderStyle.SOLID_MEDIUM)
     .setFontWeight(dropdownStyle.fontWeight);
 
-  // Metric 2
+  // Also Show
   sheet.getRange("C7")
     .setDataValidation(metricRule)
     .setValue("Active Grievances")
@@ -28298,7 +28298,7 @@ function setupInteractiveDashboardControls() {
     .setBorder(true, true, true, true, false, false, dropdownStyle.border, SpreadsheetApp.BorderStyle.SOLID_MEDIUM)
     .setFontWeight(dropdownStyle.fontWeight);
 
-  // Chart Type 2
+  // Breakdown By
   sheet.getRange("D7")
     .setDataValidation(chartTypeRule)
     .setValue("Bar Chart")
