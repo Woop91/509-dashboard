@@ -4,7 +4,9 @@ Future feature ideas and enhancements for the 509 Dashboard.
 
 **Status Summary:** 33 of 50 features have been implemented. 17 remain pending (including 2 new high-priority features).
 
-**Last Updated:** 2025-12-07 (Version 3.5)
+**Last Updated:** 2025-12-07 (Version 3.6)
+
+**Note (v3.6):** Menu system reorganized into 6 clean menus: Dashboard, Sheet Manager, Setup, Demo, Administrator, and Tests. See AI_REFERENCE.md v3.6 changelog.
 
 **Note (v3.5):** 43 features that were implemented but not accessible from the menu have been restored to the menu system. See AI_REFERENCE.md v3.5 changelog for complete list.
 
