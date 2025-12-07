@@ -47,18 +47,29 @@
 - **Result:** ~600 lines of code removed, lighter production deployment
 
 ✅ **Enhanced `nukeSeedData()` Function** (`SeedNuke.gs`)
-- Now clears **Config tab demo entries**:
-  - Job Titles (Column A)
-  - Office Locations (Column B)
-  - Units (Column C)
-  - Supervisors (Column F)
-  - Managers (Column G)
-  - Stewards (Column H)
-  - Grievance Coordinators (Column O)
-  - Home Towns (Column AF)
-- Clears Member Directory, Grievance Log, Steward Workload
-- Sets SEED_NUKED flag
-- Shows post-nuke guidance dialog
+- Clears **Config tab demo entries** (demo data):
+  - Job Titles (A), Office Locations (B), Units (C)
+  - Supervisors (F), Managers (G), Stewards (H)
+  - Grievance Coordinators (O), Home Towns (AF)
+  - Office Addresses (AN)
+- **PRESERVES Organization Info** (never cleared):
+  - Org Name (U), Local Number (V), Main Address (W), Main Phone (X)
+  - Union Parent (AK), State/Region (AL), Website (AM)
+  - Main Fax (AO), Toll Free (AP)
+  - All deadline and contract reference columns
+
+✅ **Updated ORG_DEFAULTS** (`Constants.gs`)
+- Updated SEIU 509 headquarters info:
+  - Address: 293 Boston Post Road West, 4th Floor, Marlborough, MA 01752
+  - Main: 774-843-7509, Fax: 508-485-8529
+  - Toll Free: 800-632-8079
+  - Contact: Marc (marc@seiu509.org)
+  - Website: https://www.seiu509.org/
+
+✅ **Added New Config Columns** (`Constants.gs`)
+- `OFFICE_ADDRESSES` (AN, col 40) - Street addresses for office locations
+- `MAIN_FAX` (AO, col 41) - Organization fax number
+- `TOLL_FREE` (AP, col 42) - Toll-free phone number
 
 ✅ **Simplified Menu Structure:**
 - Seed menu completely removed (functions no longer exist)
@@ -69,8 +80,9 @@
 
 **Files Modified:**
 - `Code.gs` - Removed all seed functions (~600 lines), simplified menu
+- `Constants.gs` - Updated ORG_DEFAULTS, added OFFICE_ADDRESSES, MAIN_FAX, TOLL_FREE
 - `ReorganizedMenu.gs` - Removed seed menu items
-- `SeedNuke.gs` - Added clearConfigDemoData() function
+- `SeedNuke.gs` - Enhanced clearConfigDemoData() to preserve org info
 - `AI_REFERENCE.md` - Updated for production deployment
 
 ---

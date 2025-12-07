@@ -419,6 +419,11 @@ const CONFIG_COLS = {
   UNION_PARENT: 37,           // AK - parent union (e.g., "SEIU")
   STATE_REGION: 38,           // AL - state/region (e.g., "Massachusetts")
   ORG_WEBSITE: 39,            // AM - organization website URL
+  // Office Addresses (col 40) - corresponds to OFFICE_LOCATIONS in col B
+  OFFICE_ADDRESSES: 40,       // AN - addresses for each office location (same order as col B)
+  // Additional Contact (cols 41-42)
+  MAIN_FAX: 41,               // AO - main fax number
+  TOLL_FREE: 42,              // AP - toll-free number
   // Backward compatibility alias
   COMMITTEES: 9               // Alias for STEWARD_COMMITTEES (col I)
 };
@@ -432,6 +437,8 @@ const CONFIG_COLS = {
  *   1. Edit these defaults here, OR
  *   2. Set values in the Config sheet (takes precedence)
  *
+ * NOTE: Organization info is NEVER deleted during nuke operations.
+ *
  * @const {Object}
  */
 const ORG_DEFAULTS = {
@@ -440,11 +447,17 @@ const ORG_DEFAULTS = {
   LOCAL_NUMBER: '509',
   UNION_PARENT: 'SEIU',
   STATE_REGION: 'Massachusetts',
-  ORG_WEBSITE: 'https://www.seiu509.org',
+  ORG_WEBSITE: 'https://www.seiu509.org/',
+
+  // Union Headquarters
+  MAIN_ADDRESS: '293 Boston Post Road West, 4th Floor, Marlborough, MA 01752',
+  MAIN_PHONE: '774-843-7509',
+  MAIN_FAX: '508-485-8529',
+  TOLL_FREE: '800-632-8079',
 
   // Contact Info
-  MAIN_ADDRESS: '888 Worcester St, Suite 100, Wellesley, MA 02482',
-  MAIN_PHONE: '(617) 924-8509',
+  PRIMARY_CONTACT_NAME: 'Marc',
+  PRIMARY_CONTACT_EMAIL: 'marc@seiu509.org',
   GRIEVANCE_EMAIL: 'grievances@seiu509.org',
   INFO_EMAIL: 'info@seiu509.org',
 
