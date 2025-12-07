@@ -1,6 +1,6 @@
 # 509 Dashboard - Complete Feature Reference
 
-**Version:** 3.7
+**Version:** 3.8
 **Last Updated:** 2025-12-07
 **Purpose:** Union grievance tracking and member engagement system for SEIU Local 509
 
@@ -46,7 +46,62 @@
 
 ---
 
-## 🆕 Changelog - Version 3.6 (2025-12-07)
+## 🆕 Changelog - Version 3.8 (2025-12-07)
+
+**COMPREHENSIVE DASHBOARD FIXES & SEED/NUKE ALIGNMENT:**
+
+✅ **Operations Analytics - Merged Tab:**
+- Created new `OperationsAnalytics.gs` combining 5 analytics tabs into one:
+  - Trends & Timeline
+  - Location Analytics
+  - Type Analysis
+  - Member Engagement
+  - Cost Impact
+- All sections wired with live COUNTIF/COUNTIFS formulas from Grievance Log
+
+✅ **Fixed Dashboard Data Population:**
+- Interactive Dashboard: Added live formulas to metric cards and data tables
+- Executive Dashboard: Fixed Win Rate formula (Settled vs Denied, not "Resolved*")
+- KPI Performance Dashboard: Added 8 KPI rows with live formulas
+
+✅ **Seed/Nuke Alignment for Feedback:**
+- Sample Feedback entries NO LONGER auto-added during CREATE_509_DASHBOARD
+- Sample Feedback now only added via: Demo > Seed Demo Data > Add Sample Feedback Entries
+- `nukeSeedData()` now clears Feedback & Development (added `clearFeedbackDevelopment()`)
+- Updated nuke warning message to mention Feedback & Development
+
+✅ **Data Validation Fixes:**
+- Days Open: Shows only 0 or positive numbers (already correct)
+- Next Action Due: Now shows only future dates or blank (clears if overdue)
+- Days to Deadline: Now shows only positive numbers or blank (clears if overdue)
+
+✅ **Row 2 Formatting Fixes:**
+- Member Directory: Row 2 now has data row formatting (not header formatting)
+- Grievance Log: Row 2 now has data row formatting (not header formatting)
+
+**Files Modified:**
+- `OperationsAnalytics.gs` - NEW: Merged analytics dashboard
+- `Code.gs` - Executive Dashboard, KPI Dashboard, row 2 formatting fixes
+- `InteractiveDashboard.gs` - Live data formulas
+- `BatchGrievanceRecalc.gs` - Data validation (future dates only, positive only)
+- `SeedNuke.gs` - Added clearFeedbackDevelopment()
+- `DashboardFixes.gs` - Removed auto-add sample feedback
+- `Constants.gs` - Added OPERATIONS_ANALYTICS sheet name
+- `build.js` - Added OperationsAnalytics.gs to build
+
+---
+
+## Changelog - Version 3.7 (2025-12-07)
+
+**Creator Attribution Added:**
+- Added Wardis N. Vizcaino as Creator & Owner
+- Role: Steward at SEIU Local 509
+- Contact: wardis@pm.me
+- License: Free for use by non-profit collective bargaining groups and unions
+
+---
+
+## Changelog - Version 3.6 (2025-12-07)
 
 **MENU REORGANIZATION - Cleaner Structure:**
 
@@ -1865,6 +1920,8 @@ const resolution = isClosed ? [
    - Member Directory (deletes all rows, keeps headers)
    - Grievance Log (deletes all rows, keeps headers)
    - Steward Workload (deletes all rows, keeps headers)
+   - Config Tab demo entries (Job Titles, Locations, etc.)
+   - Feedback & Development (sample feedback entries)
 3. Sets `SEED_NUKED` flag in Script Properties
 4. Rebuilds dashboards to recalculate metrics (will show zeros)
 5. Shows post-nuke guidance dialog with setup checklist
