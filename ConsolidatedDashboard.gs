@@ -14,7 +14,7 @@
  * Build Info:
  * - Version: 2.1.0 (Security Enhanced + Code Review Improvements)
  * - Build ID: 20251202-improvements
- * - Build Date: 2025-12-07T02:51:38.235Z
+ * - Build Date: 2025-12-07T02:55:52.643Z
  * - Build Type: DEVELOPMENT
  * - Modules: 77 files
  * - Tests Included: Yes
@@ -449,6 +449,11 @@ const CONFIG_COLS = {
   UNION_PARENT: 37,           // AK - parent union (e.g., "SEIU")
   STATE_REGION: 38,           // AL - state/region (e.g., "Massachusetts")
   ORG_WEBSITE: 39,            // AM - organization website URL
+  // Extended Location & Contact Info (cols 40-43)
+  OFFICE_ADDRESSES: 40,       // AN - addresses corresponding to Office Locations
+  MAIN_FAX: 41,               // AO - main fax number
+  MAIN_CONTACT_NAME: 42,      // AP - primary contact person name
+  MAIN_CONTACT_EMAIL: 43,     // AQ - primary contact email
   // Backward compatibility alias
   COMMITTEES: 9               // Alias for STEWARD_COMMITTEES (col I)
 };
@@ -470,11 +475,15 @@ const ORG_DEFAULTS = {
   LOCAL_NUMBER: '509',
   UNION_PARENT: 'SEIU',
   STATE_REGION: 'Massachusetts',
-  ORG_WEBSITE: 'https://www.seiu509.org',
+  ORG_WEBSITE: 'https://www.seiu509.org/',
 
-  // Contact Info
-  MAIN_ADDRESS: '888 Worcester St, Suite 100, Wellesley, MA 02482',
-  MAIN_PHONE: '(617) 924-8509',
+  // Union Headquarters Contact Info
+  MAIN_ADDRESS: '293 Boston Post Road West, 4th Floor, Marlborough, MA 01752',
+  MAIN_PHONE: '774-843-7509',
+  MAIN_FAX: '508-485-8529',
+  MAIN_CONTACT_NAME: 'Marc',
+  MAIN_CONTACT_EMAIL: 'marc@seiu509.org',
+  MAIN_CONTACT_PHONE: '800-632-8079',
   GRIEVANCE_EMAIL: 'grievances@seiu509.org',
   INFO_EMAIL: 'info@seiu509.org',
 
@@ -3161,7 +3170,7 @@ function createConfigTab() {
   config.clear();
 
   const configData = [
-    // Row 1: Column Headers (32 columns total)
+    // Row 1: Column Headers (43 columns total)
     // Employment Info (1-5)
     ["Job Titles", "Office Locations", "Units", "Office Days", "Yes/No (Dropdowns)",
     // Supervision (6-7) - managers only, NOT stewards
@@ -3181,19 +3190,29 @@ function createConfigTab() {
     // Deadlines (27-30)
      "Filing Deadline Days", "Step I Response Days", "Step II Appeal Days", "Step II Response Days",
     // Multi-select Options (31-32)
-     "Best Times to Contact", "Home Towns"],
+     "Best Times to Contact", "Home Towns",
+    // Contract & Legal References (33-36)
+     "Contract Article (Grievance)", "Contract Article (Discipline)", "Contract Article (Workload)", "Contract Name",
+    // Org Identity (37-39)
+     "Union Parent", "State/Region", "Organization Website",
+    // Extended Location & Contact Info (40-43)
+     "Office Addresses", "Main Fax", "Main Contact Name", "Main Contact Email"],
 
     // Data rows - first row has default/example values for settings columns
+    // IMPORTANT: Organization info (cols 21-24, 37-43) should NOT be deleted by nuke operations
     ["Coordinator", "Boston HQ", "Unit A - Administrative", "Monday", "Yes",
      "Sarah Johnson", "Michael Chen",
      "Jane Smith", "Grievance Committee",
      "Open", "Informal", "Discipline", "Art. 1 - Recognition", "Email",
      "Jane Smith, John Doe, Mary Johnson", "", "",
      "", "3, 7, 14", "",
-     "SEIU Local 509", "509", "", "",
+     "SEIU Local 509", "509", "293 Boston Post Road West, 4th Floor, Marlborough, MA 01752", "774-843-7509",
      "", "",
      "21", "30", "10", "30",
-     "Morning (8am-12pm)", "Boston"],
+     "Morning (8am-12pm)", "Boston",
+     "Article 23A", "Article 12", "Article 15", "2023-2026 CBA",
+     "SEIU", "Massachusetts", "https://www.seiu509.org/",
+     "", "508-485-8529", "Marc", "marc@seiu509.org"],
 
     ["Analyst", "Worcester Office", "Unit B - Technical", "Tuesday", "No",
      "Mike Wilson", "Lisa Anderson",
@@ -3204,7 +3223,10 @@ function createConfigTab() {
      "", "", "", "",
      "", "",
      "", "", "", "",
-     "Afternoon (12pm-5pm)", "Worcester"],
+     "Afternoon (12pm-5pm)", "Worcester",
+     "", "", "", "",
+     "", "", "",
+     "", "", "", ""],
 
     ["Case Manager", "Springfield Branch", "Unit C - Support Services", "Wednesday", "",
      "Emily Davis", "Robert Brown",
@@ -3215,7 +3237,10 @@ function createConfigTab() {
      "", "", "", "",
      "", "",
      "", "", "", "",
-     "Evening (5pm-8pm)", "Springfield"],
+     "Evening (5pm-8pm)", "Springfield",
+     "", "", "", "",
+     "", "", "",
+     "", "", "", ""],
 
     ["Specialist", "Cambridge Office", "Unit D - Operations", "Thursday", "",
      "Tom Harris", "Jennifer Lee",
@@ -3226,7 +3251,10 @@ function createConfigTab() {
      "", "", "", "",
      "", "",
      "", "", "", "",
-     "Weekends", "Cambridge"],
+     "Weekends", "Cambridge",
+     "", "", "", "",
+     "", "", "",
+     "", "", "", ""],
 
     ["Senior Analyst", "Lowell Center", "Unit E - Field Services", "Friday", "",
      "Amanda White", "David Martinez",
@@ -3237,7 +3265,10 @@ function createConfigTab() {
      "", "", "", "",
      "", "",
      "", "", "", "",
-     "Flexible", "Lowell"],
+     "Flexible", "Lowell",
+     "", "", "", "",
+     "", "", "",
+     "", "", "", ""],
 
     ["Team Lead", "Quincy Station", "", "Saturday", "",
      "Chris Taylor", "Susan Garcia",
@@ -3248,7 +3279,10 @@ function createConfigTab() {
      "", "", "", "",
      "", "",
      "", "", "", "",
-     "", "Quincy"],
+     "", "Quincy",
+     "", "", "", "",
+     "", "", "",
+     "", "", "", ""],
 
     ["Director", "Remote/Hybrid", "", "Sunday", "",
      "Patricia Moore", "James Wilson",
@@ -3259,7 +3293,10 @@ function createConfigTab() {
      "", "", "", "",
      "", "",
      "", "", "", "",
-     "", "Brockton"],
+     "", "Brockton",
+     "", "", "", "",
+     "", "", "",
+     "", "", "", ""],
 
     ["Manager", "Brockton Office", "", "", "",
      "Kevin Anderson", "Nancy Taylor",
@@ -3270,7 +3307,10 @@ function createConfigTab() {
      "", "", "", "",
      "", "",
      "", "", "", "",
-     "", "Lynn"],
+     "", "Lynn",
+     "", "", "", "",
+     "", "", "",
+     "", "", "", ""],
 
     ["Assistant", "Lynn Location", "", "", "",
      "Michelle Lee", "Richard White",
@@ -3281,7 +3321,10 @@ function createConfigTab() {
      "", "", "", "",
      "", "",
      "", "", "", "",
-     "", "Salem"],
+     "", "Salem",
+     "", "", "", "",
+     "", "", "",
+     "", "", "", ""],
 
     ["Associate", "Salem Office", "", "", "",
      "Brandon Scott", "Angela Moore",
@@ -3292,7 +3335,10 @@ function createConfigTab() {
      "", "", "", "",
      "", "",
      "", "", "", "",
-     "", "Framingham"],
+     "", "Framingham",
+     "", "", "", "",
+     "", "", "",
+     "", "", "", ""],
 
     ["Technician", "", "", "", "",
      "Jessica Green", "Christopher Lee",
@@ -3303,7 +3349,10 @@ function createConfigTab() {
      "", "", "", "",
      "", "",
      "", "", "", "",
-     "", "Newton"],
+     "", "Newton",
+     "", "", "", "",
+     "", "", "",
+     "", "", "", ""],
 
     ["Administrator", "", "", "", "",
      "Andrew Clark", "Melissa Wright",
@@ -3314,7 +3363,10 @@ function createConfigTab() {
      "", "", "", "",
      "", "",
      "", "", "", "",
-     "", "Somerville"],
+     "", "Somerville",
+     "", "", "", "",
+     "", "", "",
+     "", "", "", ""],
 
     ["Support Staff", "", "", "", "",
      "Rachel Brown", "Timothy Davis",
@@ -3325,10 +3377,13 @@ function createConfigTab() {
      "", "", "", "",
      "", "",
      "", "", "", "",
-     "", "Malden"]
+     "", "Malden",
+     "", "", "", "",
+     "", "", "",
+     "", "", "", ""]
   ];
 
-  // Add category header row first (9 categories, 32 columns)
+  // Add category header row first (12 categories, 43 columns)
   const categoryRow = [
     "── EMPLOYMENT INFO ──", "", "", "", "",
     "── SUPERVISION ──", "",
@@ -3339,7 +3394,10 @@ function createConfigTab() {
     "── ORGANIZATION ──", "", "", "",
     "── INTEGRATION ──", "",
     "── DEADLINES ──", "", "", "",
-    "── MULTI-SELECT OPTIONS ──", ""
+    "── MULTI-SELECT OPTIONS ──", "",
+    "── CONTRACT & LEGAL ──", "", "", "",
+    "── ORG IDENTITY ──", "", "",
+    "── EXTENDED CONTACT ──", "", "", ""
   ];
 
   // Insert category row at top, then column headers, then data
@@ -3352,7 +3410,7 @@ function createConfigTab() {
     .setFontSize(10)
     .setHorizontalAlignment("center");
 
-  // Category colors for row 1 (dark colors) - 32 columns total
+  // Category colors for row 1 (dark colors) - 43 columns total
   // Employment Info (cols 1-5) - Blue
   config.getRange(1, 1, 1, 5).setBackground("#3B82F6").setFontColor("#FFFFFF");
   // Supervision (cols 6-7) - Green (managers only)
@@ -3373,13 +3431,19 @@ function createConfigTab() {
   config.getRange(1, 27, 1, 4).setBackground("#D97706").setFontColor("#FFFFFF");
   // Multi-select Options (cols 31-32) - Cyan
   config.getRange(1, 31, 1, 2).setBackground("#06B6D4").setFontColor("#FFFFFF");
+  // Contract & Legal (cols 33-36) - Dark Green
+  config.getRange(1, 33, 1, 4).setBackground("#059669").setFontColor("#FFFFFF");
+  // Org Identity (cols 37-39) - Dark Teal
+  config.getRange(1, 37, 1, 3).setBackground("#0D9488").setFontColor("#FFFFFF");
+  // Extended Contact (cols 40-43) - Dark Blue
+  config.getRange(1, 40, 1, 4).setBackground("#1E40AF").setFontColor("#FFFFFF");
 
   // Style column header row (Row 2) with matching lighter colors
   config.getRange(2, 1, 1, configData[0].length)
     .setFontWeight("bold")
     .setFontSize(9);
 
-  // Light colors for column headers (Row 2) - 32 columns total
+  // Light colors for column headers (Row 2) - 43 columns total
   config.getRange(2, 1, 1, 5).setBackground("#DBEAFE");   // Light blue - Employment (1-5)
   config.getRange(2, 6, 1, 2).setBackground("#D1FAE5");   // Light green - Supervision (6-7)
   config.getRange(2, 8, 1, 2).setBackground("#E8E3F3");   // Light purple - Steward Info (8-9)
@@ -3390,6 +3454,9 @@ function createConfigTab() {
   config.getRange(2, 25, 1, 2).setBackground("#E0E7FF");  // Light indigo - Integration (25-26)
   config.getRange(2, 27, 1, 4).setBackground("#FEF3C7");  // Light amber - Deadlines (27-30)
   config.getRange(2, 31, 1, 2).setBackground("#CFFAFE");  // Light cyan - Multi-select Options (31-32)
+  config.getRange(2, 33, 1, 4).setBackground("#D1FAE5");  // Light green - Contract & Legal (33-36)
+  config.getRange(2, 37, 1, 3).setBackground("#CCFBF1");  // Light teal - Org Identity (37-39)
+  config.getRange(2, 40, 1, 4).setBackground("#DBEAFE");  // Light blue - Extended Contact (40-43)
 
   // Add borders between category groups (right border after last column of each category)
   const totalRows = configData.length + 1;
@@ -3402,6 +3469,9 @@ function createConfigTab() {
   config.getRange(1, 24, totalRows, 1).setBorder(null, null, null, true, null, null, "#9CA3AF", SpreadsheetApp.BorderStyle.SOLID_MEDIUM);  // After Organization (24)
   config.getRange(1, 26, totalRows, 1).setBorder(null, null, null, true, null, null, "#9CA3AF", SpreadsheetApp.BorderStyle.SOLID_MEDIUM);  // After Integration (26)
   config.getRange(1, 30, totalRows, 1).setBorder(null, null, null, true, null, null, "#9CA3AF", SpreadsheetApp.BorderStyle.SOLID_MEDIUM);  // After Deadlines (30)
+  config.getRange(1, 32, totalRows, 1).setBorder(null, null, null, true, null, null, "#9CA3AF", SpreadsheetApp.BorderStyle.SOLID_MEDIUM);  // After Multi-select Options (32)
+  config.getRange(1, 36, totalRows, 1).setBorder(null, null, null, true, null, null, "#9CA3AF", SpreadsheetApp.BorderStyle.SOLID_MEDIUM);  // After Contract & Legal (36)
+  config.getRange(1, 39, totalRows, 1).setBorder(null, null, null, true, null, null, "#9CA3AF", SpreadsheetApp.BorderStyle.SOLID_MEDIUM);  // After Org Identity (39)
 
   for (let i = 1; i <= configData[0].length; i++) {
     config.autoResizeColumn(i);

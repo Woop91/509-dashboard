@@ -419,6 +419,11 @@ const CONFIG_COLS = {
   UNION_PARENT: 37,           // AK - parent union (e.g., "SEIU")
   STATE_REGION: 38,           // AL - state/region (e.g., "Massachusetts")
   ORG_WEBSITE: 39,            // AM - organization website URL
+  // Extended Location & Contact Info (cols 40-43)
+  OFFICE_ADDRESSES: 40,       // AN - addresses corresponding to Office Locations
+  MAIN_FAX: 41,               // AO - main fax number
+  MAIN_CONTACT_NAME: 42,      // AP - primary contact person name
+  MAIN_CONTACT_EMAIL: 43,     // AQ - primary contact email
   // Backward compatibility alias
   COMMITTEES: 9               // Alias for STEWARD_COMMITTEES (col I)
 };
@@ -440,11 +445,15 @@ const ORG_DEFAULTS = {
   LOCAL_NUMBER: '509',
   UNION_PARENT: 'SEIU',
   STATE_REGION: 'Massachusetts',
-  ORG_WEBSITE: 'https://www.seiu509.org',
+  ORG_WEBSITE: 'https://www.seiu509.org/',
 
-  // Contact Info
-  MAIN_ADDRESS: '888 Worcester St, Suite 100, Wellesley, MA 02482',
-  MAIN_PHONE: '(617) 924-8509',
+  // Union Headquarters Contact Info
+  MAIN_ADDRESS: '293 Boston Post Road West, 4th Floor, Marlborough, MA 01752',
+  MAIN_PHONE: '774-843-7509',
+  MAIN_FAX: '508-485-8529',
+  MAIN_CONTACT_NAME: 'Marc',
+  MAIN_CONTACT_EMAIL: 'marc@seiu509.org',
+  MAIN_CONTACT_PHONE: '800-632-8079',
   GRIEVANCE_EMAIL: 'grievances@seiu509.org',
   INFO_EMAIL: 'info@seiu509.org',
 
