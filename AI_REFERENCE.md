@@ -1,6 +1,6 @@
 # 509 Dashboard - Complete Feature Reference
 
-**Version:** 3.8
+**Version:** 3.10
 **Last Updated:** 2025-12-07
 **Purpose:** Union grievance tracking and member engagement system for SEIU Local 509
 
@@ -64,10 +64,10 @@
 - Executive Dashboard: Fixed Win Rate formula (Settled vs Denied, not "Resolved*")
 - KPI Performance Dashboard: Added 8 KPI rows with live formulas
 
-✅ **Seed/Nuke Alignment for Feedback:**
-- Sample Feedback entries NO LONGER auto-added during CREATE_509_DASHBOARD
-- Sample Feedback now only added via: Demo > Seed Demo Data > Add Sample Feedback Entries
-- `nukeSeedData()` now clears Feedback & Development (added `clearFeedbackDevelopment()`)
+✅ **Feedback Auto-Population:**
+- Sample Feedback entries ARE auto-added during CREATE_509_DASHBOARD (3 sample entries)
+- Additional feedback can be added via: Demo > Seed Demo Data > Add Sample Feedback Entries
+- `nukeSeedData()` clears Feedback & Development (added `clearFeedbackDevelopment()`)
 - Updated nuke warning message to mention Feedback & Development
 
 ✅ **Data Validation Fixes:**
@@ -85,9 +85,112 @@
 - `InteractiveDashboard.gs` - Live data formulas
 - `BatchGrievanceRecalc.gs` - Data validation (future dates only, positive only)
 - `SeedNuke.gs` - Added clearFeedbackDevelopment()
-- `DashboardFixes.gs` - Removed auto-add sample feedback
+- `DashboardFixes.gs` - Added auto-populate sample feedback on CREATE_509_DASHBOARD
 - `Constants.gs` - Added OPERATIONS_ANALYTICS sheet name
 - `build.js` - Added OperationsAnalytics.gs to build
+
+---
+
+## Changelog - Version 3.10 (2025-12-07)
+
+**COMPREHENSIVE NUMBER FORMATTING WITH COMMAS:**
+
+✅ **Executive Dashboard** (`Code.gs`)
+- All numeric values now use TEXT(value,"#,##0") for comma formatting
+- Updated Quick Stats: Active Members, Active Grievances, Overdue Cases, Active Stewards
+- Updated Detailed KPIs: All member/grievance counts with comma separators
+- Comparison formulas updated to handle comma-formatted values with SUBSTITUTE()
+
+✅ **KPI Dashboard** (`Code.gs`)
+- All KPI numeric values now use TEXT(value,"#,##0")
+- Current Value, Variance, Last Month columns all show commas (20,000 not 20000)
+- Target column updated to use comma format (20,000 not 20000)
+
+✅ **Grievance Log** (`Code.gs`)
+- Applied setNumberFormat("#,##0") to Days Open column (S)
+- Applied setNumberFormat("#,##0") to Days to Deadline column (U)
+- Supports up to 1,000 rows of data
+
+✅ **Member Directory** (`Code.gs`)
+- Applied setNumberFormat("#,##0") to Open Rate column (S)
+- Applied setNumberFormat("#,##0") to Volunteer Hours column (T)
+- Supports up to 25,000 members
+
+✅ **Operations Analytics** (already had formatting via setNumberFormat)
+- Verified all numeric columns use "#,##0" format
+
+✅ **Interactive Dashboard** (already updated in v3.8)
+- Verified metric cards use TEXT(value,"#,##0")
+
+**Files Modified:**
+- `Code.gs` - Executive Dashboard, KPI Dashboard, Grievance Log, Member Directory number formatting
+- `ConsolidatedDashboard.gs` - Rebuilt with all changes
+
+---
+
+## Changelog - Version 3.9 (2025-12-07)
+
+**DASHBOARD FIXES - Executive, KPI, and Steward Workload:**
+
+✅ **Fixed Executive Dashboard Member Satisfaction Score** (`Code.gs`)
+- **Issue:** Formula referenced `'Member Satisfaction'!C:C` (Member Name column)
+- **Fix:** Changed to `'Member Satisfaction'!F:F` (Overall Satisfaction 1-5 rating)
+- Member Satisfaction Score now displays correctly (average of 1-5 ratings)
+
+✅ **Fixed KPI Dashboard Last Month Column** (`Code.gs`)
+- **Issue:** All "Last Month" values were hardcoded as `"-"` placeholder
+- **Fix:** Added proper formulas using `EOMONTH()` to calculate previous month date ranges:
+  - Active Grievances: Filed in previous month with Open status
+  - Win Rate %: Settled vs Denied cases closed in previous month
+  - Avg Days to Resolve: Average days for cases closed in previous month
+  - Cases Settled: Settled cases closed in previous month
+  - Cases Pending: Pending Info cases filed in previous month
+- Static metrics (Total Members, Steward Coverage, Member/Steward Ratio) show current value
+
+✅ **Fixed Steward Workload to Reflect Actual Data** (`Code.gs`)
+- **Issue:** Overdue Cases and Due This Week columns showed 0 (hardcoded placeholders)
+- **Fix:** `populateStewardWorkload()` now calculates actual values:
+  - Overdue Cases: Counts grievances where DAYS_TO_DEADLINE < 0 or contains "OVERDUE"
+  - Due This Week: Counts grievances where DAYS_TO_DEADLINE is 0-7 days
+  - Also checks NEXT_ACTION_DUE date for additional due-this-week cases
+- Steward workload now accurately reflects open case deadlines
+
+**Files Modified:**
+- `Code.gs` - Fixed createExecutiveDashboard(), createKPIPerformanceDashboard(), populateStewardWorkload()
+- `ConsolidatedDashboard.gs` - Rebuilt with all fixes
+
+---
+
+## Changelog - Version 3.8 (2025-12-07)
+
+**OPERATIONS ANALYTICS & INTERACTIVE DASHBOARD FIXES:**
+
+✅ **Rewrote Operations Analytics with Dynamic Columns** (`OperationsAnalytics.gs`)
+- All formulas now use dynamic column references via `getColumnLetter()`
+- Added `getOperationsAnalyticsColumns()` helper function
+- Fixed blank column issues in all 5 sections (Trends, Location, Type, Engagement, Cost)
+- All number formatting uses TEXT(value,"#,##0") for comma separators
+
+✅ **Added Delete Standalone Tabs Function** (`OperationsAnalytics.gs`, `Code.gs`)
+- `deleteStandaloneAnalyticsTabs()` removes deprecated individual analytics tabs
+- Called automatically during CREATE_509_DASHBOARD after Operations Analytics created
+- Tabs deleted: Trends & Timeline, Location Analytics, Type Analysis, Member Engagement, Cost Impact
+
+✅ **Restored Feedback Auto-Population** (`DashboardFixes.gs`)
+- Sample Feedback & Development entries auto-populate on dashboard creation
+- 3 sample entries (Feedback, Future Feature, Bug Report) added if sheet is empty
+
+✅ **Fixed Interactive Dashboard Number Formatting** (`InteractiveDashboard.gs`)
+- All metric cards now use TEXT(value,"#,##0") for comma-formatted numbers (20,001 not 20001)
+- Fixed: Total Members, Active Cases, Resolution Rate, Needs Attention
+- Data tables also use comma formatting
+
+**Files Modified:**
+- `OperationsAnalytics.gs` - Complete rewrite with dynamic columns
+- `Code.gs` - Added deleteStandaloneAnalyticsTabs() call
+- `DashboardFixes.gs` - Restored feedback auto-population
+- `InteractiveDashboard.gs` - Fixed number formatting
+- `ConsolidatedDashboard.gs` - Rebuilt with all changes
 
 ---
 
