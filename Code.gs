@@ -871,8 +871,9 @@ function refreshDashboardDeadlines() {
 }
 
 /**
- * Refresh Grievance Log Formulas - Re-applies ARRAYFORMULA to calculated columns
- * Run this after seeding data to fix Days Open, Next Action, Days to Deadline
+ * Recalculate Grievance Log calculated columns (Days Open, Next Action Due, Days to Deadline)
+ * These columns are calculated via code, not formulas - call this to refresh values
+ * Wrapper for recalcAllGrievancesBatched() from BatchGrievanceRecalc.gs
  */
 function refreshGrievanceFormulas() {
   const ss = SpreadsheetApp.getActive();
@@ -883,42 +884,20 @@ function refreshGrievanceFormulas() {
     return;
   }
 
-  SpreadsheetApp.getActive().toast('Refreshing grievance formulas...', 'Please wait', -1);
+  SpreadsheetApp.getActive().toast('Recalculating grievance values...', 'Please wait', -1);
 
-  // Get column letters
-  const gStatusCol = getColumnLetter(GRIEVANCE_COLS.STATUS);
-  const gCurrentStepCol = getColumnLetter(GRIEVANCE_COLS.CURRENT_STEP);
-  const gIncidentDateCol = getColumnLetter(GRIEVANCE_COLS.INCIDENT_DATE);
-  const gFilingDeadlineCol = getColumnLetter(GRIEVANCE_COLS.FILING_DEADLINE);
-  const gDateFiledCol = getColumnLetter(GRIEVANCE_COLS.DATE_FILED);
-  const gStep1DueCol = getColumnLetter(GRIEVANCE_COLS.STEP1_DUE);
-  const gStep2DueCol = getColumnLetter(GRIEVANCE_COLS.STEP2_DUE);
-  const gStep3AppealDueCol = getColumnLetter(GRIEVANCE_COLS.STEP3_APPEAL_DUE);
-  const gDateClosedCol = getColumnLetter(GRIEVANCE_COLS.DATE_CLOSED);
-  const gDaysOpenCol = getColumnLetter(GRIEVANCE_COLS.DAYS_OPEN);
-  const gNextActionCol = getColumnLetter(GRIEVANCE_COLS.NEXT_ACTION_DUE);
-  const gDaysToDeadlineCol = getColumnLetter(GRIEVANCE_COLS.DAYS_TO_DEADLINE);
-
-  // Clear the formula columns first (S, T, U = columns 19, 20, 21)
-  const lastRow = Math.max(grievanceLog.getLastRow(), 100);
-  grievanceLog.getRange(2, GRIEVANCE_COLS.DAYS_OPEN, lastRow - 1, 3).clearContent();
-
-  // Days Open - Column S (19)
-  grievanceLog.getRange(gDaysOpenCol + "2").setFormula(
-    `=ARRAYFORMULA(IF(${gDateFiledCol}2:${gDateFiledCol}<>"",IF(${gDateClosedCol}2:${gDateClosedCol}<>"",${gDateClosedCol}2:${gDateClosedCol}-${gDateFiledCol}2:${gDateFiledCol},TODAY()-${gDateFiledCol}2:${gDateFiledCol}),""))`
-  );
-
-  // Next Action Due - Column T (20)
-  grievanceLog.getRange(gNextActionCol + "2").setFormula(
-    `=ARRAYFORMULA(IF(${gStatusCol}2:${gStatusCol}="Open",IF(${gCurrentStepCol}2:${gCurrentStepCol}="Step I",${gStep1DueCol}2:${gStep1DueCol},IF(${gCurrentStepCol}2:${gCurrentStepCol}="Step II",${gStep2DueCol}2:${gStep2DueCol},IF(${gCurrentStepCol}2:${gCurrentStepCol}="Step III",${gStep3AppealDueCol}2:${gStep3AppealDueCol},${gFilingDeadlineCol}2:${gFilingDeadlineCol}))),""))`
-  );
-
-  // Days to Deadline - Column U (21) - Shows text for overdue, number for future
-  grievanceLog.getRange(gDaysToDeadlineCol + "2").setFormula(
-    `=ARRAYFORMULA(IF(${gNextActionCol}2:${gNextActionCol}<>"",IF(${gNextActionCol}2:${gNextActionCol}-TODAY()<0,"OVERDUE "&ABS(${gNextActionCol}2:${gNextActionCol}-TODAY())&"d",IF(${gNextActionCol}2:${gNextActionCol}-TODAY()=0,"DUE TODAY",${gNextActionCol}2:${gNextActionCol}-TODAY())),""))`
-  );
-
-  SpreadsheetApp.getActive().toast('✅ Grievance formulas refreshed!', 'Complete', 3);
+  try {
+    // Use the batched recalculation from BatchGrievanceRecalc.gs
+    const result = recalcAllGrievancesBatched();
+    SpreadsheetApp.getActive().toast(
+      `✅ Recalculated ${result.processed} grievances in ${(result.duration / 1000).toFixed(1)}s`,
+      'Complete',
+      5
+    );
+  } catch (error) {
+    Logger.log('Error in refreshGrievanceFormulas: ' + error.message);
+    SpreadsheetApp.getUi().alert('Error recalculating: ' + error.message);
+  }
 }
 
 /* --------------------- ANALYTICS DATA SHEET --------------------- */
@@ -1638,48 +1617,24 @@ function setupFormulasAndCalculations() {
   const gCurrentStepCol = getColumnLetter(GRIEVANCE_COLS.CURRENT_STEP);
   const gMemberIdCol = getColumnLetter(GRIEVANCE_COLS.MEMBER_ID);
 
-  // IMPORTANT: Using 10000 rows to support large datasets (5k grievances + buffer)
-
-  // Filing Deadline (Incident Date + 21 days) - Column H
-  grievanceLog.getRange(gFilingDeadlineCol + "2").setFormula(
-    `=ARRAYFORMULA(IF(${gIncidentDateCol}2:${gIncidentDateCol}10000<>"",${gIncidentDateCol}2:${gIncidentDateCol}10000+21,""))`
-  );
-
-  // Step I Decision Due (Date Filed + 30 days) - Column J
-  grievanceLog.getRange(gStep1DueCol + "2").setFormula(
-    `=ARRAYFORMULA(IF(${gDateFiledCol}2:${gDateFiledCol}10000<>"",${gDateFiledCol}2:${gDateFiledCol}10000+30,""))`
-  );
-
-  // Step II Appeal Due (Step I Decision Rcvd + 10 days) - Column L
-  grievanceLog.getRange(gStep2AppealDueCol + "2").setFormula(
-    `=ARRAYFORMULA(IF(${gStep1RcvdCol}2:${gStep1RcvdCol}10000<>"",${gStep1RcvdCol}2:${gStep1RcvdCol}10000+10,""))`
-  );
-
-  // Step II Decision Due (Step II Appeal Filed + 30 days) - Column N
-  grievanceLog.getRange(gStep2DueCol + "2").setFormula(
-    `=ARRAYFORMULA(IF(${gStep2AppealFiledCol}2:${gStep2AppealFiledCol}10000<>"",${gStep2AppealFiledCol}2:${gStep2AppealFiledCol}10000+30,""))`
-  );
-
-  // Step III Appeal Due (Step II Decision Rcvd + 30 days) - Column P
-  grievanceLog.getRange(gStep3AppealDueCol + "2").setFormula(
-    `=ARRAYFORMULA(IF(${gStep2RcvdCol}2:${gStep2RcvdCol}10000<>"",${gStep2RcvdCol}2:${gStep2RcvdCol}10000+30,""))`
-  );
-
-  // Days Open - Column S (shows actual days - negative values indicate data entry errors)
-  grievanceLog.getRange(gDaysOpenCol + "2").setFormula(
-    `=ARRAYFORMULA(IF(${gDateFiledCol}2:${gDateFiledCol}10000<>"",IF(${gDateClosedCol}2:${gDateClosedCol}10000<>"",${gDateClosedCol}2:${gDateClosedCol}10000-${gDateFiledCol}2:${gDateFiledCol}10000,TODAY()-${gDateFiledCol}2:${gDateFiledCol}10000),""))`
-  );
-
-  // Next Action Due - Column T (determines based on current step)
-  grievanceLog.getRange(gNextActionCol + "2").setFormula(
-    `=ARRAYFORMULA(IF(${gStatusCol}2:${gStatusCol}10000="Open",IF(${gCurrentStepCol}2:${gCurrentStepCol}10000="Step I",${gStep1DueCol}2:${gStep1DueCol}10000,IF(${gCurrentStepCol}2:${gCurrentStepCol}10000="Step II",${gStep2DueCol}2:${gStep2DueCol}10000,IF(${gCurrentStepCol}2:${gCurrentStepCol}10000="Step III",${gStep3AppealDueCol}2:${gStep3AppealDueCol}10000,${gFilingDeadlineCol}2:${gFilingDeadlineCol}10000))),""))`
-  );
-
-  // Days to Deadline - Column U (shows descriptive text for overdue items)
-  // Positive = days remaining, 0 = "DUE TODAY", Negative = "OVERDUE Xd"
-  grievanceLog.getRange(gDaysToDeadlineCol + "2").setFormula(
-    `=ARRAYFORMULA(IF(${gNextActionCol}2:${gNextActionCol}10000<>"",IF(${gNextActionCol}2:${gNextActionCol}10000-TODAY()<0,"OVERDUE "&ABS(${gNextActionCol}2:${gNextActionCol}10000-TODAY())&"d",IF(${gNextActionCol}2:${gNextActionCol}10000-TODAY()=0,"DUE TODAY",${gNextActionCol}2:${gNextActionCol}10000-TODAY())),""))`
-  );
+  // ============================================================================
+  // CALCULATED COLUMNS - NO FORMULAS IN SHEET
+  // ============================================================================
+  // The following columns are calculated by BatchGrievanceRecalc.gs and written
+  // as STATIC VALUES (not formulas). This prevents data corruption when rows
+  // are deleted. Run recalcAllGrievancesBatched() to recalculate all values.
+  //
+  // Column H: Filing Deadline (Incident Date + 21 days)
+  // Column J: Step I Decision Due (Date Filed + 30 days)
+  // Column L: Step II Appeal Due (Step I Decision Rcvd + 10 days)
+  // Column N: Step II Decision Due (Step II Appeal Filed + 30 days)
+  // Column P: Step III Appeal Due (Step II Decision Rcvd + 30 days)
+  // Column S: Days Open (DATE_CLOSED - DATE_FILED or TODAY - DATE_FILED)
+  // Column T: Next Action Due (based on Current Step)
+  // Column U: Days to Deadline (Next Action Due - TODAY)
+  //
+  // To recalculate: Menu → Dashboard → Grievance Tools → Refresh Grievance Formulas
+  // ============================================================================
 
   // Add conditional formatting for Days to Deadline column
   const daysToDeadlineRange = grievanceLog.getRange(gDaysToDeadlineCol + "2:" + gDaysToDeadlineCol + "10000");
@@ -2281,8 +2236,9 @@ function onOpen() {
         .addSeparator()
         .addItem("Seed All 5k Grievances (Legacy)", "SEED_5K_GRIEVANCES"))
       .addSeparator()
-      .addItem("🗑️ Nuke All Seed Data", "nukeSeedData")
-      .addItem("⚠️ Clear All Data", "clearAllData")
+      .addItem("🚨 Nuke Seed Data (Exit Demo Mode)", "nukeSeedData")
+      .addItem("🗑️ Nuke ALL Sheet Data (Comprehensive)", "nukeAllSheetData")
+      .addItem("⚠️ Clear Core Data Only", "clearAllData")
       .addSeparator()
       .addSubMenu(ui.createMenu("👥 User Roles (RBAC)")
         .addItem("Initialize RBAC", "initializeRBAC")
@@ -3530,19 +3486,21 @@ function clearAllData() {
 }
 
 /**
- * NUCLEAR OPTION: Delete ALL seed data from all sheets
+ * NUCLEAR OPTION: Delete ALL data from all sheets (comprehensive clear)
  * More thorough than clearAllData - clears analytics, surveys, feedback too
+ * Different from nukeSeedData() in SeedNuke.gs which is for exiting demo mode
  */
-function nukeSeedData() {
+function nukeAllSheetData() {
   const ui = SpreadsheetApp.getUi();
   const response = ui.alert(
-    '🗑️ NUCLEAR OPTION: Delete ALL Seed Data',
+    '🗑️ NUCLEAR OPTION: Delete ALL Data',
     '⚠️ WARNING: This will DELETE:\n' +
     '• All members from Member Directory\n' +
     '• All grievances from Grievance Log\n' +
     '• All analytics data\n' +
     '• All satisfaction surveys\n' +
-    '• All feedback entries\n\n' +
+    '• All feedback entries\n' +
+    '• All archived data\n\n' +
     'This action CANNOT be undone!\n\n' +
     'Are you absolutely sure?',
     ui.ButtonSet.YES_NO
@@ -3601,7 +3559,7 @@ function nukeSeedData() {
       "Data Nuke",
       "All Sheets",
       "Completed",
-      "All seed data deleted via nukeSeedData()",
+      "All data deleted via nukeAllSheetData()",
       "Critical",
       "Data cleared successfully"
     ]);

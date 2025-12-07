@@ -67,10 +67,36 @@
 | Archive | `createArchiveSheet()` | 6 (A-F) |
 | Diagnostics | `createDiagnosticsSheet()` | 7 (A-G) |
 
+**NUKE FUNCTION FIX & DOCUMENTATION:**
+
+✅ **Fixed Duplicate `nukeSeedData()` Function** (`Code.gs`, `SeedNuke.gs`)
+- **Issue:** Two functions with same name existed in Code.gs and SeedNuke.gs
+- **Solution:** Renamed Code.gs version to `nukeAllSheetData()` to eliminate conflict
+- SeedNuke.gs version remains as `nukeSeedData()` (Exit Demo Mode)
+
+✅ **Three Clear Data Clearing Options Now Available:**
+1. **`nukeSeedData()`** (SeedNuke.gs) - Exit Demo Mode
+   - Clears Member Directory, Grievance Log, Steward Workload
+   - Sets SEED_NUKED flag to hide seed menu
+   - Shows post-nuke guidance dialog
+   - Menu: `🚨 Nuke Seed Data (Exit Demo Mode)`
+
+2. **`nukeAllSheetData()`** (Code.gs) - Comprehensive Clear
+   - Clears all sheets: Members, Grievances, Analytics, Satisfaction, Feedback, Archive
+   - Logs to Diagnostics
+   - Does NOT set SEED_NUKED flag
+   - Menu: `🗑️ Nuke ALL Sheet Data (Comprehensive)`
+
+3. **`clearAllData()`** (Code.gs) - Basic Clear
+   - Clears only Member Directory and Grievance Log
+   - Menu: `⚠️ Clear Core Data Only`
+
 **Files Modified:**
-- `Code.gs` - Added column cleanup to all sheet creation functions
+- `Code.gs` - Added column cleanup, renamed nukeSeedData() to nukeAllSheetData()
 - `InteractiveDashboard.gs` - Added column cleanup to setDashboardDimensions()
+- `ReorganizedMenu.gs` - Updated menu items for consistency
 - `ConsolidatedDashboard.gs` - Rebuilt with all fixes
+- `SEED_NUKE_GUIDE.md` - Updated version and date
 
 ---
 
@@ -1420,41 +1446,31 @@ Applied to rows 2-5000 for each column.
 
 ## Formula System
 
-### Auto-Calculated Formulas
+### Grievance Log - Code-Calculated Values (No Sheet Formulas)
 
-Set via `setupFormulasAndCalculations()` for rows 2-100:
+**IMPORTANT (v2.3):** The Grievance Log has NO formulas in the sheet body. All calculated columns are computed by `recalcAllGrievancesBatched()` in BatchGrievanceRecalc.gs and written as static values. This prevents data corruption when rows are deleted.
 
-**Grievance Log Formulas:**
+**Calculated Columns (via BatchGrievanceRecalc.gs):**
 
-```javascript
-// Filing Deadline (Column H)
-grievanceLog.getRange(row, 8).setFormula(`=IF(G${row}<>"",G${row}+21,"")`);
+| Column | Name | Calculation |
+|--------|------|-------------|
+| H (8)  | Filing Deadline | INCIDENT_DATE + 21 days |
+| J (10) | Step I Decision Due | DATE_FILED + 30 days |
+| L (12) | Step II Appeal Due | STEP1_DECISION_RCVD + 10 days |
+| N (14) | Step II Decision Due | STEP2_APPEAL_FILED + 30 days |
+| P (16) | Step III Appeal Due | STEP2_DECISION_RCVD + 30 days |
+| S (19) | Days Open | DATE_CLOSED - DATE_FILED (or TODAY - DATE_FILED) |
+| T (20) | Next Action Due | Based on Current Step |
+| U (21) | Days to Deadline | NEXT_ACTION_DUE - TODAY |
 
-// Step I Decision Due (Column J)
-grievanceLog.getRange(row, 10).setFormula(`=IF(I${row}<>"",I${row}+30,"")`);
+**To Recalculate:**
+- Menu: Dashboard → Grievance Tools → Refresh Grievance Formulas
+- Or run: `recalcAllGrievancesBatched()` from Apps Script
 
-// Step II Appeal Due (Column L)
-grievanceLog.getRange(row, 12).setFormula(`=IF(K${row}<>"",K${row}+10,"")`);
-
-// Step II Decision Due (Column N)
-grievanceLog.getRange(row, 14).setFormula(`=IF(M${row}<>"",M${row}+30,"")`);
-
-// Step III Appeal Due (Column P)
-grievanceLog.getRange(row, 16).setFormula(`=IF(O${row}<>"",O${row}+30,"")`);
-
-// Days Open (Column S)
-grievanceLog.getRange(row, 19).setFormula(
-  `=IF(I${row}<>"",IF(R${row}<>"",R${row}-I${row},TODAY()-I${row}),"")`
-);
-
-// Next Action Due (Column T)
-grievanceLog.getRange(row, 20).setFormula(
-  `=IF(E${row}="Open",IF(F${row}="Step I",J${row},IF(F${row}="Step II",N${row},IF(F${row}="Step III",P${row},H${row}))),"")`
-);
-
-// Days to Deadline (Column U)
-grievanceLog.getRange(row, 21).setFormula(`=IF(T${row}<>"",T${row}-TODAY(),"")`);
-```
+**Key Functions:**
+- `recalcAllGrievancesBatched()` - Recalculates all 8 columns for all rows
+- `calculateGrievanceDeadlines(row)` - Returns deadline calculations for a single row
+- `calculateGrievanceTimeline(row, today)` - Returns Days Open, Next Action Due, Days to Deadline
 
 **Member Directory Formulas:**
 
@@ -1601,31 +1617,82 @@ const resolution = isClosed ? [
 
 ### nukeSeedData()
 
-**Purpose:** Complete nuclear option - delete ALL seed data across all sheets
+**Purpose:** Exit Demo Mode - Remove seed/test data and prepare for production use
 
 **Implementation:**
-1. Shows comprehensive warning dialog
-2. Requires explicit confirmation
-3. Clears data from:
+1. Shows comprehensive warning dialog with TWO confirmation steps
+2. Clears data from:
+   - Member Directory (deletes all rows, keeps headers)
+   - Grievance Log (deletes all rows, keeps headers)
+   - Steward Workload (deletes all rows, keeps headers)
+3. Sets `SEED_NUKED` flag in Script Properties
+4. Rebuilds dashboards to recalculate metrics (will show zeros)
+5. Shows post-nuke guidance dialog with setup checklist
+
+**What Happens After Nuking:**
+- Empty sheets (with headers intact)
+- All dashboards show zero metrics
+- Seed menu options are hidden (SEED_NUKED flag set)
+- Getting started guidance appears
+
+**Safety Features:**
+- Dual confirmation dialogs (two-step confirmation)
+- Clear warning about irreversibility
+- Can be cancelled at any point
+- Null-safe (won't error if sheets don't exist)
+
+**File:** SeedNuke.gs
+
+**Menu:** `509 Tools > 📊 Data Management > 🚨 Nuke Seed Data (Exit Demo Mode)`
+
+**Related:** See SEED_NUKE_GUIDE.md for complete documentation
+
+---
+
+### nukeAllSheetData()
+
+**Purpose:** Comprehensive data clear - Delete ALL data from all sheets (more thorough than nukeSeedData)
+
+**Implementation:**
+1. Shows warning dialog with single confirmation
+2. Clears data from:
    - Member Directory (all member rows)
    - Grievance Log (all grievance rows)
    - Analytics Data (computed rows)
    - Member Satisfaction (survey rows)
    - Feedback & Development (feedback rows)
    - Archive (archived items)
-4. Keeps all headers and structure intact
-5. Logs action to Diagnostics sheet
-6. Toast notification
+3. Keeps all headers and structure intact
+4. Logs action to Diagnostics sheet
+5. Toast notification on completion
 
-**Safety Features:**
-- Dual confirmation dialogs
-- Clear warning about irreversibility
-- Can be cancelled at any point
-- Null-safe (won't error if sheets don't exist)
+**Difference from nukeSeedData():**
+- More comprehensive - clears analytics, surveys, feedback, archive
+- Does NOT set SEED_NUKED flag (seed menu stays visible)
+- Does NOT show guidance dialog
+- Single confirmation instead of dual
 
-**File:** Code.gs (lines 1463-1538)
+**File:** Code.gs
 
-**Note:** This is NOT the same as clearAllData() - it's much more comprehensive and clears test data from all sheets, not just Member Directory and Grievance Log.
+**Menu:** `509 Tools > 📊 Data Management > 🗑️ Nuke ALL Sheet Data (Comprehensive)`
+
+---
+
+### clearAllData()
+
+**Purpose:** Basic clear - Delete only core data (Member Directory and Grievance Log)
+
+**Implementation:**
+1. Shows warning dialog
+2. Clears only:
+   - Member Directory (all rows except header)
+   - Grievance Log (all rows except header)
+3. Keeps headers intact
+4. Toast notification on completion
+
+**File:** Code.gs
+
+**Menu:** `509 Tools > 📊 Data Management > ⚠️ Clear Core Data Only`
 
 ---
 
@@ -2567,6 +2634,13 @@ A comprehensive code review was conducted covering stubs, dead ends, and errors.
    - Fixed `setTimeout(function() { return action, delay; });` → `setTimeout(function() { action; }, delay);`
    - Fixed in EnhancedADHDFeatures.gs, MobileOptimization.gs, ConsolidatedDashboard.gs
 
+4. **Dashboard Widgets Not Populating (CRITICAL)** - FIXED
+   - **Upcoming Deadlines widget:** QUERY formula used `DAYS_TO_DEADLINE >= 0` but column contains text like "DUE TODAY" or "OVERDUE 5d", causing filter to fail
+   - **Fix:** Changed to use date comparisons on `NEXT_ACTION_DUE` column: `AND ${nextActionCol} >= date '...' AND ${nextActionCol} <= date '...'`
+   - **Engagement Metrics widget:** COUNTIF formulas included header row and lacked non-empty check for date comparisons
+   - **Fix:** Changed to COUNTIFS starting from row 2 with `"<>"` condition to exclude empty cells
+   - Fixed in `createMainDashboard()` and `refreshDashboardDeadlines()` in ConsolidatedDashboard.gs
+
 **⚠️ Known Technical Debt (Non-Critical):**
 
 None - All issues resolved!
@@ -3319,8 +3393,41 @@ All coordinator notifications and steward acknowledgments are logged to Audit_Lo
 
 ---
 
-**Document Version:** 2.2
-**Last Updated:** 2025-12-06
+### Version 2.3 - Grievance Calculated Columns Fix
+
+**Problem Fixed:**
+When rows were deleted from Grievance Log, calculated columns would show stale/corrupted data because they used ARRAYFORMULA in row 2.
+
+**Solution:**
+Removed ALL ARRAYFORMULAs from Grievance Log. All calculated columns are now handled by `recalcAllGrievancesBatched()` in BatchGrievanceRecalc.gs and written as static values.
+
+**Files Changed:**
+- Code.gs: Removed all ARRAYFORMULA setup for columns H, J, L, N, P, S, T, U in createGrievanceLog()
+- Code.gs: Updated refreshGrievanceFormulas() to call recalcAllGrievancesBatched() instead
+- AI_REFERENCE.md: Updated documentation
+
+**How to Recalculate Values:**
+- Menu: Dashboard → Grievance Tools → Refresh Grievance Formulas
+- Or run: `recalcAllGrievancesBatched()` from Apps Script
+
+**Calculated Columns (via BatchGrievanceRecalc.gs - NO formulas in sheet):**
+| Column | Name | Calculation |
+|--------|------|-------------|
+| H (8)  | Filing Deadline | INCIDENT_DATE + 21 days |
+| J (10) | Step I Decision Due | DATE_FILED + 30 days |
+| L (12) | Step II Appeal Due | STEP1_DECISION_RCVD + 10 days |
+| N (14) | Step II Decision Due | STEP2_APPEAL_FILED + 30 days |
+| P (16) | Step III Appeal Due | STEP2_DECISION_RCVD + 30 days |
+| S (19) | Days Open | DATE_CLOSED - DATE_FILED (or TODAY - DATE_FILED if open) |
+| T (20) | Next Action Due | Based on CURRENT_STEP: Step I→J, Step II→N, Step III→P |
+| U (21) | Days to Deadline | NEXT_ACTION_DUE - TODAY |
+
+**Important:** There are NO formulas in the Grievance Log sheet body. All values are static data calculated by Apps Script.
+
+---
+
+**Document Version:** 2.3
+**Last Updated:** 2025-12-07
 **Maintained By:** Claude (AI Assistant)
 **Repository:** [Add GitHub URL]
 
