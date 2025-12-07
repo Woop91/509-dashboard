@@ -1,6 +1,6 @@
 # 509 Dashboard - Complete Feature Reference
 
-**Version:** 3.2
+**Version:** 3.3
 **Last Updated:** 2025-12-07
 **Purpose:** Union grievance tracking and member engagement system for SEIU Local 509
 
@@ -36,15 +36,34 @@
 
 ---
 
-## 🆕 Changelog - Version 3.2 (2025-12-07)
+## 🆕 Changelog - Version 3.3 (2025-12-07)
 
-**PRODUCTION DEPLOYMENT - SEED FUNCTIONS REMOVED:**
+**SEED FUNCTIONS RESTORED FOR DEMO/TESTING:**
 
-✅ **Removed All Seed Functions from Codebase** (`Code.gs`)
-- **Removed:** SEED_MEMBERS_TOGGLE_1/2/3/4, SEED_20K_MEMBERS
-- **Removed:** SEED_GRIEVANCES_TOGGLE_1/2, SEED_5K_GRIEVANCES
-- **Removed:** All helper functions (seedMembersWithCount, validateSeedSheets, etc.)
-- **Result:** ~600 lines of code removed, lighter production deployment
+✅ **Restored All Seed Functions** (`Code.gs`)
+- **Restored:** SEED_MEMBERS_TOGGLE_1/2/3/4, SEED_20K_MEMBERS
+- **Restored:** SEED_GRIEVANCES_TOGGLE_1/2, SEED_5K_GRIEVANCES
+- **Restored:** All helper functions (seedMembersWithCount, validateSeedSheets, etc.)
+- Seed functions are available for demo/testing purposes
+- When `nukeSeedData()` is run, seed menu is hidden via SEED_NUKED flag
+
+✅ **Restored Seed Menu** (`ReorganizedMenu.gs`)
+- **Menu:** `🔧 Setup > 🌱 Seed Demo Data`
+  - `👥 Seed Members` submenu with 4 toggles (5,000 each)
+  - `📋 Seed Grievances` submenu with 2 toggles (2,500 each)
+  - `📝 Add Sample Feedback Entries`
+
+**Files Modified:**
+- `Code.gs` - Restored all seed functions (~600 lines)
+- `ReorganizedMenu.gs` - Restored seed menu items
+- `GettingStartedAndFAQ.gs` - Updated FAQ content
+- `SEED_NUKE_GUIDE.md` - Updated with Config clearing info
+
+---
+
+## Changelog - Version 3.2 (2025-12-07)
+
+**CONFIG TAB ENHANCEMENTS & NUKE IMPROVEMENTS:**
 
 ✅ **Enhanced `nukeSeedData()` Function** (`SeedNuke.gs`)
 - Clears **Config tab demo entries** (demo data):
@@ -71,19 +90,10 @@
 - `MAIN_FAX` (AO, col 41) - Organization fax number
 - `TOLL_FREE` (AP, col 42) - Toll-free phone number
 
-✅ **Simplified Menu Structure:**
-- Seed menu completely removed (functions no longer exist)
-- Data Management menu now contains:
-  1. `🚨 Nuke All Data (Production Reset)` - nukeSeedData()
-  2. `🗑️ Nuke ALL Sheet Data (Comprehensive)` - nukeAllSheetData()
-  3. `⚠️ Clear Core Data Only` - clearAllData()
-
 **Files Modified:**
-- `Code.gs` - Removed all seed functions (~600 lines), simplified menu
 - `Constants.gs` - Updated ORG_DEFAULTS, added OFFICE_ADDRESSES, MAIN_FAX, TOLL_FREE
-- `ReorganizedMenu.gs` - Removed seed menu items
 - `SeedNuke.gs` - Enhanced clearConfigDemoData() to preserve org info
-- `AI_REFERENCE.md` - Updated for production deployment
+- `AI_REFERENCE.md` - Updated documentation
 
 ---
 
