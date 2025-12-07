@@ -1,6 +1,6 @@
 # 509 Dashboard - Complete Feature Reference
 
-**Version:** 2.10
+**Version:** 3.1
 **Last Updated:** 2025-12-07
 **Purpose:** Union grievance tracking and member engagement system for SEIU Local 509
 
@@ -36,48 +36,124 @@
 
 ---
 
-## 🆕 Changelog - Version 2.10 (2025-12-07)
+## 🆕 Changelog - Version 3.1 (2025-12-07)
 
-**INTERACTIVE DASHBOARD UI OVERHAUL & GRIEVANCE LOG FORMULA REMOVAL:**
+**COLUMN CLEANUP - NO MORE UNUSED COLUMNS:**
 
-✅ **Replaced Dashboard Dropdowns with Checkbox Lists** (`InteractiveDashboard.gs`, `ConsolidatedDashboard.gs`)
-- **Control Panel (Rows 4-20):**
-  - Row 4: Section header
-  - Row 5: Metrics header
-  - Rows 6-15: Two columns of metric checkboxes (10 per column)
-  - Row 16: Chart type header
-  - Row 17: Chart type checkboxes (Donut, Pie, Bar, Column, Line)
-  - Row 18: Theme header
-  - Row 19: Theme checkboxes (Union Blue, Solidarity Red, Success Green, Professional Purple, Modern Dark)
-  - Row 20: Comparison toggle checkbox + Quick Action dropdown
-- **Added Helper Functions:**
-  - `getSelectedMetrics(sheet)` - Reads checked metrics from columns A and F
-  - `getSelectedChartType(sheet)` - Reads checked chart type from row 17
-  - `getSelectedTheme(sheet)` - Reads checked theme from row 19
+✅ **All Sheet Creation Functions Now Delete Unused Columns**
+- Every sheet creation function now removes columns beyond the defined headers
+- Ensures no tabs show extra empty columns (Z, AA, AB... etc.)
+- Clean, professional appearance with no wasted column space
 
-✅ **Updated Dashboard Layout** (all sections shifted +12 rows for expanded control panel)
-- **Rows 1-3:** Header section
-- **Rows 4-20:** Control panel with checkboxes
-- **Row 21:** Gap
-- **Rows 22-30:** Metric cards section (header at 22, cards at 24-30)
-- **Row 31:** Gap
-- **Rows 32-53:** Chart areas (header at 32, content 33-53)
-- **Rows 54-55:** Gap
-- **Rows 56-76:** Pie chart section (header at 56, content 58-76)
-- **Rows 77-78:** Gap
-- **Rows 79-99:** Location chart section (header at 79, content 81-99)
-- **Rows 100-101:** Gap
-- **Rows 102-121:** Data table section (header at 102, content 104-121)
+**Sheets Updated with Column Cleanup:**
+| Sheet | Function | Columns Kept |
+|-------|----------|--------------|
+| Config | `createConfigTab()` | 32 (A-AF) |
+| Member Directory | `createMemberDirectory()` | 31 (A-AE) |
+| Grievance Log | `createGrievanceLog()` | 34 (A-AH) |
+| Main Dashboard | `createMainDashboard()` | 12 (A-L) |
+| Interactive Dashboard | `createInteractiveDashboardSheet()` | 20 (A-T) |
+| Analytics Data | `createAnalyticsDataSheet()` | 11 (A-K) |
+| Member Satisfaction | `createMemberSatisfactionSheet()` | 10 (A-J) |
+| Feedback | `createFeedbackSheet()` | 14 (A-N) |
+| Steward Workload | `createStewardWorkloadSheet()` | 11 (A-K) |
+| Trends | `createTrendsSheet()` | 12 (A-L) |
+| Location Analytics | `createLocationSheet()` | 11 (A-K) |
+| Type Analysis | `createTypeAnalysisSheet()` | 11 (A-K) |
+| Executive Dashboard | `createExecutiveDashboard()` | 4 (A-D) |
+| KPI Performance | `createKPIPerformanceDashboard()` | 12 (A-L) |
+| Member Engagement | `createMemberEngagementSheet()` | 12 (A-L) |
+| Cost Impact | `createCostImpactSheet()` | 10 (A-J) |
+| Archive | `createArchiveSheet()` | 6 (A-F) |
+| Diagnostics | `createDiagnosticsSheet()` | 7 (A-G) |
 
-✅ **Removed All ARRAYFORMULAs from Grievance Log** (`Code.gs`)
-- Columns H, J, L, N, P, S, T, U now use code-calculated static values
-- `refreshGrievanceFormulas()` now calls `recalcAllGrievancesBatched()` from BatchGrievanceRecalc.gs
-- Prevents data corruption when rows are deleted from the sheet
+**NUKE FUNCTION FIX & DOCUMENTATION:**
+
+✅ **Fixed Duplicate `nukeSeedData()` Function** (`Code.gs`, `SeedNuke.gs`)
+- **Issue:** Two functions with same name existed in Code.gs and SeedNuke.gs
+- **Solution:** Renamed Code.gs version to `nukeAllSheetData()` to eliminate conflict
+- SeedNuke.gs version remains as `nukeSeedData()` (Exit Demo Mode)
+
+✅ **Three Clear Data Clearing Options Now Available:**
+1. **`nukeSeedData()`** (SeedNuke.gs) - Exit Demo Mode
+   - Clears Member Directory, Grievance Log, Steward Workload
+   - Sets SEED_NUKED flag to hide seed menu
+   - Shows post-nuke guidance dialog
+   - Menu: `🚨 Nuke Seed Data (Exit Demo Mode)`
+
+2. **`nukeAllSheetData()`** (Code.gs) - Comprehensive Clear
+   - Clears all sheets: Members, Grievances, Analytics, Satisfaction, Feedback, Archive
+   - Logs to Diagnostics
+   - Does NOT set SEED_NUKED flag
+   - Menu: `🗑️ Nuke ALL Sheet Data (Comprehensive)`
+
+3. **`clearAllData()`** (Code.gs) - Basic Clear
+   - Clears only Member Directory and Grievance Log
+   - Menu: `⚠️ Clear Core Data Only`
 
 **Files Modified:**
-- `InteractiveDashboard.gs` - Checkbox UI, updated row numbers, helper functions
-- `ConsolidatedDashboard.gs` - Same changes synchronized
-- `Code.gs` - Removed ARRAYFORMULA setup, updated refreshGrievanceFormulas()
+- `Code.gs` - Added column cleanup, renamed nukeSeedData() to nukeAllSheetData()
+- `InteractiveDashboard.gs` - Added column cleanup to setDashboardDimensions()
+- `ReorganizedMenu.gs` - Updated menu items for consistency
+- `ConsolidatedDashboard.gs` - Rebuilt with all fixes
+- `SEED_NUKE_GUIDE.md` - Updated version and date
+
+---
+
+## Changelog - Version 3.0 (2025-12-07)
+
+**DROPDOWN & VALIDATION IMPROVEMENTS:**
+
+✅ **Added "Has Open Grievance?" Dropdown** (`MemberDirectoryDropdowns.gs`)
+- Added dropdown to column AB (MEMBER_COLS.HAS_OPEN_GRIEVANCE)
+- Uses Yes/No values from Config sheet
+- Added to both main and silent dropdown setup functions
+
+✅ **Fixed Audit Log Sheet Creation** (`SecurityService.gs`)
+- `createAuditLogSheet()` now checks if sheet exists before creating
+- Also checks for "Audit_Log" variant for backward compatibility
+- Prevents "sheet already exists" error during dashboard setup
+
+✅ **Rebuilt ConsolidatedDashboard.gs with 77 Modules**
+- Added missing test modules: TestFramework.gs, Code.test.gs, Integration.test.gs
+- Synced all dropdown and validation improvements
+
+✅ **Renamed Interactive Dashboard Controls** (`InteractiveDashboard.gs`)
+- More descriptive labels for better user experience:
+  - `What to show (Chart 1):` - Select metric for primary chart
+  - `How to show it (Chart 1):` - Select chart type for primary chart
+  - `What to show (Chart 2):` - Select metric for secondary chart
+  - `How to show it (Chart 2):` - Select chart type for secondary chart
+  - `Color Scheme:` - Select dashboard color theme
+  - `Show both charts:` - Toggle to display both charts
+  - `Quick Action:` - Dropdown for common actions
+
+**Member Directory Dropdowns (Single-Select):**
+- Job Title (D)
+- Work Location (E)
+- Unit (F)
+- Is Steward (N)
+- Supervisor Name (L)
+- Manager Name (M)
+- Assigned Steward (P)
+- Contact Steward (Z)
+- **Has Open Grievance? (AB)** ← NEW
+
+**Member Directory Dropdowns (Multi-Select):**
+- Office Days (G)
+- Preferred Communication (J)
+- Best Time to Contact (K)
+- Committees (O)
+
+**Grievance Log Dropdowns (Multi-Select):**
+- Articles Violated (V)
+- Issue Category (W)
+
+**Files Modified:**
+- `MemberDirectoryDropdowns.gs` - Added Has Open Grievance dropdown
+- `SecurityService.gs` - Fixed createAuditLogSheet()
+- `InteractiveDashboard.gs` - Renamed dashboard control labels
+- `ConsolidatedDashboard.gs` - Rebuilt with all fixes
 
 ---
 
@@ -153,12 +229,12 @@ Refactored 6 large multi-responsibility functions into smaller, focused helper f
 
 ✅ **`createInteractiveDashboardSheet()` (311 lines → 8 helper functions)** (`InteractiveDashboard.gs`)
 - `createDashboardHeaderSection()` - Header rows 1-3
-- `createDashboardControlPanel()` - Control panel rows 4-20 (checkboxes - see v2.10)
-- `createDashboardMetricCards()` - Metric cards rows 22-30
-- `createDashboardChartAreas()` - Chart areas rows 32-53
-- `createDashboardPieChartSection()` - Pie charts rows 56-76
-- `createDashboardLocationChartSection()` - Location chart rows 79-99
-- `createDashboardDataTableSection()` - Data table rows 102-121
+- `createDashboardControlPanel()` - Control panel rows 4-9
+- `createDashboardMetricCards()` - Metric cards rows 10-18
+- `createDashboardChartAreas()` - Chart areas rows 21-42
+- `createDashboardPieChartSection()` - Pie charts rows 45-65
+- `createDashboardLocationChartSection()` - Location chart rows 68-88
+- `createDashboardDataTableSection()` - Data table rows 91-110
 - `setDashboardDimensions()` - Column widths and row heights
 
 ✅ **`seedMembersWithCount()` (271 lines → 8 helper functions)** (`Code.gs`)
@@ -1541,31 +1617,82 @@ const resolution = isClosed ? [
 
 ### nukeSeedData()
 
-**Purpose:** Complete nuclear option - delete ALL seed data across all sheets
+**Purpose:** Exit Demo Mode - Remove seed/test data and prepare for production use
 
 **Implementation:**
-1. Shows comprehensive warning dialog
-2. Requires explicit confirmation
-3. Clears data from:
+1. Shows comprehensive warning dialog with TWO confirmation steps
+2. Clears data from:
+   - Member Directory (deletes all rows, keeps headers)
+   - Grievance Log (deletes all rows, keeps headers)
+   - Steward Workload (deletes all rows, keeps headers)
+3. Sets `SEED_NUKED` flag in Script Properties
+4. Rebuilds dashboards to recalculate metrics (will show zeros)
+5. Shows post-nuke guidance dialog with setup checklist
+
+**What Happens After Nuking:**
+- Empty sheets (with headers intact)
+- All dashboards show zero metrics
+- Seed menu options are hidden (SEED_NUKED flag set)
+- Getting started guidance appears
+
+**Safety Features:**
+- Dual confirmation dialogs (two-step confirmation)
+- Clear warning about irreversibility
+- Can be cancelled at any point
+- Null-safe (won't error if sheets don't exist)
+
+**File:** SeedNuke.gs
+
+**Menu:** `509 Tools > 📊 Data Management > 🚨 Nuke Seed Data (Exit Demo Mode)`
+
+**Related:** See SEED_NUKE_GUIDE.md for complete documentation
+
+---
+
+### nukeAllSheetData()
+
+**Purpose:** Comprehensive data clear - Delete ALL data from all sheets (more thorough than nukeSeedData)
+
+**Implementation:**
+1. Shows warning dialog with single confirmation
+2. Clears data from:
    - Member Directory (all member rows)
    - Grievance Log (all grievance rows)
    - Analytics Data (computed rows)
    - Member Satisfaction (survey rows)
    - Feedback & Development (feedback rows)
    - Archive (archived items)
-4. Keeps all headers and structure intact
-5. Logs action to Diagnostics sheet
-6. Toast notification
+3. Keeps all headers and structure intact
+4. Logs action to Diagnostics sheet
+5. Toast notification on completion
 
-**Safety Features:**
-- Dual confirmation dialogs
-- Clear warning about irreversibility
-- Can be cancelled at any point
-- Null-safe (won't error if sheets don't exist)
+**Difference from nukeSeedData():**
+- More comprehensive - clears analytics, surveys, feedback, archive
+- Does NOT set SEED_NUKED flag (seed menu stays visible)
+- Does NOT show guidance dialog
+- Single confirmation instead of dual
 
-**File:** Code.gs (lines 1463-1538)
+**File:** Code.gs
 
-**Note:** This is NOT the same as clearAllData() - it's much more comprehensive and clears test data from all sheets, not just Member Directory and Grievance Log.
+**Menu:** `509 Tools > 📊 Data Management > 🗑️ Nuke ALL Sheet Data (Comprehensive)`
+
+---
+
+### clearAllData()
+
+**Purpose:** Basic clear - Delete only core data (Member Directory and Grievance Log)
+
+**Implementation:**
+1. Shows warning dialog
+2. Clears only:
+   - Member Directory (all rows except header)
+   - Grievance Log (all rows except header)
+3. Keeps headers intact
+4. Toast notification on completion
+
+**File:** Code.gs
+
+**Menu:** `509 Tools > 📊 Data Management > ⚠️ Clear Core Data Only`
 
 ---
 
@@ -3299,55 +3426,7 @@ Removed ALL ARRAYFORMULAs from Grievance Log. All calculated columns are now han
 
 ---
 
-### Version 2.4 - Interactive Dashboard Checkbox UI
-
-**Change:**
-Replaced dropdown selectors in the Interactive Dashboard with checkbox lists for better visibility and easier multi-selection.
-
-**New Control Panel Layout (rows 4-20):**
-- Row 4: Header
-- Row 5: "SELECT METRICS TO DISPLAY" header
-- Rows 6-15: Metrics checkboxes in TWO COLUMNS (10 metrics per column)
-  - Column A: Checkboxes | Column B-E: Metric names (left side)
-  - Column F: Checkboxes | Column G-J: Metric names (right side)
-- Row 16-17: Chart Type checkboxes (Donut, Pie, Bar, Column, Line)
-- Row 18-19: Theme checkboxes (Union Blue, Solidarity Red, etc.)
-- Row 20: Enable Comparison checkbox + Quick Action dropdown
-
-**Metrics Available (20 total):**
-| Column 1 | Column 2 |
-|----------|----------|
-| Total Members | Win Rate % |
-| Active Members | Overdue Grievances |
-| Total Stewards | Due This Week |
-| Unit 8 Members | In Mediation |
-| Unit 10 Members | In Arbitration |
-| Total Grievances | Grievances by Type |
-| Active Grievances | Grievances by Location |
-| Resolved Grievances | Grievances by Step |
-| Grievances Won | Steward Workload |
-| Grievances Lost | Monthly Trends |
-
-**Helper Functions Added:**
-- `getSelectedMetrics(sheet)` - Returns array of checked metric names
-- `getSelectedChartType(sheet)` - Returns selected chart type
-- `getSelectedTheme(sheet)` - Returns selected theme
-
-**Row Adjustments (all sections shifted +12 rows):**
-- Metric Cards: rows 22-30 (was 10-18)
-- Chart Areas: rows 32-53 (was 21-42)
-- Pie Charts: rows 56-76 (was 45-65)
-- Location Chart: rows 79-99 (was 68-88)
-- Data Table: rows 102-121 (was 91-110)
-
-**Files Changed:**
-- InteractiveDashboard.gs: Complete checkbox UI implementation
-- ConsolidatedDashboard.gs: Partial update (control panel function)
-- AI_REFERENCE.md: Documentation
-
----
-
-**Document Version:** 2.4
+**Document Version:** 2.3
 **Last Updated:** 2025-12-07
 **Maintained By:** Claude (AI Assistant)
 **Repository:** [Add GitHub URL]
