@@ -152,7 +152,7 @@ function createConfigTab() {
   config.clear();
 
   const configData = [
-    // Row 1: Column Headers (32 columns total)
+    // Row 1: Column Headers (43 columns total)
     // Employment Info (1-5)
     ["Job Titles", "Office Locations", "Units", "Office Days", "Yes/No (Dropdowns)",
     // Supervision (6-7) - managers only, NOT stewards
@@ -172,19 +172,29 @@ function createConfigTab() {
     // Deadlines (27-30)
      "Filing Deadline Days", "Step I Response Days", "Step II Appeal Days", "Step II Response Days",
     // Multi-select Options (31-32)
-     "Best Times to Contact", "Home Towns"],
+     "Best Times to Contact", "Home Towns",
+    // Contract & Legal References (33-36)
+     "Contract Article (Grievance)", "Contract Article (Discipline)", "Contract Article (Workload)", "Contract Name",
+    // Org Identity (37-39)
+     "Union Parent", "State/Region", "Organization Website",
+    // Extended Location & Contact Info (40-43)
+     "Office Addresses", "Main Fax", "Main Contact Name", "Main Contact Email"],
 
     // Data rows - first row has default/example values for settings columns
+    // IMPORTANT: Organization info (cols 21-24, 37-43) should NOT be deleted by nuke operations
     ["Coordinator", "Boston HQ", "Unit A - Administrative", "Monday", "Yes",
      "Sarah Johnson", "Michael Chen",
      "Jane Smith", "Grievance Committee",
      "Open", "Informal", "Discipline", "Art. 1 - Recognition", "Email",
      "Jane Smith, John Doe, Mary Johnson", "", "",
      "", "3, 7, 14", "",
-     "SEIU Local 509", "509", "", "",
+     "SEIU Local 509", "509", "293 Boston Post Road West, 4th Floor, Marlborough, MA 01752", "774-843-7509",
      "", "",
      "21", "30", "10", "30",
-     "Morning (8am-12pm)", "Boston"],
+     "Morning (8am-12pm)", "Boston",
+     "Article 23A", "Article 12", "Article 15", "2023-2026 CBA",
+     "SEIU", "Massachusetts", "https://www.seiu509.org/",
+     "", "508-485-8529", "Marc", "marc@seiu509.org"],
 
     ["Analyst", "Worcester Office", "Unit B - Technical", "Tuesday", "No",
      "Mike Wilson", "Lisa Anderson",
@@ -195,7 +205,10 @@ function createConfigTab() {
      "", "", "", "",
      "", "",
      "", "", "", "",
-     "Afternoon (12pm-5pm)", "Worcester"],
+     "Afternoon (12pm-5pm)", "Worcester",
+     "", "", "", "",
+     "", "", "",
+     "", "", "", ""],
 
     ["Case Manager", "Springfield Branch", "Unit C - Support Services", "Wednesday", "",
      "Emily Davis", "Robert Brown",
@@ -206,7 +219,10 @@ function createConfigTab() {
      "", "", "", "",
      "", "",
      "", "", "", "",
-     "Evening (5pm-8pm)", "Springfield"],
+     "Evening (5pm-8pm)", "Springfield",
+     "", "", "", "",
+     "", "", "",
+     "", "", "", ""],
 
     ["Specialist", "Cambridge Office", "Unit D - Operations", "Thursday", "",
      "Tom Harris", "Jennifer Lee",
@@ -217,7 +233,10 @@ function createConfigTab() {
      "", "", "", "",
      "", "",
      "", "", "", "",
-     "Weekends", "Cambridge"],
+     "Weekends", "Cambridge",
+     "", "", "", "",
+     "", "", "",
+     "", "", "", ""],
 
     ["Senior Analyst", "Lowell Center", "Unit E - Field Services", "Friday", "",
      "Amanda White", "David Martinez",
@@ -228,7 +247,10 @@ function createConfigTab() {
      "", "", "", "",
      "", "",
      "", "", "", "",
-     "Flexible", "Lowell"],
+     "Flexible", "Lowell",
+     "", "", "", "",
+     "", "", "",
+     "", "", "", ""],
 
     ["Team Lead", "Quincy Station", "", "Saturday", "",
      "Chris Taylor", "Susan Garcia",
@@ -239,7 +261,10 @@ function createConfigTab() {
      "", "", "", "",
      "", "",
      "", "", "", "",
-     "", "Quincy"],
+     "", "Quincy",
+     "", "", "", "",
+     "", "", "",
+     "", "", "", ""],
 
     ["Director", "Remote/Hybrid", "", "Sunday", "",
      "Patricia Moore", "James Wilson",
@@ -250,7 +275,10 @@ function createConfigTab() {
      "", "", "", "",
      "", "",
      "", "", "", "",
-     "", "Brockton"],
+     "", "Brockton",
+     "", "", "", "",
+     "", "", "",
+     "", "", "", ""],
 
     ["Manager", "Brockton Office", "", "", "",
      "Kevin Anderson", "Nancy Taylor",
@@ -261,7 +289,10 @@ function createConfigTab() {
      "", "", "", "",
      "", "",
      "", "", "", "",
-     "", "Lynn"],
+     "", "Lynn",
+     "", "", "", "",
+     "", "", "",
+     "", "", "", ""],
 
     ["Assistant", "Lynn Location", "", "", "",
      "Michelle Lee", "Richard White",
@@ -272,7 +303,10 @@ function createConfigTab() {
      "", "", "", "",
      "", "",
      "", "", "", "",
-     "", "Salem"],
+     "", "Salem",
+     "", "", "", "",
+     "", "", "",
+     "", "", "", ""],
 
     ["Associate", "Salem Office", "", "", "",
      "Brandon Scott", "Angela Moore",
@@ -283,7 +317,10 @@ function createConfigTab() {
      "", "", "", "",
      "", "",
      "", "", "", "",
-     "", "Framingham"],
+     "", "Framingham",
+     "", "", "", "",
+     "", "", "",
+     "", "", "", ""],
 
     ["Technician", "", "", "", "",
      "Jessica Green", "Christopher Lee",
@@ -294,7 +331,10 @@ function createConfigTab() {
      "", "", "", "",
      "", "",
      "", "", "", "",
-     "", "Newton"],
+     "", "Newton",
+     "", "", "", "",
+     "", "", "",
+     "", "", "", ""],
 
     ["Administrator", "", "", "", "",
      "Andrew Clark", "Melissa Wright",
@@ -305,7 +345,10 @@ function createConfigTab() {
      "", "", "", "",
      "", "",
      "", "", "", "",
-     "", "Somerville"],
+     "", "Somerville",
+     "", "", "", "",
+     "", "", "",
+     "", "", "", ""],
 
     ["Support Staff", "", "", "", "",
      "Rachel Brown", "Timothy Davis",
@@ -316,10 +359,13 @@ function createConfigTab() {
      "", "", "", "",
      "", "",
      "", "", "", "",
-     "", "Malden"]
+     "", "Malden",
+     "", "", "", "",
+     "", "", "",
+     "", "", "", ""]
   ];
 
-  // Add category header row first (9 categories, 32 columns)
+  // Add category header row first (12 categories, 43 columns)
   const categoryRow = [
     "── EMPLOYMENT INFO ──", "", "", "", "",
     "── SUPERVISION ──", "",
@@ -330,7 +376,10 @@ function createConfigTab() {
     "── ORGANIZATION ──", "", "", "",
     "── INTEGRATION ──", "",
     "── DEADLINES ──", "", "", "",
-    "── MULTI-SELECT OPTIONS ──", ""
+    "── MULTI-SELECT OPTIONS ──", "",
+    "── CONTRACT & LEGAL ──", "", "", "",
+    "── ORG IDENTITY ──", "", "",
+    "── EXTENDED CONTACT ──", "", "", ""
   ];
 
   // Insert category row at top, then column headers, then data
@@ -343,7 +392,7 @@ function createConfigTab() {
     .setFontSize(10)
     .setHorizontalAlignment("center");
 
-  // Category colors for row 1 (dark colors) - 32 columns total
+  // Category colors for row 1 (dark colors) - 43 columns total
   // Employment Info (cols 1-5) - Blue
   config.getRange(1, 1, 1, 5).setBackground("#3B82F6").setFontColor("#FFFFFF");
   // Supervision (cols 6-7) - Green (managers only)
@@ -364,13 +413,19 @@ function createConfigTab() {
   config.getRange(1, 27, 1, 4).setBackground("#D97706").setFontColor("#FFFFFF");
   // Multi-select Options (cols 31-32) - Cyan
   config.getRange(1, 31, 1, 2).setBackground("#06B6D4").setFontColor("#FFFFFF");
+  // Contract & Legal (cols 33-36) - Dark Green
+  config.getRange(1, 33, 1, 4).setBackground("#059669").setFontColor("#FFFFFF");
+  // Org Identity (cols 37-39) - Dark Teal
+  config.getRange(1, 37, 1, 3).setBackground("#0D9488").setFontColor("#FFFFFF");
+  // Extended Contact (cols 40-43) - Dark Blue
+  config.getRange(1, 40, 1, 4).setBackground("#1E40AF").setFontColor("#FFFFFF");
 
   // Style column header row (Row 2) with matching lighter colors
   config.getRange(2, 1, 1, configData[0].length)
     .setFontWeight("bold")
     .setFontSize(9);
 
-  // Light colors for column headers (Row 2) - 32 columns total
+  // Light colors for column headers (Row 2) - 43 columns total
   config.getRange(2, 1, 1, 5).setBackground("#DBEAFE");   // Light blue - Employment (1-5)
   config.getRange(2, 6, 1, 2).setBackground("#D1FAE5");   // Light green - Supervision (6-7)
   config.getRange(2, 8, 1, 2).setBackground("#E8E3F3");   // Light purple - Steward Info (8-9)
@@ -381,6 +436,9 @@ function createConfigTab() {
   config.getRange(2, 25, 1, 2).setBackground("#E0E7FF");  // Light indigo - Integration (25-26)
   config.getRange(2, 27, 1, 4).setBackground("#FEF3C7");  // Light amber - Deadlines (27-30)
   config.getRange(2, 31, 1, 2).setBackground("#CFFAFE");  // Light cyan - Multi-select Options (31-32)
+  config.getRange(2, 33, 1, 4).setBackground("#D1FAE5");  // Light green - Contract & Legal (33-36)
+  config.getRange(2, 37, 1, 3).setBackground("#CCFBF1");  // Light teal - Org Identity (37-39)
+  config.getRange(2, 40, 1, 4).setBackground("#DBEAFE");  // Light blue - Extended Contact (40-43)
 
   // Add borders between category groups (right border after last column of each category)
   const totalRows = configData.length + 1;
@@ -393,6 +451,9 @@ function createConfigTab() {
   config.getRange(1, 24, totalRows, 1).setBorder(null, null, null, true, null, null, "#9CA3AF", SpreadsheetApp.BorderStyle.SOLID_MEDIUM);  // After Organization (24)
   config.getRange(1, 26, totalRows, 1).setBorder(null, null, null, true, null, null, "#9CA3AF", SpreadsheetApp.BorderStyle.SOLID_MEDIUM);  // After Integration (26)
   config.getRange(1, 30, totalRows, 1).setBorder(null, null, null, true, null, null, "#9CA3AF", SpreadsheetApp.BorderStyle.SOLID_MEDIUM);  // After Deadlines (30)
+  config.getRange(1, 32, totalRows, 1).setBorder(null, null, null, true, null, null, "#9CA3AF", SpreadsheetApp.BorderStyle.SOLID_MEDIUM);  // After Multi-select Options (32)
+  config.getRange(1, 36, totalRows, 1).setBorder(null, null, null, true, null, null, "#9CA3AF", SpreadsheetApp.BorderStyle.SOLID_MEDIUM);  // After Contract & Legal (36)
+  config.getRange(1, 39, totalRows, 1).setBorder(null, null, null, true, null, null, "#9CA3AF", SpreadsheetApp.BorderStyle.SOLID_MEDIUM);  // After Org Identity (39)
 
   for (let i = 1; i <= configData[0].length; i++) {
     config.autoResizeColumn(i);
@@ -400,6 +461,13 @@ function createConfigTab() {
 
   config.setFrozenRows(2); // Freeze both category and header rows
   config.setTabColor("#2563EB");
+
+  // Delete unused columns beyond the defined layout (32 columns used)
+  const totalCols = config.getMaxColumns();
+  const usedCols = 32;  // Config uses 32 columns (A-AF)
+  if (totalCols > usedCols) {
+    config.deleteColumns(usedCols + 1, totalCols - usedCols);
+  }
 }
 
 /* --------------------- MEMBER DIRECTORY - ALL CORRECT COLUMNS --------------------- */
@@ -491,6 +559,12 @@ function createMemberDirectory() {
   // Hide Member Interests columns (U-X) by default
   memberDir.hideColumns(MEMBER_COLS.INTEREST_LOCAL, 4);     // Columns 21-24
 
+  // Delete unused columns beyond the defined headers (31 columns)
+  const totalCols = memberDir.getMaxColumns();
+  if (totalCols > headers.length) {
+    memberDir.deleteColumns(headers.length + 1, totalCols - headers.length);
+  }
+
   memberDir.setTabColor("#059669");
 }
 
@@ -567,6 +641,12 @@ function createGrievanceLog() {
     .setAllowInvalid(false)
     .build();
   checkboxRange.setDataValidation(checkboxValidation);
+
+  // Delete unused columns beyond the defined headers (34 columns)
+  const totalCols = grievanceLog.getMaxColumns();
+  if (totalCols > headers.length) {
+    grievanceLog.deleteColumns(headers.length + 1, totalCols - headers.length);
+  }
 
   grievanceLog.setTabColor("#DC2626");
 }
@@ -752,6 +832,13 @@ function createMainDashboard() {
   dashboard.getRange("C22:C31").setNumberFormat("MM/dd/yyyy");
 
   dashboard.setTabColor("#7C3AED");
+
+  // Delete unused columns beyond the defined layout (12 columns used A-L)
+  const totalCols = dashboard.getMaxColumns();
+  const usedCols = 12;  // Main Dashboard uses columns A-L
+  if (totalCols > usedCols) {
+    dashboard.deleteColumns(usedCols + 1, totalCols - usedCols);
+  }
 }
 
 /**
@@ -917,6 +1004,13 @@ function createAnalyticsDataSheet() {
   analytics.getRange("J5").setFormula(`=UNIQUE(FILTER('Grievance Log'!${stewardCol}:${stewardCol}, 'Grievance Log'!${stewardCol}:${stewardCol}<>"", 'Grievance Log'!${stewardCol}:${stewardCol}<>"Assigned Steward (Name)"))`);
   analytics.getRange("K5").setFormula(`=ARRAYFORMULA(IF(J5:J<>"", COUNTIFS('Grievance Log'!${stewardCol}:${stewardCol}, J5:J, 'Grievance Log'!${statusCol}:${statusCol}, "Open"), ""))`);
 
+  // Delete unused columns beyond the defined layout (11 columns used A-K)
+  const totalCols = analytics.getMaxColumns();
+  const usedCols = 11;  // Analytics Data uses columns A-K
+  if (totalCols > usedCols) {
+    analytics.deleteColumns(usedCols + 1, totalCols - usedCols);
+  }
+
   analytics.hideSheet();
 }
 
@@ -971,6 +1065,12 @@ function createMemberSatisfactionSheet() {
 
   satisfaction.getRange(11, 1, metrics.length, 2).setValues(metrics);
   satisfaction.setTabColor("#10B981");
+
+  // Delete unused columns beyond the defined headers (10 columns)
+  const totalCols = satisfaction.getMaxColumns();
+  if (totalCols > headers.length) {
+    satisfaction.deleteColumns(headers.length + 1, totalCols - headers.length);
+  }
 }
 
 /* --------------------- FEEDBACK & DEVELOPMENT --------------------- */
@@ -994,6 +1094,12 @@ function createFeedbackSheet() {
   feedback.setFrozenRows(3);
   feedback.setTabColor(COLORS.ACCENT_PURPLE);
   feedback.setColumnWidth(1, 120); feedback.setColumnWidth(2, 110); feedback.setColumnWidth(3, 120); feedback.setColumnWidth(4, 80); feedback.setColumnWidth(5, 200); feedback.setColumnWidth(6, 300); feedback.setColumnWidth(7, 100); feedback.setColumnWidth(8, 90); feedback.setColumnWidth(9, 100); feedback.setColumnWidth(10, 110); feedback.setColumnWidth(11, 120); feedback.setColumnWidth(12, 200); feedback.setColumnWidth(13, 250); feedback.setColumnWidth(14, 110);
+
+  // Delete unused columns beyond the defined headers (14 columns)
+  const totalCols = feedback.getMaxColumns();
+  if (totalCols > headers.length) {
+    feedback.deleteColumns(headers.length + 1, totalCols - headers.length);
+  }
 }
 
 /* --------------------- STEWARD WORKLOAD --------------------- */
@@ -1007,6 +1113,12 @@ function createStewardWorkloadSheet() {
   sheet.getRange(3, 1, 1, headers.length).setValues([headers]).setFontWeight("bold").setBackground(COLORS.LIGHT_GRAY);
   sheet.setFrozenRows(3);
   sheet.setTabColor(COLORS.PRIMARY_PURPLE);
+
+  // Delete unused columns beyond the defined headers (11 columns)
+  const totalCols = sheet.getMaxColumns();
+  if (totalCols > headers.length) {
+    sheet.deleteColumns(headers.length + 1, totalCols - headers.length);
+  }
 }
 
 function createTrendsSheet() {
@@ -1019,6 +1131,12 @@ function createTrendsSheet() {
   sheet.getRange(3, 1, 1, headers.length).setValues([headers]).setFontWeight("bold").setBackground(COLORS.LIGHT_GRAY);
   sheet.setFrozenRows(3);
   sheet.setTabColor(COLORS.UNION_GREEN);
+
+  // Delete unused columns beyond the defined headers (12 columns)
+  const totalCols = sheet.getMaxColumns();
+  if (totalCols > headers.length) {
+    sheet.deleteColumns(headers.length + 1, totalCols - headers.length);
+  }
 }
 
 
@@ -1032,6 +1150,12 @@ function createLocationSheet() {
   sheet.getRange(3, 1, 1, headers.length).setValues([headers]).setFontWeight("bold").setBackground(COLORS.LIGHT_GRAY);
   sheet.setFrozenRows(3);
   sheet.setTabColor(COLORS.ACCENT_TEAL);
+
+  // Delete unused columns beyond the defined headers (11 columns)
+  const totalCols = sheet.getMaxColumns();
+  if (totalCols > headers.length) {
+    sheet.deleteColumns(headers.length + 1, totalCols - headers.length);
+  }
 }
 
 function createTypeAnalysisSheet() {
@@ -1044,6 +1168,12 @@ function createTypeAnalysisSheet() {
   sheet.getRange(3, 1, 1, headers.length).setValues([headers]).setFontWeight("bold").setBackground(COLORS.LIGHT_GRAY);
   sheet.setFrozenRows(3);
   sheet.setTabColor(COLORS.PRIMARY_BLUE);
+
+  // Delete unused columns beyond the defined headers (11 columns)
+  const totalCols = sheet.getMaxColumns();
+  if (totalCols > headers.length) {
+    sheet.deleteColumns(headers.length + 1, totalCols - headers.length);
+  }
 }
 
 /* --------------------- EXECUTIVE DASHBOARD (Merged Summary + Quick Stats) --------------------- */
@@ -1143,6 +1273,13 @@ function createExecutiveDashboard() {
   sheet.setColumnWidth(2, 150);
   sheet.setColumnWidth(3, 100);
   sheet.setColumnWidth(4, 100);
+
+  // Delete unused columns beyond the defined columns (4 columns used)
+  const totalCols = sheet.getMaxColumns();
+  const usedCols = 4;  // Executive Dashboard uses columns A-D
+  if (totalCols > usedCols) {
+    sheet.deleteColumns(usedCols + 1, totalCols - usedCols);
+  }
 }
 
 /* --------------------- KPI PERFORMANCE DASHBOARD (Merged Performance + KPI Board) --------------------- */
@@ -1215,6 +1352,12 @@ function createKPIPerformanceDashboard() {
   sheet.setColumnWidth(10, 80);  // Worst
   sheet.setColumnWidth(11, 120); // Owner
   sheet.setColumnWidth(12, 110); // Last Updated
+
+  // Delete unused columns beyond the defined headers (12 columns)
+  const totalCols = sheet.getMaxColumns();
+  if (totalCols > headers.length) {
+    sheet.deleteColumns(headers.length + 1, totalCols - headers.length);
+  }
 }
 
 function createMemberEngagementSheet() {
@@ -1227,6 +1370,12 @@ function createMemberEngagementSheet() {
   sheet.getRange(3, 1, 1, headers.length).setValues([headers]).setFontWeight("bold").setBackground(COLORS.LIGHT_GRAY);
   sheet.setFrozenRows(3);
   sheet.setTabColor(COLORS.ACCENT_PURPLE);
+
+  // Delete unused columns beyond the defined headers (12 columns)
+  const totalCols = sheet.getMaxColumns();
+  if (totalCols > headers.length) {
+    sheet.deleteColumns(headers.length + 1, totalCols - headers.length);
+  }
 }
 
 function createCostImpactSheet() {
@@ -1239,6 +1388,12 @@ function createCostImpactSheet() {
   sheet.getRange(3, 1, 1, headers.length).setValues([headers]).setFontWeight("bold").setBackground(COLORS.LIGHT_GRAY);
   sheet.setFrozenRows(3);
   sheet.setTabColor(COLORS.SOLIDARITY_RED);
+
+  // Delete unused columns beyond the defined headers (10 columns)
+  const totalCols = sheet.getMaxColumns();
+  if (totalCols > headers.length) {
+    sheet.deleteColumns(headers.length + 1, totalCols - headers.length);
+  }
 }
 
 
@@ -1252,6 +1407,12 @@ function createArchiveSheet() {
   sheet.getRange(3, 1, 1, headers.length).setValues([headers]).setFontWeight("bold").setBackground(COLORS.LIGHT_GRAY);
   sheet.setFrozenRows(3);
   sheet.setTabColor(COLORS.TEXT_GRAY);
+
+  // Delete unused columns beyond the defined headers (6 columns)
+  const totalCols = sheet.getMaxColumns();
+  if (totalCols > headers.length) {
+    sheet.deleteColumns(headers.length + 1, totalCols - headers.length);
+  }
 }
 
 function createDiagnosticsSheet() {
@@ -1264,6 +1425,12 @@ function createDiagnosticsSheet() {
   sheet.getRange(3, 1, 1, headers.length).setValues([headers]).setFontWeight("bold").setBackground(COLORS.LIGHT_GRAY);
   sheet.setFrozenRows(3);
   sheet.setTabColor(COLORS.SOLIDARITY_RED);
+
+  // Delete unused columns beyond the defined headers (7 columns)
+  const totalCols = sheet.getMaxColumns();
+  if (totalCols > headers.length) {
+    sheet.deleteColumns(headers.length + 1, totalCols - headers.length);
+  }
 }
 
 /* --------------------- DATA VALIDATIONS --------------------- */
