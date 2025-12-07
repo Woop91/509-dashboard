@@ -1,6 +1,6 @@
 # 509 Dashboard - Complete Feature Reference
 
-**Version:** 3.5
+**Version:** 3.6
 **Last Updated:** 2025-12-07
 **Purpose:** Union grievance tracking and member engagement system for SEIU Local 509
 
@@ -36,7 +36,41 @@
 
 ---
 
-## 🆕 Changelog - Version 3.5 (2025-12-07)
+## 🆕 Changelog - Version 3.6 (2025-12-07)
+
+**MENU REORGANIZATION - Cleaner Structure:**
+
+Reorganized menus for better logical grouping and reduced redundancy:
+
+✅ **New Menu Structure (6 menus):**
+| Menu | Purpose |
+|------|---------|
+| 👤 Dashboard | Daily operations, search, grievance tools, communications |
+| 📊 Sheet Manager | Data, performance, integrity, automations, analytics |
+| 🔧 Setup | Dropdown configuration, dashboard setup |
+| 🎭 Demo | Seed demo data, data management (nuke/clear) |
+| ⚙️ Administrator | System health, workflow, column toggles, RBAC |
+| 🧪 Tests | All testing functions (Unit, Validation, Integration, Performance) |
+
+✅ **Changes Made:**
+- **Removed** Optional Extras menu (redundant - features already in main menus)
+- **Removed** Testing submenu from Administrator (separate Tests menu covers this)
+- **Created** new 🎭 Demo menu with Seed Demo Data and Data Management
+- **Simplified** 🔧 Setup menu to focus on Dropdown Config and Dashboard Setup
+
+✅ **Architecture Change:**
+- `Code.gs onOpen()` now calls `createReorganizedMenus(ui)` from `ReorganizedMenu.gs`
+- All 43+ features from v3.5 remain accessible in the reorganized structure
+- Tests menu remains in Code.gs for comprehensive test coverage
+
+**Files Modified:**
+- `Code.gs` - Removed redundant Optional Extras, calls createReorganizedMenus()
+- `ReorganizedMenu.gs` - New Demo menu, removed Testing submenu, simplified Setup
+- `ConsolidatedDashboard.gs` - Rebuilt with reorganized menus
+
+---
+
+## Changelog - Version 3.5 (2025-12-07)
 
 **MENU SYSTEM RESTORATION - 43 Missing Features Added:**
 
