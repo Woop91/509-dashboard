@@ -14,7 +14,7 @@
  * Build Info:
  * - Version: 2.1.0 (Security Enhanced + Code Review Improvements)
  * - Build ID: 20251202-improvements
- * - Build Date: 2025-12-07T22:19:50.385Z
+ * - Build Date: 2025-12-07T22:21:28.906Z
  * - Build Type: DEVELOPMENT
  * - Modules: 79 files
  * - Tests Included: Yes
@@ -29053,21 +29053,21 @@ function createDashboardMetricCards(sheet) {
   const statusCol = getColumnLetter(GRIEVANCE_COLS.STATUS);
   const daysToDeadlineCol = getColumnLetter(GRIEVANCE_COLS.DAYS_TO_DEADLINE);
 
-  // Card 1: Our Growing Family (Total Members)
+  // Card 1: Our Growing Family (Total Members) - with comma formatting (20,001 not 20001)
   sheet.getRange("A14:E16").merge()
-    .setFormula(`=COUNTA('Member Directory'!${memberIdCol}2:${memberIdCol})`);
+    .setFormula(`=TEXT(COUNTA('Member Directory'!${memberIdCol}2:${memberIdCol}),"#,##0")`);
 
-  // Card 2: Active Cases (Open Grievances)
+  // Card 2: Active Cases (Open Grievances) - with comma formatting
   sheet.getRange("F14:J16").merge()
-    .setFormula(`=COUNTIF('Grievance Log'!${statusCol}:${statusCol},"Open")`);
+    .setFormula(`=TEXT(COUNTIF('Grievance Log'!${statusCol}:${statusCol},"Open"),"#,##0")`);
 
   // Card 3: Victory Rate (Win %)
   sheet.getRange("K14:O16").merge()
     .setFormula(`=IFERROR(TEXT(COUNTIF('Grievance Log'!${statusCol}:${statusCol},"Settled")/(COUNTIF('Grievance Log'!${statusCol}:${statusCol},"Settled")+COUNTIF('Grievance Log'!${statusCol}:${statusCol},"Denied")),"0%"),"0%")`);
 
-  // Card 4: Needs Attention (Overdue)
+  // Card 4: Needs Attention (Overdue) - with comma formatting, MAX to avoid negatives
   sheet.getRange("P14:T16").merge()
-    .setFormula(`=COUNTIFS('Grievance Log'!${statusCol}:${statusCol},"Open",'Grievance Log'!${daysToDeadlineCol}:${daysToDeadlineCol},"<0")`);
+    .setFormula(`=TEXT(MAX(0,COUNTIFS('Grievance Log'!${statusCol}:${statusCol},"Open",'Grievance Log'!${daysToDeadlineCol}:${daysToDeadlineCol},"<0")),"#,##0")`);
 
   // Update subtitles with context
   sheet.getRange("A17:E18").merge().setValue("Union members strong together");
@@ -29241,11 +29241,11 @@ function createDashboardDataTableSection(sheet) {
 
     sheet.getRange(dataRow, 1).setValue(i + 1);  // Rank
     sheet.getRange(dataRow, 2).setValue(location);  // Item (Location)
-    sheet.getRange(dataRow, 3).setFormula(`=COUNTIF('Grievance Log'!${locationCol}:${locationCol},"${location}")`);  // Count
-    sheet.getRange(dataRow, 4).setFormula(`=COUNTIFS('Grievance Log'!${locationCol}:${locationCol},"${location}",'Grievance Log'!${statusCol}:${statusCol},"Open")`);  // Active
-    sheet.getRange(dataRow, 5).setFormula(`=COUNTIFS('Grievance Log'!${locationCol}:${locationCol},"${location}",'Grievance Log'!${statusCol}:${statusCol},"Settled")+COUNTIFS('Grievance Log'!${locationCol}:${locationCol},"${location}",'Grievance Log'!${statusCol}:${statusCol},"Closed")`);  // Resolved
+    sheet.getRange(dataRow, 3).setFormula(`=TEXT(COUNTIF('Grievance Log'!${locationCol}:${locationCol},"${location}"),"#,##0")`);  // Count with comma formatting
+    sheet.getRange(dataRow, 4).setFormula(`=TEXT(COUNTIFS('Grievance Log'!${locationCol}:${locationCol},"${location}",'Grievance Log'!${statusCol}:${statusCol},"Open"),"#,##0")`);  // Active
+    sheet.getRange(dataRow, 5).setFormula(`=TEXT(COUNTIFS('Grievance Log'!${locationCol}:${locationCol},"${location}",'Grievance Log'!${statusCol}:${statusCol},"Settled")+COUNTIFS('Grievance Log'!${locationCol}:${locationCol},"${location}",'Grievance Log'!${statusCol}:${statusCol},"Closed"),"#,##0")`);  // Resolved
     sheet.getRange(dataRow, 6).setFormula(`=IFERROR(TEXT(COUNTIFS('Grievance Log'!${locationCol}:${locationCol},"${location}",'Grievance Log'!${statusCol}:${statusCol},"Settled")/(COUNTIFS('Grievance Log'!${locationCol}:${locationCol},"${location}",'Grievance Log'!${statusCol}:${statusCol},"Settled")+COUNTIFS('Grievance Log'!${locationCol}:${locationCol},"${location}",'Grievance Log'!${statusCol}:${statusCol},"Denied")),"0%"),"0%")`);  // Win Rate
-    sheet.getRange(dataRow, 7).setFormula(`=IF(D${dataRow}>5,"🔴 High",IF(D${dataRow}>2,"🟡 Medium","🟢 Low"))`);  // Status
+    sheet.getRange(dataRow, 7).setFormula(`=IF(VALUE(SUBSTITUTE(D${dataRow},",",""))>5,"🔴 High",IF(VALUE(SUBSTITUTE(D${dataRow},",",""))>2,"🟡 Medium","🟢 Low"))`);  // Status
   }
 
   sheet.getRange("A94:G" + (93 + locations.length)).setHorizontalAlignment("center");
