@@ -366,7 +366,7 @@ function logAudit(eventType, description, metadata) {
  */
 function createAuditLogSheet() {
   const ss = SpreadsheetApp.getActiveSpreadsheet();
-  const sheetName = SHEET_NAMES.AUDIT_LOG || 'Audit Log';
+  const sheetName = 'Audit Log';
 
   // Check if sheet already exists
   let sheet = ss.getSheetByName(sheetName);

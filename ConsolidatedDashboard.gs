@@ -14,7 +14,7 @@
  * Build Info:
  * - Version: 2.1.0 (Security Enhanced + Code Review Improvements)
  * - Build ID: 20251202-improvements
- * - Build Date: 2025-12-07T02:52:34.232Z
+ * - Build Date: 2025-12-07T02:55:52.643Z
  * - Build Type: DEVELOPMENT
  * - Modules: 77 files
  * - Tests Included: Yes
@@ -3479,6 +3479,13 @@ function createConfigTab() {
 
   config.setFrozenRows(2); // Freeze both category and header rows
   config.setTabColor("#2563EB");
+
+  // Delete unused columns beyond the defined layout (32 columns used)
+  const totalCols = config.getMaxColumns();
+  const usedCols = 32;  // Config uses 32 columns (A-AF)
+  if (totalCols > usedCols) {
+    config.deleteColumns(usedCols + 1, totalCols - usedCols);
+  }
 }
 
 /* --------------------- MEMBER DIRECTORY - ALL CORRECT COLUMNS --------------------- */
@@ -3570,6 +3577,12 @@ function createMemberDirectory() {
   // Hide Member Interests columns (U-X) by default
   memberDir.hideColumns(MEMBER_COLS.INTEREST_LOCAL, 4);     // Columns 21-24
 
+  // Delete unused columns beyond the defined headers (31 columns)
+  const totalCols = memberDir.getMaxColumns();
+  if (totalCols > headers.length) {
+    memberDir.deleteColumns(headers.length + 1, totalCols - headers.length);
+  }
+
   memberDir.setTabColor("#059669");
 }
 
@@ -3646,6 +3659,12 @@ function createGrievanceLog() {
     .setAllowInvalid(false)
     .build();
   checkboxRange.setDataValidation(checkboxValidation);
+
+  // Delete unused columns beyond the defined headers (34 columns)
+  const totalCols = grievanceLog.getMaxColumns();
+  if (totalCols > headers.length) {
+    grievanceLog.deleteColumns(headers.length + 1, totalCols - headers.length);
+  }
 
   grievanceLog.setTabColor("#DC2626");
 }
@@ -3831,6 +3850,13 @@ function createMainDashboard() {
   dashboard.getRange("C22:C31").setNumberFormat("MM/dd/yyyy");
 
   dashboard.setTabColor("#7C3AED");
+
+  // Delete unused columns beyond the defined layout (12 columns used A-L)
+  const totalCols = dashboard.getMaxColumns();
+  const usedCols = 12;  // Main Dashboard uses columns A-L
+  if (totalCols > usedCols) {
+    dashboard.deleteColumns(usedCols + 1, totalCols - usedCols);
+  }
 }
 
 /**
@@ -3996,6 +4022,13 @@ function createAnalyticsDataSheet() {
   analytics.getRange("J5").setFormula(`=UNIQUE(FILTER('Grievance Log'!${stewardCol}:${stewardCol}, 'Grievance Log'!${stewardCol}:${stewardCol}<>"", 'Grievance Log'!${stewardCol}:${stewardCol}<>"Assigned Steward (Name)"))`);
   analytics.getRange("K5").setFormula(`=ARRAYFORMULA(IF(J5:J<>"", COUNTIFS('Grievance Log'!${stewardCol}:${stewardCol}, J5:J, 'Grievance Log'!${statusCol}:${statusCol}, "Open"), ""))`);
 
+  // Delete unused columns beyond the defined layout (11 columns used A-K)
+  const totalCols = analytics.getMaxColumns();
+  const usedCols = 11;  // Analytics Data uses columns A-K
+  if (totalCols > usedCols) {
+    analytics.deleteColumns(usedCols + 1, totalCols - usedCols);
+  }
+
   analytics.hideSheet();
 }
 
@@ -4050,6 +4083,12 @@ function createMemberSatisfactionSheet() {
 
   satisfaction.getRange(11, 1, metrics.length, 2).setValues(metrics);
   satisfaction.setTabColor("#10B981");
+
+  // Delete unused columns beyond the defined headers (10 columns)
+  const totalCols = satisfaction.getMaxColumns();
+  if (totalCols > headers.length) {
+    satisfaction.deleteColumns(headers.length + 1, totalCols - headers.length);
+  }
 }
 
 /* --------------------- FEEDBACK & DEVELOPMENT --------------------- */
@@ -4073,6 +4112,12 @@ function createFeedbackSheet() {
   feedback.setFrozenRows(3);
   feedback.setTabColor(COLORS.ACCENT_PURPLE);
   feedback.setColumnWidth(1, 120); feedback.setColumnWidth(2, 110); feedback.setColumnWidth(3, 120); feedback.setColumnWidth(4, 80); feedback.setColumnWidth(5, 200); feedback.setColumnWidth(6, 300); feedback.setColumnWidth(7, 100); feedback.setColumnWidth(8, 90); feedback.setColumnWidth(9, 100); feedback.setColumnWidth(10, 110); feedback.setColumnWidth(11, 120); feedback.setColumnWidth(12, 200); feedback.setColumnWidth(13, 250); feedback.setColumnWidth(14, 110);
+
+  // Delete unused columns beyond the defined headers (14 columns)
+  const totalCols = feedback.getMaxColumns();
+  if (totalCols > headers.length) {
+    feedback.deleteColumns(headers.length + 1, totalCols - headers.length);
+  }
 }
 
 /* --------------------- STEWARD WORKLOAD --------------------- */
@@ -4086,6 +4131,12 @@ function createStewardWorkloadSheet() {
   sheet.getRange(3, 1, 1, headers.length).setValues([headers]).setFontWeight("bold").setBackground(COLORS.LIGHT_GRAY);
   sheet.setFrozenRows(3);
   sheet.setTabColor(COLORS.PRIMARY_PURPLE);
+
+  // Delete unused columns beyond the defined headers (11 columns)
+  const totalCols = sheet.getMaxColumns();
+  if (totalCols > headers.length) {
+    sheet.deleteColumns(headers.length + 1, totalCols - headers.length);
+  }
 }
 
 function createTrendsSheet() {
@@ -4098,6 +4149,12 @@ function createTrendsSheet() {
   sheet.getRange(3, 1, 1, headers.length).setValues([headers]).setFontWeight("bold").setBackground(COLORS.LIGHT_GRAY);
   sheet.setFrozenRows(3);
   sheet.setTabColor(COLORS.UNION_GREEN);
+
+  // Delete unused columns beyond the defined headers (12 columns)
+  const totalCols = sheet.getMaxColumns();
+  if (totalCols > headers.length) {
+    sheet.deleteColumns(headers.length + 1, totalCols - headers.length);
+  }
 }
 
 
@@ -4111,6 +4168,12 @@ function createLocationSheet() {
   sheet.getRange(3, 1, 1, headers.length).setValues([headers]).setFontWeight("bold").setBackground(COLORS.LIGHT_GRAY);
   sheet.setFrozenRows(3);
   sheet.setTabColor(COLORS.ACCENT_TEAL);
+
+  // Delete unused columns beyond the defined headers (11 columns)
+  const totalCols = sheet.getMaxColumns();
+  if (totalCols > headers.length) {
+    sheet.deleteColumns(headers.length + 1, totalCols - headers.length);
+  }
 }
 
 function createTypeAnalysisSheet() {
@@ -4123,6 +4186,12 @@ function createTypeAnalysisSheet() {
   sheet.getRange(3, 1, 1, headers.length).setValues([headers]).setFontWeight("bold").setBackground(COLORS.LIGHT_GRAY);
   sheet.setFrozenRows(3);
   sheet.setTabColor(COLORS.PRIMARY_BLUE);
+
+  // Delete unused columns beyond the defined headers (11 columns)
+  const totalCols = sheet.getMaxColumns();
+  if (totalCols > headers.length) {
+    sheet.deleteColumns(headers.length + 1, totalCols - headers.length);
+  }
 }
 
 /* --------------------- EXECUTIVE DASHBOARD (Merged Summary + Quick Stats) --------------------- */
@@ -4222,6 +4291,13 @@ function createExecutiveDashboard() {
   sheet.setColumnWidth(2, 150);
   sheet.setColumnWidth(3, 100);
   sheet.setColumnWidth(4, 100);
+
+  // Delete unused columns beyond the defined columns (4 columns used)
+  const totalCols = sheet.getMaxColumns();
+  const usedCols = 4;  // Executive Dashboard uses columns A-D
+  if (totalCols > usedCols) {
+    sheet.deleteColumns(usedCols + 1, totalCols - usedCols);
+  }
 }
 
 /* --------------------- KPI PERFORMANCE DASHBOARD (Merged Performance + KPI Board) --------------------- */
@@ -4294,6 +4370,12 @@ function createKPIPerformanceDashboard() {
   sheet.setColumnWidth(10, 80);  // Worst
   sheet.setColumnWidth(11, 120); // Owner
   sheet.setColumnWidth(12, 110); // Last Updated
+
+  // Delete unused columns beyond the defined headers (12 columns)
+  const totalCols = sheet.getMaxColumns();
+  if (totalCols > headers.length) {
+    sheet.deleteColumns(headers.length + 1, totalCols - headers.length);
+  }
 }
 
 function createMemberEngagementSheet() {
@@ -4306,6 +4388,12 @@ function createMemberEngagementSheet() {
   sheet.getRange(3, 1, 1, headers.length).setValues([headers]).setFontWeight("bold").setBackground(COLORS.LIGHT_GRAY);
   sheet.setFrozenRows(3);
   sheet.setTabColor(COLORS.ACCENT_PURPLE);
+
+  // Delete unused columns beyond the defined headers (12 columns)
+  const totalCols = sheet.getMaxColumns();
+  if (totalCols > headers.length) {
+    sheet.deleteColumns(headers.length + 1, totalCols - headers.length);
+  }
 }
 
 function createCostImpactSheet() {
@@ -4318,6 +4406,12 @@ function createCostImpactSheet() {
   sheet.getRange(3, 1, 1, headers.length).setValues([headers]).setFontWeight("bold").setBackground(COLORS.LIGHT_GRAY);
   sheet.setFrozenRows(3);
   sheet.setTabColor(COLORS.SOLIDARITY_RED);
+
+  // Delete unused columns beyond the defined headers (10 columns)
+  const totalCols = sheet.getMaxColumns();
+  if (totalCols > headers.length) {
+    sheet.deleteColumns(headers.length + 1, totalCols - headers.length);
+  }
 }
 
 
@@ -4331,6 +4425,12 @@ function createArchiveSheet() {
   sheet.getRange(3, 1, 1, headers.length).setValues([headers]).setFontWeight("bold").setBackground(COLORS.LIGHT_GRAY);
   sheet.setFrozenRows(3);
   sheet.setTabColor(COLORS.TEXT_GRAY);
+
+  // Delete unused columns beyond the defined headers (6 columns)
+  const totalCols = sheet.getMaxColumns();
+  if (totalCols > headers.length) {
+    sheet.deleteColumns(headers.length + 1, totalCols - headers.length);
+  }
 }
 
 function createDiagnosticsSheet() {
@@ -4343,6 +4443,12 @@ function createDiagnosticsSheet() {
   sheet.getRange(3, 1, 1, headers.length).setValues([headers]).setFontWeight("bold").setBackground(COLORS.LIGHT_GRAY);
   sheet.setFrozenRows(3);
   sheet.setTabColor(COLORS.SOLIDARITY_RED);
+
+  // Delete unused columns beyond the defined headers (7 columns)
+  const totalCols = sheet.getMaxColumns();
+  if (totalCols > headers.length) {
+    sheet.deleteColumns(headers.length + 1, totalCols - headers.length);
+  }
 }
 
 /* --------------------- DATA VALIDATIONS --------------------- */
@@ -5135,7 +5241,7 @@ function onOpen() {
     .addToUi();
 
   // ============ ⚙️ ADMINISTRATOR MENU ============
-  ui.createMenu("⚙️ Admin")
+  const adminMenu = ui.createMenu("⚙️ Admin")
     .addSubMenu(ui.createMenu("⚠️ System Health")
       .addItem("🏥 Run Health Check", "performSystemHealthCheck")
       .addItem("⚠️ Error Dashboard", "showErrorDashboard")
@@ -5194,31 +5300,23 @@ function onOpen() {
       .addItem("📝 Add Sample Feedback Entries", "addSampleFeedbackEntries")
       .addSeparator()
       .addItem("🗑️ Remove Emergency Contact Columns", "removeEmergencyContactColumns"))
-    .addSeparator()
-    .addSubMenu(ui.createMenu("🌱 Seed Data (Testing)")
-      .addSubMenu(ui.createMenu("👥 Seed Members")
-        .addItem("Seed 5,000 Members (Toggle 1)", "SEED_MEMBERS_TOGGLE_1")
-        .addItem("Seed 5,000 Members (Toggle 2)", "SEED_MEMBERS_TOGGLE_2")
-        .addItem("Seed 5,000 Members (Toggle 3)", "SEED_MEMBERS_TOGGLE_3")
-        .addItem("Seed 5,000 Members (Toggle 4)", "SEED_MEMBERS_TOGGLE_4")
-        .addSeparator()
-        .addItem("Seed All 20k Members (Legacy)", "SEED_20K_MEMBERS"))
-      .addSubMenu(ui.createMenu("📋 Seed Grievances")
-        .addItem("Seed 2,500 Grievances (Toggle 1)", "SEED_GRIEVANCES_TOGGLE_1")
-        .addItem("Seed 2,500 Grievances (Toggle 2)", "SEED_GRIEVANCES_TOGGLE_2")
-        .addSeparator()
-        .addItem("Seed All 5k Grievances (Legacy)", "SEED_5K_GRIEVANCES"))
-      .addSeparator()
-      .addItem("🗑️ Nuke All Seed Data", "nukeSeedData")
-      .addItem("⚠️ Clear All Data", "clearAllData")
-      .addSeparator()
-      .addSubMenu(ui.createMenu("👥 User Roles (RBAC)")
-        .addItem("Initialize RBAC", "initializeRBAC")
-        .addItem("Configure Roles", "configureUserRoles")
-        .addItem("Add Admin", "addAdmin")
-        .addItem("Add Steward", "addSteward")
-        .addItem("Add Viewer", "addViewer")
-        .addItem("My Permissions", "showMyPermissions")))
+    .addSeparator();
+
+  // Data Management menu (seed functions removed for production)
+  adminMenu.addSubMenu(ui.createMenu("🗑️ Data Management")
+    .addItem("🚨 Nuke All Data (Production Reset)", "nukeSeedData")
+    .addItem("🗑️ Nuke ALL Sheet Data (Comprehensive)", "nukeAllSheetData")
+    .addItem("⚠️ Clear Core Data Only", "clearAllData"));
+
+  // Always add RBAC submenu
+  adminMenu.addSeparator()
+    .addSubMenu(ui.createMenu("👥 User Roles (RBAC)")
+      .addItem("Initialize RBAC", "initializeRBAC")
+      .addItem("Configure Roles", "configureUserRoles")
+      .addItem("Add Admin", "addAdmin")
+      .addItem("Add Steward", "addSteward")
+      .addItem("Add Viewer", "addViewer")
+      .addItem("My Permissions", "showMyPermissions"))
     .addToUi();
 
   // ============ 🧪 TESTING MENU ============
@@ -5825,612 +5923,22 @@ If you experience dropdown issues:
   SpreadsheetApp.getUi().alert("Dropdown Refresh Info", infoText, SpreadsheetApp.getUi().ButtonSet.OK);
 }
 
-/* --------------------- SEED MEMBERS (WITH TOGGLES) --------------------- */
-function SEED_MEMBERS_TOGGLE_1() { seedMembersWithCount(5000, "Toggle 1"); }
-function SEED_MEMBERS_TOGGLE_2() { seedMembersWithCount(5000, "Toggle 2"); }
-function SEED_MEMBERS_TOGGLE_3() { seedMembersWithCount(5000, "Toggle 3"); }
-function SEED_MEMBERS_TOGGLE_4() { seedMembersWithCount(5000, "Toggle 4"); }
-
+/* --------------------- SEED FUNCTIONS REMOVED --------------------- */
 /**
- * Seeds member directory with test data
- * Refactored to use helper functions for maintainability
+ * NOTE: Seed functions have been removed for production deployment.
+ * This reduces code size and removes demo/testing functionality.
+ *
+ * If you need to restore seeding capability:
+ * 1. Check git history for the removed seed functions
+ * 2. Or contact the development team for a demo version
+ *
+ * Removed functions:
+ * - SEED_MEMBERS_TOGGLE_1/2/3/4
+ * - SEED_20K_MEMBERS
+ * - SEED_GRIEVANCES_TOGGLE_1/2
+ * - SEED_5K_GRIEVANCES
+ * - All related helper functions
  */
-function seedMembersWithCount(count, toggleName) {
-  const ss = SpreadsheetApp.getActive();
-  const memberDir = ss.getSheetByName(SHEETS.MEMBER_DIR);
-  const config = ss.getSheetByName(SHEETS.CONFIG);
-
-  // Validate sheets exist
-  if (!validateSeedSheets(memberDir, config)) return;
-
-  // Confirm with user
-  const ui = SpreadsheetApp.getUi();
-  const response = ui.alert(
-    `Seed ${count} Members (${toggleName})`,
-    `This will add ${count} member records. This may take 1-2 minutes. Continue?`,
-    ui.ButtonSet.YES_NO
-  );
-  if (response !== ui.Button.YES) return;
-
-  SpreadsheetApp.getActive().toast(`🚀 Seeding ${count} members (${toggleName})...`, "Processing", -1);
-
-  // Prepare for seeding
-  clearMemberValidationsForSeed(memberDir, count);
-
-  // Get seed configuration
-  const seedConfig = getMemberSeedConfig();
-  if (!seedConfig) return;
-
-  // Generate and write data
-  const startingRow = memberDir.getLastRow();
-  const result = generateAndWriteMemberData(memberDir, count, startingRow, toggleName, seedConfig);
-
-  // Restore sheet state
-  restoreMemberSheetAfterSeed(memberDir, startingRow, count);
-
-  const finalRow = memberDir.getLastRow();
-  SpreadsheetApp.getActive().toast(`✅ ${count} members added (${toggleName})! Sheet now has ${finalRow - 1} members.`, "Complete", 5);
-}
-
-/**
- * Validates sheets exist for seeding
- */
-function validateSeedSheets(memberDir, config) {
-  if (!memberDir) {
-    SpreadsheetApp.getUi().alert('Error', 'Member Directory sheet not found! Please run CREATE_509_DASHBOARD first.', SpreadsheetApp.getUi().ButtonSet.OK);
-    return false;
-  }
-  if (!config) {
-    SpreadsheetApp.getUi().alert('Error', 'Config sheet not found! Please run CREATE_509_DASHBOARD first.', SpreadsheetApp.getUi().ButtonSet.OK);
-    return false;
-  }
-  return true;
-}
-
-/**
- * Clears data validations before seeding
- */
-function clearMemberValidationsForSeed(memberDir, count) {
-  const lastRow = Math.max(memberDir.getLastRow(), 2);
-  const maxSeedRows = lastRow + count + 100;
-  try {
-    // Clear validations for all columns that have dropdown values set during seeding
-    // Columns: JOB_TITLE(4), WORK_LOCATION(5), UNIT(6), OFFICE_DAYS(7),
-    //          SUPERVISOR(12), MANAGER(13), IS_STEWARD(14), ASSIGNED_STEWARD(16),
-    //          CONTACT_STEWARD(26)
-    const columnsToClean = [4, 5, 6, 7, 12, 13, 14, 16, 26];
-    columnsToClean.forEach(function(col) {
-      memberDir.getRange(2, col, maxSeedRows, 1).clearDataValidations();
-    });
-    Logger.log('Cleared data validations for seed operation');
-  } catch (e) {
-    Logger.log('Warning: Could not clear some validations: ' + e.message);
-  }
-}
-
-/**
- * Gets configuration data for member seeding
- */
-function getMemberSeedConfig() {
-  const dropdowns = getMemberDirectoryDropdownValues();
-
-  let commMethods = getConfigColumnValues(CONFIG_COLS.COMM_METHODS);
-  if (commMethods.length === 0) {
-    commMethods = ["Email", "Phone", "Text", "In Person"];
-  }
-
-  const seedConfig = {
-    firstNames: ["James", "Mary", "John", "Patricia", "Robert", "Jennifer", "Michael", "Linda", "William", "Elizabeth", "David", "Barbara", "Richard", "Susan", "Joseph", "Jessica", "Thomas", "Sarah", "Charles", "Karen", "Christopher", "Nancy", "Daniel", "Lisa", "Matthew", "Betty", "Anthony", "Margaret", "Mark", "Sandra", "Donald", "Ashley", "Steven", "Kimberly", "Paul", "Emily", "Andrew", "Donna", "Joshua", "Michelle"],
-    lastNames: ["Smith", "Johnson", "Williams", "Brown", "Jones", "Garcia", "Miller", "Davis", "Rodriguez", "Martinez", "Hernandez", "Lopez", "Gonzalez", "Wilson", "Anderson", "Thomas", "Taylor", "Moore", "Jackson", "Martin", "Lee", "Perez", "Thompson", "White", "Harris", "Sanchez", "Clark", "Ramirez", "Lewis", "Robinson", "Walker", "Young", "Allen", "King", "Wright", "Scott", "Torres", "Nguyen", "Hill", "Flores"],
-    jobTitles: dropdowns.jobTitles,
-    locations: dropdowns.locations,
-    units: dropdowns.units,
-    officeDays: dropdowns.officeDays,
-    supervisors: dropdowns.supervisors,
-    managers: dropdowns.managers,
-    stewards: dropdowns.stewards,
-    commMethods: commMethods,
-    times: ["Mornings", "Afternoons", "Evenings", "Weekends", "Flexible"],
-    committeeOptions: getConfigColumnValues(CONFIG_COLS.STEWARD_COMMITTEES),
-    homeTownOptions: getConfigColumnValues(CONFIG_COLS.HOME_TOWNS),
-    contactNotes: getSeedContactNotes()
-  };
-
-  // Validate required config
-  if (seedConfig.jobTitles.length === 0 || seedConfig.locations.length === 0 ||
-      seedConfig.units.length === 0 || seedConfig.supervisors.length === 0 ||
-      seedConfig.managers.length === 0 || seedConfig.stewards.length === 0) {
-    SpreadsheetApp.getUi().alert('Error', 'Config data is incomplete. Please ensure all dropdown lists in Config sheet are populated.', SpreadsheetApp.getUi().ButtonSet.OK);
-    return null;
-  }
-
-  return seedConfig;
-}
-
-/**
- * Returns sample contact notes for seeding
- */
-function getSeedContactNotes() {
-  return [
-    "Discussed upcoming contract negotiations",
-    "Follow-up on workplace safety concerns",
-    "Scheduled one-on-one meeting for next week",
-    "Provided information about member benefits",
-    "Addressed scheduling conflict resolution",
-    "Checked in about workload issues",
-    "Discussed professional development opportunities",
-    "Followed up on grievance status",
-    "Welcomed new member to the union",
-    "Provided update on chapter meeting",
-    "Discussed concerns about overtime policies",
-    "Shared information about steward training",
-    "Follow-up on previous conversation about working conditions",
-    "Answered questions about union dues",
-    "Discussed upcoming union events"
-  ];
-}
-
-/**
- * Generates and writes member data in batches
- */
-function generateAndWriteMemberData(memberDir, count, startingRow, toggleName, config) {
-  const BATCH_SIZE = 1000;
-  const MAX_STEWARDS = 25;
-  let data = [];
-  let stewardCount = 0;
-
-  for (let i = 1; i <= count; i++) {
-    const row = generateSingleMemberRow(i, startingRow, config, stewardCount, MAX_STEWARDS);
-    if (row.isSteward) stewardCount++;
-    data.push(row.data);
-
-    if (data.length === BATCH_SIZE) {
-      writeMemberBatch(memberDir, data, i, count, toggleName);
-      data = [];
-    }
-  }
-
-  // Write remaining data
-  if (data.length > 0) {
-    writeMemberBatch(memberDir, data, count, count, toggleName);
-  }
-
-  SpreadsheetApp.flush();
-  Logger.log('Seed complete. Member Directory now has ' + memberDir.getLastRow() + ' rows');
-}
-
-/**
- * Generates a single member row
- */
-function generateSingleMemberRow(index, startingRow, config, stewardCount, maxStewards) {
-  const firstName = config.firstNames[Math.floor(Math.random() * config.firstNames.length)];
-  const lastName = config.lastNames[Math.floor(Math.random() * config.lastNames.length)];
-  const memberID = "M" + String(startingRow + index).padStart(6, '0');
-
-  // Generate office days
-  const numDays = Math.floor(Math.random() * 3) + 1;
-  const selectedDays = [];
-  const availableDays = [...config.officeDays];
-  for (let d = 0; d < numDays && availableDays.length > 0; d++) {
-    const idx = Math.floor(Math.random() * availableDays.length);
-    selectedDays.push(availableDays.splice(idx, 1)[0]);
-  }
-
-  const isSteward = (stewardCount < maxStewards && Math.random() > 0.95) ? "Yes" : "No";
-  const daysAgo = Math.floor(Math.random() * 90);
-
-  const row = [
-    memberID, firstName, lastName,
-    config.jobTitles[Math.floor(Math.random() * config.jobTitles.length)],
-    config.locations[Math.floor(Math.random() * config.locations.length)],
-    config.units[Math.floor(Math.random() * config.units.length)],
-    selectedDays.join(", "),
-    `${firstName.toLowerCase()}.${lastName.toLowerCase()}${startingRow + index}@union.org`,
-    `(555) ${String(Math.floor(Math.random() * 900) + 100)}-${String(Math.floor(Math.random() * 9000) + 1000)}`,
-    config.commMethods[Math.floor(Math.random() * config.commMethods.length)],
-    config.times[Math.floor(Math.random() * config.times.length)],
-    config.supervisors[Math.floor(Math.random() * config.supervisors.length)],
-    config.managers[Math.floor(Math.random() * config.managers.length)],
-    isSteward,
-    isSteward === "Yes" && config.committeeOptions.length > 0 ? config.committeeOptions[Math.floor(Math.random() * config.committeeOptions.length)] : "",
-    config.stewards[Math.floor(Math.random() * config.stewards.length)],
-    Math.random() > 0.7 ? new Date(Date.now() - daysAgo * 24 * 60 * 60 * 1000) : "",
-    Math.random() > 0.8 ? new Date(Date.now() - daysAgo * 24 * 60 * 60 * 1000) : "",
-    Math.floor(Math.random() * 40) + 60,
-    Math.floor(Math.random() * 50),
-    Math.random() > 0.5 ? "Yes" : "No",
-    Math.random() > 0.6 ? "Yes" : "No",
-    Math.random() > 0.8 ? "Yes" : "No",
-    config.homeTownOptions.length > 0 ? config.homeTownOptions[Math.floor(Math.random() * config.homeTownOptions.length)] : "",
-    new Date(Date.now() - Math.random() * 365 * 24 * 60 * 60 * 1000),
-    Math.random() > 0.6 ? config.stewards[Math.floor(Math.random() * config.stewards.length)] : "",
-    Math.random() > 0.6 ? config.contactNotes[Math.floor(Math.random() * config.contactNotes.length)] : ""
-  ];
-
-  return { data: row, isSteward: isSteward === "Yes" };
-}
-
-/**
- * Writes a batch of member data to the sheet
- */
-function writeMemberBatch(memberDir, data, currentIndex, totalCount, toggleName) {
-  try {
-    memberDir.getRange(memberDir.getLastRow() + 1, 1, data.length, data[0].length).setValues(data);
-    SpreadsheetApp.getActive().toast(`Added ${currentIndex} of ${totalCount} members (${toggleName})...`, "Progress", 1);
-    SpreadsheetApp.flush();
-  } catch (e) {
-    Logger.log(`Error writing member batch at ${currentIndex}: ${e.message}`);
-    SpreadsheetApp.getActive().toast(`⚠️ Error at ${currentIndex}. Retrying...`, "Warning", 2);
-    Utilities.sleep(1000);
-    try {
-      memberDir.getRange(memberDir.getLastRow() + 1, 1, data.length, data[0].length).setValues(data);
-    } catch (e2) {
-      Logger.log(`Retry failed: ${e2.message}`);
-      throw new Error(`Failed to write members: ${e2.message}`);
-    }
-  }
-}
-
-/**
- * Restores dropdowns, checkboxes, and formulas after seeding
- */
-function restoreMemberSheetAfterSeed(memberDir, startingRow, count) {
-  SpreadsheetApp.getActive().toast(`Restoring dropdowns...`, "Processing", -1);
-  try {
-    setupMemberDirectoryDropdownsSilent();
-    setupGrievanceLogDropdownsSilent();
-    Logger.log('Successfully re-applied dropdowns after seeding');
-  } catch (e) {
-    Logger.log('Warning: Could not re-apply dropdowns: ' + e.message);
-  }
-
-  try {
-    const startGrievanceCol = MEMBER_COLS.START_GRIEVANCE;
-    memberDir.getRange(startingRow + 1, startGrievanceCol, count, 1).insertCheckboxes();
-    Logger.log('Successfully added checkboxes for Start Grievance column');
-  } catch (e) {
-    Logger.log('Warning: Could not add checkboxes: ' + e.message);
-  }
-
-  SpreadsheetApp.getActive().toast(`Refreshing formulas...`, "Processing", -1);
-  try {
-    setupFormulasAndCalculations();
-    Logger.log('Successfully refreshed formulas after seeding');
-  } catch (e) {
-    Logger.log('Warning: Could not refresh formulas: ' + e.message);
-  }
-}
-
-/* --------------------- LEGACY: SEED 20,000 MEMBERS --------------------- */
-function SEED_20K_MEMBERS() {
-  const ui = SpreadsheetApp.getUi();
-  const response = ui.alert(
-    'Seed 20,000 Members',
-    'Use the 4 toggles instead for better performance:\n\n' +
-    '• Seed Members - Toggle 1 (5,000)\n' +
-    '• Seed Members - Toggle 2 (5,000)\n' +
-    '• Seed Members - Toggle 3 (5,000)\n' +
-    '• Seed Members - Toggle 4 (5,000)\n\n' +
-    'Would you like to seed all 20,000 at once anyway?',
-    ui.ButtonSet.YES_NO
-  );
-
-  if (response !== ui.Button.YES) return;
-
-  // Call all 4 toggles
-  seedMembersWithCount(5000, "Toggle 1");
-  seedMembersWithCount(5000, "Toggle 2");
-  seedMembersWithCount(5000, "Toggle 3");
-  seedMembersWithCount(5000, "Toggle 4");
-}
-
-/* --------------------- SEED GRIEVANCES (WITH TOGGLES) --------------------- */
-function SEED_GRIEVANCES_TOGGLE_1() { seedGrievancesWithCount(2500, "Toggle 1"); }
-function SEED_GRIEVANCES_TOGGLE_2() { seedGrievancesWithCount(2500, "Toggle 2"); }
-
-/**
- * Seeds grievance log with test data
- * Refactored to use helper functions for maintainability
- */
-function seedGrievancesWithCount(count, toggleName) {
-  const ss = SpreadsheetApp.getActive();
-  const grievanceLog = ss.getSheetByName(SHEETS.GRIEVANCE_LOG);
-  const memberDir = ss.getSheetByName(SHEETS.MEMBER_DIR);
-  const config = ss.getSheetByName(SHEETS.CONFIG);
-
-  // Validate sheets
-  if (!validateGrievanceSeedSheets(grievanceLog, memberDir, config)) return;
-
-  // Confirm with user
-  const ui = SpreadsheetApp.getUi();
-  const response = ui.alert(
-    `Seed ${count} Grievances (${toggleName})`,
-    `This will add ${count} grievance records. This may take 1-2 minutes. Continue?`,
-    ui.ButtonSet.YES_NO
-  );
-  if (response !== ui.Button.YES) return;
-
-  SpreadsheetApp.getActive().toast(`🚀 Seeding ${count} grievances (${toggleName})...`, "Processing", -1);
-
-  // Prepare for seeding
-  clearGrievanceValidationsForSeed(grievanceLog, count);
-
-  // Get member data
-  const memberLastRow = memberDir.getLastRow();
-  if (memberLastRow < 2) {
-    ui.alert('Error', 'No members found. Please seed members first.', ui.ButtonSet.OK);
-    return;
-  }
-
-  const allMemberData = memberDir.getRange(2, 1, memberLastRow - 1, 31).getValues();
-  const memberIDs = allMemberData.map(function(row) { return row[MEMBER_COLS.MEMBER_ID - 1]; }).filter(String);
-
-  // Get seed configuration
-  const seedConfig = getGrievanceSeedConfig();
-  if (!seedConfig) return;
-
-  // Generate and write data
-  const startingRow = grievanceLog.getLastRow();
-  const successCount = generateAndWriteGrievanceData(grievanceLog, count, startingRow, toggleName, seedConfig, allMemberData, memberIDs);
-
-  // Restore sheet state
-  restoreGrievanceSheetAfterSeed();
-
-  const finalRow = grievanceLog.getLastRow();
-  SpreadsheetApp.getActive().toast(`✅ ${successCount} grievances added (${toggleName})! Total: ${finalRow - 1} grievances.`, "Complete", 5);
-}
-
-/**
- * Validates sheets exist for grievance seeding
- */
-function validateGrievanceSeedSheets(grievanceLog, memberDir, config) {
-  if (!grievanceLog) {
-    SpreadsheetApp.getUi().alert('Error', 'Grievance Log sheet not found! Please run CREATE_509_DASHBOARD first.', SpreadsheetApp.getUi().ButtonSet.OK);
-    return false;
-  }
-  if (!memberDir) {
-    SpreadsheetApp.getUi().alert('Error', 'Member Directory sheet not found! Please run CREATE_509_DASHBOARD first.', SpreadsheetApp.getUi().ButtonSet.OK);
-    return false;
-  }
-  if (!config) {
-    SpreadsheetApp.getUi().alert('Error', 'Config sheet not found! Please run CREATE_509_DASHBOARD first.', SpreadsheetApp.getUi().ButtonSet.OK);
-    return false;
-  }
-  return true;
-}
-
-/**
- * Clears data validations before grievance seeding
- */
-function clearGrievanceValidationsForSeed(grievanceLog, count) {
-  const lastRow = Math.max(grievanceLog.getLastRow(), 2);
-  const maxSeedRows = lastRow + count + 100;
-  try {
-    const columnsToClean = [5, 6, 22, 23, 27];
-    columnsToClean.forEach(function(col) {
-      grievanceLog.getRange(2, col, maxSeedRows, 1).clearDataValidations();
-    });
-    Logger.log('Cleared grievance data validations for seed operation');
-  } catch (e) {
-    Logger.log('Warning: Could not clear some validations: ' + e.message);
-  }
-}
-
-/**
- * Gets configuration data for grievance seeding
- */
-function getGrievanceSeedConfig() {
-  const grievanceDropdowns = getGrievanceLogDropdownValues();
-
-  const seedConfig = {
-    statuses: grievanceDropdowns.statuses,
-    steps: grievanceDropdowns.steps,
-    categories: grievanceDropdowns.categories,
-    articles: grievanceDropdowns.articles,
-    stewards: grievanceDropdowns.stewards,
-    deadlineConfig: getAllDeadlineConfig(),
-    resolutions: ["Won - Resolved favorably", "Won - Full remedy granted", "Lost - No violation found", "Lost - Withdrawn by member", "Settled - Partial remedy", "Settled - Compromise reached"]
-  };
-
-  if (seedConfig.statuses.length === 0 || seedConfig.steps.length === 0 ||
-      seedConfig.articles.length === 0 || seedConfig.categories.length === 0 ||
-      seedConfig.stewards.length === 0) {
-    SpreadsheetApp.getUi().alert('Error', 'Config data is incomplete. Please ensure all dropdown lists in Config sheet are populated.', SpreadsheetApp.getUi().ButtonSet.OK);
-    return null;
-  }
-
-  return seedConfig;
-}
-
-/**
- * Generates and writes grievance data in batches
- */
-function generateAndWriteGrievanceData(grievanceLog, count, startingRow, toggleName, config, allMemberData, memberIDs) {
-  const BATCH_SIZE = 500;
-  let data = [];
-  let successCount = 0;
-
-  for (let i = 1; i <= count; i++) {
-    const memberIndex = Math.floor(Math.random() * memberIDs.length);
-    const memberID = memberIDs[memberIndex];
-    const memberData = allMemberData[memberIndex];
-
-    if (!memberData || !memberID) continue;
-
-    const row = generateSingleGrievanceRow(i, startingRow, memberID, memberData, config);
-    data.push(row);
-    successCount++;
-
-    if (data.length === BATCH_SIZE) {
-      writeGrievanceBatch(grievanceLog, data, successCount, count, toggleName);
-      data = [];
-    }
-  }
-
-  if (data.length > 0) {
-    writeGrievanceBatch(grievanceLog, data, successCount, count, toggleName);
-  }
-
-  SpreadsheetApp.flush();
-  Logger.log('Grievance seed complete. Grievance Log now has ' + grievanceLog.getLastRow() + ' rows');
-  return successCount;
-}
-
-/**
- * Generates a single grievance row
- */
-function generateSingleGrievanceRow(index, startingRow, memberID, memberData, config) {
-  const grievanceID = "G-" + String(startingRow + index).padStart(6, '0');
-  const status = config.statuses[Math.floor(Math.random() * config.statuses.length)];
-  const step = config.steps[Math.floor(Math.random() * config.steps.length)];
-
-  const daysAgo = Math.floor(Math.random() * 365);
-  const incidentDate = new Date(Date.now() - daysAgo * 24 * 60 * 60 * 1000);
-  const dateFiled = new Date(incidentDate.getTime() + Math.random() * 14 * 24 * 60 * 60 * 1000);
-
-  const isClosed = status === "Closed" || status === "Settled" || status === "Withdrawn";
-  const dateClosed = isClosed ? new Date(dateFiled.getTime() + Math.random() * 90 * 24 * 60 * 60 * 1000) : "";
-  const resolution = isClosed ? config.resolutions[Math.floor(Math.random() * config.resolutions.length)] : "";
-
-  // Calculate deadlines
-  const DAY_MS = 24 * 60 * 60 * 1000;
-  const dc = config.deadlineConfig;
-  const filingDeadline = new Date(incidentDate.getTime() + dc.filingDeadlineDays * DAY_MS);
-  const step1DecisionDue = new Date(dateFiled.getTime() + dc.step1ResponseDays * DAY_MS);
-  const step1DecisionRcvd = (step !== "Informal" && Math.random() > 0.3) ? new Date(dateFiled.getTime() + Math.random() * dc.step1ResponseDays * DAY_MS) : "";
-  const step2AppealDue = step1DecisionRcvd ? new Date(step1DecisionRcvd.getTime() + dc.step2AppealDays * DAY_MS) : "";
-  const step2AppealFiled = (step === "Step II" || step === "Step III" || step === "Arbitration") && step2AppealDue ? new Date(step1DecisionRcvd.getTime() + Math.random() * dc.step2AppealDays * DAY_MS) : "";
-  const step2DecisionDue = step2AppealFiled ? new Date(step2AppealFiled.getTime() + dc.step2ResponseDays * DAY_MS) : "";
-  const step2DecisionRcvd = (step === "Step III" || step === "Arbitration") && step2DecisionDue ? new Date(step2AppealFiled.getTime() + Math.random() * dc.step2ResponseDays * DAY_MS) : "";
-  const step3AppealDue = step2DecisionRcvd ? new Date(step2DecisionRcvd.getTime() + GRIEVANCE_TIMELINES.STEP3_APPEAL_DAYS * DAY_MS) : "";
-  const step3AppealFiled = (step === "Step III" || step === "Arbitration") && step3AppealDue ? new Date(step2DecisionRcvd.getTime() + Math.random() * GRIEVANCE_TIMELINES.STEP3_APPEAL_DAYS * DAY_MS) : "";
-  const daysOpen = isClosed && dateClosed ? Math.floor((dateClosed - dateFiled) / DAY_MS) : Math.floor((Date.now() - dateFiled.getTime()) / DAY_MS);
-
-  let nextActionDue = "";
-  if (!isClosed) {
-    if (step === "Informal" || step === "Step I") nextActionDue = step1DecisionDue;
-    else if (step === "Step II") nextActionDue = step2DecisionDue || step2AppealDue;
-    else if (step === "Step III") nextActionDue = step3AppealDue;
-    else if (step === "Arbitration") nextActionDue = new Date(Date.now() + Math.random() * 60 * DAY_MS);
-  }
-  const daysToDeadline = nextActionDue ? Math.floor((nextActionDue - Date.now()) / DAY_MS) : "";
-
-  return [
-    grievanceID, memberID, memberData[1], memberData[2], status, step,
-    incidentDate, filingDeadline, dateFiled, step1DecisionDue, step1DecisionRcvd,
-    step2AppealDue, step2AppealFiled, step2DecisionDue, step2DecisionRcvd,
-    step3AppealDue, step3AppealFiled, dateClosed, daysOpen, nextActionDue, daysToDeadline,
-    config.articles[Math.floor(Math.random() * config.articles.length)],
-    config.categories[Math.floor(Math.random() * config.categories.length)],
-    memberData[7], memberData[5], memberData[4],
-    config.stewards[Math.floor(Math.random() * config.stewards.length)],
-    resolution
-  ];
-}
-
-/**
- * Writes a batch of grievance data to the sheet
- */
-function writeGrievanceBatch(grievanceLog, data, currentCount, totalCount, toggleName) {
-  try {
-    grievanceLog.getRange(grievanceLog.getLastRow() + 1, 1, data.length, data[0].length).setValues(data);
-    SpreadsheetApp.getActive().toast(`Added ${currentCount} of ${totalCount} grievances (${toggleName})...`, "Progress", 1);
-    SpreadsheetApp.flush();
-  } catch (e) {
-    Logger.log(`Error writing batch at count ${currentCount}: ${e.message}`);
-    SpreadsheetApp.getActive().toast(`⚠️ Error at ${currentCount}. Retrying...`, "Warning", 2);
-    Utilities.sleep(1000);
-    try {
-      grievanceLog.getRange(grievanceLog.getLastRow() + 1, 1, data.length, data[0].length).setValues(data);
-    } catch (e2) {
-      Logger.log(`Retry failed: ${e2.message}`);
-      throw new Error(`Failed to write grievances: ${e2.message}`);
-    }
-  }
-}
-
-/**
- * Restores formulas and dropdowns after grievance seeding
- */
-function restoreGrievanceSheetAfterSeed() {
-  SpreadsheetApp.getActive().toast(`Updating formulas and snapshots...`, "Processing", -1);
-  updateMemberDirectorySnapshots();
-
-  try {
-    refreshGrievanceFormulas();
-    Logger.log('Successfully re-applied grievance formulas after seeding');
-  } catch (e) {
-    Logger.log('Warning: Could not re-apply grievance formulas: ' + e.message);
-  }
-
-  try {
-    setupGrievanceLogDropdownsSilent();
-    Logger.log('Successfully re-applied grievance dropdowns after seeding');
-  } catch (e) {
-    Logger.log('Warning: Could not re-apply grievance dropdowns: ' + e.message);
-  }
-}
-
-/* --------------------- LEGACY: SEED 5,000 GRIEVANCES --------------------- */
-function SEED_5K_GRIEVANCES() {
-  const ui = SpreadsheetApp.getUi();
-  const response = ui.alert(
-    'Seed 5,000 Grievances',
-    'Use the 2 toggles instead for better performance:\n\n' +
-    '• Seed Grievances - Toggle 1 (2,500)\n' +
-    '• Seed Grievances - Toggle 2 (2,500)\n\n' +
-    'Would you like to seed all 5,000 at once anyway?',
-    ui.ButtonSet.YES_NO
-  );
-
-  if (response !== ui.Button.YES) return;
-
-  // Call both toggles
-  seedGrievancesWithCount(2500, "Toggle 1");
-  seedGrievancesWithCount(2500, "Toggle 2");
-}
-
-function updateMemberDirectorySnapshots() {
-  const ss = SpreadsheetApp.getActive();
-  const memberDir = ss.getSheetByName(SHEETS.MEMBER_DIR);
-  const grievanceLog = ss.getSheetByName(SHEETS.GRIEVANCE_LOG);
-  if (!memberDir || !grievanceLog) return;
-  const memberLastRow = memberDir.getLastRow();
-  const grievanceLastRow = grievanceLog.getLastRow();
-  if (memberLastRow < 2 || grievanceLastRow < 2) return;
-  const memberIDs = memberDir.getRange(2, 1, memberLastRow - 1, 1).getValues().flat();
-  const grievanceData = grievanceLog.getRange(2, 1, grievanceLastRow - 1, 28).getValues();
-  const memberSnapshots = {};
-  grievanceData.forEach(function(row) {
-    const memberID = row[GRIEVANCE_COLS.MEMBER_ID - 1];
-    const status = row[GRIEVANCE_COLS.STATUS - 1];
-    const nextActionDue = row[GRIEVANCE_COLS.NEXT_ACTION_DUE - 1];
-    const assignedSteward = row[GRIEVANCE_COLS.STEWARD - 1];
-    if (!memberID) return;
-    if (!memberSnapshots[memberID]) {
-      memberSnapshots[memberID] = {status, nextDeadline: nextActionDue, stewardWhoContacted: assignedSteward};
-    } else {
-      if (status && (status === "Open" || status.includes("Filed") || status === "Pending Info")) memberSnapshots[memberID].status = status;
-      if (nextActionDue && nextActionDue instanceof Date) {
-        if (!memberSnapshots[memberID].nextDeadline || (memberSnapshots[memberID].nextDeadline instanceof Date && nextActionDue < memberSnapshots[memberID].nextDeadline)) {
-          memberSnapshots[memberID].nextDeadline = nextActionDue;
-        }
-      }
-    }
-  });
-  const updateData = [];
-  for (let i = 0; i < memberIDs.length; i++) {
-    const snapshot = memberSnapshots[memberIDs[i]];
-    if (snapshot) {
-      const contactDate = new Date(Date.now() - Math.floor(Math.random() * 14) * 24 * 60 * 60 * 1000);
-      const contactNotes = ["Discussed case progress", "Member updated on next steps", "Reviewed timeline and deadlines", "Answered member questions", "Scheduled follow-up meeting"][Math.floor(Math.random() * 5)];
-      updateData.push([snapshot.status || "", snapshot.nextDeadline || "", contactDate, snapshot.stewardWhoContacted || "", contactNotes]);
-    } else {
-      updateData.push(["", "", "", "", ""]);
-    }
-  }
-  if (updateData.length > 0) memberDir.getRange(2, MEMBER_COLS.HAS_OPEN_GRIEVANCE, updateData.length, 5).setValues(updateData);
-}
 
 function clearAllData() {
   const ui = SpreadsheetApp.getUi();
@@ -6458,19 +5966,21 @@ function clearAllData() {
 }
 
 /**
- * NUCLEAR OPTION: Delete ALL seed data from all sheets
+ * NUCLEAR OPTION: Delete ALL data from all sheets (comprehensive clear)
  * More thorough than clearAllData - clears analytics, surveys, feedback too
+ * Different from nukeSeedData() in SeedNuke.gs which is for exiting demo mode
  */
-function nukeSeedData() {
+function nukeAllSheetData() {
   const ui = SpreadsheetApp.getUi();
   const response = ui.alert(
-    '🗑️ NUCLEAR OPTION: Delete ALL Seed Data',
+    '🗑️ NUCLEAR OPTION: Delete ALL Data',
     '⚠️ WARNING: This will DELETE:\n' +
     '• All members from Member Directory\n' +
     '• All grievances from Grievance Log\n' +
     '• All analytics data\n' +
     '• All satisfaction surveys\n' +
-    '• All feedback entries\n\n' +
+    '• All feedback entries\n' +
+    '• All archived data\n\n' +
     'This action CANNOT be undone!\n\n' +
     'Are you absolutely sure?',
     ui.ButtonSet.YES_NO
@@ -6529,7 +6039,7 @@ function nukeSeedData() {
       "Data Nuke",
       "All Sheets",
       "Completed",
-      "All seed data deleted via nukeSeedData()",
+      "All data deleted via nukeAllSheetData()",
       "Critical",
       "Data cleared successfully"
     ]);
@@ -27932,129 +27442,45 @@ function createDashboardHeaderSection(sheet) {
 }
 
 /**
- * Creates control panel section with checkbox lists instead of dropdowns
- * Layout: Two columns of metrics, chart types row, themes row
+ * Creates control panel section (rows 4-9)
  */
 function createDashboardControlPanel(sheet) {
   sheet.getRange("A4:T4").merge()
-    .setValue("🎛️ YOUR COMMAND CENTER - Select What You Want to See!")
+    .setValue("🎛️ YOUR COMMAND CENTER - Make This Dashboard Your Own!")
     .setFontSize(14).setFontFamily("Roboto")
     .setFontWeight("bold")
     .setHorizontalAlignment("center")
     .setBackground(COLORS.ACCENT_TEAL)
     .setFontColor("white");
 
-  // Metrics section header
-  sheet.getRange("A5:J5").merge()
-    .setValue("📊 SELECT METRICS TO DISPLAY (check all that apply)")
-    .setFontSize(11).setFontFamily("Roboto")
-    .setFontWeight("bold")
-    .setBackground(COLORS.LIGHT_GRAY);
-
-  // Define metrics split into two columns
-  const metricsCol1 = [
-    "Total Members",
-    "Active Members",
-    "Total Stewards",
-    "Unit 8 Members",
-    "Unit 10 Members",
-    "Total Grievances",
-    "Active Grievances",
-    "Resolved Grievances",
-    "Grievances Won",
-    "Grievances Lost"
+  const controls = [
+    ["What to show (Chart 1):", "How to show it (Chart 1):", "What to show (Chart 2):", "How to show it (Chart 2):", "Color Scheme:"],
+    ["", "", "", "", ""]
   ];
 
-  const metricsCol2 = [
-    "Win Rate %",
-    "Overdue Grievances",
-    "Due This Week",
-    "In Mediation",
-    "In Arbitration",
-    "Grievances by Type",
-    "Grievances by Location",
-    "Grievances by Step",
-    "Steward Workload",
-    "Monthly Trends"
-  ];
-
-  // Column 1 metrics (A-E)
-  for (let i = 0; i < metricsCol1.length; i++) {
-    const row = 6 + i;
-    sheet.getRange(row, 1).insertCheckboxes(); // Checkbox in column A
-    sheet.getRange(row, 2, 1, 4).merge()
-      .setValue(metricsCol1[i])
-      .setFontSize(10).setFontFamily("Roboto")
-      .setVerticalAlignment("middle");
-  }
-
-  // Column 2 metrics (F-J)
-  for (let i = 0; i < metricsCol2.length; i++) {
-    const row = 6 + i;
-    sheet.getRange(row, 6).insertCheckboxes(); // Checkbox in column F
-    sheet.getRange(row, 7, 1, 4).merge()
-      .setValue(metricsCol2[i])
-      .setFontSize(10).setFontFamily("Roboto")
-      .setVerticalAlignment("middle");
-  }
-
-  // Set default checked metrics
-  sheet.getRange("A6").setValue(true);  // Total Members
-  sheet.getRange("A13").setValue(true); // Active Grievances
-  sheet.getRange("F6").setValue(true);  // Win Rate %
-
-  // Chart Types section header (row 16)
-  sheet.getRange("A16:J16").merge()
-    .setValue("📈 CHART TYPE")
-    .setFontSize(11).setFontFamily("Roboto")
+  sheet.getRange("A6:E6").setValues([controls[0]])
     .setFontWeight("bold")
-    .setBackground(COLORS.LIGHT_GRAY);
-
-  // Chart type checkboxes in a row
-  const chartTypes = ["Donut", "Pie", "Bar", "Column", "Line", "Area", "Table"];
-  sheet.getRange("A17").insertCheckboxes().setValue(true); // Default: Donut
-  sheet.getRange("B17").setValue("Donut").setFontSize(9);
-  sheet.getRange("C17").insertCheckboxes();
-  sheet.getRange("D17").setValue("Pie").setFontSize(9);
-  sheet.getRange("E17").insertCheckboxes();
-  sheet.getRange("F17").setValue("Bar").setFontSize(9);
-  sheet.getRange("G17").insertCheckboxes();
-  sheet.getRange("H17").setValue("Column").setFontSize(9);
-  sheet.getRange("I17").insertCheckboxes();
-  sheet.getRange("J17").setValue("Line").setFontSize(9);
-
-  // Themes section header (row 18)
-  sheet.getRange("A18:J18").merge()
-    .setValue("🎨 THEME")
-    .setFontSize(11).setFontFamily("Roboto")
-    .setFontWeight("bold")
-    .setBackground(COLORS.LIGHT_GRAY);
-
-  // Theme checkboxes in a row
-  sheet.getRange("A19").insertCheckboxes().setValue(true); // Default: Union Blue
-  sheet.getRange("B19").setValue("Union Blue").setFontSize(9);
-  sheet.getRange("C19").insertCheckboxes();
-  sheet.getRange("D19").setValue("Solidarity Red").setFontSize(9);
-  sheet.getRange("E19").insertCheckboxes();
-  sheet.getRange("F19").setValue("Success Green").setFontSize(9);
-  sheet.getRange("G19").insertCheckboxes();
-  sheet.getRange("H19").setValue("Professional Purple").setFontSize(9);
-  sheet.getRange("I19").insertCheckboxes();
-  sheet.getRange("J19").setValue("Modern Dark").setFontSize(9);
-
-  // Comparison toggle (row 20)
-  sheet.getRange("A20:B20").merge()
-    .setValue("🔄 Enable Comparison:")
     .setFontSize(10).setFontFamily("Roboto")
-    .setFontWeight("bold")
-    .setBackground(COLORS.LIGHT_GRAY);
-  sheet.getRange("C20").insertCheckboxes().setValue(true);
+    .setBackground(COLORS.LIGHT_GRAY)
+    .setHorizontalAlignment("right");
 
-  // Quick Action dropdown (keep this one as dropdown for actions)
-  sheet.getRange("E20:F20").merge()
-    .setValue("Quick Action:")
-    .setFontSize(10).setFontFamily("Roboto")
+  sheet.getRange("A7:E7")
+    .setBackground(COLORS.WHITE)
+    .setBorder(true, true, true, true, true, true, COLORS.BORDER_GRAY, SpreadsheetApp.BorderStyle.SOLID);
+
+  sheet.getRange("G6").setValue("Show both charts:")
     .setFontWeight("bold")
+    .setFontSize(10).setFontFamily("Roboto")
+    .setBackground(COLORS.LIGHT_GRAY)
+    .setHorizontalAlignment("right");
+
+  sheet.getRange("G7")
+    .setBackground(COLORS.WHITE)
+    .setBorder(true, true, true, true, true, true, COLORS.BORDER_GRAY, SpreadsheetApp.BorderStyle.SOLID);
+
+  sheet.getRange("I6").setValue("Quick Action:")
+    .setFontWeight("bold")
+    .setFontSize(10).setFontFamily("Roboto")
     .setBackground(COLORS.LIGHT_GRAY)
     .setHorizontalAlignment("right");
 
@@ -28069,7 +27495,7 @@ function createDashboardControlPanel(sheet) {
     .setAllowInvalid(false)
     .build();
 
-  sheet.getRange("G20")
+  sheet.getRange("I7")
     .setValue("Select Action...")
     .setDataValidation(actionDropdown)
     .setFontSize(10).setFontFamily("Roboto")
@@ -28079,10 +27505,10 @@ function createDashboardControlPanel(sheet) {
 }
 
 /**
- * Creates metric cards section (rows 22-30) - adjusted for checkbox control panel
+ * Creates metric cards section (rows 10-18)
  */
 function createDashboardMetricCards(sheet) {
-  sheet.getRange("A22:T22").merge()
+  sheet.getRange("A10:T10").merge()
     .setValue("📈 YOUR VICTORIES AT A GLANCE - Watch These Numbers Grow!")
     .setFontSize(14).setFontFamily("Roboto")
     .setFontWeight("bold")
@@ -28098,9 +27524,9 @@ function createDashboardMetricCards(sheet) {
   ];
 
   cardPositions.forEach(function(card) {
-    const startRow = 24;
+    const startRow = 12;
 
-    sheet.getRange(`${card.col}${startRow}:${card.endCol}30`)
+    sheet.getRange(`${card.col}${startRow}:${card.endCol}18`)
       .setBackground(COLORS.WHITE)
       .setBorder(true, true, true, true, false, false, COLORS.BORDER_GRAY, SpreadsheetApp.BorderStyle.SOLID_MEDIUM);
 
@@ -28133,11 +27559,11 @@ function createDashboardMetricCards(sheet) {
 }
 
 /**
- * Creates chart areas (rows 32-53) - adjusted for checkbox control panel
+ * Creates chart areas (rows 21-42)
  */
 function createDashboardChartAreas(sheet) {
   // Chart Area 1
-  sheet.getRange("A32:J32").merge()
+  sheet.getRange("A21:J21").merge()
     .setValue("📊 YOUR STORY IN CHARTS - Watch Your Data Come to Life!")
     .setFontSize(13).setFontFamily("Roboto")
     .setFontWeight("bold")
@@ -28145,11 +27571,11 @@ function createDashboardChartAreas(sheet) {
     .setBackground(COLORS.ACCENT_TEAL)
     .setFontColor("white");
 
-  sheet.getRange("A33:J53")
+  sheet.getRange("A22:J42")
     .setBackground(COLORS.WHITE)
     .setBorder(true, true, true, true, false, false, COLORS.BORDER_GRAY, SpreadsheetApp.BorderStyle.SOLID);
 
-  sheet.getRange("A34:J34").merge()
+  sheet.getRange("A23:J23").merge()
     .setValue("🎨 Your chart is waiting to spring to life! Select a metric above and hit refresh")
     .setFontSize(11).setFontFamily("Roboto")
     .setFontStyle("italic")
@@ -28158,7 +27584,7 @@ function createDashboardChartAreas(sheet) {
     .setFontColor(COLORS.TEXT_GRAY);
 
   // Chart Area 2
-  sheet.getRange("L32:T32").merge()
+  sheet.getRange("L21:T21").merge()
     .setValue("📊 DOUBLE THE INSIGHTS - See Two Stories Side by Side!")
     .setFontSize(13).setFontFamily("Roboto")
     .setFontWeight("bold")
@@ -28166,11 +27592,11 @@ function createDashboardChartAreas(sheet) {
     .setBackground(COLORS.ACCENT_PURPLE)
     .setFontColor("white");
 
-  sheet.getRange("L33:T53")
+  sheet.getRange("L22:T42")
     .setBackground(COLORS.WHITE)
     .setBorder(true, true, true, true, false, false, COLORS.BORDER_GRAY, SpreadsheetApp.BorderStyle.SOLID);
 
-  sheet.getRange("L34:T34").merge()
+  sheet.getRange("L23:T23").merge()
     .setValue("🌟 Enable comparison mode above to see another dimension of your success!")
     .setFontSize(11).setFontFamily("Roboto")
     .setFontStyle("italic")
@@ -28180,10 +27606,10 @@ function createDashboardChartAreas(sheet) {
 }
 
 /**
- * Creates pie chart section (rows 56-76) - adjusted for checkbox control panel
+ * Creates pie chart section (rows 45-65)
  */
 function createDashboardPieChartSection(sheet) {
-  sheet.getRange("A56:T56").merge()
+  sheet.getRange("A45:T45").merge()
     .setValue("🥧 COLORFUL INSIGHTS - Your Work in Living Color!")
     .setFontSize(14).setFontFamily("Roboto")
     .setFontWeight("bold")
@@ -28192,7 +27618,7 @@ function createDashboardPieChartSection(sheet) {
     .setFontColor("white");
 
   // Pie Chart 1 - Grievances by Status
-  sheet.getRange("A58:J58").merge()
+  sheet.getRange("A47:J47").merge()
     .setValue("🎯 Status Snapshot - See Progress at a Glance")
     .setFontSize(12).setFontFamily("Roboto")
     .setFontWeight("bold")
@@ -28200,12 +27626,12 @@ function createDashboardPieChartSection(sheet) {
     .setBackground(COLORS.ACCENT_TEAL)
     .setFontColor("white");
 
-  sheet.getRange("A59:J76")
+  sheet.getRange("A48:J65")
     .setBackground(COLORS.WHITE)
     .setBorder(true, true, true, true, false, false, COLORS.BORDER_GRAY, SpreadsheetApp.BorderStyle.SOLID);
 
   // Pie Chart 2 - Grievances by Location
-  sheet.getRange("L58:T58").merge()
+  sheet.getRange("L47:T47").merge()
     .setValue("🗺️ Location Hotspots - Where the Action Is!")
     .setFontSize(12).setFontFamily("Roboto")
     .setFontWeight("bold")
@@ -28213,16 +27639,16 @@ function createDashboardPieChartSection(sheet) {
     .setBackground(COLORS.ACCENT_PURPLE)
     .setFontColor("white");
 
-  sheet.getRange("L59:T76")
+  sheet.getRange("L48:T65")
     .setBackground(COLORS.WHITE)
     .setBorder(true, true, true, true, false, false, COLORS.BORDER_GRAY, SpreadsheetApp.BorderStyle.SOLID);
 }
 
 /**
- * Creates warehouse-style location chart section (rows 79-99) - adjusted for checkbox control panel
+ * Creates warehouse-style location chart section (rows 68-88)
  */
 function createDashboardLocationChartSection(sheet) {
-  sheet.getRange("A79:T79").merge()
+  sheet.getRange("A68:T68").merge()
     .setValue("🏢 UNITED ACROSS LOCATIONS - Our Collective Strength!")
     .setFontSize(14).setFontFamily("Roboto")
     .setFontWeight("bold")
@@ -28230,7 +27656,7 @@ function createDashboardLocationChartSection(sheet) {
     .setBackground(COLORS.ACCENT_PURPLE)
     .setFontColor("white");
 
-  sheet.getRange("A81:T81").merge()
+  sheet.getRange("A70:T70").merge()
     .setValue("💪 Every City, Every Worker - Together We Stand!")
     .setFontSize(12).setFontFamily("Roboto")
     .setFontWeight("bold")
@@ -28238,16 +27664,16 @@ function createDashboardLocationChartSection(sheet) {
     .setBackground(COLORS.ACCENT_TEAL)
     .setFontColor("white");
 
-  sheet.getRange("A82:T99")
+  sheet.getRange("A71:T88")
     .setBackground(COLORS.WHITE)
     .setBorder(true, true, true, true, false, false, COLORS.BORDER_GRAY, SpreadsheetApp.BorderStyle.SOLID);
 }
 
 /**
- * Creates data table section (rows 102-121) - adjusted for checkbox control panel
+ * Creates data table section (rows 91-110)
  */
 function createDashboardDataTableSection(sheet) {
-  sheet.getRange("A102:T102").merge()
+  sheet.getRange("A91:T91").merge()
     .setValue("📋 THE DETAILS THAT MATTER - Celebrating Excellence!")
     .setFontSize(14).setFontFamily("Roboto")
     .setFontWeight("bold")
@@ -28256,114 +27682,203 @@ function createDashboardDataTableSection(sheet) {
     .setFontColor("white");
 
   const tableHeaders = ["Rank", "Item", "Count", "Active", "Resolved", "Win Rate", "Status"];
-  sheet.getRange("A104:G104").setValues([tableHeaders])
+  sheet.getRange("A93:G93").setValues([tableHeaders])
     .setFontWeight("bold")
     .setBackground(COLORS.ACCENT_TEAL)
     .setFontColor("white")
     .setFontFamily("Roboto")
     .setHorizontalAlignment("center");
 
-  sheet.getRange("A105:G121")
+  sheet.getRange("A94:G110")
     .setBackground(COLORS.WHITE)
     .setBorder(true, true, true, true, true, true, COLORS.BORDER_GRAY, SpreadsheetApp.BorderStyle.SOLID);
 }
 
 /**
  * Sets column widths, row heights, and frozen rows
- * Row layout (with checkbox control panel):
- *   Rows 1-3: Header
- *   Rows 4-20: Control panel (checkboxes)
- *   Row 21: Gap
- *   Rows 22-30: Metric cards
- *   Row 31: Gap
- *   Rows 32-53: Chart areas
- *   Rows 54-55: Gap
- *   Rows 56-76: Pie chart section
- *   Rows 77-78: Gap
- *   Rows 79-99: Location chart section
- *   Rows 100-101: Gap
- *   Rows 102-121: Data table section
  */
 function setDashboardDimensions(sheet) {
   // Set column widths
-  sheet.setColumnWidth(1, 80);   // Rank/Checkbox
-  sheet.setColumnWidth(2, 250);  // Item/Label
+  sheet.setColumnWidth(1, 80);   // Rank
+  sheet.setColumnWidth(2, 250);  // Item
   sheet.setColumnWidth(3, 100);  // Count
   sheet.setColumnWidth(4, 100);  // Active
   sheet.setColumnWidth(5, 100);  // Resolved
-  sheet.setColumnWidth(6, 100);  // Win Rate/Checkbox
-  sheet.setColumnWidth(7, 120);  // Status/Label
+  sheet.setColumnWidth(6, 100);  // Win Rate
+  sheet.setColumnWidth(7, 120);  // Status
 
-  // Set row heights for section headers
-  sheet.setRowHeight(4, 35);   // Control panel header
-  sheet.setRowHeight(22, 35);  // Metric cards header
-  sheet.setRowHeight(32, 35);  // Chart areas header
-  sheet.setRowHeight(56, 35);  // Pie chart section header
-  sheet.setRowHeight(79, 35);  // Location chart section header
-  sheet.setRowHeight(102, 35); // Data table section header
+  // Set row heights
+  sheet.setRowHeight(4, 35);
+  sheet.setRowHeight(10, 35);
+  sheet.setRowHeight(21, 35);
+  sheet.setRowHeight(45, 35);
+  sheet.setRowHeight(68, 35);
+  sheet.setRowHeight(91, 35);
 
   // Freeze header rows
-  sheet.setFrozenRows(3);
+  sheet.setFrozenRows(2);
+
+  // Delete unused columns beyond the defined layout (20 columns used A-T)
+  const totalCols = sheet.getMaxColumns();
+  const usedCols = 20;  // Interactive Dashboard uses columns A-T
+  if (totalCols > usedCols) {
+    sheet.deleteColumns(usedCols + 1, totalCols - usedCols);
+  }
+
+  sheet.setTabColor(COLORS.PRIMARY_BLUE);
 }
 
 /**
- * Setup checkbox controls for Interactive Dashboard
- * Checkboxes are created in createDashboardControlPanel(), this just ensures they're properly configured
+ * Setup data validation for Interactive Dashboard controls
  */
 function setupInteractiveDashboardControls() {
   const ss = SpreadsheetApp.getActiveSpreadsheet();
   const sheet = ss.getSheetByName(SHEETS.INTERACTIVE_DASHBOARD);
+  const configSheet = ss.getSheetByName(SHEETS.CONFIG);
 
-  if (!sheet) return;
+  if (!sheet || !configSheet) return;
 
-  // Metrics checkboxes are in rows 6-15, columns A and F
-  // Ensure checkboxes exist (they're created in createDashboardControlPanel)
+  // Available metrics for selection
+  const metrics = [
+    "Total Members",
+    "Active Members",
+    "Total Stewards",
+    "Unit 8 Members",
+    "Unit 10 Members",
+    "Total Grievances",
+    "Active Grievances",
+    "Resolved Grievances",
+    "Grievances Won",
+    "Grievances Lost",
+    "Win Rate %",
+    "Overdue Grievances",
+    "Due This Week",
+    "In Mediation",
+    "In Arbitration",
+    "Grievances by Type",
+    "Grievances by Location",
+    "Grievances by Step",
+    "Steward Workload",
+    "Monthly Trends"
+  ];
 
-  // Column 1 metrics (A6:A15)
-  for (let row = 6; row <= 15; row++) {
-    const cell = sheet.getRange(row, 1);
-    if (!cell.getDataValidation()) {
-      cell.insertCheckboxes();
-    }
-  }
+  // Chart types
+  const chartTypes = [
+    "Donut Chart",
+    "Pie Chart",
+    "Bar Chart",
+    "Column Chart",
+    "Line Chart",
+    "Area Chart",
+    "Table"
+  ];
 
-  // Column 2 metrics (F6:F15)
-  for (let row = 6; row <= 15; row++) {
-    const cell = sheet.getRange(row, 6);
-    if (!cell.getDataValidation()) {
-      cell.insertCheckboxes();
-    }
-  }
+  // Themes
+  const themes = [
+    "Union Blue",
+    "Solidarity Red",
+    "Success Green",
+    "Professional Purple",
+    "Modern Dark",
+    "Light & Clean"
+  ];
 
-  // Chart type checkboxes (row 17: A, C, E, G, I)
-  const chartCols = [1, 3, 5, 7, 9];
-  chartCols.forEach(col => {
-    const cell = sheet.getRange(17, col);
-    if (!cell.getDataValidation()) {
-      cell.insertCheckboxes();
-    }
-  });
+  // Comparison options
+  const comparisonOptions = ["Yes", "No"];
 
-  // Theme checkboxes (row 19: A, C, E, G, I)
-  const themeCols = [1, 3, 5, 7, 9];
-  themeCols.forEach(col => {
-    const cell = sheet.getRange(19, col);
-    if (!cell.getDataValidation()) {
-      cell.insertCheckboxes();
-    }
-  });
+  // Create dropdown rules with help text
+  const metricRule = SpreadsheetApp.newDataValidation()
+    .requireValueInList(metrics, true)
+    .setAllowInvalid(false)
+    .setHelpText('🎯 Click here to select a metric!')
+    .build();
 
-  // Comparison checkbox (C20)
-  const comparisonCell = sheet.getRange("C20");
-  if (!comparisonCell.getDataValidation()) {
-    comparisonCell.insertCheckboxes();
-  }
+  const chartTypeRule = SpreadsheetApp.newDataValidation()
+    .requireValueInList(chartTypes, true)
+    .setAllowInvalid(false)
+    .setHelpText('📊 Click here to select chart type!')
+    .build();
 
-  Logger.log("Interactive Dashboard checkbox controls verified");
+  const themeRule = SpreadsheetApp.newDataValidation()
+    .requireValueInList(themes, true)
+    .setAllowInvalid(false)
+    .setHelpText('🎨 Click here to select a theme!')
+    .build();
+
+  const comparisonRule = SpreadsheetApp.newDataValidation()
+    .requireValueInList(comparisonOptions, true)
+    .setAllowInvalid(false)
+    .setHelpText('🔄 Click here to toggle comparison mode!')
+    .build();
+
+  // Apply data validation to control cells with enhanced visual styling
+  const dropdownStyle = {
+    background: "#DBEAFE",  // Light blue to stand out
+    border: "#3B82F6",      // Blue border
+    fontWeight: "bold"
+  };
+
+  // What to show (Chart 1)
+  sheet.getRange("A7")
+    .setDataValidation(metricRule)
+    .setValue("Total Members")
+    .setBackground(dropdownStyle.background)
+    .setBorder(true, true, true, true, false, false, dropdownStyle.border, SpreadsheetApp.BorderStyle.SOLID_MEDIUM)
+    .setFontWeight(dropdownStyle.fontWeight);
+
+  // How to show it (Chart 1)
+  sheet.getRange("B7")
+    .setDataValidation(chartTypeRule)
+    .setValue("Donut Chart")
+    .setBackground(dropdownStyle.background)
+    .setBorder(true, true, true, true, false, false, dropdownStyle.border, SpreadsheetApp.BorderStyle.SOLID_MEDIUM)
+    .setFontWeight(dropdownStyle.fontWeight);
+
+  // What to show (Chart 2)
+  sheet.getRange("C7")
+    .setDataValidation(metricRule)
+    .setValue("Active Grievances")
+    .setBackground(dropdownStyle.background)
+    .setBorder(true, true, true, true, false, false, dropdownStyle.border, SpreadsheetApp.BorderStyle.SOLID_MEDIUM)
+    .setFontWeight(dropdownStyle.fontWeight);
+
+  // How to show it (Chart 2)
+  sheet.getRange("D7")
+    .setDataValidation(chartTypeRule)
+    .setValue("Bar Chart")
+    .setBackground(dropdownStyle.background)
+    .setBorder(true, true, true, true, false, false, dropdownStyle.border, SpreadsheetApp.BorderStyle.SOLID_MEDIUM)
+    .setFontWeight(dropdownStyle.fontWeight);
+
+  // Theme
+  sheet.getRange("E7")
+    .setDataValidation(themeRule)
+    .setValue("Union Blue")
+    .setBackground("#FEF3C7")  // Yellow for theme selector
+    .setBorder(true, true, true, true, false, false, "#F59E0B", SpreadsheetApp.BorderStyle.SOLID_MEDIUM)
+    .setFontWeight(dropdownStyle.fontWeight);
+
+  // Comparison toggle
+  sheet.getRange("G7")
+    .setDataValidation(comparisonRule)
+    .setValue("Yes")
+    .setBackground("#D1FAE5")  // Green for toggle
+    .setBorder(true, true, true, true, false, false, "#10B981", SpreadsheetApp.BorderStyle.SOLID_MEDIUM)
+    .setFontWeight(dropdownStyle.fontWeight);
+
+  // Add visual dropdown indicators in row 8
+  sheet.getRange("A8:G8")
+    .setValues([["▼ Select", "▼ Select", "▼ Select", "▼ Select", "▼ Select", "", "▼ Select"]])
+    .setFontSize(8)
+    .setFontColor("#6B7280")
+    .setFontStyle("italic")
+    .setHorizontalAlignment("center");
+
+  Logger.log("Interactive Dashboard controls set up successfully with enhanced visibility");
 }
 
 /**
- * Rebuilds the Interactive Dashboard based on user checkbox selections
+ * Rebuilds the Interactive Dashboard based on user selections
  */
 function rebuildInteractiveDashboard() {
   const ss = SpreadsheetApp.getActiveSpreadsheet();
@@ -28379,22 +27894,13 @@ function rebuildInteractiveDashboard() {
   try {
     SpreadsheetApp.getUi().alert('✨ Bringing your dashboard to life...\n\n🎨 Painting your data with insights!\n⏱️ Just a moment while we celebrate your work...');
 
-    // Get selected metrics from checkboxes
-    const selectedMetrics = getSelectedMetrics(sheet);
-    const metric1 = selectedMetrics[0] || "Total Members";
-    const metric2 = selectedMetrics[1] || "Active Grievances";
-
-    // Get selected chart type from checkboxes (row 17)
-    const chartType1 = getSelectedChartType(sheet);
-
-    // Get selected theme from checkboxes (row 19)
-    const theme = getSelectedTheme(sheet);
-
-    // Get comparison setting from checkbox (C20)
-    const enableComparison = sheet.getRange("C20").getValue() === true ? "Yes" : "No";
-
-    // Default chart type for metric 2
-    const chartType2 = "Bar Chart";
+    // Get user selections
+    const metric1 = sheet.getRange("A7").getValue() || "Total Members";
+    const chartType1 = sheet.getRange("B7").getValue() || "Donut Chart";
+    const metric2 = sheet.getRange("C7").getValue() || "Active Grievances";
+    const chartType2 = sheet.getRange("D7").getValue() || "Bar Chart";
+    const theme = sheet.getRange("E7").getValue() || "Union Blue";
+    const enableComparison = sheet.getRange("G7").getValue() || "Yes";
 
     // Get data
     const memberData = memberSheet.getDataRange().getValues();
@@ -28435,69 +27941,6 @@ function rebuildInteractiveDashboard() {
     SpreadsheetApp.getUi().alert('Oops! We hit a small bump...\n\n' + error.message + '\n\n💪 No worries, let\'s try again!');
     Logger.log('Error: ' + error.toString());
   }
-}
-
-/**
- * Get selected metrics from checkboxes
- * Returns array of selected metric names
- */
-function getSelectedMetrics(sheet) {
-  const metricsCol1 = [
-    "Total Members", "Active Members", "Total Stewards", "Unit 8 Members", "Unit 10 Members",
-    "Total Grievances", "Active Grievances", "Resolved Grievances", "Grievances Won", "Grievances Lost"
-  ];
-  const metricsCol2 = [
-    "Win Rate %", "Overdue Grievances", "Due This Week", "In Mediation", "In Arbitration",
-    "Grievances by Type", "Grievances by Location", "Grievances by Step", "Steward Workload", "Monthly Trends"
-  ];
-
-  const selected = [];
-
-  // Check column 1 (A6:A15)
-  for (let i = 0; i < 10; i++) {
-    if (sheet.getRange(6 + i, 1).getValue() === true) {
-      selected.push(metricsCol1[i]);
-    }
-  }
-
-  // Check column 2 (F6:F15)
-  for (let i = 0; i < 10; i++) {
-    if (sheet.getRange(6 + i, 6).getValue() === true) {
-      selected.push(metricsCol2[i]);
-    }
-  }
-
-  return selected;
-}
-
-/**
- * Get selected chart type from checkboxes (row 17)
- */
-function getSelectedChartType(sheet) {
-  const chartTypes = ["Donut Chart", "Pie Chart", "Bar Chart", "Column Chart", "Line Chart"];
-  const chartCols = [1, 3, 5, 7, 9]; // A, C, E, G, I
-
-  for (let i = 0; i < chartCols.length; i++) {
-    if (sheet.getRange(17, chartCols[i]).getValue() === true) {
-      return chartTypes[i];
-    }
-  }
-  return "Donut Chart"; // Default
-}
-
-/**
- * Get selected theme from checkboxes (row 19)
- */
-function getSelectedTheme(sheet) {
-  const themes = ["Union Blue", "Solidarity Red", "Success Green", "Professional Purple", "Modern Dark"];
-  const themeCols = [1, 3, 5, 7, 9]; // A, C, E, G, I
-
-  for (let i = 0; i < themeCols.length; i++) {
-    if (sheet.getRange(19, themeCols[i]).getValue() === true) {
-      return themes[i];
-    }
-  }
-  return "Union Blue"; // Default
 }
 
 /**
@@ -29256,18 +28699,18 @@ function applyDashboardTheme(sheet, themeName) {
       accentColor = COLORS.ACCENT_TEAL;
   }
 
-  // Apply theme colors to headers (updated for checkbox layout)
-  sheet.getRange("A1:T1").setBackground(primaryColor);    // Main header
-  sheet.getRange("A4:T4").setBackground(accentColor);     // Control panel header
-  sheet.getRange("A22:T22").setBackground(primaryColor);  // Metric cards header
-  sheet.getRange("A32:J32").setBackground(accentColor);   // Chart area 1 header
-  sheet.getRange("L32:T32").setBackground(COLORS.ACCENT_PURPLE); // Chart area 2 header
-  sheet.getRange("A56:T56").setBackground(primaryColor);  // Pie chart section header
-  sheet.getRange("A58:J58").setBackground(accentColor);   // Pie chart 1 header
-  sheet.getRange("L58:T58").setBackground(COLORS.ACCENT_PURPLE); // Pie chart 2 header
-  sheet.getRange("A79:T79").setBackground(COLORS.ACCENT_PURPLE); // Location section header
-  sheet.getRange("A81:T81").setBackground(accentColor);   // Location sub-header
-  sheet.getRange("A102:T102").setBackground(primaryColor); // Data table header
+  // Apply theme colors to headers
+  sheet.getRange("A1:T1").setBackground(primaryColor);
+  sheet.getRange("A4:T4").setBackground(accentColor);
+  sheet.getRange("A10:T10").setBackground(primaryColor);
+  sheet.getRange("A21:J21").setBackground(accentColor);
+  sheet.getRange("L21:T21").setBackground(COLORS.ACCENT_PURPLE);
+  sheet.getRange("A45:T45").setBackground(primaryColor);
+  sheet.getRange("A47:J47").setBackground(accentColor);
+  sheet.getRange("L47:T47").setBackground(COLORS.ACCENT_PURPLE);
+  sheet.getRange("A68:T68").setBackground(COLORS.ACCENT_PURPLE);
+  sheet.getRange("A70:T70").setBackground(accentColor);
+  sheet.getRange("A91:T91").setBackground(primaryColor);
 }
 
 /**
@@ -29285,10 +28728,10 @@ function openInteractiveDashboard() {
   ss.setActiveSheet(sheet);
   SpreadsheetApp.getUi().alert('🎉 Welcome to your Interactive Dashboard!\n\n' +
     '✨ Here\'s how to make it dance:\n\n' +
-    '1️⃣ Check the metrics you want to display in the control panel (rows 6-15)\n' +
-    '2️⃣ Select your chart type and theme using the checkboxes\n' +
-    '3️⃣ Click "509 Tools > Interactive Dashboard > Refresh Charts" to see the magic\n' +
-    '4️⃣ Enable comparison mode to see two charts side by side!\n\n' +
+    '1️⃣ Pick your favorite metrics from the dropdowns in Row 7\n' +
+    '2️⃣ Click "509 Tools > Interactive Dashboard > Refresh Charts" to see the magic\n' +
+    '3️⃣ Turn on comparison mode to see two stories at once\n' +
+    '4️⃣ Choose a theme that makes you smile!\n\n' +
     '💪 Your data is ready to tell its story!');
 }
 
@@ -31431,6 +30874,7 @@ function CLEAR_CHART_CACHE() {
  * - Manager Name (M)
  * - Assigned Steward (P)
  * - Contact Steward (Z)
+ * - Has Open Grievance? (AB)
  *
  * MULTI-SELECT DROPDOWNS (comma-separated values allowed):
  * - Office Days (G)
@@ -31517,6 +30961,11 @@ function setupMemberDirectoryDropdowns() {
       setDropdownByCol(memberSheet, MEMBER_COLS.CONTACT_STEWARD, lastRow, stewards, 'Contact Steward', true);
     }
 
+    // Has Open Grievance? (Column AB / MEMBER_COLS.HAS_OPEN_GRIEVANCE)
+    if (yesNo.length > 0) {
+      setDropdownByCol(memberSheet, MEMBER_COLS.HAS_OPEN_GRIEVANCE, lastRow, yesNo, 'Has Open Grievance?', true);
+    }
+
     // ==================== MULTI-SELECT DROPDOWNS ====================
     // These allow comma-separated values (setAllowInvalid = true)
 
@@ -31554,7 +31003,7 @@ function setupMemberDirectoryDropdowns() {
     SpreadsheetApp.getUi().alert(
       'Dropdowns Setup Complete',
       'Data validation dropdowns have been added to the Member Directory.\n\n' +
-      'Single-select fields: Job Title, Work Location, Unit, Is Steward, Supervisor, Manager, Assigned Steward, Contact Steward\n\n' +
+      'Single-select fields: Job Title, Work Location, Unit, Is Steward, Supervisor, Manager, Assigned Steward, Contact Steward, Has Open Grievance?\n\n' +
       'Multi-select fields (comma-separated): Office Days, Preferred Communication, Best Time to Contact, Committees\n\n' +
       'Date fields: Recent Contact Date\n\n' +
       'To customize dropdown options, edit the Config sheet.',
@@ -31908,6 +31357,11 @@ function setupMemberDirectoryDropdownsSilent() {
     if (stewards.length > 0) {
       setDropdownByCol(memberSheet, MEMBER_COLS.ASSIGNED_STEWARD, lastRow, stewards, 'Assigned Steward', true);
       setDropdownByCol(memberSheet, MEMBER_COLS.CONTACT_STEWARD, lastRow, stewards, 'Contact Steward', true);
+    }
+
+    // Has Open Grievance? (uses same Yes/No values)
+    if (yesNo.length > 0) {
+      setDropdownByCol(memberSheet, MEMBER_COLS.HAS_OPEN_GRIEVANCE, lastRow, yesNo, 'Has Open Grievance?', true);
     }
 
     // Office Days (multi-select)
@@ -39965,24 +39419,12 @@ function onOpen_Reorganized() {
 
   // ------------ SETUP MENU ------------
   ui.createMenu("🔧 Setup")
-    .addSubMenu(ui.createMenu("🌱 Seed Functions")
-      .addSubMenu(ui.createMenu("👥 Seed Members")
-        .addItem("Seed Members - Toggle 1 (5,000)", "SEED_MEMBERS_TOGGLE_1")
-        .addItem("Seed Members - Toggle 2 (5,000)", "SEED_MEMBERS_TOGGLE_2")
-        .addItem("Seed Members - Toggle 3 (5,000)", "SEED_MEMBERS_TOGGLE_3")
-        .addItem("Seed Members - Toggle 4 (5,000)", "SEED_MEMBERS_TOGGLE_4")
-        .addSeparator()
-        .addItem("Seed All 20k Members (Legacy)", "SEED_20K_MEMBERS"))
-      .addSubMenu(ui.createMenu("📋 Seed Grievances")
-        .addItem("Seed Grievances - Toggle 1 (2,500)", "SEED_GRIEVANCES_TOGGLE_1")
-        .addItem("Seed Grievances - Toggle 2 (2,500)", "SEED_GRIEVANCES_TOGGLE_2")
-        .addSeparator()
-        .addItem("Seed All 5k Grievances (Legacy)", "SEED_5K_GRIEVANCES"))
+    .addSubMenu(ui.createMenu("🗑️ Data Management")
+      .addItem("🚨 Nuke All Data (Production Reset)", "nukeSeedData")
+      .addItem("🗑️ Nuke ALL Sheet Data (Comprehensive)", "nukeAllSheetData")
+      .addItem("⚠️ Clear Core Data Only", "clearAllData")
       .addSeparator()
-      .addItem("📝 Add Sample Feedback Entries", "addSampleFeedbackEntries")
-      .addSeparator()
-      .addItem("🗑️ Nuke All Seed Data", "nukeSeedData")
-      .addItem("Clear All Data", "clearAllData"))
+      .addItem("📝 Add Sample Feedback Entries", "addSampleFeedbackEntries"))
     .addSeparator()
     .addSubMenu(ui.createMenu("📋 Dropdown Configuration")
       .addItem("📋 Setup All Dropdowns", "setupAllDropdowns")
@@ -41798,7 +41240,7 @@ function logAudit(eventType, description, metadata) {
  */
 function createAuditLogSheet() {
   const ss = SpreadsheetApp.getActiveSpreadsheet();
-  const sheetName = SHEET_NAMES.AUDIT_LOG || 'Audit Log';
+  const sheetName = 'Audit Log';
 
   // Check if sheet already exists
   let sheet = ss.getSheetByName(sheetName);
@@ -41979,10 +41421,11 @@ function filterGrievanceDataByPermission(grievanceData, userEmail) {
  *
  * Features:
  * - Removes all seeded members and grievances
+ * - Clears Config tab demo entries (Job Titles, Locations, etc.)
  * - Keeps headers and structure intact
  * - Recalculates all dashboards
+ * - Hides seed menu options permanently
  * - Shows getting started reminder
- * - Hides seed menu options after nuke
  *
  * ------------------------------------------------------------------------====
  */
@@ -41999,8 +41442,13 @@ function nukeSeedData() {
     'This will PERMANENTLY remove all test data from:\n\n' +
     '• Member Directory (all members)\n' +
     '• Grievance Log (all grievances)\n' +
-    '• Steward Workload (all records)\n\n' +
-    'Headers and sheet structure will be preserved.\n\n' +
+    '• Steward Workload (all records)\n' +
+    '• Config Tab Demo Entries:\n' +
+    '   - Job Titles, Office Locations, Units\n' +
+    '   - Supervisors, Managers, Stewards\n' +
+    '   - Grievance Coordinators, Home Towns\n\n' +
+    'Headers and sheet structure will be preserved.\n' +
+    'Seed menu options will be hidden.\n\n' +
     'This action CANNOT be undone!\n\n' +
     'Are you sure you want to proceed?',
     ui.ButtonSet.YES_NO
@@ -42015,7 +41463,8 @@ function nukeSeedData() {
   const finalConfirm = ui.alert(
     '🚨 FINAL CONFIRMATION',
     'This is your last chance!\n\n' +
-    'ALL test data will be permanently deleted.\n\n' +
+    'ALL test data will be permanently deleted.\n' +
+    'ALL seed functions will be hidden from menus.\n\n' +
     'Click YES to proceed with data removal.',
     ui.ButtonSet.YES_NO
   );
@@ -42039,13 +41488,16 @@ function nukeSeedData() {
     // Step 3: Clear Steward Workload (keep headers)
     clearStewardWorkload();
 
-    // Step 4: Recalculate all dashboards
+    // Step 4: Clear Config tab demo entries (keep headers)
+    clearConfigDemoData();
+
+    // Step 5: Recalculate all dashboards
     rebuildDashboard();
 
-    // Step 5: Set flag that data has been nuked
+    // Step 6: Set flag that data has been nuked (hides seed menu)
     PropertiesService.getScriptProperties().setProperty('SEED_NUKED', 'true');
 
-    // Step 6: Show getting started reminder
+    // Step 7: Show getting started reminder
     showPostNukeGuidance();
 
   } catch (error) {
@@ -42116,6 +41568,64 @@ function clearStewardWorkload() {
   }
 
   Logger.log('Steward Workload cleared');
+}
+
+/**
+ * Clears demo/seeded data from Config tab
+ * Preserves row 1 headers, clears all data below
+ *
+ * Columns cleared:
+ * - A: Job Titles (CONFIG_COLS.JOB_TITLES)
+ * - B: Office Locations (CONFIG_COLS.OFFICE_LOCATIONS)
+ * - C: Units (CONFIG_COLS.UNITS)
+ * - F: Supervisors (CONFIG_COLS.SUPERVISORS)
+ * - G: Managers (CONFIG_COLS.MANAGERS)
+ * - H: Stewards (CONFIG_COLS.STEWARDS)
+ * - O: Grievance Coordinators (CONFIG_COLS.GRIEVANCE_COORDINATORS)
+ * - AF: Home Towns (CONFIG_COLS.HOME_TOWNS)
+ */
+function clearConfigDemoData() {
+  const ss = SpreadsheetApp.getActiveSpreadsheet();
+  const sheet = ss.getSheetByName(SHEETS.CONFIG);
+
+  if (!sheet) {
+    Logger.log('Config sheet not found, skipping');
+    return;
+  }
+
+  const lastRow = sheet.getLastRow();
+
+  if (lastRow <= 1) {
+    Logger.log('Config sheet has only headers, nothing to clear');
+    return;
+  }
+
+  // Define columns to clear (using CONFIG_COLS constants)
+  // These columns contain demo/seeded data that should be removed
+  const columnsToClear = [
+    CONFIG_COLS.JOB_TITLES,           // A (1) - Job Titles
+    CONFIG_COLS.OFFICE_LOCATIONS,     // B (2) - Office Locations
+    CONFIG_COLS.UNITS,                // C (3) - Units
+    CONFIG_COLS.SUPERVISORS,          // F (6) - Supervisors
+    CONFIG_COLS.MANAGERS,             // G (7) - Managers
+    CONFIG_COLS.STEWARDS,             // H (8) - Stewards
+    CONFIG_COLS.GRIEVANCE_COORDINATORS, // O (15) - Grievance Coordinators
+    CONFIG_COLS.HOME_TOWNS            // AF (32) - Home Towns
+  ];
+
+  // Clear each column from row 2 to lastRow (preserve header in row 1)
+  const rowsToDelete = lastRow - 1;
+
+  columnsToClear.forEach(function(col) {
+    try {
+      const range = sheet.getRange(2, col, rowsToDelete, 1);
+      range.clearContent();
+    } catch (e) {
+      Logger.log('Error clearing column ' + col + ': ' + e.message);
+    }
+  });
+
+  Logger.log('Config demo data cleared: ' + columnsToClear.length + ' columns, ' + rowsToDelete + ' rows each');
 }
 
 /**
