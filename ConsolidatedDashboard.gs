@@ -14,7 +14,7 @@
  * Build Info:
  * - Version: 2.1.0 (Security Enhanced + Code Review Improvements)
  * - Build ID: 20251202-improvements
- * - Build Date: 2025-12-07T16:27:18.008Z
+ * - Build Date: 2025-12-07T16:45:24.869Z
  * - Build Type: PRODUCTION
  * - Modules: 74 files
  * - Tests Included: No
@@ -7239,6 +7239,15 @@ function updateMemberDirectorySnapshots() {
       const contactNotes = ["Discussed case progress", "Member updated on next steps", "Reviewed timeline and deadlines", "Answered member questions", "Scheduled follow-up meeting"][Math.floor(Math.random() * 5)];
       updateData.push([snapshot.status || "", snapshot.nextDeadline || "", contactDate, snapshot.stewardWhoContacted || "", contactNotes]);
     } else {
+      updateData.push(["", "", "", "", ""]);
+    }
+  }
+  if (updateData.length > 0) {
+    // Write to Member Directory columns for grievance snapshot data
+    // Columns: Status snapshot, Next deadline, Last contact date, Steward, Contact notes
+    memberDir.getRange(2, 10, updateData.length, 5).setValues(updateData);
+  }
+}
 
 
 
