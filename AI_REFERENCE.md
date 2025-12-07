@@ -52,15 +52,19 @@
   - `📋 Seed Grievances` submenu with 2 toggles (2,500 each)
   - `📝 Add Sample Feedback Entries`
 
-✅ **Self-Deleting Nuke Function** (`SeedNuke.gs`)
-- When `nukeSeedData()` is triggered, ALL seed code is **permanently deleted**:
+✅ **Completely Self-Deleting Nuke Function** (`SeedNuke.gs`)
+- When `nukeSeedData()` is triggered, ALL seed AND nuke code is **permanently deleted**:
   - Removes seed data from Member Directory, Grievance Log, Steward Workload
   - Clears Config tab demo entries (preserves organization info)
   - Uses **Apps Script API** to delete seed functions from Code.gs
-  - Replaces SeedNuke.gs with minimal stub
+  - **COMPLETELY DELETES SeedNuke.gs** (not just replaced - file is removed entirely)
   - Removes seed menu items from ReorganizedMenu.gs
+  - **Removes the nuke menu item** from ReorganizedMenu.gs
   - Removes seed references from Getting Started/FAQ sheets
-- **Zero Trace Guarantee:** After nuke, there is NO evidence seed functionality ever existed
+- **Zero Trace Guarantee:** After nuke, there is NO evidence that:
+  - Seed functionality ever existed
+  - Nuke functionality ever existed
+  - Any demo/testing code was ever present
 - Fallback: If Apps Script API is unavailable, shows manual cleanup instructions
 
 **Apps Script API Requirements:**

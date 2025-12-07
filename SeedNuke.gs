@@ -9,11 +9,15 @@
  * IMPORTANT: This function will PERMANENTLY DELETE:
  * - All seeded members and grievances
  * - Config tab demo entries
- * - ALL seed functions from the script code
- * - ALL seed-related menu items
- * - ALL seed-related documentation from sheets
+ * - ALL seed functions from the script code (Code.gs)
+ * - ALL seed-related menu items (ReorganizedMenu.gs)
+ * - THIS ENTIRE FILE (SeedNuke.gs) - complete self-deletion
+ * - The nuke menu item itself
  *
- * After nuke completes, there will be ZERO trace of seed functionality.
+ * After nuke completes, there will be ZERO trace of:
+ * - Seed functionality
+ * - Nuke functionality
+ * - Any demo/testing code
  *
  * ------------------------------------------------------------------------====
  */
@@ -32,8 +36,8 @@ function nukeSeedData() {
     '• Config Tab Demo Entries (Job Titles, Locations, etc.)\n' +
     '• ALL seed functions from the script code\n' +
     '• ALL seed menu items\n' +
-    '• ALL seed-related documentation\n\n' +
-    'After this operation, there will be NO trace of seed functionality.\n\n' +
+    '• THIS NUKE FUNCTION ITSELF (complete self-deletion)\n\n' +
+    'After this operation, there will be NO trace of seed OR nuke functionality.\n\n' +
     'This action CANNOT be undone!\n\n' +
     'Are you sure you want to proceed?',
     ui.ButtonSet.YES_NO
@@ -48,8 +52,8 @@ function nukeSeedData() {
   const finalConfirm = ui.alert(
     '🚨 FINAL CONFIRMATION',
     'This is your last chance!\n\n' +
-    'ALL test data AND seed code will be permanently deleted.\n' +
-    'This includes removing seed functions from the script itself.\n\n' +
+    'ALL test data, seed code, AND this nuke function will be permanently deleted.\n' +
+    'The SeedNuke.gs file will be completely removed from the project.\n\n' +
     'Click YES to proceed.',
     ui.ButtonSet.YES_NO
   );
@@ -96,10 +100,11 @@ function nukeSeedData() {
       ui.alert(
         '⚠️ Partial Success',
         'Data has been cleared successfully.\n\n' +
-        'However, seed functions could not be automatically removed from the script.\n' +
-        'To complete the cleanup, please manually delete these files from the Apps Script editor:\n' +
+        'However, seed/nuke functions could not be automatically removed from the script.\n' +
+        'To complete the cleanup with ZERO trace, manually delete from Apps Script editor:\n\n' +
         '• Seed functions in Code.gs (search for "SEED_MEMBERS" and "SEED_GRIEVANCES")\n' +
-        '• The entire SeedNuke.gs file\n\n' +
+        '• The ENTIRE SeedNuke.gs file\n' +
+        '• The nuke menu item in ReorganizedMenu.gs\n\n' +
         'Or enable the Apps Script API in your Google Cloud project for automatic removal.',
         ui.ButtonSet.OK
       );
@@ -169,14 +174,10 @@ function removeSeedFunctionsFromScript() {
       const file = files[i];
 
       if (file.name === 'SeedNuke') {
-        // Mark SeedNuke.gs for removal (will be replaced with minimal version)
-        seedNukeFileIndex = i;
-        // Replace with minimal post-nuke version
-        updatedFiles.push({
-          name: 'SeedNuke',
-          type: 'SERVER_JS',
-          source: '// Seed functions have been removed after production nuke.\n// This file can be safely deleted.\n\nfunction isSeedNuked() {\n  return true;\n}\n'
-        });
+        // COMPLETELY REMOVE SeedNuke.gs - do not add to updatedFiles
+        // This file will be deleted entirely, leaving zero trace
+        Logger.log('SeedNuke.gs will be completely removed from project');
+        continue; // Skip this file - don't add to updatedFiles
       } else if (file.name === 'Code') {
         // Remove seed functions from Code.gs
         let source = file.source;
@@ -218,11 +219,14 @@ function removeSeedFunctionsFromScript() {
           source: source
         });
       } else if (file.name === 'ReorganizedMenu') {
-        // Remove seed menu items from ReorganizedMenu.gs
+        // Remove seed menu items AND nuke menu item from ReorganizedMenu.gs
         let source = file.source;
 
         // Remove the entire seed submenu
         source = source.replace(/\.addSubMenu\(ui\.createMenu\("🌱 Seed Demo Data"\)[\s\S]*?\)\)\s*\.addSeparator\(\)/g, '');
+
+        // Remove the nuke menu item (leaves no trace of nuke functionality)
+        source = source.replace(/\.addItem\("🚨 Nuke All Data \(Production Reset\)", "nukeSeedData"\)\s*/g, '');
 
         updatedFiles.push({
           name: file.name,
@@ -552,8 +556,8 @@ function showPostNukeGuidance() {
     </div>
 
     <div class="info-box">
-      <strong>💡 Note:</strong> All seed functions and demo data have been permanently removed from your spreadsheet.
-      This ensures a clean production environment with no test data residue.
+      <strong>💡 Note:</strong> All seed functions, demo data, AND this nuke functionality have been permanently removed.
+      The SeedNuke.gs file has been completely deleted. Your production environment is 100% clean.
     </div>
 
     <div class="button-container">

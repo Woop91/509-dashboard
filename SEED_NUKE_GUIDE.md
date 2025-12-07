@@ -31,19 +31,20 @@ When you execute the **Nuke Seed Data** function, the system will:
    - All SEED_GRIEVANCES_TOGGLE functions from Code.gs
    - All seed helper functions (seedMembersWithCount, etc.)
    - SEED_20K_MEMBERS and SEED_5K_GRIEVANCES functions
-6. **Replace SeedNuke.gs**: Replaces this file with a minimal stub
+6. **COMPLETELY DELETE SeedNuke.gs**: The entire file is removed (not just replaced)
 7. **Remove Seed Menu**: Deletes the "🌱 Seed Demo Data" menu from ReorganizedMenu.gs
+8. **Remove Nuke Menu Item**: Deletes the "🚨 Nuke All Data" menu item itself
 
 ### Preserved Items
-8. **Preserve Organization Info**: Keep your real organization settings:
+9. **Preserve Organization Info**: Keep your real organization settings:
    - Organization Name, Local Number, Main Address, Phone
    - Union Parent, State/Region, Website
    - Main Fax, Toll Free numbers
    - All deadline and contract reference columns
-9. **Preserve Structure**: Keep all headers, formulas, and sheet structure intact
-10. **Show Setup Guide**: Display getting started instructions
+10. **Preserve Structure**: Keep all headers, formulas, and sheet structure intact
+11. **Show Setup Guide**: Display getting started instructions
 
-> **🔴 IMPORTANT**: After the nuke completes, there will be **ZERO trace** that seed functionality ever existed in your spreadsheet or script code. This is a permanent, irreversible operation.
+> **🔴 IMPORTANT**: After the nuke completes, there will be **ZERO trace** that seed OR nuke functionality ever existed in your spreadsheet or script code. The SeedNuke.gs file is completely deleted, not just emptied. This is a permanent, irreversible operation.
 
 ---
 
@@ -97,9 +98,9 @@ This will PERMANENTLY remove:
 • Config Tab Demo Entries (Job Titles, Locations, etc.)
 • ALL seed functions from the script code
 • ALL seed menu items
-• ALL seed-related documentation
+• THIS NUKE FUNCTION ITSELF (complete self-deletion)
 
-After this operation, there will be NO trace of seed functionality.
+After this operation, there will be NO trace of seed OR nuke functionality.
 
 This action CANNOT be undone!
 
@@ -112,8 +113,8 @@ Are you sure you want to proceed?
 
 This is your last chance!
 
-ALL test data AND seed code will be permanently deleted.
-This includes removing seed functions from the script itself.
+ALL test data, seed code, AND this nuke function will be permanently deleted.
+The SeedNuke.gs file will be completely removed from the project.
 
 Click YES to proceed.
 ```
@@ -155,9 +156,10 @@ After nuking, a comprehensive guide will appear with:
 
 4. **Code Changes** (if Apps Script API enabled):
    - All SEED_* functions removed from Code.gs (~600 lines deleted)
-   - SeedNuke.gs replaced with minimal stub
+   - **SeedNuke.gs completely deleted** (file removed from project)
    - Seed menu items removed from ReorganizedMenu.gs
-   - **Zero evidence** that seed functionality ever existed
+   - **Nuke menu item also removed** from ReorganizedMenu.gs
+   - **Zero evidence** that seed OR nuke functionality ever existed
 
 ### What Remains Intact
 
@@ -401,4 +403,4 @@ Your dashboard is **production-ready**! 🚀
 ---
 
 **Last Updated**: 2025-12-07
-**Version**: 2.0.0 (Self-Deleting Seed Code)
+**Version**: 2.1.0 (Complete Self-Deletion - Nuke Also Deletes Itself)
