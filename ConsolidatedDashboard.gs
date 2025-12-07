@@ -14,7 +14,7 @@
  * Build Info:
  * - Version: 2.1.0 (Security Enhanced + Code Review Improvements)
  * - Build ID: 20251202-improvements
- * - Build Date: 2025-12-07T18:35:07.030Z
+ * - Build Date: 2025-12-07T18:49:08.923Z
  * - Build Type: DEVELOPMENT
  * - Modules: 78 files
  * - Tests Included: Yes
@@ -5111,213 +5111,10 @@ function onOpen() {
       .addToUi();
   }
 
-  // ============ 👤 DAILY USE MENU ============
-  ui.createMenu("👤 Dashboard")
-    .addItem("🔄 Refresh All", "refreshCalculations")
-    .addSeparator()
-    .addSubMenu(ui.createMenu("🔍 Search & Lookup")
-      .addItem("🔍 Search Members", "showMemberSearch")
-      .addItem("🔍 Quick Member Search", "quickMemberSearch")
-      .addSeparator()
-      .addItem("🔍 Mobile Search (Members & Grievances)", "showMobileUnifiedSearch"))
-    .addSeparator()
-    .addSubMenu(ui.createMenu("📋 Grievance Tools")
-      .addItem("➕ Start New Grievance", "showStartGrievanceDialog")
-      .addItem("🔄 Grievance Float Toggle", "toggleGrievanceFloat")
-      .addItem("🎛️ Float Control Panel", "showGrievanceFloatPanel")
-      .addSeparator()
-      .addItem("📧 Send Coordinator Message", "showCoordinatorMessageDialog")
-      .addItem("📧 Batch Coordinator Notification", "showBatchCoordinatorNotification")
-      .addItem("🔧 Setup Notification Trigger", "setupCoordinatorNotificationTrigger")
-      .addItem("🧹 Clear All Notifications", "clearAllCoordinatorNotifications")
-      .addSeparator()
-      .addItem("📊 Sort Grievances (Active First)", "sortGrievancesByStatus")
-      .addItem("🔄 Refresh Progress Bar", "setupGrievanceProgressBar")
-      .addItem("🧹 Cleanup Grievance Log", "cleanupGrievanceLog")
-      .addSeparator()
-      .addItem("🆔 Generate Next Grievance ID", "showNextGrievanceID"))
-    .addSeparator()
-    .addSubMenu(ui.createMenu("👥 Member Tools")
-      .addItem("👥 Mobile Member Browser", "showMobileMemberBrowser")
-      .addItem("🆔 Generate Next Member ID", "showNextMemberID"))
-    .addSeparator()
-    .addSubMenu(ui.createMenu("📝 Forms")
-      .addItem("📋 Open Grievance Form", "openGrievanceForm")
-      .addItem("📞 Open Contact Form", "openContactForm")
-      .addSeparator()
-      .addItem("📝 Open Member Google Form", "openMemberGoogleForm"))
-    .addSeparator()
-    .addSubMenu(ui.createMenu("📊 Dashboards")
-      .addItem("📊 Main Dashboard", "goToDashboard")
-      .addItem("🎯 Unified Operations Monitor", "showUnifiedOperationsMonitor")
-      .addItem("✨ Interactive Dashboard", "openInteractiveDashboard")
-      .addSeparator()
-      .addItem("📱 Mobile Dashboard", "showMobileDashboard")
-      .addItem("🔄 Refresh Interactive Dashboard", "rebuildInteractiveDashboard"))
-    .addSeparator()
-    .addSubMenu(ui.createMenu("📁 Google Drive")
-      .addItem("📁 Setup Folder for Grievance", "setupDriveFolderForGrievance")
-      .addItem("📎 Upload Files", "showFileUploadDialog")
-      .addItem("📂 Show Grievance Files", "showGrievanceFiles"))
-    .addSeparator()
-    .addSubMenu(ui.createMenu("📧 Communications")
-      .addItem("📧 Compose Email", "composeGrievanceEmail")
-      .addItem("📝 Email Templates", "showEmailTemplateManager")
-      .addSeparator()
-      .addItem("📞 View Communications Log", "showGrievanceCommunications"))
-    .addSeparator()
-    .addSubMenu(ui.createMenu("📊 Reports & Export")
-      .addItem("📊 Custom Report Builder", "showCustomReportBuilder")
-      .addSeparator()
-      .addItem("📄 Export Grievances to CSV", "exportGrievancesToCSV")
-      .addItem("📄 Export Members to CSV", "exportMembersToCSV"))
-    .addSeparator()
-    .addSubMenu(ui.createMenu("♿ Accessibility")
-      .addItem("🌙 Quick Toggle Dark Mode", "quickToggleDarkMode")
-      .addItem("🎯 Activate Focus Mode", "activateFocusMode")
-      .addItem("🎯 Deactivate Focus Mode", "deactivateFocusMode")
-      .addSeparator()
-      .addItem("♿ ADHD Control Panel", "showADHDControlPanel")
-      .addItem("🎨 Theme Manager", "showThemeManager"))
-    .addSeparator()
-    .addItem("⌨️ Keyboard Shortcuts", "showKeyboardShortcuts")
-    .addToUi();
-
-  // ============ 📊 SHEET MANAGER MENU ============
-  ui.createMenu("📊 Manager")
-    .addSubMenu(ui.createMenu("💾 Backup & Recovery")
-      .addItem("💾 Create Backup Now", "createBackup")
-      .addItem("💾 Backup & Recovery Manager", "showBackupManager")
-      .addSeparator()
-      .addItem("📊 View Backup Log", "navigateToBackupLog")
-      .addSeparator()
-      .addItem("🔕 Disable Automated Backups", "disableAutomatedBackups"))
-    .addSeparator()
-    .addSubMenu(ui.createMenu("🤖 Smart Assignment")
-      .addItem("🤖 Auto-Assign Steward", "showAutoAssignDialog")
-      .addItem("👥 Steward Workload Dashboard", "showStewardWorkloadDashboard")
-      .addSeparator()
-      .addItem("📦 Batch Auto-Assign", "batchAutoAssign"))
-    .addSeparator()
-    .addSubMenu(ui.createMenu("⚡ Batch Operations")
-      .addItem("⚡ Show Batch Operations Menu", "showBatchOperationsMenu")
-      .addSeparator()
-      .addItem("👤 Bulk Assign Steward", "batchAssignSteward")
-      .addItem("📊 Bulk Update Status", "batchUpdateStatus")
-      .addItem("📄 Bulk Export to PDF", "batchExportPDF")
-      .addItem("📧 Bulk Email Notifications", "batchEmailNotifications")
-      .addItem("📝 Bulk Add Notes", "batchAddNotes"))
-    .addSeparator()
-    .addSubMenu(ui.createMenu("📅 Calendar & Deadlines")
-      .addItem("📅 Sync Deadlines to Calendar", "syncDeadlinesToCalendar")
-      .addItem("👀 View Upcoming Deadlines", "showUpcomingDeadlinesFromCalendar")
-      .addSeparator()
-      .addItem("🗑️ Clear All Calendar Events", "clearAllCalendarEvents"))
-    .addSeparator()
-    .addSubMenu(ui.createMenu("📈 Analytics & Insights")
-      .addItem("🔮 Predictive Analytics Dashboard", "showPredictiveAnalyticsDashboard")
-      .addItem("📈 Generate Full Analysis", "performPredictiveAnalysis")
-      .addItem("🔬 Root Cause Analysis", "showRootCauseAnalysisDashboard"))
-    .addSeparator()
-    .addSubMenu(ui.createMenu("🔒 Data Integrity")
-      .addItem("📊 Data Quality Dashboard", "showDataQualityDashboard")
-      .addItem("🔍 Check Referential Integrity", "checkReferentialIntegrity")
-      .addSeparator()
-      .addItem("📝 Create Change Log Sheet", "createChangeLogSheet"))
-    .addSeparator()
-    .addSubMenu(ui.createMenu("⚡ Performance & Cache")
-      .addItem("🗄️ Cache Status Dashboard", "showCacheStatusDashboard")
-      .addItem("🔥 Warm Up All Caches", "warmUpCaches")
-      .addItem("🗑️ Clear All Caches", "invalidateAllCaches"))
-    .addSeparator()
-    .addSubMenu(ui.createMenu("📧 Test Communications")
-      .addItem("🧪 Test Deadline Notifications", "testDeadlineNotifications")
-      .addItem("🧪 Test Monthly Report", "generateMonthlyReport")
-      .addItem("🧪 Test Quarterly Report", "generateQuarterlyReport"))
-    .addSeparator()
-    .addSubMenu(ui.createMenu("🔕 Disable Automations")
-      .addItem("🔕 Disable Deadline Notifications", "disableDailyDeadlineNotifications")
-      .addItem("🔕 Disable All Reports", "disableAutomatedReports"))
-    .addToUi();
-
-  // ============ ⚙️ ADMINISTRATOR MENU ============
-  const adminMenu = ui.createMenu("⚙️ Admin")
-    .addSubMenu(ui.createMenu("⚠️ System Health")
-      .addItem("🏥 Run Health Check", "performSystemHealthCheck")
-      .addItem("⚠️ Error Dashboard", "showErrorDashboard")
-      .addSeparator()
-      .addItem("📊 View Error Trends", "createErrorTrendReport")
-      .addItem("🧪 Test Error Logging", "testErrorLogging"))
-    .addSeparator()
-    .addSubMenu(ui.createMenu("🔄 Workflow Management")
-      .addItem("📊 View Current State", "showCurrentWorkflowState")
-      .addItem("🔄 Workflow Visualizer", "showWorkflowVisualizer")
-      .addItem("🔄 Change Workflow State", "changeWorkflowState")
-      .addSeparator()
-      .addItem("📦 Batch Update State", "batchUpdateWorkflowState"))
-    .addSeparator()
-    .addSubMenu(ui.createMenu("👁️ View & Display")
-      .addItem(isSetupMenuHidden() ? "🚀 Show Setup Menu" : "🚀 Hide Setup Menu", "toggleSetupMenuVisibility")
-      .addSeparator()
-      .addItem("📊 Toggle Engagement Metrics", "toggleEngagementMetricsColumns")
-      .addItem("💡 Toggle Member Interests", "toggleMemberInterestsColumns")
-      .addItem("📊💡 Toggle Both (Metrics & Interests)", "toggleEngagementAndInterestsColumns")
-      .addSeparator()
-      .addItem("Toggle Level 2 Member Columns", "toggleLevel2Columns")
-      .addItem("Show All Member Columns", "showAllMemberColumns")
-      .addSeparator()
-      .addItem("Reorder Sheets Logically", "reorderSheetsLogically")
-      .addItem("👁️ Hide Diagnostics Tab", "hideDiagnosticsTab")
-      .addSeparator()
-      .addItem("Hide Gridlines (Focus Mode)", "hideAllGridlines")
-      .addItem("Show Gridlines", "showAllGridlines")
-      .addItem("Setup ADHD Defaults", "setupADHDDefaults"))
-    .addSeparator()
-    .addSubMenu(ui.createMenu("↩️ History & Undo")
-      .addItem("↩️ Undo Last Action (Ctrl+Z)", "undoLastAction")
-      .addItem("↪️ Redo Last Action (Ctrl+Y)", "redoLastAction")
-      .addSeparator()
-      .addItem("↩️ Undo/Redo History", "showUndoRedoPanel")
-      .addItem("⌨️ Install Undo Shortcuts", "installUndoRedoShortcuts")
-      .addSeparator()
-      .addItem("🗑️ Clear Undo History", "clearUndoHistory"))
-    .addSeparator()
-    .addSubMenu(ui.createMenu("📱 Mobile Views")
-      .addItem("📱 Mobile Dashboard", "showMobileDashboard")
-      .addItem("🔍 Mobile Search", "showMobileUnifiedSearch")
-      .addItem("👥 Mobile Member Browser", "showMobileMemberBrowser")
-      .addItem("📋 Mobile Grievance Browser", "showMobileGrievanceBrowser")
-      .addSeparator()
-      .addItem("📋 Mobile Grievance List", "showMobileGrievanceList")
-      .addItem("📄 Paginated Data Viewer", "showPaginatedViewer"))
-    .addSeparator()
-    .addSubMenu(ui.createMenu("📁 Google Drive Batch")
-      .addItem("📁 Batch Create All Folders", "batchCreateGrievanceFolders")
-      .addItem("📁 Setup Drive Folders", "setupDriveFolderForGrievance"))
-    .addSeparator()
-    .addSubMenu(ui.createMenu("🛠️ Advanced Setup")
-      .addItem("📊 Populate Analytics Sheets", "populateAllAnalyticsSheets")
-      .addItem("📝 Add Sample Feedback Entries", "addSampleFeedbackEntries")
-      .addSeparator()
-      .addItem("🗑️ Remove Emergency Contact Columns", "removeEmergencyContactColumns"))
-    .addSeparator();
-
-  // Data Management menu (seed functions removed for production)
-  adminMenu.addSubMenu(ui.createMenu("🗑️ Data Management")
-    .addItem("🚨 Nuke All Data (Production Reset)", "nukeSeedData")
-    .addItem("🗑️ Nuke ALL Sheet Data (Comprehensive)", "nukeAllSheetData")
-    .addItem("⚠️ Clear Core Data Only", "clearAllData"));
-
-  // Always add RBAC submenu
-  adminMenu.addSeparator()
-    .addSubMenu(ui.createMenu("👥 User Roles (RBAC)")
-      .addItem("Initialize RBAC", "initializeRBAC")
-      .addItem("Configure Roles", "configureUserRoles")
-      .addItem("Add Admin", "addAdmin")
-      .addItem("Add Steward", "addSteward")
-      .addItem("Add Viewer", "addViewer")
-      .addItem("My Permissions", "showMyPermissions"))
-    .addToUi();
+  // ============ CREATE ALL MAIN MENUS ============
+  // Use the comprehensive reorganized menu system with all 43+ features
+  // This calls the reorganized menu from ReorganizedMenu.gs
+  createReorganizedMenus(ui);
 
   // ============ 🧪 TESTING MENU ============
   ui.createMenu("🧪 Tests")
@@ -40671,18 +40468,25 @@ function checkForUpdates() {
  * REORGANIZED MENU SYSTEM
  * ------------------------------------------------------------------------====
  *
- * Organizes dashboard menus into three categories:
- * 1. Average User - Daily operations and common tasks
- * 2. Sheet Manager - Data management, performance, integrity, automations
- * 3. Administrator - System admin, seed functions, health monitoring
+ * Comprehensive menu system with 43+ features organized into four categories:
+ * 1. 👤 Dashboard - Daily operations, search, grievance tools, communications
+ * 2. 📊 Sheet Manager - Data, performance, integrity, automations, analytics
+ * 3. 🔧 Setup - Seed data, data management, dropdown configuration
+ * 4. ⚙️ Administrator - System health, workflow, column toggles, RBAC
  *
- * To use this menu instead of the default one:
- * - Rename the existing onOpen() function to onOpen_OLD()
- * - Rename this onOpen_Reorganized() function to onOpen()
+ * This file defines createReorganizedMenus(ui) which is called from Code.gs onOpen()
+ * The Tests menu and Optional Extras menu are defined separately in Code.gs
  */
 
-function onOpen_Reorganized() {
-  const ui = SpreadsheetApp.getUi();
+/**
+ * Creates the reorganized menus - called from Code.gs onOpen()
+ * This is the main entry point for menu creation
+ * @param {Ui} ui - The UI object from SpreadsheetApp
+ */
+function createReorganizedMenus(ui) {
+  if (!ui) {
+    ui = SpreadsheetApp.getUi();
+  }
 
   // ------------ AVERAGE USER MENU ------------
   ui.createMenu("👤 Dashboard")
@@ -41007,6 +40811,14 @@ function onOpen_Reorganized() {
     .addSeparator()
     .addItem("👁️ Toggle Setup Menu Visibility", "toggleSetupMenuVisibility")
     .addToUi();
+}
+
+/**
+ * Legacy wrapper for backwards compatibility
+ * Calls createReorganizedMenus() directly
+ */
+function onOpen_Reorganized() {
+  createReorganizedMenus();
 }
 
 
