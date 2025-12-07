@@ -89,36 +89,45 @@ function createGettingStartedSheet(ss) {
   ];
 
   row++;
-  for (let i = 0; i < quickStartSteps.length; i++) {
-    const step = quickStartSteps[i];
+  // OPTIMIZED: Batch operations for quick start steps
+  const numSteps = quickStartSteps.length;
+  const stepStartRow = row;
 
-    // Step number
-    sheet.getRange(row, 1)
-      .setValue(step[0])
-      .setFontWeight("bold")
-      .setFontSize(14)
-      .setBackground(COLORS.INFO_LIGHT)
-      .setVerticalAlignment("top")
-      .setBorder(true, true, true, true, false, false);
+  // Set all values at once (steps 1-2 in columns 1-2, description in column 3)
+  const stepData = quickStartSteps.map(step => [step[0], step[1], step[2], ""]);
+  sheet.getRange(stepStartRow, 1, numSteps, 4).setValues(stepData);
 
-    // Step title
-    sheet.getRange(row, 2)
-      .setValue(step[1])
-      .setFontWeight("bold")
-      .setFontSize(12)
-      .setVerticalAlignment("top")
-      .setBorder(true, true, true, true, false, false);
-
-    // Step description
-    sheet.getRange(row, 3, 1, 2).merge()
-      .setValue(step[2])
-      .setWrap(true)
-      .setVerticalAlignment("top")
-      .setBorder(true, true, true, true, false, false);
-
-    sheet.setRowHeight(row, 60);
-    row++;
+  // Merge column 3-4 for descriptions
+  for (let i = 0; i < numSteps; i++) {
+    sheet.getRange(stepStartRow + i, 3, 1, 2).merge();
   }
+
+  // Format column 1 (step numbers) - batch
+  sheet.getRange(stepStartRow, 1, numSteps, 1)
+    .setFontWeight("bold")
+    .setFontSize(14)
+    .setBackground(COLORS.INFO_LIGHT)
+    .setVerticalAlignment("top")
+    .setBorder(true, true, true, true, false, false);
+
+  // Format column 2 (step titles) - batch
+  sheet.getRange(stepStartRow, 2, numSteps, 1)
+    .setFontWeight("bold")
+    .setFontSize(12)
+    .setVerticalAlignment("top")
+    .setBorder(true, true, true, true, false, false);
+
+  // Format columns 3-4 (descriptions) - batch
+  sheet.getRange(stepStartRow, 3, numSteps, 2)
+    .setWrap(true)
+    .setVerticalAlignment("top")
+    .setBorder(true, true, true, true, false, false);
+
+  // Set row heights
+  for (let i = 0; i < numSteps; i++) {
+    sheet.setRowHeight(stepStartRow + i, 60);
+  }
+  row = stepStartRow + numSteps;
 
   // Key Features Section
   row += 2;
@@ -142,28 +151,39 @@ function createGettingStartedSheet(ss) {
   ];
 
   row++;
-  for (let i = 0; i < features.length; i++) {
-    const feature = features[i];
+  // OPTIMIZED: Batch operations for features
+  const numFeatures = features.length;
+  const featureStartRow = row;
 
-    // Feature name
-    sheet.getRange(row, 1, 1, 2).merge()
-      .setValue(feature[0])
-      .setFontWeight("bold")
-      .setFontSize(11)
-      .setVerticalAlignment("top")
-      .setBorder(true, true, true, true, false, false)
-      .setBackground(COLORS.LIGHT_GRAY);
+  // Set all values at once
+  const featureData = features.map(f => [f[0], "", f[1], ""]);
+  sheet.getRange(featureStartRow, 1, numFeatures, 4).setValues(featureData);
 
-    // Feature description
-    sheet.getRange(row, 3, 1, 2).merge()
-      .setValue(feature[1])
-      .setWrap(true)
-      .setVerticalAlignment("top")
-      .setBorder(true, true, true, true, false, false);
-
-    sheet.setRowHeight(row, 50);
-    row++;
+  // Merge cells for each row
+  for (let i = 0; i < numFeatures; i++) {
+    sheet.getRange(featureStartRow + i, 1, 1, 2).merge();
+    sheet.getRange(featureStartRow + i, 3, 1, 2).merge();
   }
+
+  // Format feature names (columns 1-2) - batch
+  sheet.getRange(featureStartRow, 1, numFeatures, 2)
+    .setFontWeight("bold")
+    .setFontSize(11)
+    .setVerticalAlignment("top")
+    .setBorder(true, true, true, true, false, false)
+    .setBackground(COLORS.LIGHT_GRAY);
+
+  // Format descriptions (columns 3-4) - batch
+  sheet.getRange(featureStartRow, 3, numFeatures, 2)
+    .setWrap(true)
+    .setVerticalAlignment("top")
+    .setBorder(true, true, true, true, false, false);
+
+  // Set row heights
+  for (let i = 0; i < numFeatures; i++) {
+    sheet.setRowHeight(featureStartRow + i, 50);
+  }
+  row = featureStartRow + numFeatures;
 
   // Important Links Section
   row += 2;
@@ -185,24 +205,36 @@ function createGettingStartedSheet(ss) {
   ];
 
   row++;
-  for (let i = 0; i < links.length; i++) {
-    const link = links[i];
+  // OPTIMIZED: Batch operations for links
+  const numLinks = links.length;
+  const linkStartRow = row;
 
-    sheet.getRange(row, 2)
-      .setValue(link[0])
-      .setFontWeight("bold")
-      .setVerticalAlignment("middle")
-      .setBorder(true, true, true, true, false, false);
+  // Set all values at once
+  const linkData = links.map(l => ["", l[0], l[1], ""]);
+  sheet.getRange(linkStartRow, 1, numLinks, 4).setValues(linkData);
 
-    sheet.getRange(row, 3, 1, 2).merge()
-      .setValue(link[1])
-      .setVerticalAlignment("middle")
-      .setBorder(true, true, true, true, false, false)
-      .setFontColor("#1155CC");
-
-    sheet.setRowHeight(row, 30);
-    row++;
+  // Merge column 3-4 for URLs
+  for (let i = 0; i < numLinks; i++) {
+    sheet.getRange(linkStartRow + i, 3, 1, 2).merge();
   }
+
+  // Format link names (column 2) - batch
+  sheet.getRange(linkStartRow, 2, numLinks, 1)
+    .setFontWeight("bold")
+    .setVerticalAlignment("middle")
+    .setBorder(true, true, true, true, false, false);
+
+  // Format URLs (columns 3-4) - batch
+  sheet.getRange(linkStartRow, 3, numLinks, 2)
+    .setVerticalAlignment("middle")
+    .setBorder(true, true, true, true, false, false)
+    .setFontColor("#1155CC");
+
+  // Set row heights
+  for (let i = 0; i < numLinks; i++) {
+    sheet.setRowHeight(linkStartRow + i, 30);
+  }
+  row = linkStartRow + numLinks;
 
   // Support Section
   row += 2;
@@ -413,47 +445,54 @@ function createFAQSheet(ss) {
 }
 
 /**
- * Helper function to add FAQ section rows
+ * Helper function to add FAQ section rows - OPTIMIZED for batch operations
+ * Reduces API calls from 4+ per FAQ to batch operations
  */
 function addFAQSection(sheet, startRow, faqs) {
-  let row = startRow;
+  const numFaqs = faqs.length;
+  if (numFaqs === 0) return startRow;
 
-  for (let i = 0; i < faqs.length; i++) {
-    const faq = faqs[i];
+  // Build all data at once
+  const data = faqs.map((faq, i) => ["Q" + (i + 1), faq[0], faq[1]]);
 
-    // Number
-    sheet.getRange(row, 1)
-      .setValue("Q" + (i + 1))
-      .setFontWeight("bold")
-      .setFontSize(12)
-      .setBackground(COLORS.INFO_LIGHT)
-      .setVerticalAlignment("top")
-      .setHorizontalAlignment("center")
-      .setBorder(true, true, true, true, false, false);
+  // Set all values in one batch call
+  const dataRange = sheet.getRange(startRow, 1, numFaqs, 3);
+  dataRange.setValues(data);
 
-    // Question
-    sheet.getRange(row, 2)
-      .setValue(faq[0])
-      .setFontWeight("bold")
-      .setFontSize(11)
-      .setVerticalAlignment("top")
-      .setBorder(true, true, true, true, false, false)
-      .setWrap(true);
+  // Apply formatting to entire columns at once (batch operations)
+  // Column 1 (Q numbers) - format entire column range at once
+  const col1Range = sheet.getRange(startRow, 1, numFaqs, 1);
+  col1Range
+    .setFontWeight("bold")
+    .setFontSize(12)
+    .setBackground(COLORS.INFO_LIGHT)
+    .setVerticalAlignment("top")
+    .setHorizontalAlignment("center")
+    .setBorder(true, true, true, true, false, false);
 
-    // Answer
-    sheet.getRange(row, 3)
-      .setValue(faq[1])
-      .setWrap(true)
-      .setVerticalAlignment("top")
-      .setBorder(true, true, true, true, false, false);
+  // Column 2 (Questions) - format entire column range at once
+  const col2Range = sheet.getRange(startRow, 2, numFaqs, 1);
+  col2Range
+    .setFontWeight("bold")
+    .setFontSize(11)
+    .setVerticalAlignment("top")
+    .setBorder(true, true, true, true, false, false)
+    .setWrap(true);
 
-    // Auto-adjust row height based on content
-    const contentLength = faq[1].length;
+  // Column 3 (Answers) - format entire column range at once
+  const col3Range = sheet.getRange(startRow, 3, numFaqs, 1);
+  col3Range
+    .setWrap(true)
+    .setVerticalAlignment("top")
+    .setBorder(true, true, true, true, false, false);
+
+  // Set row heights based on content (unfortunately must be done per row)
+  // But batch the height calculations first to minimize switching
+  for (let i = 0; i < numFaqs; i++) {
+    const contentLength = faqs[i][1].length;
     const estimatedHeight = Math.max(40, Math.min(150, Math.ceil(contentLength / 80) * 20));
-    sheet.setRowHeight(row, estimatedHeight);
-
-    row++;
+    sheet.setRowHeight(startRow + i, estimatedHeight);
   }
 
-  return row;
+  return startRow + numFaqs;
 }
