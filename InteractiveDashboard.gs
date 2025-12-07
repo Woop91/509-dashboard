@@ -181,6 +181,33 @@ function createDashboardMetricCards(sheet) {
       .setFontColor(COLORS.TEXT_GRAY)
       .setValue("📈 Growing Together");
   });
+
+  // Add formulas to populate the metric cards with live data
+  const memberIdCol = getColumnLetter(MEMBER_COLS.MEMBER_ID);
+  const statusCol = getColumnLetter(GRIEVANCE_COLS.STATUS);
+  const daysToDeadlineCol = getColumnLetter(GRIEVANCE_COLS.DAYS_TO_DEADLINE);
+
+  // Card 1: Our Growing Family (Total Members)
+  sheet.getRange("A14:E16").merge()
+    .setFormula(`=COUNTA('Member Directory'!${memberIdCol}2:${memberIdCol})`);
+
+  // Card 2: Active Cases (Open Grievances)
+  sheet.getRange("F14:J16").merge()
+    .setFormula(`=COUNTIF('Grievance Log'!${statusCol}:${statusCol},"Open")`);
+
+  // Card 3: Victory Rate (Win %)
+  sheet.getRange("K14:O16").merge()
+    .setFormula(`=IFERROR(TEXT(COUNTIF('Grievance Log'!${statusCol}:${statusCol},"Settled")/(COUNTIF('Grievance Log'!${statusCol}:${statusCol},"Settled")+COUNTIF('Grievance Log'!${statusCol}:${statusCol},"Denied")),"0%"),"0%")`);
+
+  // Card 4: Needs Attention (Overdue)
+  sheet.getRange("P14:T16").merge()
+    .setFormula(`=COUNTIFS('Grievance Log'!${statusCol}:${statusCol},"Open",'Grievance Log'!${daysToDeadlineCol}:${daysToDeadlineCol},"<0")`);
+
+  // Update subtitles with context
+  sheet.getRange("A17:E18").merge().setValue("Union members strong together");
+  sheet.getRange("F17:J18").merge().setValue("Cases currently being worked");
+  sheet.getRange("K17:O18").merge().setValue("Settled vs Denied ratio");
+  sheet.getRange("P17:T18").merge().setValue("Cases past deadline");
 }
 
 /**
@@ -317,6 +344,45 @@ function createDashboardDataTableSection(sheet) {
   sheet.getRange("A94:G110")
     .setBackground(COLORS.WHITE)
     .setBorder(true, true, true, true, true, true, COLORS.BORDER_GRAY, SpreadsheetApp.BorderStyle.SOLID);
+
+  // Add data rows with formulas for top stewards/locations
+  const statusCol = getColumnLetter(GRIEVANCE_COLS.STATUS);
+  const locationCol = getColumnLetter(GRIEVANCE_COLS.LOCATION);
+
+  // Get locations from Config for data table
+  const ss = SpreadsheetApp.getActiveSpreadsheet();
+  const configSheet = ss.getSheetByName(SHEETS.CONFIG);
+  let locations = [];
+
+  if (configSheet) {
+    const locCol = CONFIG_COLS.OFFICE_LOCATIONS;
+    const lastRow = configSheet.getLastRow();
+    if (lastRow > 1) {
+      const values = configSheet.getRange(2, locCol, Math.min(lastRow - 1, 10), 1).getValues();
+      locations = values.map(r => r[0]).filter(v => v !== '' && v !== null);
+    }
+  }
+
+  // Default locations if none found
+  if (locations.length === 0) {
+    locations = ["Boston", "Springfield", "Worcester", "Cambridge", "Lowell"];
+  }
+
+  // Add data rows for each location
+  for (let i = 0; i < Math.min(locations.length, 15); i++) {
+    const dataRow = 94 + i;
+    const location = locations[i];
+
+    sheet.getRange(dataRow, 1).setValue(i + 1);  // Rank
+    sheet.getRange(dataRow, 2).setValue(location);  // Item (Location)
+    sheet.getRange(dataRow, 3).setFormula(`=COUNTIF('Grievance Log'!${locationCol}:${locationCol},"${location}")`);  // Count
+    sheet.getRange(dataRow, 4).setFormula(`=COUNTIFS('Grievance Log'!${locationCol}:${locationCol},"${location}",'Grievance Log'!${statusCol}:${statusCol},"Open")`);  // Active
+    sheet.getRange(dataRow, 5).setFormula(`=COUNTIFS('Grievance Log'!${locationCol}:${locationCol},"${location}",'Grievance Log'!${statusCol}:${statusCol},"Settled")+COUNTIFS('Grievance Log'!${locationCol}:${locationCol},"${location}",'Grievance Log'!${statusCol}:${statusCol},"Closed")`);  // Resolved
+    sheet.getRange(dataRow, 6).setFormula(`=IFERROR(TEXT(COUNTIFS('Grievance Log'!${locationCol}:${locationCol},"${location}",'Grievance Log'!${statusCol}:${statusCol},"Settled")/(COUNTIFS('Grievance Log'!${locationCol}:${locationCol},"${location}",'Grievance Log'!${statusCol}:${statusCol},"Settled")+COUNTIFS('Grievance Log'!${locationCol}:${locationCol},"${location}",'Grievance Log'!${statusCol}:${statusCol},"Denied")),"0%"),"0%")`);  // Win Rate
+    sheet.getRange(dataRow, 7).setFormula(`=IF(D${dataRow}>5,"🔴 High",IF(D${dataRow}>2,"🟡 Medium","🟢 Low"))`);  // Status
+  }
+
+  sheet.getRange("A94:G" + (93 + locations.length)).setHorizontalAlignment("center");
 }
 
 /**

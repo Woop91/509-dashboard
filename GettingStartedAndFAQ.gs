@@ -69,6 +69,40 @@ function createGettingStartedSheet(ss) {
     .setWrap(true);
   sheet.setRowHeight(row, 30);
 
+  // Creator & License Section
+  row += 2;
+  sheet.getRange(row, 1, 1, 4).merge()
+    .setValue("👤 Creator & License")
+    .setFontSize(18)
+    .setFontWeight("bold")
+    .setBackground(COLORS.ACCENT_PURPLE)
+    .setFontColor("white")
+    .setVerticalAlignment("middle");
+  sheet.setRowHeight(row, 40);
+
+  row++;
+  sheet.getRange(row, 2, 1, 3).merge()
+    .setValue("Created by: Wardis N. Vizcaino, Steward at SEIU Local 509")
+    .setFontSize(12)
+    .setFontWeight("bold")
+    .setWrap(true);
+  sheet.setRowHeight(row, 30);
+
+  row++;
+  sheet.getRange(row, 2, 1, 3).merge()
+    .setValue("Contact: wardis@pm.me")
+    .setFontSize(12)
+    .setWrap(true);
+  sheet.setRowHeight(row, 30);
+
+  row++;
+  sheet.getRange(row, 2, 1, 3).merge()
+    .setValue("License: Free for use by non-profit collective bargaining groups and unions. No license required.")
+    .setFontSize(12)
+    .setFontStyle("italic")
+    .setWrap(true);
+  sheet.setRowHeight(row, 30);
+
   // Quick Start Section
   row += 2;
   sheet.getRange(row, 1, 1, 4).merge()

@@ -421,29 +421,48 @@ function fixInteractiveDropdownHighlighting() {
  */
 function populateAllAnalyticsSheetsOnCreate() {
   try {
-    // 1. Populate Type Analysis
-    populateTypeAnalysis();
+    // 1. Populate Operations Analytics (merged sheet with Trends, Location, Type, Engagement, Cost)
+    if (typeof populateOperationsAnalytics === 'function') {
+      populateOperationsAnalytics();
+    }
 
-    // 2. Populate Trends sheet
-    populateTrendsSheet();
-
-    // 3. Populate Location Analytics
-    populateLocationAnalytics();
-
-    // 4. Populate Member Engagement
-    populateMemberEngagement();
-
-    // 5. Populate Cost Impact
-    populateCostImpact();
-
-    // 6. Populate Steward Workload (if function exists)
+    // 2. Populate Steward Workload (if function exists)
     if (typeof populateStewardWorkload === 'function') {
       populateStewardWorkload();
     }
 
-    // 7. Populate Member Satisfaction (if function exists)
+    // 3. Populate Member Satisfaction (if function exists)
     if (typeof populateMemberSatisfaction === 'function') {
       populateMemberSatisfaction();
+    }
+
+    // 8. Add sample Feedback & Development entries
+    if (typeof addSampleFeedbackEntriesSilent === 'function') {
+      addSampleFeedbackEntriesSilent();
+    } else if (typeof addSampleFeedbackEntries === 'function') {
+      // Silently add sample feedback (skip the UI alert)
+      try {
+        const ss = SpreadsheetApp.getActiveSpreadsheet();
+        const feedback = ss.getSheetByName(SHEETS.FEEDBACK);
+        if (feedback) {
+          const today = new Date();
+          const lastWeek = new Date(today.getTime() - 7 * 24 * 60 * 60 * 1000);
+          const twoWeeksAgo = new Date(today.getTime() - 14 * 24 * 60 * 60 * 1000);
+          const nextMonth = new Date(today.getTime() + 30 * 24 * 60 * 60 * 1000);
+
+          const sampleEntries = [
+            ['Feedback', Utilities.formatDate(lastWeek, Session.getScriptTimeZone(), 'MM/dd/yyyy'), 'Maria Gonzalez', 'Medium', 'Dashboard load time could be improved', 'When opening the Interactive Dashboard with 20k+ members, it takes 5-8 seconds to load.', 'Under Review', 25, 'Moderate', Utilities.formatDate(nextMonth, Session.getScriptTimeZone(), 'MM/dd/yyyy'), 'Tech Team', 'None', 'Investigating caching options', Utilities.formatDate(today, Session.getScriptTimeZone(), 'MM/dd/yyyy')],
+            ['Future Feature', Utilities.formatDate(twoWeeksAgo, Session.getScriptTimeZone(), 'MM/dd/yyyy'), 'James Wilson', 'High', 'Automated weekly steward workload reports', 'Send automated email reports to stewards every Monday morning.', 'Planned', 10, 'Complex', Utilities.formatDate(nextMonth, Session.getScriptTimeZone(), 'MM/dd/yyyy'), 'Development Team', 'Need Gmail API', 'Aligns with automation goals', Utilities.formatDate(today, Session.getScriptTimeZone(), 'MM/dd/yyyy')],
+            ['Bug Report', Utilities.formatDate(today, Session.getScriptTimeZone(), 'MM/dd/yyyy'), 'Sarah Chen', 'High', 'Member search not finding partial matches', 'Search only works with exact matches.', 'New', 0, 'Simple', Utilities.formatDate(new Date(today.getTime() + 7 * 24 * 60 * 60 * 1000), Session.getScriptTimeZone(), 'MM/dd/yyyy'), 'Unassigned', 'None', 'Update search algorithm', Utilities.formatDate(today, Session.getScriptTimeZone(), 'MM/dd/yyyy')]
+          ];
+
+          const lastRow = feedback.getLastRow();
+          feedback.getRange(lastRow + 1, 1, sampleEntries.length, sampleEntries[0].length).setValues(sampleEntries);
+          Logger.log('Added sample feedback entries');
+        }
+      } catch (e) {
+        Logger.log('Error adding sample feedback: ' + e.message);
+      }
     }
 
     Logger.log('All analytics sheets populated during CREATE_509_DASHBOARD');

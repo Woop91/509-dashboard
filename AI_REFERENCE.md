@@ -1,8 +1,18 @@
 # 509 Dashboard - Complete Feature Reference
 
-**Version:** 3.6
+**Version:** 3.7
 **Last Updated:** 2025-12-07
 **Purpose:** Union grievance tracking and member engagement system for SEIU Local 509
+
+---
+
+## Creator & License
+
+**Creator & Owner:** Wardis N. Vizcaino
+**Role:** Steward at SEIU Local 509
+**Contact:** wardis@pm.me
+
+**License:** Free for use by non-profit collective bargaining groups and unions. No license required.
 
 ---
 
@@ -671,7 +681,8 @@ Refactored 6 large multi-responsibility functions into smaller, focused helper f
 - ✅ **Coordinator Notification System** - Feature 95 for grievance coordinator notifications
 
 **Menu System Updates:**
-- 🔄 **Renamed "🚀 Setup" to "🚀 Optional Extras"** - Clarifies menu is optional after CREATE_509_DASHBOARD
+- ✅ **Six-menu structure** - 👤 Dashboard, 📊 Sheet Manager, 🔧 Setup, 🎭 Demo, ⚙️ Administrator, 🧪 Tests
+- ❌ **Removed Optional Extras menu** - Features consolidated into main menus
 - ❌ **Removed conflicting Initial Setup items** - "Setup Dashboard Enhancements" and "Setup Member Directory Dropdowns" were removed as they conflicted with CREATE_509_DASHBOARD validations
 - ➕ **Added showDropdownRefreshInfo()** - Explains when to refresh dropdowns
 

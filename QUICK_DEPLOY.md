@@ -72,21 +72,16 @@ Download `ConsolidatedDashboard.gs` from this repository's main branch.
 1. Close the Apps Script editor tab
 2. Go back to your Google Sheet
 3. **Refresh the page** (F5 or Ctrl+R / Cmd+R)
-4. You should see menus including: **👤 Dashboard**, **📊 Sheet Manager**, **⚙️ Administrator**, and **🚀 Optional Extras**
+4. You should see menus including: **👤 Dashboard**, **📊 Sheet Manager**, **🔧 Setup**, **🎭 Demo**, **⚙️ Administrator**, and **🧪 Tests**
 
-> ⚠️ **IMPORTANT: Skip the "Optional Extras" menu for now!**
->
-> `CREATE_509_DASHBOARD` already set up all sheets, dropdowns, and validations.
-> The **🚀 Optional Extras** menu is for **later** - it contains automations (backups, notifications) and diagnostic tools.
->
-> **Do NOT** run any "Setup Enhancements" or "Setup Dropdowns" functions - these can conflict with the validations already configured.
+> ✅ **All set!** `CREATE_509_DASHBOARD` already configured all sheets, dropdowns, and validations.
 
 ### **Step 7: Seed Test Data**
 
-1. Click **⚙️ Administrator → Seed Functions → Seed Members**
+1. Click **🎭 Demo → 🌱 Seed Demo Data → 👥 Seed Members**
 2. Click **"Seed Members - Toggle 1 (5,000)"** (takes ~1 minute)
 3. Repeat for Toggle 2, 3, 4 to generate up to 20k members total
-4. Click **⚙️ Administrator → Seed Functions → Seed Grievances**
+4. Click **🎭 Demo → 🌱 Seed Demo Data → 📋 Seed Grievances**
 5. Click **"Seed Grievances - Toggle 1 (2,500)"** (takes ~1 minute)
 6. Repeat for Toggle 2 to generate up to 5k grievances total
 
@@ -125,22 +120,19 @@ Your dashboard is fully operational with:
 
 | Menu | What It Does |
 |------|-------------|
-| **👤 Dashboard** (Average User) | Daily operations, search, grievances, reports, accessibility |
+| **👤 Dashboard** | Daily operations, search, grievances, reports, accessibility |
 | **📊 Sheet Manager** | Data management, backups, automations, analytics |
-| **⚙️ Administrator** | System setup, seed functions, health monitoring |
-| **🚀 Optional Extras** | Enable automations, refresh dropdowns, run diagnostics |
-
-> 💡 **When to use Optional Extras:**
-> - **Enable Automations**: Set up automated backups, deadline notifications, monthly/quarterly reports
-> - **Refresh Dropdowns**: Only if you added new stewards and need to update dropdown lists
-> - **Verify & Diagnose**: Run tests and health checks if something seems wrong
+| **🔧 Setup** | Dropdown configuration, dashboard setup |
+| **🎭 Demo** | Seed demo data, nuke/clear data management |
+| **⚙️ Administrator** | System health, workflow, column toggles, RBAC |
+| **🧪 Tests** | Unit, validation, integration, performance tests |
 
 #### Quick Access:
-- **Refresh All**: Dashboard → 🔄 Refresh All
-- **Operations Monitor**: Dashboard → Dashboards → 🎯 Unified Operations Monitor
-- **Main Dashboard**: Dashboard → Dashboards → 📊 Main Dashboard
-- **Help**: Dashboard → Help & Support → ❓ Help
-- **Clear Data**: Administrator → Seed Functions → 🗑️ Nuke All Seed Data
+- **Refresh All**: 👤 Dashboard → 🔄 Refresh All
+- **Operations Monitor**: 👤 Dashboard → 📊 Dashboards → 🎯 Unified Operations Monitor
+- **Main Dashboard**: 👤 Dashboard → 📊 Dashboards → 📊 Main Dashboard
+- **Help**: 👤 Dashboard → ❓ Help & Support
+- **Clear Data**: 🎭 Demo → 🗑️ Data Management → Nuke All Data
 
 ### **Customize Your Data:**
 
@@ -163,7 +155,7 @@ Your dashboard is fully operational with:
 
 ### **Menus don't appear?**
 - Refresh the page (F5)
-- Ensure you see **three menus**: 👤 Dashboard, 📊 Sheet Manager, ⚙️ Administrator
+- Ensure you see **six menus**: 👤 Dashboard, 📊 Sheet Manager, 🔧 Setup, 🎭 Demo, ⚙️ Administrator, 🧪 Tests
 - Or manually run `onOpen()` from Apps Script editor
 
 ### **Authorization error?**
