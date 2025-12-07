@@ -79,7 +79,7 @@ function createDashboardControlPanel(sheet) {
     .setFontColor("white");
 
   const controls = [
-    ["Metric 1:", "Chart Type 1:", "Metric 2:", "Chart Type 2:", "Theme:"],
+    ["What to show (Chart 1):", "How to show it (Chart 1):", "What to show (Chart 2):", "How to show it (Chart 2):", "Color Scheme:"],
     ["", "", "", "", ""]
   ];
 
@@ -93,7 +93,7 @@ function createDashboardControlPanel(sheet) {
     .setBackground(COLORS.WHITE)
     .setBorder(true, true, true, true, true, true, COLORS.BORDER_GRAY, SpreadsheetApp.BorderStyle.SOLID);
 
-  sheet.getRange("G6").setValue("Enable Comparison:")
+  sheet.getRange("G6").setValue("Show both charts:")
     .setFontWeight("bold")
     .setFontSize(10).setFontFamily("Roboto")
     .setBackground(COLORS.LIGHT_GRAY)
@@ -342,6 +342,15 @@ function setDashboardDimensions(sheet) {
 
   // Freeze header rows
   sheet.setFrozenRows(2);
+
+  // Delete unused columns beyond the defined layout (20 columns used A-T)
+  const totalCols = sheet.getMaxColumns();
+  const usedCols = 20;  // Interactive Dashboard uses columns A-T
+  if (totalCols > usedCols) {
+    sheet.deleteColumns(usedCols + 1, totalCols - usedCols);
+  }
+
+  sheet.setTabColor(COLORS.PRIMARY_BLUE);
 }
 
 /**
@@ -434,7 +443,7 @@ function setupInteractiveDashboardControls() {
     fontWeight: "bold"
   };
 
-  // Metric 1
+  // What to show (Chart 1)
   sheet.getRange("A7")
     .setDataValidation(metricRule)
     .setValue("Total Members")
@@ -442,7 +451,7 @@ function setupInteractiveDashboardControls() {
     .setBorder(true, true, true, true, false, false, dropdownStyle.border, SpreadsheetApp.BorderStyle.SOLID_MEDIUM)
     .setFontWeight(dropdownStyle.fontWeight);
 
-  // Chart Type 1
+  // How to show it (Chart 1)
   sheet.getRange("B7")
     .setDataValidation(chartTypeRule)
     .setValue("Donut Chart")
@@ -450,7 +459,7 @@ function setupInteractiveDashboardControls() {
     .setBorder(true, true, true, true, false, false, dropdownStyle.border, SpreadsheetApp.BorderStyle.SOLID_MEDIUM)
     .setFontWeight(dropdownStyle.fontWeight);
 
-  // Metric 2
+  // What to show (Chart 2)
   sheet.getRange("C7")
     .setDataValidation(metricRule)
     .setValue("Active Grievances")
@@ -458,7 +467,7 @@ function setupInteractiveDashboardControls() {
     .setBorder(true, true, true, true, false, false, dropdownStyle.border, SpreadsheetApp.BorderStyle.SOLID_MEDIUM)
     .setFontWeight(dropdownStyle.fontWeight);
 
-  // Chart Type 2
+  // How to show it (Chart 2)
   sheet.getRange("D7")
     .setDataValidation(chartTypeRule)
     .setValue("Bar Chart")

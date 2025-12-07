@@ -14,7 +14,7 @@
  * Build Info:
  * - Version: 2.1.0 (Security Enhanced + Code Review Improvements)
  * - Build ID: 20251202-improvements
- * - Build Date: 2025-12-07T02:23:35.656Z
+ * - Build Date: 2025-12-07T02:41:16.523Z
  * - Build Type: DEVELOPMENT
  * - Modules: 77 files
  * - Tests Included: Yes
@@ -3409,6 +3409,13 @@ function createConfigTab() {
 
   config.setFrozenRows(2); // Freeze both category and header rows
   config.setTabColor("#2563EB");
+
+  // Delete unused columns beyond the defined layout (32 columns used)
+  const totalCols = config.getMaxColumns();
+  const usedCols = 32;  // Config uses 32 columns (A-AF)
+  if (totalCols > usedCols) {
+    config.deleteColumns(usedCols + 1, totalCols - usedCols);
+  }
 }
 
 /* --------------------- MEMBER DIRECTORY - ALL CORRECT COLUMNS --------------------- */
@@ -3500,6 +3507,12 @@ function createMemberDirectory() {
   // Hide Member Interests columns (U-X) by default
   memberDir.hideColumns(MEMBER_COLS.INTEREST_LOCAL, 4);     // Columns 21-24
 
+  // Delete unused columns beyond the defined headers (31 columns)
+  const totalCols = memberDir.getMaxColumns();
+  if (totalCols > headers.length) {
+    memberDir.deleteColumns(headers.length + 1, totalCols - headers.length);
+  }
+
   memberDir.setTabColor("#059669");
 }
 
@@ -3576,6 +3589,12 @@ function createGrievanceLog() {
     .setAllowInvalid(false)
     .build();
   checkboxRange.setDataValidation(checkboxValidation);
+
+  // Delete unused columns beyond the defined headers (34 columns)
+  const totalCols = grievanceLog.getMaxColumns();
+  if (totalCols > headers.length) {
+    grievanceLog.deleteColumns(headers.length + 1, totalCols - headers.length);
+  }
 
   grievanceLog.setTabColor("#DC2626");
 }
@@ -3761,6 +3780,13 @@ function createMainDashboard() {
   dashboard.getRange("C22:C31").setNumberFormat("MM/dd/yyyy");
 
   dashboard.setTabColor("#7C3AED");
+
+  // Delete unused columns beyond the defined layout (12 columns used A-L)
+  const totalCols = dashboard.getMaxColumns();
+  const usedCols = 12;  // Main Dashboard uses columns A-L
+  if (totalCols > usedCols) {
+    dashboard.deleteColumns(usedCols + 1, totalCols - usedCols);
+  }
 }
 
 /**
@@ -3926,6 +3952,13 @@ function createAnalyticsDataSheet() {
   analytics.getRange("J5").setFormula(`=UNIQUE(FILTER('Grievance Log'!${stewardCol}:${stewardCol}, 'Grievance Log'!${stewardCol}:${stewardCol}<>"", 'Grievance Log'!${stewardCol}:${stewardCol}<>"Assigned Steward (Name)"))`);
   analytics.getRange("K5").setFormula(`=ARRAYFORMULA(IF(J5:J<>"", COUNTIFS('Grievance Log'!${stewardCol}:${stewardCol}, J5:J, 'Grievance Log'!${statusCol}:${statusCol}, "Open"), ""))`);
 
+  // Delete unused columns beyond the defined layout (11 columns used A-K)
+  const totalCols = analytics.getMaxColumns();
+  const usedCols = 11;  // Analytics Data uses columns A-K
+  if (totalCols > usedCols) {
+    analytics.deleteColumns(usedCols + 1, totalCols - usedCols);
+  }
+
   analytics.hideSheet();
 }
 
@@ -3980,6 +4013,12 @@ function createMemberSatisfactionSheet() {
 
   satisfaction.getRange(11, 1, metrics.length, 2).setValues(metrics);
   satisfaction.setTabColor("#10B981");
+
+  // Delete unused columns beyond the defined headers (10 columns)
+  const totalCols = satisfaction.getMaxColumns();
+  if (totalCols > headers.length) {
+    satisfaction.deleteColumns(headers.length + 1, totalCols - headers.length);
+  }
 }
 
 /* --------------------- FEEDBACK & DEVELOPMENT --------------------- */
@@ -4003,6 +4042,12 @@ function createFeedbackSheet() {
   feedback.setFrozenRows(3);
   feedback.setTabColor(COLORS.ACCENT_PURPLE);
   feedback.setColumnWidth(1, 120); feedback.setColumnWidth(2, 110); feedback.setColumnWidth(3, 120); feedback.setColumnWidth(4, 80); feedback.setColumnWidth(5, 200); feedback.setColumnWidth(6, 300); feedback.setColumnWidth(7, 100); feedback.setColumnWidth(8, 90); feedback.setColumnWidth(9, 100); feedback.setColumnWidth(10, 110); feedback.setColumnWidth(11, 120); feedback.setColumnWidth(12, 200); feedback.setColumnWidth(13, 250); feedback.setColumnWidth(14, 110);
+
+  // Delete unused columns beyond the defined headers (14 columns)
+  const totalCols = feedback.getMaxColumns();
+  if (totalCols > headers.length) {
+    feedback.deleteColumns(headers.length + 1, totalCols - headers.length);
+  }
 }
 
 /* --------------------- STEWARD WORKLOAD --------------------- */
@@ -4016,6 +4061,12 @@ function createStewardWorkloadSheet() {
   sheet.getRange(3, 1, 1, headers.length).setValues([headers]).setFontWeight("bold").setBackground(COLORS.LIGHT_GRAY);
   sheet.setFrozenRows(3);
   sheet.setTabColor(COLORS.PRIMARY_PURPLE);
+
+  // Delete unused columns beyond the defined headers (11 columns)
+  const totalCols = sheet.getMaxColumns();
+  if (totalCols > headers.length) {
+    sheet.deleteColumns(headers.length + 1, totalCols - headers.length);
+  }
 }
 
 function createTrendsSheet() {
@@ -4028,6 +4079,12 @@ function createTrendsSheet() {
   sheet.getRange(3, 1, 1, headers.length).setValues([headers]).setFontWeight("bold").setBackground(COLORS.LIGHT_GRAY);
   sheet.setFrozenRows(3);
   sheet.setTabColor(COLORS.UNION_GREEN);
+
+  // Delete unused columns beyond the defined headers (12 columns)
+  const totalCols = sheet.getMaxColumns();
+  if (totalCols > headers.length) {
+    sheet.deleteColumns(headers.length + 1, totalCols - headers.length);
+  }
 }
 
 
@@ -4041,6 +4098,12 @@ function createLocationSheet() {
   sheet.getRange(3, 1, 1, headers.length).setValues([headers]).setFontWeight("bold").setBackground(COLORS.LIGHT_GRAY);
   sheet.setFrozenRows(3);
   sheet.setTabColor(COLORS.ACCENT_TEAL);
+
+  // Delete unused columns beyond the defined headers (11 columns)
+  const totalCols = sheet.getMaxColumns();
+  if (totalCols > headers.length) {
+    sheet.deleteColumns(headers.length + 1, totalCols - headers.length);
+  }
 }
 
 function createTypeAnalysisSheet() {
@@ -4053,6 +4116,12 @@ function createTypeAnalysisSheet() {
   sheet.getRange(3, 1, 1, headers.length).setValues([headers]).setFontWeight("bold").setBackground(COLORS.LIGHT_GRAY);
   sheet.setFrozenRows(3);
   sheet.setTabColor(COLORS.PRIMARY_BLUE);
+
+  // Delete unused columns beyond the defined headers (11 columns)
+  const totalCols = sheet.getMaxColumns();
+  if (totalCols > headers.length) {
+    sheet.deleteColumns(headers.length + 1, totalCols - headers.length);
+  }
 }
 
 /* --------------------- EXECUTIVE DASHBOARD (Merged Summary + Quick Stats) --------------------- */
@@ -4152,6 +4221,13 @@ function createExecutiveDashboard() {
   sheet.setColumnWidth(2, 150);
   sheet.setColumnWidth(3, 100);
   sheet.setColumnWidth(4, 100);
+
+  // Delete unused columns beyond the defined columns (4 columns used)
+  const totalCols = sheet.getMaxColumns();
+  const usedCols = 4;  // Executive Dashboard uses columns A-D
+  if (totalCols > usedCols) {
+    sheet.deleteColumns(usedCols + 1, totalCols - usedCols);
+  }
 }
 
 /* --------------------- KPI PERFORMANCE DASHBOARD (Merged Performance + KPI Board) --------------------- */
@@ -4224,6 +4300,12 @@ function createKPIPerformanceDashboard() {
   sheet.setColumnWidth(10, 80);  // Worst
   sheet.setColumnWidth(11, 120); // Owner
   sheet.setColumnWidth(12, 110); // Last Updated
+
+  // Delete unused columns beyond the defined headers (12 columns)
+  const totalCols = sheet.getMaxColumns();
+  if (totalCols > headers.length) {
+    sheet.deleteColumns(headers.length + 1, totalCols - headers.length);
+  }
 }
 
 function createMemberEngagementSheet() {
@@ -4236,6 +4318,12 @@ function createMemberEngagementSheet() {
   sheet.getRange(3, 1, 1, headers.length).setValues([headers]).setFontWeight("bold").setBackground(COLORS.LIGHT_GRAY);
   sheet.setFrozenRows(3);
   sheet.setTabColor(COLORS.ACCENT_PURPLE);
+
+  // Delete unused columns beyond the defined headers (12 columns)
+  const totalCols = sheet.getMaxColumns();
+  if (totalCols > headers.length) {
+    sheet.deleteColumns(headers.length + 1, totalCols - headers.length);
+  }
 }
 
 function createCostImpactSheet() {
@@ -4248,6 +4336,12 @@ function createCostImpactSheet() {
   sheet.getRange(3, 1, 1, headers.length).setValues([headers]).setFontWeight("bold").setBackground(COLORS.LIGHT_GRAY);
   sheet.setFrozenRows(3);
   sheet.setTabColor(COLORS.SOLIDARITY_RED);
+
+  // Delete unused columns beyond the defined headers (10 columns)
+  const totalCols = sheet.getMaxColumns();
+  if (totalCols > headers.length) {
+    sheet.deleteColumns(headers.length + 1, totalCols - headers.length);
+  }
 }
 
 
@@ -4261,6 +4355,12 @@ function createArchiveSheet() {
   sheet.getRange(3, 1, 1, headers.length).setValues([headers]).setFontWeight("bold").setBackground(COLORS.LIGHT_GRAY);
   sheet.setFrozenRows(3);
   sheet.setTabColor(COLORS.TEXT_GRAY);
+
+  // Delete unused columns beyond the defined headers (6 columns)
+  const totalCols = sheet.getMaxColumns();
+  if (totalCols > headers.length) {
+    sheet.deleteColumns(headers.length + 1, totalCols - headers.length);
+  }
 }
 
 function createDiagnosticsSheet() {
@@ -4273,6 +4373,12 @@ function createDiagnosticsSheet() {
   sheet.getRange(3, 1, 1, headers.length).setValues([headers]).setFontWeight("bold").setBackground(COLORS.LIGHT_GRAY);
   sheet.setFrozenRows(3);
   sheet.setTabColor(COLORS.SOLIDARITY_RED);
+
+  // Delete unused columns beyond the defined headers (7 columns)
+  const totalCols = sheet.getMaxColumns();
+  if (totalCols > headers.length) {
+    sheet.deleteColumns(headers.length + 1, totalCols - headers.length);
+  }
 }
 
 /* --------------------- DATA VALIDATIONS --------------------- */
@@ -27877,7 +27983,7 @@ function createDashboardControlPanel(sheet) {
     .setFontColor("white");
 
   const controls = [
-    ["Metric 1:", "Chart Type 1:", "Metric 2:", "Chart Type 2:", "Theme:"],
+    ["What to show (Chart 1):", "How to show it (Chart 1):", "What to show (Chart 2):", "How to show it (Chart 2):", "Color Scheme:"],
     ["", "", "", "", ""]
   ];
 
@@ -27891,7 +27997,7 @@ function createDashboardControlPanel(sheet) {
     .setBackground(COLORS.WHITE)
     .setBorder(true, true, true, true, true, true, COLORS.BORDER_GRAY, SpreadsheetApp.BorderStyle.SOLID);
 
-  sheet.getRange("G6").setValue("Enable Comparison:")
+  sheet.getRange("G6").setValue("Show both charts:")
     .setFontWeight("bold")
     .setFontSize(10).setFontFamily("Roboto")
     .setBackground(COLORS.LIGHT_GRAY)
@@ -28140,6 +28246,15 @@ function setDashboardDimensions(sheet) {
 
   // Freeze header rows
   sheet.setFrozenRows(2);
+
+  // Delete unused columns beyond the defined layout (20 columns used A-T)
+  const totalCols = sheet.getMaxColumns();
+  const usedCols = 20;  // Interactive Dashboard uses columns A-T
+  if (totalCols > usedCols) {
+    sheet.deleteColumns(usedCols + 1, totalCols - usedCols);
+  }
+
+  sheet.setTabColor(COLORS.PRIMARY_BLUE);
 }
 
 /**
@@ -28232,7 +28347,7 @@ function setupInteractiveDashboardControls() {
     fontWeight: "bold"
   };
 
-  // Metric 1
+  // What to show (Chart 1)
   sheet.getRange("A7")
     .setDataValidation(metricRule)
     .setValue("Total Members")
@@ -28240,7 +28355,7 @@ function setupInteractiveDashboardControls() {
     .setBorder(true, true, true, true, false, false, dropdownStyle.border, SpreadsheetApp.BorderStyle.SOLID_MEDIUM)
     .setFontWeight(dropdownStyle.fontWeight);
 
-  // Chart Type 1
+  // How to show it (Chart 1)
   sheet.getRange("B7")
     .setDataValidation(chartTypeRule)
     .setValue("Donut Chart")
@@ -28248,7 +28363,7 @@ function setupInteractiveDashboardControls() {
     .setBorder(true, true, true, true, false, false, dropdownStyle.border, SpreadsheetApp.BorderStyle.SOLID_MEDIUM)
     .setFontWeight(dropdownStyle.fontWeight);
 
-  // Metric 2
+  // What to show (Chart 2)
   sheet.getRange("C7")
     .setDataValidation(metricRule)
     .setValue("Active Grievances")
@@ -28256,7 +28371,7 @@ function setupInteractiveDashboardControls() {
     .setBorder(true, true, true, true, false, false, dropdownStyle.border, SpreadsheetApp.BorderStyle.SOLID_MEDIUM)
     .setFontWeight(dropdownStyle.fontWeight);
 
-  // Chart Type 2
+  // How to show it (Chart 2)
   sheet.getRange("D7")
     .setDataValidation(chartTypeRule)
     .setValue("Bar Chart")

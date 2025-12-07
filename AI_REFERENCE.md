@@ -38,6 +38,35 @@
 
 ## 🆕 Changelog - Version 3.1 (2025-12-07)
 
+**COLUMN CLEANUP - NO MORE UNUSED COLUMNS:**
+
+✅ **All Sheet Creation Functions Now Delete Unused Columns**
+- Every sheet creation function now removes columns beyond the defined headers
+- Ensures no tabs show extra empty columns (Z, AA, AB... etc.)
+- Clean, professional appearance with no wasted column space
+
+**Sheets Updated with Column Cleanup:**
+| Sheet | Function | Columns Kept |
+|-------|----------|--------------|
+| Config | `createConfigTab()` | 32 (A-AF) |
+| Member Directory | `createMemberDirectory()` | 31 (A-AE) |
+| Grievance Log | `createGrievanceLog()` | 34 (A-AH) |
+| Main Dashboard | `createMainDashboard()` | 12 (A-L) |
+| Interactive Dashboard | `createInteractiveDashboardSheet()` | 20 (A-T) |
+| Analytics Data | `createAnalyticsDataSheet()` | 11 (A-K) |
+| Member Satisfaction | `createMemberSatisfactionSheet()` | 10 (A-J) |
+| Feedback | `createFeedbackSheet()` | 14 (A-N) |
+| Steward Workload | `createStewardWorkloadSheet()` | 11 (A-K) |
+| Trends | `createTrendsSheet()` | 12 (A-L) |
+| Location Analytics | `createLocationSheet()` | 11 (A-K) |
+| Type Analysis | `createTypeAnalysisSheet()` | 11 (A-K) |
+| Executive Dashboard | `createExecutiveDashboard()` | 4 (A-D) |
+| KPI Performance | `createKPIPerformanceDashboard()` | 12 (A-L) |
+| Member Engagement | `createMemberEngagementSheet()` | 12 (A-L) |
+| Cost Impact | `createCostImpactSheet()` | 10 (A-J) |
+| Archive | `createArchiveSheet()` | 6 (A-F) |
+| Diagnostics | `createDiagnosticsSheet()` | 7 (A-G) |
+
 **NUKE FUNCTION FIX & DOCUMENTATION:**
 
 ✅ **Fixed Duplicate `nukeSeedData()` Function** (`Code.gs`, `SeedNuke.gs`)
@@ -63,9 +92,10 @@
    - Menu: `⚠️ Clear Core Data Only`
 
 **Files Modified:**
-- `Code.gs` - Renamed nukeSeedData() to nukeAllSheetData(), updated menu items
+- `Code.gs` - Added column cleanup, renamed nukeSeedData() to nukeAllSheetData()
+- `InteractiveDashboard.gs` - Added column cleanup to setDashboardDimensions()
 - `ReorganizedMenu.gs` - Updated menu items for consistency
-- `AI_REFERENCE.md` - Updated documentation for all three functions
+- `ConsolidatedDashboard.gs` - Rebuilt with all fixes
 - `SEED_NUKE_GUIDE.md` - Updated version and date
 
 ---
@@ -87,6 +117,16 @@
 ✅ **Rebuilt ConsolidatedDashboard.gs with 77 Modules**
 - Added missing test modules: TestFramework.gs, Code.test.gs, Integration.test.gs
 - Synced all dropdown and validation improvements
+
+✅ **Renamed Interactive Dashboard Controls** (`InteractiveDashboard.gs`)
+- More descriptive labels for better user experience:
+  - `What to show (Chart 1):` - Select metric for primary chart
+  - `How to show it (Chart 1):` - Select chart type for primary chart
+  - `What to show (Chart 2):` - Select metric for secondary chart
+  - `How to show it (Chart 2):` - Select chart type for secondary chart
+  - `Color Scheme:` - Select dashboard color theme
+  - `Show both charts:` - Toggle to display both charts
+  - `Quick Action:` - Dropdown for common actions
 
 **Member Directory Dropdowns (Single-Select):**
 - Job Title (D)
@@ -112,6 +152,7 @@
 **Files Modified:**
 - `MemberDirectoryDropdowns.gs` - Added Has Open Grievance dropdown
 - `SecurityService.gs` - Fixed createAuditLogSheet()
+- `InteractiveDashboard.gs` - Renamed dashboard control labels
 - `ConsolidatedDashboard.gs` - Rebuilt with all fixes
 
 ---
