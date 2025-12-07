@@ -295,7 +295,7 @@ function createFAQSheet(ss) {
     ["How do I add a new member?", "Go to the 👥 Member Directory sheet and add a new row. Fill in the basic information (First Name, Last Name, Job Title, Work Location, Unit, Email, Phone). The system will automatically calculate grievance metrics. Leave auto-calculated columns (highlighted in green/orange) blank."],
     ["How do I add a new grievance?", "Go to the 📋 Grievance Log sheet and add a new row. Enter the Member ID, name, status, current step, Incident Date, and grievance details. The system will automatically calculate all CBA-compliant deadlines based on Article 23A."],
     ["Which columns should I not edit manually?", "Never manually edit columns highlighted in green or orange. These are auto-calculated fields including: Member metrics (Total Grievances, Win Rate, etc.), Deadline columns (Filing Deadline, Step I/II/III Due Dates), and Derived fields (Days Open, Priority Score, etc.)."],
-    ["Can I import data from another spreadsheet?", "Yes! You can copy and paste data from another spreadsheet, or use the seed data functions for testing. Just ensure your data matches the column structure. Go to 509 Tools > Data Management > Seed All Test Data for sample data."]
+    ["Can I import data from another spreadsheet?", "Yes! You can copy and paste data from another spreadsheet. Just ensure your data matches the column structure. Use File > Import to bring in CSV files, or copy/paste directly from another sheet."]
   ];
 
   row++;
