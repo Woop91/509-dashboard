@@ -79,7 +79,7 @@ function createDashboardControlPanel(sheet) {
     .setFontColor("white");
 
   const controls = [
-    ["What to show (Chart 1):", "How to show it (Chart 1):", "What to show (Chart 2):", "How to show it (Chart 2):", "Theme:"],
+    ["What to show (Chart 1):", "How to show it (Chart 1):", "What to show (Chart 2):", "How to show it (Chart 2):", "Color Scheme:"],
     ["", "", "", "", ""]
   ];
 

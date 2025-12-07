@@ -14,7 +14,7 @@
  * Build Info:
  * - Version: 2.1.0 (Security Enhanced + Code Review Improvements)
  * - Build ID: 20251202-improvements
- * - Build Date: 2025-12-07T02:00:58.222Z
+ * - Build Date: 2025-12-07T02:04:10.100Z
  * - Build Type: DEVELOPMENT
  * - Modules: 77 files
  * - Tests Included: Yes
@@ -27919,7 +27919,7 @@ function createDashboardControlPanel(sheet) {
     .setFontColor("white");
 
   const controls = [
-    ["What to show (Chart 1):", "How to show it (Chart 1):", "What to show (Chart 2):", "How to show it (Chart 2):", "Theme:"],
+    ["What to show (Chart 1):", "How to show it (Chart 1):", "What to show (Chart 2):", "How to show it (Chart 2):", "Color Scheme:"],
     ["", "", "", "", ""]
   ];
 
