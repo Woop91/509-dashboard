@@ -1,6 +1,6 @@
 # 509 Dashboard - Complete Feature Reference
 
-**Version:** 3.3
+**Version:** 3.4
 **Last Updated:** 2025-12-07
 **Purpose:** Union grievance tracking and member engagement system for SEIU Local 509
 
@@ -36,7 +36,31 @@
 
 ---
 
-## 🆕 Changelog - Version 3.3 (2025-12-07)
+## 🆕 Changelog - Version 3.4 (2025-12-07)
+
+**FEATURE ROADMAP UPDATES:**
+
+✅ **Added Smart Member Import Feature** (High Priority)
+- Import member log information from uploaded CSV/Excel documents
+- Intelligent field mapping with UI
+- Duplicate detection during import
+- Preview before final import
+- Handle partial matches and data conflicts
+
+✅ **Added Nuke Safety Mode - Data Protection** (High Priority)
+- When nuke is enabled and data cleaned: prevent bulk data deletion/alteration
+- Protects Grievance Log and Member Directory from accidental mass changes
+- New data entry still permitted (single-row inserts allowed)
+- Add NUKE_SAFETY_MODE flag in Config
+- Block batch delete/edit operations after nuke
+
+**Files Modified:**
+- `TODO.md` - Added 2 new high-priority features (17 pending, was 15)
+- `RECOMMENDATIONS_IMPORT.csv` - Added features to tracking sheet
+
+---
+
+## Changelog - Version 3.3 (2025-12-07)
 
 **SEED FUNCTIONS RESTORED FOR DEMO/TESTING:**
 
