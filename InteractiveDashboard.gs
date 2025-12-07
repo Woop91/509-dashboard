@@ -1391,18 +1391,18 @@ function applyDashboardTheme(sheet, themeName) {
       accentColor = COLORS.ACCENT_TEAL;
   }
 
-  // Apply theme colors to headers
-  sheet.getRange("A1:T1").setBackground(primaryColor);
-  sheet.getRange("A4:T4").setBackground(accentColor);
-  sheet.getRange("A10:T10").setBackground(primaryColor);
-  sheet.getRange("A21:J21").setBackground(accentColor);
-  sheet.getRange("L21:T21").setBackground(COLORS.ACCENT_PURPLE);
-  sheet.getRange("A45:T45").setBackground(primaryColor);
-  sheet.getRange("A47:J47").setBackground(accentColor);
-  sheet.getRange("L47:T47").setBackground(COLORS.ACCENT_PURPLE);
-  sheet.getRange("A68:T68").setBackground(COLORS.ACCENT_PURPLE);
-  sheet.getRange("A70:T70").setBackground(accentColor);
-  sheet.getRange("A91:T91").setBackground(primaryColor);
+  // Apply theme colors to headers (updated for checkbox layout)
+  sheet.getRange("A1:T1").setBackground(primaryColor);    // Main header
+  sheet.getRange("A4:T4").setBackground(accentColor);     // Control panel header
+  sheet.getRange("A22:T22").setBackground(primaryColor);  // Metric cards header
+  sheet.getRange("A32:J32").setBackground(accentColor);   // Chart area 1 header
+  sheet.getRange("L32:T32").setBackground(COLORS.ACCENT_PURPLE); // Chart area 2 header
+  sheet.getRange("A56:T56").setBackground(primaryColor);  // Pie chart section header
+  sheet.getRange("A58:J58").setBackground(accentColor);   // Pie chart 1 header
+  sheet.getRange("L58:T58").setBackground(COLORS.ACCENT_PURPLE); // Pie chart 2 header
+  sheet.getRange("A79:T79").setBackground(COLORS.ACCENT_PURPLE); // Location section header
+  sheet.getRange("A81:T81").setBackground(accentColor);   // Location sub-header
+  sheet.getRange("A102:T102").setBackground(primaryColor); // Data table header
 }
 
 /**
@@ -1420,9 +1420,9 @@ function openInteractiveDashboard() {
   ss.setActiveSheet(sheet);
   SpreadsheetApp.getUi().alert('🎉 Welcome to your Interactive Dashboard!\n\n' +
     '✨ Here\'s how to make it dance:\n\n' +
-    '1️⃣ Pick your favorite metrics from the dropdowns in Row 7\n' +
-    '2️⃣ Click "509 Tools > Interactive Dashboard > Refresh Charts" to see the magic\n' +
-    '3️⃣ Turn on comparison mode to see two stories at once\n' +
-    '4️⃣ Choose a theme that makes you smile!\n\n' +
+    '1️⃣ Check the metrics you want to display in the control panel (rows 6-15)\n' +
+    '2️⃣ Select your chart type and theme using the checkboxes\n' +
+    '3️⃣ Click "509 Tools > Interactive Dashboard > Refresh Charts" to see the magic\n' +
+    '4️⃣ Enable comparison mode to see two charts side by side!\n\n' +
     '💪 Your data is ready to tell its story!');
 }
