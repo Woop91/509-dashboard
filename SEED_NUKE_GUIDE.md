@@ -10,6 +10,7 @@ The **Seed Nuke** feature allows you to remove all test/seeded data from your da
 
 When you execute the **Nuke Seed Data** function, the system will:
 
+### Data Removal
 1. **Remove ALL Members**: Delete all test members from Member Directory
 2. **Remove ALL Grievances**: Delete all test grievances from Grievance Log
 3. **Clear Steward Workload**: Remove all test steward assignments
@@ -23,13 +24,26 @@ When you execute the **Nuke Seed Data** function, the system will:
    - Grievance Coordinators (Column O)
    - Home Towns (Column AF)
    - Office Addresses (Column AN)
-5. **Preserve Organization Info**: Keep your real organization settings:
+
+### Code Removal (Zero Trace Guarantee)
+5. **Delete ALL Seed Functions**: Uses Apps Script API to permanently remove:
+   - All SEED_MEMBERS_TOGGLE functions from Code.gs
+   - All SEED_GRIEVANCES_TOGGLE functions from Code.gs
+   - All seed helper functions (seedMembersWithCount, etc.)
+   - SEED_20K_MEMBERS and SEED_5K_GRIEVANCES functions
+6. **Replace SeedNuke.gs**: Replaces this file with a minimal stub
+7. **Remove Seed Menu**: Deletes the "🌱 Seed Demo Data" menu from ReorganizedMenu.gs
+
+### Preserved Items
+8. **Preserve Organization Info**: Keep your real organization settings:
    - Organization Name, Local Number, Main Address, Phone
    - Union Parent, State/Region, Website
    - Main Fax, Toll Free numbers
    - All deadline and contract reference columns
-6. **Preserve Structure**: Keep all headers, formulas, and sheet structure intact
-7. **Show Setup Guide**: Display getting started instructions
+9. **Preserve Structure**: Keep all headers, formulas, and sheet structure intact
+10. **Show Setup Guide**: Display getting started instructions
+
+> **🔴 IMPORTANT**: After the nuke completes, there will be **ZERO trace** that seed functionality ever existed in your spreadsheet or script code. This is a permanent, irreversible operation.
 
 ---
 
@@ -76,14 +90,16 @@ You'll see **TWO confirmation dialogs**:
 
 **First Confirmation:**
 ```
-⚠️ WARNING: Remove All Seeded Data
+⚠️ WARNING: Remove All Seeded Data & Functions
 
-This will PERMANENTLY remove all test data from:
-• Member Directory (all members)
-• Grievance Log (all grievances)
-• Steward Workload (all records)
+This will PERMANENTLY remove:
+• All test data from Member Directory, Grievance Log, Steward Workload
+• Config Tab Demo Entries (Job Titles, Locations, etc.)
+• ALL seed functions from the script code
+• ALL seed menu items
+• ALL seed-related documentation
 
-Headers and sheet structure will be preserved.
+After this operation, there will be NO trace of seed functionality.
 
 This action CANNOT be undone!
 
@@ -96,9 +112,10 @@ Are you sure you want to proceed?
 
 This is your last chance!
 
-ALL test data will be permanently deleted.
+ALL test data AND seed code will be permanently deleted.
+This includes removing seed functions from the script itself.
 
-Click YES to proceed with data removal.
+Click YES to proceed.
 ```
 
 ### Step 3: Wait for Processing
@@ -132,9 +149,15 @@ After nuking, a comprehensive guide will appear with:
    - No overdue grievances
 
 3. **Menu Changes**:
-   - "Seed Data" options removed
+   - "🌱 Seed Demo Data" menu completely removed
    - Cleaner Data Management menu
    - Focus on production tools
+
+4. **Code Changes** (if Apps Script API enabled):
+   - All SEED_* functions removed from Code.gs (~600 lines deleted)
+   - SeedNuke.gs replaced with minimal stub
+   - Seed menu items removed from ReorganizedMenu.gs
+   - **Zero evidence** that seed functionality ever existed
 
 ### What Remains Intact
 
@@ -221,12 +244,18 @@ If using the grievance workflow:
 
 ## 🔄 Can I Undo the Nuke?
 
-**No, the nuke is permanent.**
+**No, the nuke is permanent and irreversible.**
 
-However, you can:
-- **Restore from backup**: If you made a copy before nuking
-- **Re-seed manually**: Run seed functions from script editor (for testing only)
-- **Import data**: Add your real data to start fresh
+The nuke not only deletes seed data but also **permanently removes all seed code** from the script itself. After nuking:
+- Seed functions no longer exist in the code
+- SeedNuke.gs is replaced with a minimal stub
+- The seed menu is completely removed
+- There is **zero trace** of seed functionality
+
+**Recovery options:**
+- **Restore from backup**: If you made a copy of the spreadsheet AND script before nuking
+- **Fresh deployment**: Deploy a new copy from the original source code
+- **Import data**: Add your real data to start fresh (recommended approach)
 
 ---
 
@@ -247,9 +276,10 @@ However, you can:
 ### Problem: Need to Re-Seed for Training
 
 **Solution**:
-1. Make a copy of the spreadsheet
-2. In the Apps Script editor, run `resetNukeFlag()`
-3. Run `seedAll()` from the menu
+Since seed functions are permanently deleted after nuking, you cannot re-seed:
+1. Deploy a fresh copy from the original source code
+2. Or restore from a backup made BEFORE the nuke
+3. The `resetNukeFlag()` function no longer restores seed capabilities
 
 ### Problem: Accidentally Nuked Too Soon
 
@@ -257,6 +287,35 @@ However, you can:
 - If you have a backup copy, restore from there
 - If no backup, you'll need to import your data manually
 - For future: Always make a backup first!
+
+---
+
+## 🔧 Apps Script API Requirement
+
+For the **automatic code removal** feature to work, the Apps Script API must be enabled:
+
+### Enabling the Apps Script API
+
+1. Go to [Google Cloud Console](https://console.cloud.google.com/)
+2. Select your project (or create one linked to your script)
+3. Go to **APIs & Services** > **Library**
+4. Search for "Apps Script API"
+5. Click **Enable**
+
+### Required OAuth Scope
+
+The script needs this OAuth scope for automatic code removal:
+```
+https://www.googleapis.com/auth/script.projects
+```
+
+### What Happens Without the API?
+
+If the Apps Script API is not enabled:
+- All **data** will still be cleared (members, grievances, config demo data)
+- Seed **code** will NOT be automatically removed
+- You'll see a message with manual cleanup instructions
+- You can manually delete seed functions from the Apps Script editor
 
 ---
 
@@ -342,4 +401,4 @@ Your dashboard is **production-ready**! 🚀
 ---
 
 **Last Updated**: 2025-12-07
-**Version**: 1.2.0
+**Version**: 2.0.0 (Self-Deleting Seed Code)
