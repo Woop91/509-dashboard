@@ -91,6 +91,72 @@
 
 ---
 
+## Changelog - Version 3.9 (2025-12-07)
+
+**DASHBOARD FIXES - Executive, KPI, and Steward Workload:**
+
+✅ **Fixed Executive Dashboard Member Satisfaction Score** (`Code.gs`)
+- **Issue:** Formula referenced `'Member Satisfaction'!C:C` (Member Name column)
+- **Fix:** Changed to `'Member Satisfaction'!F:F` (Overall Satisfaction 1-5 rating)
+- Member Satisfaction Score now displays correctly (average of 1-5 ratings)
+
+✅ **Fixed KPI Dashboard Last Month Column** (`Code.gs`)
+- **Issue:** All "Last Month" values were hardcoded as `"-"` placeholder
+- **Fix:** Added proper formulas using `EOMONTH()` to calculate previous month date ranges:
+  - Active Grievances: Filed in previous month with Open status
+  - Win Rate %: Settled vs Denied cases closed in previous month
+  - Avg Days to Resolve: Average days for cases closed in previous month
+  - Cases Settled: Settled cases closed in previous month
+  - Cases Pending: Pending Info cases filed in previous month
+- Static metrics (Total Members, Steward Coverage, Member/Steward Ratio) show current value
+
+✅ **Fixed Steward Workload to Reflect Actual Data** (`Code.gs`)
+- **Issue:** Overdue Cases and Due This Week columns showed 0 (hardcoded placeholders)
+- **Fix:** `populateStewardWorkload()` now calculates actual values:
+  - Overdue Cases: Counts grievances where DAYS_TO_DEADLINE < 0 or contains "OVERDUE"
+  - Due This Week: Counts grievances where DAYS_TO_DEADLINE is 0-7 days
+  - Also checks NEXT_ACTION_DUE date for additional due-this-week cases
+- Steward workload now accurately reflects open case deadlines
+
+**Files Modified:**
+- `Code.gs` - Fixed createExecutiveDashboard(), createKPIPerformanceDashboard(), populateStewardWorkload()
+- `ConsolidatedDashboard.gs` - Rebuilt with all fixes
+
+---
+
+## Changelog - Version 3.8 (2025-12-07)
+
+**OPERATIONS ANALYTICS & INTERACTIVE DASHBOARD FIXES:**
+
+✅ **Rewrote Operations Analytics with Dynamic Columns** (`OperationsAnalytics.gs`)
+- All formulas now use dynamic column references via `getColumnLetter()`
+- Added `getOperationsAnalyticsColumns()` helper function
+- Fixed blank column issues in all 5 sections (Trends, Location, Type, Engagement, Cost)
+- All number formatting uses TEXT(value,"#,##0") for comma separators
+
+✅ **Added Delete Standalone Tabs Function** (`OperationsAnalytics.gs`, `Code.gs`)
+- `deleteStandaloneAnalyticsTabs()` removes deprecated individual analytics tabs
+- Called automatically during CREATE_509_DASHBOARD after Operations Analytics created
+- Tabs deleted: Trends & Timeline, Location Analytics, Type Analysis, Member Engagement, Cost Impact
+
+✅ **Restored Feedback Auto-Population** (`DashboardFixes.gs`)
+- Sample Feedback & Development entries auto-populate on dashboard creation
+- 3 sample entries (Feedback, Future Feature, Bug Report) added if sheet is empty
+
+✅ **Fixed Interactive Dashboard Number Formatting** (`InteractiveDashboard.gs`)
+- All metric cards now use TEXT(value,"#,##0") for comma-formatted numbers (20,001 not 20001)
+- Fixed: Total Members, Active Cases, Resolution Rate, Needs Attention
+- Data tables also use comma formatting
+
+**Files Modified:**
+- `OperationsAnalytics.gs` - Complete rewrite with dynamic columns
+- `Code.gs` - Added deleteStandaloneAnalyticsTabs() call
+- `DashboardFixes.gs` - Restored feedback auto-population
+- `InteractiveDashboard.gs` - Fixed number formatting
+- `ConsolidatedDashboard.gs` - Rebuilt with all changes
+
+---
+
 ## Changelog - Version 3.7 (2025-12-07)
 
 **Creator Attribution Added:**
