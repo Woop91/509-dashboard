@@ -2130,8 +2130,9 @@ function onOpen() {
         .addSeparator()
         .addItem("Seed All 5k Grievances (Legacy)", "SEED_5K_GRIEVANCES"))
       .addSeparator()
-      .addItem("🗑️ Nuke All Seed Data", "nukeSeedData")
-      .addItem("⚠️ Clear All Data", "clearAllData")
+      .addItem("🚨 Nuke Seed Data (Exit Demo Mode)", "nukeSeedData")
+      .addItem("🗑️ Nuke ALL Sheet Data (Comprehensive)", "nukeAllSheetData")
+      .addItem("⚠️ Clear Core Data Only", "clearAllData")
       .addSeparator()
       .addSubMenu(ui.createMenu("👥 User Roles (RBAC)")
         .addItem("Initialize RBAC", "initializeRBAC")
@@ -3379,19 +3380,21 @@ function clearAllData() {
 }
 
 /**
- * NUCLEAR OPTION: Delete ALL seed data from all sheets
+ * NUCLEAR OPTION: Delete ALL data from all sheets (comprehensive clear)
  * More thorough than clearAllData - clears analytics, surveys, feedback too
+ * Different from nukeSeedData() in SeedNuke.gs which is for exiting demo mode
  */
-function nukeSeedData() {
+function nukeAllSheetData() {
   const ui = SpreadsheetApp.getUi();
   const response = ui.alert(
-    '🗑️ NUCLEAR OPTION: Delete ALL Seed Data',
+    '🗑️ NUCLEAR OPTION: Delete ALL Data',
     '⚠️ WARNING: This will DELETE:\n' +
     '• All members from Member Directory\n' +
     '• All grievances from Grievance Log\n' +
     '• All analytics data\n' +
     '• All satisfaction surveys\n' +
-    '• All feedback entries\n\n' +
+    '• All feedback entries\n' +
+    '• All archived data\n\n' +
     'This action CANNOT be undone!\n\n' +
     'Are you absolutely sure?',
     ui.ButtonSet.YES_NO
@@ -3450,7 +3453,7 @@ function nukeSeedData() {
       "Data Nuke",
       "All Sheets",
       "Completed",
-      "All seed data deleted via nukeSeedData()",
+      "All data deleted via nukeAllSheetData()",
       "Critical",
       "Data cleared successfully"
     ]);

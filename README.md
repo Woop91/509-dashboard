@@ -37,7 +37,7 @@ Complete union member database and grievance tracking system for Local 509.
 - **Audit Logging System** - Full audit trail for all data modifications
 - **Role-Based Access Control (RBAC)** - Admin, Steward, and Viewer roles
 - **DIAGNOSE_SETUP()** - Comprehensive system health check function
-- **Enhanced nukeSeedData()** - True nuclear option for clearing all test data
+- **Three Data Clearing Options** - nukeSeedData() (Exit Demo), nukeAllSheetData() (Comprehensive), clearAllData() (Core Only)
 - **Build System Fixes** - Proper module consolidation with 78 production modules
 
 ### Previous Updates (v2.0)
@@ -567,9 +567,13 @@ Generate realistic test data using the toggle-based approach:
 - Better performance for large datasets
 - Legacy functions (Seed All 20k/5k) still available for backward compatibility
 
-### Clear Data
-- **Nuke All Seed Data**: Removes all test data while preserving structure
-- Access via: **⚙️ Administrator > Seed Functions > Nuke All Seed Data**
+### Clear Data Options
+- **Nuke Seed Data (Exit Demo Mode)**: Removes core test data, sets SEED_NUKED flag, shows post-nuke guidance
+  - Access via: **⚙️ Administrator > Seed Functions > 🚨 Nuke Seed Data (Exit Demo Mode)**
+- **Nuke ALL Sheet Data (Comprehensive)**: Clears ALL sheets including analytics, surveys, feedback, archive
+  - Access via: **⚙️ Administrator > Seed Functions > 🗑️ Nuke ALL Sheet Data (Comprehensive)**
+- **Clear Core Data Only**: Clears only Member Directory and Grievance Log
+  - Access via: **⚙️ Administrator > Seed Functions > ⚠️ Clear Core Data Only**
 
 ## Key Improvements
 
@@ -697,7 +701,7 @@ Generate realistic test data using the toggle-based approach:
 4. Select **Seed Functions > Seed Grievances > Seed Grievances - Toggle 1 (2,500)**
 5. Repeat for additional grievance batch if needed (Toggle 2 for up to 5k total)
 6. Go to **Dashboard > Dashboards > Main Dashboard** to see populated metrics
-7. Use **Administrator > Seed Functions > Nuke All Seed Data** when done testing
+7. Use **Administrator > Seed Functions > 🚨 Nuke Seed Data (Exit Demo Mode)** when done testing
 
 **Note**: The toggle-based approach allows for incremental data generation to avoid timeouts
 
