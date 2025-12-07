@@ -3,18 +3,25 @@
  * REORGANIZED MENU SYSTEM
  * ------------------------------------------------------------------------====
  *
- * Organizes dashboard menus into three categories:
- * 1. Average User - Daily operations and common tasks
- * 2. Sheet Manager - Data management, performance, integrity, automations
- * 3. Administrator - System admin, seed functions, health monitoring
+ * Comprehensive menu system with 43+ features organized into four categories:
+ * 1. 👤 Dashboard - Daily operations, search, grievance tools, communications
+ * 2. 📊 Sheet Manager - Data, performance, integrity, automations, analytics
+ * 3. 🔧 Setup - Seed data, data management, dropdown configuration
+ * 4. ⚙️ Administrator - System health, workflow, column toggles, RBAC
  *
- * To use this menu instead of the default one:
- * - Rename the existing onOpen() function to onOpen_OLD()
- * - Rename this onOpen_Reorganized() function to onOpen()
+ * This file defines createReorganizedMenus(ui) which is called from Code.gs onOpen()
+ * The Tests menu and Optional Extras menu are defined separately in Code.gs
  */
 
-function onOpen_Reorganized() {
-  const ui = SpreadsheetApp.getUi();
+/**
+ * Creates the reorganized menus - called from Code.gs onOpen()
+ * This is the main entry point for menu creation
+ * @param {Ui} ui - The UI object from SpreadsheetApp
+ */
+function createReorganizedMenus(ui) {
+  if (!ui) {
+    ui = SpreadsheetApp.getUi();
+  }
 
   // ------------ AVERAGE USER MENU ------------
   ui.createMenu("👤 Dashboard")
@@ -24,14 +31,27 @@ function onOpen_Reorganized() {
       .addItem("🎯 Unified Operations Monitor", "showUnifiedOperationsMonitor")
       .addItem("📊 Main Dashboard", "goToDashboard")
       .addItem("✨ Interactive Dashboard", "openInteractiveDashboard")
-      .addItem("🔄 Refresh Interactive Dashboard", "rebuildInteractiveDashboard"))
+      .addItem("🔄 Refresh Interactive Dashboard", "rebuildInteractiveDashboard")
+      .addSeparator()
+      .addItem("📊 Benchmark Dashboard", "showBenchmarkDashboard")
+      .addItem("📈 Visualization Builder", "showVisualizationBuilder")
+      .addItem("⚡ Cached Dashboard (Fast)", "showCachedDashboard"))
     .addSeparator()
-    .addSubMenu(ui.createMenu("🔍 Search & Lookup")
+    .addSubMenu(ui.createMenu("🔍 Search & Filter")
       .addItem("🔍 Search Members", "showMemberSearch")
-      .addItem("🔍 Quick Member Search", "quickMemberSearch"))
+      .addItem("🔍 Quick Member Search", "quickMemberSearch")
+      .addSeparator()
+      .addItem("🔎 Advanced Search", "showSearchDialog")
+      .addItem("🎛️ Advanced Filtering", "showFilterDialog")
+      .addItem("⚡ Quick Filters", "showQuickFilterMenu")
+      .addSeparator()
+      .addItem("💾 Saved Searches", "showSavedSearches")
+      .addItem("🔖 Bookmarks", "showBookmarks"))
     .addSeparator()
     .addSubMenu(ui.createMenu("📋 Grievance Tools")
       .addItem("➕ Start New Grievance", "showStartGrievanceDialog")
+      .addItem("📋 My Assigned Grievances", "showMyAssignedGrievances")
+      .addSeparator()
       .addItem("🔄 Grievance Float Toggle", "toggleGrievanceFloat")
       .addItem("🎛️ Float Control Panel", "showGrievanceFloatPanel")
       .addSeparator()
@@ -47,16 +67,22 @@ function onOpen_Reorganized() {
       .addItem("📧 Compose Email", "composeGrievanceEmail")
       .addItem("📝 Email Templates", "showEmailTemplateManager")
       .addSeparator()
+      .addItem("🔔 Notification Center", "showNotificationCenter")
+      .addSeparator()
       .addItem("📧 Email Opt-Out Management", "showOptOutManagementPanel")
       .addItem("📊 Opt-Out Statistics", "showOptOutStatistics")
       .addSeparator()
       .addItem("📞 View Communications Log", "showGrievanceCommunications"))
     .addSeparator()
-    .addSubMenu(ui.createMenu("📊 Reports")
+    .addSubMenu(ui.createMenu("📊 Reports & Export")
       .addItem("📊 Custom Report Builder", "showCustomReportBuilder")
       .addSeparator()
+      .addItem("📤 Export Wizard", "showExportWizard")
+      .addItem("📥 Import Wizard", "showImportWizard")
+      .addSeparator()
       .addItem("📄 Export Grievances to CSV", "exportGrievancesToCSV")
-      .addItem("📄 Export Members to CSV", "exportMembersToCSV"))
+      .addItem("📄 Export Members to CSV", "exportMembersToCSV")
+      .addItem("📊 Advanced Export Options", "showAdvancedExport"))
     .addSeparator()
     .addSubMenu(ui.createMenu("♿ Accessibility")
       .addItem("♿ ADHD Control Panel", "showADHDControlPanel")
@@ -64,20 +90,38 @@ function onOpen_Reorganized() {
       .addSeparator()
       .addItem("🌙 Quick Toggle Dark Mode", "quickToggleDarkMode")
       .addItem("🎯 Activate Focus Mode", "activateFocusMode")
-      .addItem("🎯 Deactivate Focus Mode", "deactivateFocusMode"))
+      .addItem("🎯 Deactivate Focus Mode", "deactivateFocusMode")
+      .addSeparator()
+      .addItem("🦓 Toggle Zebra Stripes", "toggleZebraStripes")
+      .addItem("🔲 Toggle Gridlines (ADHD)", "toggleGridlinesADHD")
+      .addItem("🐢 Toggle Reduced Motion", "toggleReducedMotion"))
     .addSeparator()
     .addSubMenu(ui.createMenu("❓ Help & Support")
-      .addItem("🚀 Quick Start Guide", "showQuickStartGuide")
+      .addItem("👋 Welcome Wizard", "showWelcomeWizard")
+      .addItem("🚀 Getting Started Guide", "showGettingStartedGuide")
       .addItem("📚 Interactive Tutorial", "showInteractiveTutorial")
       .addItem("🎥 Video Tutorials", "showVideoTutorials")
       .addSeparator()
       .addItem("❓ Context Help (F1)", "showContextHelp")
+      .addItem("📖 Enhanced Help", "showEnhancedHelp")
+      .addItem("📋 Column Help", "showColumnHelp")
+      .addItem("💡 Quick Tips", "showQuickTips")
+      .addSeparator()
       .addItem("🔍 Search Help", "showHelpSearch")
       .addItem("⌨️ Keyboard Shortcuts", "showKeyboardShortcuts")
       .addSeparator()
       .addItem("📋 Release Notes", "showReleaseNotes")
-      .addItem("🆕 What's New", "showWhatsNew"))
-    .addItem("⚡ Quick Actions", "showQuickActionsMenu")
+      .addItem("🆕 What's New", "showWhatsNew")
+      .addItem("📜 Version History", "showVersionHistory"))
+    .addSeparator()
+    .addSubMenu(ui.createMenu("⚡ Quick Actions")
+      .addItem("⚡ Quick Actions Menu", "showQuickActionsMenu")
+      .addItem("📌 Quick Actions Sidebar", "showQuickActionsSidebar")
+      .addSeparator()
+      .addItem("👤 Member Quick Actions", "showMemberQuickActions")
+      .addItem("📋 Grievance Quick Actions", "showGrievanceQuickActions")
+      .addSeparator()
+      .addItem("📝 Quick Capture Notepad", "showQuickCaptureNotepad"))
     .addToUi();
 
   // ------------ SHEET MANAGER MENU ------------
@@ -93,6 +137,9 @@ function onOpen_Reorganized() {
     .addSeparator()
     .addSubMenu(ui.createMenu("⚡ Performance")
       .addItem("🗄️ Cache Status Dashboard", "showCacheStatusDashboard")
+      .addItem("📊 Performance Summary", "showPerformanceSummary")
+      .addItem("📱 Device Analytics", "showDeviceAnalyticsDashboard")
+      .addItem("👥 Session Dashboard", "showSessionDashboard")
       .addSeparator()
       .addItem("🔥 Warm Up All Caches", "warmUpCaches")
       .addItem("🗑️ Clear All Caches", "invalidateAllCaches"))
@@ -100,6 +147,7 @@ function onOpen_Reorganized() {
     .addSubMenu(ui.createMenu("🔒 Data Integrity")
       .addItem("📊 Data Quality Dashboard", "showDataQualityDashboard")
       .addItem("🔍 Check Referential Integrity", "checkReferentialIntegrity")
+      .addItem("📋 Validation Report", "showValidationReport")
       .addSeparator()
       .addItem("✅ Run Bulk Validation", "runBulkValidation")
       .addItem("⚙️ Validation Settings", "showValidationSettings")
@@ -119,13 +167,18 @@ function onOpen_Reorganized() {
     .addSubMenu(ui.createMenu("🤖 Automations")
       .addItem("📬 Notification Settings", "showNotificationSettings")
       .addItem("📊 Report Automation Settings", "showReportAutomationSettings")
+      .addItem("🔄 Auto-Refresh Settings", "showAutoRefreshSettings")
       .addSeparator()
       .addItem("✅ Enable Daily Deadline Notifications", "setupDailyDeadlineNotifications")
       .addItem("🔕 Disable Deadline Notifications", "disableDailyDeadlineNotifications")
       .addSeparator()
       .addItem("✅ Enable Monthly Reports", "setupMonthlyReports")
       .addItem("✅ Enable Quarterly Reports", "setupQuarterlyReports")
-      .addItem("🔕 Disable All Reports", "disableAutomatedReports"))
+      .addItem("🔕 Disable All Reports", "disableAutomatedReports")
+      .addSeparator()
+      .addItem("⌨️ Setup Keyboard Shortcuts", "setupKeyboardShortcuts")
+      .addItem("🔄 Setup Auto-Refresh Trigger", "setupAutoRefreshTrigger")
+      .addItem("🔒 Setup Security Monitoring", "setupSuspiciousActivityMonitoring"))
     .addSeparator()
     .addSubMenu(ui.createMenu("📁 Google Drive Integration")
       .addItem("📁 Batch Create All Folders", "batchCreateGrievanceFolders")
@@ -223,6 +276,9 @@ function onOpen_Reorganized() {
     .addSeparator()
     .addSubMenu(ui.createMenu("👁️ Column Toggles & View")
       .addItem("Toggle Level 2 Member Columns", "toggleLevel2Columns")
+      .addItem("Toggle Engagement Metrics", "toggleEngagementMetricsColumns")
+      .addItem("Toggle Member Interests", "toggleMemberInterestsColumns")
+      .addItem("Toggle Engagement & Interests", "toggleEngagementAndInterestsColumns")
       .addItem("Show All Member Columns", "showAllMemberColumns")
       .addSeparator()
       .addItem("📨 Toggle Admin Message Columns", "toggleAdminMessageColumns")
@@ -234,20 +290,12 @@ function onOpen_Reorganized() {
       .addItem("🔄 Refresh Dashboard Deadlines", "refreshDashboardDeadlines")
       .addItem("🧹 Cleanup Extra Member Columns", "cleanupMemberDirectoryColumns")
       .addSeparator()
-      .addSubMenu(ui.createMenu("📁 Admin Tab Visibility")
-        .addItem("👁️ Toggle Admin Tabs", "toggleAdminTabs")
-        .addItem("🙈 Hide All Admin Tabs", "hideAdminTabs")
-        .addItem("👀 Show All Admin Tabs", "showAdminTabs")
-        .addItem("📤 Move Admin Tabs to End", "moveAdminTabsToEnd")
-        .addSeparator()
-        .addItem("👁️ Hide Diagnostics Tab", "hideDiagnosticsTab"))
+      .addItem("👁️ Hide Diagnostics Tab", "hideDiagnosticsTab")
       .addItem("Reorder Sheets Logically", "reorderSheetsLogically")
       .addItem("Hide Gridlines (Focus Mode)", "hideAllGridlines")
       .addItem("Show Gridlines", "showAllGridlines")
-      .addItem("Setup ADHD Defaults", "setupADHDDefaults")
-      .addSeparator()
-      .addItem("🔧 Run All Dashboard Fixes", "runAllDashboardFixes")
-      .addItem("🔄 Clear Grievance Log Row Formatting", "clearGrievanceLogRowFormatting"))
+      .addItem("🎯 Toggle Complexity Indicators", "toggleComplexityIndicators")
+      .addItem("Setup ADHD Defaults", "setupADHDDefaults"))
     .addSeparator()
     .addSubMenu(ui.createMenu("↩️ History & Undo")
       .addItem("↩️ Undo/Redo History", "showUndoRedoPanel")
@@ -261,6 +309,9 @@ function onOpen_Reorganized() {
     .addSubMenu(ui.createMenu("📱 Mobile & Viewing")
       .addItem("📱 Mobile Dashboard", "showMobileDashboard")
       .addItem("📋 Mobile Grievance List", "showMobileGrievanceList")
+      .addItem("📋 Mobile Grievance Browser", "showMobileGrievanceBrowser")
+      .addItem("👥 Mobile Member Browser", "showMobileMemberBrowser")
+      .addItem("🔍 Mobile Unified Search", "showMobileUnifiedSearch")
       .addSeparator()
       .addItem("📄 Paginated Data Viewer", "showPaginatedViewer"))
     .addSeparator()
@@ -289,6 +340,18 @@ function onOpen_Reorganized() {
       .addSeparator()
       .addItem("My Permissions", "showMyPermissions"))
     .addSeparator()
+    .addSubMenu(ui.createMenu("⚙️ User Settings")
+      .addItem("⚙️ Preferences Editor", "showPreferencesEditor")
+      .addItem("🌐 Language Selector", "showLanguageSelector"))
+    .addSeparator()
     .addItem("👁️ Toggle Setup Menu Visibility", "toggleSetupMenuVisibility")
     .addToUi();
+}
+
+/**
+ * Legacy wrapper for backwards compatibility
+ * Calls createReorganizedMenus() directly
+ */
+function onOpen_Reorganized() {
+  createReorganizedMenus();
 }

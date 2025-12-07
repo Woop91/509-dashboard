@@ -38,53 +38,43 @@
 
 ## 🆕 Changelog - Version 3.5 (2025-12-07)
 
-**COMPREHENSIVE DASHBOARD FIXES:**
+**MENU SYSTEM RESTORATION - 43 Missing Features Added:**
 
-✅ **Fixed Grievance Log Negative Days Issue** (`BatchGrievanceRecalc.gs`)
-- **Days Open:** Now shows 0 instead of negative when date filed is in future
-- **Days to Deadline:** Shows "OVERDUE: X days" text for past deadlines instead of negative numbers
-- Shows "DUE TODAY" when deadline is today
-- Positive numbers shown for future deadlines (works with conditional formatting)
+Features existed in codebase but were not accessible from menu. All restored:
 
-✅ **Fixed Row Formatting Issues** (`DashboardFixes.gs`)
-- Added `clearGrievanceLogRowFormatting()` to fix row 2 highlighting issue
-- Added `resetGrievanceLogFormatting()` for complete formatting reset
-- Added `setupDaysToDeadlineConditionalFormatting()` to reapply conditional rules
+✅ **Search & Filter Features** (`👤 Dashboard > 🔍 Search & Filter`)
+- Advanced Search (`showSearchDialog`) - Multi-criteria grievance search
+- Advanced Filtering (`showFilterDialog`) - Complex filter combinations
+- Quick Filters (`showQuickFilterMenu`) - One-click filter presets
+- Saved Searches (`showSavedSearches`) - Load saved filter configurations
+- Bookmarks (`showBookmarks`) - Quick navigation to saved locations
 
-✅ **Fixed Non-Populating Analytics Tabs** (`DashboardFixes.gs`)
-- Added `populateTypeAnalysis()` - populates Type Analysis with win rates, trends, etc.
-- Added `populateTrendsSheet()` - monthly trend data with formulas
-- Added `populateLocationAnalytics()` - location-based metrics
-- Added `populateKPIPerformanceDashboard()` - KPI refresh
-- Added `populateMemberEngagement()` - engagement metrics
-- Added `populateCostImpact()` - cost tracking formulas
-- Added `populateAllAnalyticsSheetsEnhanced()` - master populate function
+✅ **Export/Import Wizards** (`👤 Dashboard > 📊 Reports & Export`)
+- Export Wizard (`showExportWizard`) - Guided data export with format options
+- Import Wizard (`showImportWizard`) - Guided data import from CSV/Excel
+- Advanced Export Options (`showAdvancedExport`) - Detailed export controls
 
-✅ **Added Admin Tab Hide/Unhide Toggle** (`DashboardFixes.gs`, `ReorganizedMenu.gs`)
-- **Tabs that can be hidden:** Error_Log, Test Results, Backup Log, Audit Log, Error_Trends, Archive, Diagnostics
-- Added `hideAdminTabs()` - hides all admin/diagnostic tabs
-- Added `showAdminTabs()` - shows all admin/diagnostic tabs
-- Added `toggleAdminTabs()` - toggle visibility
-- Added `moveAdminTabsToEnd()` - reorders admin tabs to end of sheet list
-- **Menu:** Administrator > Column Toggles & View > Admin Tab Visibility
+✅ **Quick Actions** (`👤 Dashboard > ⚡ Quick Actions`)
+- Quick Actions Sidebar (`showQuickActionsSidebar`) - Persistent action panel
+- Member Quick Actions (`showMemberQuickActions`) - Context menu for members
+- Grievance Quick Actions (`showGrievanceQuickActions`) - Context menu for grievances
+- Quick Capture Notepad (`showQuickCaptureNotepad`) - Rapid note-taking
+- My Assigned Grievances (`showMyAssignedGrievances`) - Personal case list
 
-✅ **Fixed Interactive Dashboard Quick Action Dropdown** (`DashboardFixes.gs`)
-- Added `fixInteractiveDropdownHighlighting()` - applies consistent blue styling
-- Quick Action dropdown now matches other dropdown styling
+✅ **Dashboard/Analytics** (`👤 Dashboard > 📊 Dashboards`)
+- Benchmark Dashboard (`showBenchmarkDashboard`) - Performance comparisons
+- Visualization Builder (`showVisualizationBuilder`) - Custom chart creation
+- Cached Dashboard (`showCachedDashboard`) - Fast cached view
 
-✅ **Added Master Fix Function** (`DashboardFixes.gs`)
-- `runAllDashboardFixes()` - runs all fixes at once:
-  - Clears row formatting issues
-  - Populates all analytics sheets
-  - Fixes dropdown styling
-  - Moves and hides admin tabs
-  - Refreshes grievance calculations
+✅ **Performance Monitoring** (`📊 Sheet Manager > ⚡ Performance`)
+- Performance Summary (`showPerformanceSummary`) - System metrics overview
+- Device Analytics (`showDeviceAnalyticsDashboard`) - Usage by device
+- Session Dashboard (`showSessionDashboard`) - Active user sessions
 
-**Office Locations Config Documented:**
-- Column B: Office Locations (site names)
-- Column AN: Office Addresses (corresponding addresses)
-- Column W: Main organization address
-- Column X: Main phone, AO: Main fax, AP: Contact name, AQ: Contact email
+✅ **Mobile Features** (`⚙️ Administrator > 📱 Mobile & Viewing`)
+- Mobile Grievance Browser (`showMobileGrievanceBrowser`) - Touch-optimized browsing
+- Mobile Member Browser (`showMobileMemberBrowser`) - Touch-optimized member view
+- Mobile Unified Search (`showMobileUnifiedSearch`) - Mobile search interface
 
 ✅ **Automatic Trigger Installation** (`DashboardFixes.gs`, `Code.gs`)
 - `installEssentialTriggers()` - Automatically installs onEdit trigger during CREATE_509_DASHBOARD
@@ -93,14 +83,46 @@
 - **Auto-recalc triggers on:** Incident Date, Date Filed, Step decisions, Date Closed, Status, Current Step
 - **No manual steps required** - Users just enter data, calculations happen automatically
 
+✅ **Help & Onboarding** (`👤 Dashboard > ❓ Help & Support`)
+- Welcome Wizard (`showWelcomeWizard`) - First-time user setup
+- Getting Started Guide (`showGettingStartedGuide`) - Onboarding walkthrough
+- Enhanced Help (`showEnhancedHelp`) - Comprehensive help system
+- Column Help (`showColumnHelp`) - Field-specific documentation
+- Quick Tips (`showQuickTips`) - Contextual hints
+- Version History (`showVersionHistory`) - Change history viewer
+
+✅ **Accessibility Toggles** (`👤 Dashboard > ♿ Accessibility`)
+- Toggle Zebra Stripes (`toggleZebraStripes`) - Alternating row colors
+- Toggle Gridlines ADHD (`toggleGridlinesADHD`) - Focus-friendly gridlines
+- Toggle Reduced Motion (`toggleReducedMotion`) - Minimize animations
+
+✅ **Column View Toggles** (`⚙️ Administrator > 👁️ Column Toggles & View`)
+- Toggle Engagement Metrics (`toggleEngagementMetricsColumns`)
+- Toggle Member Interests (`toggleMemberInterestsColumns`)
+- Toggle Engagement & Interests (`toggleEngagementAndInterestsColumns`)
+- Toggle Complexity Indicators (`toggleComplexityIndicators`)
+
+✅ **Automations & Setup** (`📊 Sheet Manager > 🤖 Automations`)
+- Auto-Refresh Settings (`showAutoRefreshSettings`) - Configure refresh behavior
+- Setup Keyboard Shortcuts (`setupKeyboardShortcuts`) - Hotkey configuration
+- Setup Auto-Refresh Trigger (`setupAutoRefreshTrigger`) - Enable auto-refresh
+- Setup Security Monitoring (`setupSuspiciousActivityMonitoring`) - Security alerts
+
+✅ **Data & Utilities**
+- Validation Report (`showValidationReport`) - Data quality summary
+- Notification Center (`showNotificationCenter`) - Central alert hub
+- Preferences Editor (`showPreferencesEditor`) - User settings
+- Language Selector (`showLanguageSelector`) - i18n language selection
+
 **Files Created:**
 - `DashboardFixes.gs` - Comprehensive fixes file with auto-triggers (~900 lines)
 
 **Files Modified:**
 - `BatchGrievanceRecalc.gs` - Fixed calculateGrievanceTimeline() for negative days
-- `ReorganizedMenu.gs` - Added Admin Tab Visibility submenu and fix menu items
+- `ReorganizedMenu.gs` - Added 43 missing menu items across all menus and Admin Tab Visibility submenu
 - `Code.gs` - Added auto-population and trigger installation to CREATE_509_DASHBOARD
-- `AI_REFERENCE.md` - Updated documentation
+- `AI_REFERENCE.md` - Updated to v3.5 with complete feature documentation
+- `ConsolidatedDashboard.gs` - Rebuilt with updated menu
 
 ---
 
@@ -108,14 +130,14 @@
 
 **FEATURE ROADMAP UPDATES:**
 
-✅ **Added Smart Member Import Feature** (High Priority)
+✅ **Added Smart Member Import Feature** (High Priority) - *PLANNED, NOT YET IMPLEMENTED*
 - Import member log information from uploaded CSV/Excel documents
 - Intelligent field mapping with UI
 - Duplicate detection during import
 - Preview before final import
 - Handle partial matches and data conflicts
 
-✅ **Added Nuke Safety Mode - Data Protection** (High Priority)
+✅ **Added Nuke Safety Mode - Data Protection** (High Priority) - *PLANNED, NOT YET IMPLEMENTED*
 - When nuke is enabled and data cleaned: prevent bulk data deletion/alteration
 - Protects Grievance Log and Member Directory from accidental mass changes
 - New data entry still permitted (single-row inserts allowed)
