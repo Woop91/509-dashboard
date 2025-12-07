@@ -1,7 +1,7 @@
 # 509 Dashboard - Complete Feature Reference
 
-**Version:** 2.9
-**Last Updated:** 2025-12-06
+**Version:** 3.0
+**Last Updated:** 2025-12-07
 **Purpose:** Union grievance tracking and member engagement system for SEIU Local 509
 
 ---
@@ -36,7 +36,53 @@
 
 ---
 
-## 🆕 Changelog - Version 2.9 (2025-12-06)
+## 🆕 Changelog - Version 3.0 (2025-12-07)
+
+**DROPDOWN & VALIDATION IMPROVEMENTS:**
+
+✅ **Added "Has Open Grievance?" Dropdown** (`MemberDirectoryDropdowns.gs`)
+- Added dropdown to column AB (MEMBER_COLS.HAS_OPEN_GRIEVANCE)
+- Uses Yes/No values from Config sheet
+- Added to both main and silent dropdown setup functions
+
+✅ **Fixed Audit Log Sheet Creation** (`SecurityService.gs`)
+- `createAuditLogSheet()` now checks if sheet exists before creating
+- Also checks for "Audit_Log" variant for backward compatibility
+- Prevents "sheet already exists" error during dashboard setup
+
+✅ **Rebuilt ConsolidatedDashboard.gs with 77 Modules**
+- Added missing test modules: TestFramework.gs, Code.test.gs, Integration.test.gs
+- Synced all dropdown and validation improvements
+
+**Member Directory Dropdowns (Single-Select):**
+- Job Title (D)
+- Work Location (E)
+- Unit (F)
+- Is Steward (N)
+- Supervisor Name (L)
+- Manager Name (M)
+- Assigned Steward (P)
+- Contact Steward (Z)
+- **Has Open Grievance? (AB)** ← NEW
+
+**Member Directory Dropdowns (Multi-Select):**
+- Office Days (G)
+- Preferred Communication (J)
+- Best Time to Contact (K)
+- Committees (O)
+
+**Grievance Log Dropdowns (Multi-Select):**
+- Articles Violated (V)
+- Issue Category (W)
+
+**Files Modified:**
+- `MemberDirectoryDropdowns.gs` - Added Has Open Grievance dropdown
+- `SecurityService.gs` - Fixed createAuditLogSheet()
+- `ConsolidatedDashboard.gs` - Rebuilt with all fixes
+
+---
+
+## Changelog - Version 2.9 (2025-12-06)
 
 **UTILITY FUNCTION & ADDITIONAL REFACTORING:**
 
