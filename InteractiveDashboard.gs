@@ -342,6 +342,15 @@ function setDashboardDimensions(sheet) {
 
   // Freeze header rows
   sheet.setFrozenRows(2);
+
+  // Delete unused columns beyond the defined layout (20 columns used A-T)
+  const totalCols = sheet.getMaxColumns();
+  const usedCols = 20;  // Interactive Dashboard uses columns A-T
+  if (totalCols > usedCols) {
+    sheet.deleteColumns(usedCols + 1, totalCols - usedCols);
+  }
+
+  sheet.setTabColor(COLORS.PRIMARY_BLUE);
 }
 
 /**

@@ -1,6 +1,6 @@
 # 509 Dashboard - Complete Feature Reference
 
-**Version:** 3.0
+**Version:** 3.1
 **Last Updated:** 2025-12-07
 **Purpose:** Union grievance tracking and member engagement system for SEIU Local 509
 
@@ -36,7 +36,45 @@
 
 ---
 
-## 🆕 Changelog - Version 3.0 (2025-12-07)
+## 🆕 Changelog - Version 3.1 (2025-12-07)
+
+**COLUMN CLEANUP - NO MORE UNUSED COLUMNS:**
+
+✅ **All Sheet Creation Functions Now Delete Unused Columns**
+- Every sheet creation function now removes columns beyond the defined headers
+- Ensures no tabs show extra empty columns (Z, AA, AB... etc.)
+- Clean, professional appearance with no wasted column space
+
+**Sheets Updated with Column Cleanup:**
+| Sheet | Function | Columns Kept |
+|-------|----------|--------------|
+| Config | `createConfigTab()` | 32 (A-AF) |
+| Member Directory | `createMemberDirectory()` | 31 (A-AE) |
+| Grievance Log | `createGrievanceLog()` | 34 (A-AH) |
+| Main Dashboard | `createMainDashboard()` | 12 (A-L) |
+| Interactive Dashboard | `createInteractiveDashboardSheet()` | 20 (A-T) |
+| Analytics Data | `createAnalyticsDataSheet()` | 11 (A-K) |
+| Member Satisfaction | `createMemberSatisfactionSheet()` | 10 (A-J) |
+| Feedback | `createFeedbackSheet()` | 14 (A-N) |
+| Steward Workload | `createStewardWorkloadSheet()` | 11 (A-K) |
+| Trends | `createTrendsSheet()` | 12 (A-L) |
+| Location Analytics | `createLocationSheet()` | 11 (A-K) |
+| Type Analysis | `createTypeAnalysisSheet()` | 11 (A-K) |
+| Executive Dashboard | `createExecutiveDashboard()` | 4 (A-D) |
+| KPI Performance | `createKPIPerformanceDashboard()` | 12 (A-L) |
+| Member Engagement | `createMemberEngagementSheet()` | 12 (A-L) |
+| Cost Impact | `createCostImpactSheet()` | 10 (A-J) |
+| Archive | `createArchiveSheet()` | 6 (A-F) |
+| Diagnostics | `createDiagnosticsSheet()` | 7 (A-G) |
+
+**Files Modified:**
+- `Code.gs` - Added column cleanup to all sheet creation functions
+- `InteractiveDashboard.gs` - Added column cleanup to setDashboardDimensions()
+- `ConsolidatedDashboard.gs` - Rebuilt with all fixes
+
+---
+
+## Changelog - Version 3.0 (2025-12-07)
 
 **DROPDOWN & VALIDATION IMPROVEMENTS:**
 
