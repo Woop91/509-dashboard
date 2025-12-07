@@ -125,6 +125,38 @@ function CREATE_509_DASHBOARD() {
     Logger.log("Completed setupAllDropdowns");
     SpreadsheetApp.getActive().toast("✅ Dropdowns configured", "95%", 2);
 
+    // Populate all analytics sheets with formulas
+    Logger.log("Starting populateAllAnalyticsSheetsOnCreate...");
+    populateAllAnalyticsSheetsOnCreate();
+    Logger.log("Completed populateAllAnalyticsSheetsOnCreate");
+    SpreadsheetApp.getActive().toast("✅ Analytics populated", "97%", 2);
+
+    // Fix Interactive Dashboard dropdown styling
+    Logger.log("Starting fixInteractiveDropdownHighlighting...");
+    if (typeof fixInteractiveDropdownHighlighting === 'function') {
+      fixInteractiveDropdownHighlighting();
+    }
+    Logger.log("Completed fixInteractiveDropdownHighlighting");
+
+    // Move admin tabs to end and hide them by default
+    Logger.log("Starting moveAdminTabsToEnd...");
+    if (typeof moveAdminTabsToEnd === 'function') {
+      moveAdminTabsToEnd();
+    }
+    if (typeof hideAdminTabs === 'function') {
+      hideAdminTabs(true); // Silent mode - no UI alerts during creation
+    }
+    Logger.log("Completed admin tab organization");
+    SpreadsheetApp.getActive().toast("✅ Tabs organized", "98%", 2);
+
+    // Install essential triggers (auto-recalculation on edit)
+    Logger.log("Starting installEssentialTriggers...");
+    if (typeof installEssentialTriggers === 'function') {
+      installEssentialTriggers();
+    }
+    Logger.log("Completed installEssentialTriggers");
+    SpreadsheetApp.getActive().toast("✅ Triggers installed", "99%", 2);
+
     onOpen();
 
     SpreadsheetApp.getActive().toast("✅ Dashboard ready! Use menu to seed data.", "Complete!", 5);
