@@ -74,10 +74,29 @@
 - `refreshGrievanceFormulas()` now calls `recalcAllGrievancesBatched()` from BatchGrievanceRecalc.gs
 - Prevents data corruption when rows are deleted from the sheet
 
+✅ **Expanded Config Tab with Office Addresses & Union Headquarters** (`Code.gs`, `Constants.gs`)
+- **Extended CONFIG_COLS from 39 to 43 columns:**
+  - AN (40): Office Addresses - addresses for each office location (for grievance forms)
+  - AO (41): Main Fax - 508-485-8529
+  - AP (42): Main Contact Name - Marc
+  - AQ (43): Main Contact Email - marc@seiu509.org
+- **Updated Union Headquarters Info (protected from nuke):**
+  - Address: 293 Boston Post Road West, 4th Floor, Marlborough, MA 01752
+  - Main Phone: 774-843-7509
+  - Fax: 508-485-8529
+  - Contact: Marc - 800-632-8079 - marc@seiu509.org
+  - Website: https://www.seiu509.org/
+- **Updated ORG_DEFAULTS in Constants.gs** with correct union headquarters info
+- **Added 3 new category sections** to Config tab styling:
+  - Contract & Legal (cols 33-36) - Dark Green
+  - Org Identity (cols 37-39) - Dark Teal
+  - Extended Contact (cols 40-43) - Dark Blue
+
 **Files Modified:**
 - `InteractiveDashboard.gs` - Checkbox UI, updated row numbers, helper functions
 - `ConsolidatedDashboard.gs` - Same changes synchronized
-- `Code.gs` - Removed ARRAYFORMULA setup, updated refreshGrievanceFormulas()
+- `Code.gs` - Removed ARRAYFORMULA setup, expanded Config tab to 43 columns
+- `Constants.gs` - Added CONFIG_COLS.OFFICE_ADDRESSES, MAIN_FAX, MAIN_CONTACT_NAME, MAIN_CONTACT_EMAIL; updated ORG_DEFAULTS
 
 ---
 
@@ -481,30 +500,93 @@ The 509 Dashboard is a comprehensive Google Apps Script-based union management s
 
 ### 1. Config Sheet
 
-**Purpose:** Master source for all dropdown validations
+**Purpose:** Master source for all dropdown validations and organization settings
 
-**Columns (13 total):**
+**Columns (43 total) - FROM Constants.gs CONFIG_COLS:**
 ```
-A: Job Titles (Coordinator, Analyst, Case Manager, etc.)
-B: Office Locations (Boston HQ, Worcester Office, etc.)
-C: Units (Unit A - Administrative, Unit B - Technical, etc.)
-D: Office Days (Monday-Sunday)
-E: Yes/No (generic Y/N validation)
-F: Supervisors (names)
-G: Managers (names)
-H: Stewards (names)
-I: Grievance Status (Open, Pending Info, Settled, Withdrawn, etc.)
-J: Grievance Step (Informal, Step I, Step II, Step III, Mediation, Arbitration)
-K: Issue Category (Discipline, Workload, Scheduling, Pay, etc.)
-L: Articles Violated (Art. 1 - Recognition, Art. 23 - Grievance Procedure, etc.)
-M: Communication Methods (Email, Phone, Text, In Person)
+Employment Info (1-5):
+A (1):  Job Titles (Coordinator, Analyst, Case Manager, etc.)
+B (2):  Office Locations (Boston HQ, Worcester Office, etc.)
+C (3):  Units (Unit A - Administrative, Unit B - Technical, etc.)
+D (4):  Office Days (Monday-Sunday)
+E (5):  Yes/No (generic Y/N validation)
+
+Supervision (6-7):
+F (6):  Supervisors (names - managers only, NOT stewards)
+G (7):  Managers (names)
+
+Steward Info (8-9):
+H (8):  Stewards (union rep names)
+I (9):  Steward Committees (Grievance Committee, Bargaining Committee, etc.)
+
+Grievance Settings (10-14):
+J (10): Grievance Status (Open, Pending Info, Settled, Withdrawn, etc.)
+K (11): Grievance Step (Informal, Step I, Step II, Step III, Mediation, Arbitration)
+L (12): Issue Category (Discipline, Workload, Scheduling, Pay, etc.)
+M (13): Articles Violated (Art. 1 - Recognition, Art. 23 - Grievance Procedure, etc.)
+N (14): Communication Methods (Email, Phone, Text, In Person)
+
+Links & Coordinators (15-17):
+O (15): Grievance Coordinators (comma-separated list)
+P (16): Grievance Form URL
+Q (17): Contact Form URL
+
+Notifications (18-20):
+R (18): Admin Emails
+S (19): Alert Days Before Deadline (e.g., "3, 7, 14")
+T (20): Notification Recipients
+
+Organization (21-24):
+U (21): Organization Name (SEIU Local 509)
+V (22): Local Number (509)
+W (23): Main Office Address (293 Boston Post Road West, 4th Floor, Marlborough, MA 01752)
+X (24): Main Phone (774-843-7509)
+
+Integration (25-26):
+Y (25): Google Drive Folder ID
+Z (26): Google Calendar ID
+
+Deadlines (27-30):
+AA (27): Filing Deadline Days (default: 21)
+AB (28): Step I Response Days (default: 30)
+AC (29): Step II Appeal Days (default: 10)
+AD (30): Step II Response Days (default: 30)
+
+Multi-select Options (31-32):
+AE (31): Best Times to Contact
+AF (32): Home Towns
+
+Contract & Legal References (33-36):
+AG (33): Contract Article (Grievance) - e.g., "Article 23A"
+AH (34): Contract Article (Discipline) - e.g., "Article 12"
+AI (35): Contract Article (Workload) - e.g., "Article 15"
+AJ (36): Contract Name - e.g., "2023-2026 CBA"
+
+Org Identity (37-39):
+AK (37): Union Parent (SEIU)
+AL (38): State/Region (Massachusetts)
+AM (39): Organization Website (https://www.seiu509.org/)
+
+Extended Location & Contact Info (40-43):
+AN (40): Office Addresses (addresses for each office location - for grievance forms)
+AO (41): Main Fax (508-485-8529)
+AP (42): Main Contact Name (Marc)
+AQ (43): Main Contact Email (marc@seiu509.org)
 ```
+
+**Union Headquarters (Protected from Nuke):**
+- Organization info in columns 21-24 and 37-43 are NOT deleted by nuke operations
+- SEIU Local 509 Headquarters: 293 Boston Post Road West, 4th Floor, Marlborough, MA 01752
+- Main: 774-843-7509 | Fax: 508-485-8529
+- Contact: Marc - 800-632-8079 - marc@seiu509.org
+- Website: https://www.seiu509.org/
 
 **Styling:**
-- Header row: Bold, dark gray background (#4A5568), white text
+- Row 1: Category headers (dark colors, white text)
+- Row 2: Column headers (light colors, bold)
 - Tab color: Blue (#2563EB)
 - Auto-resized columns
-- Frozen first row
+- Frozen first two rows
 
 ---
 
