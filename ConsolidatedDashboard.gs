@@ -27947,6 +27947,69 @@ function createDashboardControlPanel(sheet) {
 }
 
 /**
+ * Get selected metrics from checkboxes
+ * Returns array of selected metric names
+ */
+function getSelectedMetrics(sheet) {
+  const metricsCol1 = [
+    "Total Members", "Active Members", "Total Stewards", "Unit 8 Members", "Unit 10 Members",
+    "Total Grievances", "Active Grievances", "Resolved Grievances", "Grievances Won", "Grievances Lost"
+  ];
+  const metricsCol2 = [
+    "Win Rate %", "Overdue Grievances", "Due This Week", "In Mediation", "In Arbitration",
+    "Grievances by Type", "Grievances by Location", "Grievances by Step", "Steward Workload", "Monthly Trends"
+  ];
+
+  const selected = [];
+
+  // Check column 1 (A6:A15)
+  for (let i = 0; i < 10; i++) {
+    if (sheet.getRange(6 + i, 1).getValue() === true) {
+      selected.push(metricsCol1[i]);
+    }
+  }
+
+  // Check column 2 (F6:F15)
+  for (let i = 0; i < 10; i++) {
+    if (sheet.getRange(6 + i, 6).getValue() === true) {
+      selected.push(metricsCol2[i]);
+    }
+  }
+
+  return selected;
+}
+
+/**
+ * Get selected chart type from checkboxes (row 17)
+ */
+function getSelectedChartType(sheet) {
+  const chartTypes = ["Donut Chart", "Pie Chart", "Bar Chart", "Column Chart", "Line Chart"];
+  const chartCols = [1, 3, 5, 7, 9]; // A, C, E, G, I
+
+  for (let i = 0; i < chartCols.length; i++) {
+    if (sheet.getRange(17, chartCols[i]).getValue() === true) {
+      return chartTypes[i];
+    }
+  }
+  return "Donut Chart"; // Default
+}
+
+/**
+ * Get selected theme from checkboxes (row 19)
+ */
+function getSelectedTheme(sheet) {
+  const themes = ["Union Blue", "Solidarity Red", "Success Green", "Professional Purple", "Modern Dark"];
+  const themeCols = [1, 3, 5, 7, 9]; // A, C, E, G, I
+
+  for (let i = 0; i < themeCols.length; i++) {
+    if (sheet.getRange(19, themeCols[i]).getValue() === true) {
+      return themes[i];
+    }
+  }
+  return "Union Blue"; // Default
+}
+
+/**
  * Creates metric cards section (rows 22-30) - adjusted for checkbox control panel
  */
 function createDashboardMetricCards(sheet) {
@@ -27966,9 +28029,9 @@ function createDashboardMetricCards(sheet) {
   ];
 
   cardPositions.forEach(function(card) {
-    const startRow = 12;
+    const startRow = 24;
 
-    sheet.getRange(`${card.col}${startRow}:${card.endCol}18`)
+    sheet.getRange(`${card.col}${startRow}:${card.endCol}30`)
       .setBackground(COLORS.WHITE)
       .setBorder(true, true, true, true, false, false, COLORS.BORDER_GRAY, SpreadsheetApp.BorderStyle.SOLID_MEDIUM);
 
@@ -28001,11 +28064,11 @@ function createDashboardMetricCards(sheet) {
 }
 
 /**
- * Creates chart areas (rows 21-42)
+ * Creates chart areas (rows 32-53) - adjusted for checkbox control panel
  */
 function createDashboardChartAreas(sheet) {
   // Chart Area 1
-  sheet.getRange("A21:J21").merge()
+  sheet.getRange("A32:J32").merge()
     .setValue("📊 YOUR STORY IN CHARTS - Watch Your Data Come to Life!")
     .setFontSize(13).setFontFamily("Roboto")
     .setFontWeight("bold")
@@ -28013,11 +28076,11 @@ function createDashboardChartAreas(sheet) {
     .setBackground(COLORS.ACCENT_TEAL)
     .setFontColor("white");
 
-  sheet.getRange("A22:J42")
+  sheet.getRange("A33:J53")
     .setBackground(COLORS.WHITE)
     .setBorder(true, true, true, true, false, false, COLORS.BORDER_GRAY, SpreadsheetApp.BorderStyle.SOLID);
 
-  sheet.getRange("A23:J23").merge()
+  sheet.getRange("A34:J34").merge()
     .setValue("🎨 Your chart is waiting to spring to life! Select a metric above and hit refresh")
     .setFontSize(11).setFontFamily("Roboto")
     .setFontStyle("italic")
@@ -28026,7 +28089,7 @@ function createDashboardChartAreas(sheet) {
     .setFontColor(COLORS.TEXT_GRAY);
 
   // Chart Area 2
-  sheet.getRange("L21:T21").merge()
+  sheet.getRange("L32:T32").merge()
     .setValue("📊 DOUBLE THE INSIGHTS - See Two Stories Side by Side!")
     .setFontSize(13).setFontFamily("Roboto")
     .setFontWeight("bold")
@@ -28034,11 +28097,11 @@ function createDashboardChartAreas(sheet) {
     .setBackground(COLORS.ACCENT_PURPLE)
     .setFontColor("white");
 
-  sheet.getRange("L22:T42")
+  sheet.getRange("L33:T53")
     .setBackground(COLORS.WHITE)
     .setBorder(true, true, true, true, false, false, COLORS.BORDER_GRAY, SpreadsheetApp.BorderStyle.SOLID);
 
-  sheet.getRange("L23:T23").merge()
+  sheet.getRange("L34:T34").merge()
     .setValue("🌟 Enable comparison mode above to see another dimension of your success!")
     .setFontSize(11).setFontFamily("Roboto")
     .setFontStyle("italic")
@@ -28048,10 +28111,10 @@ function createDashboardChartAreas(sheet) {
 }
 
 /**
- * Creates pie chart section (rows 45-65)
+ * Creates pie chart section (rows 56-76) - adjusted for checkbox control panel
  */
 function createDashboardPieChartSection(sheet) {
-  sheet.getRange("A45:T45").merge()
+  sheet.getRange("A56:T56").merge()
     .setValue("🥧 COLORFUL INSIGHTS - Your Work in Living Color!")
     .setFontSize(14).setFontFamily("Roboto")
     .setFontWeight("bold")
@@ -28060,7 +28123,7 @@ function createDashboardPieChartSection(sheet) {
     .setFontColor("white");
 
   // Pie Chart 1 - Grievances by Status
-  sheet.getRange("A47:J47").merge()
+  sheet.getRange("A58:J58").merge()
     .setValue("🎯 Status Snapshot - See Progress at a Glance")
     .setFontSize(12).setFontFamily("Roboto")
     .setFontWeight("bold")
@@ -28068,12 +28131,12 @@ function createDashboardPieChartSection(sheet) {
     .setBackground(COLORS.ACCENT_TEAL)
     .setFontColor("white");
 
-  sheet.getRange("A48:J65")
+  sheet.getRange("A59:J76")
     .setBackground(COLORS.WHITE)
     .setBorder(true, true, true, true, false, false, COLORS.BORDER_GRAY, SpreadsheetApp.BorderStyle.SOLID);
 
   // Pie Chart 2 - Grievances by Location
-  sheet.getRange("L47:T47").merge()
+  sheet.getRange("L58:T58").merge()
     .setValue("🗺️ Location Hotspots - Where the Action Is!")
     .setFontSize(12).setFontFamily("Roboto")
     .setFontWeight("bold")
@@ -28081,16 +28144,16 @@ function createDashboardPieChartSection(sheet) {
     .setBackground(COLORS.ACCENT_PURPLE)
     .setFontColor("white");
 
-  sheet.getRange("L48:T65")
+  sheet.getRange("L59:T76")
     .setBackground(COLORS.WHITE)
     .setBorder(true, true, true, true, false, false, COLORS.BORDER_GRAY, SpreadsheetApp.BorderStyle.SOLID);
 }
 
 /**
- * Creates warehouse-style location chart section (rows 68-88)
+ * Creates warehouse-style location chart section (rows 79-99) - adjusted for checkbox control panel
  */
 function createDashboardLocationChartSection(sheet) {
-  sheet.getRange("A68:T68").merge()
+  sheet.getRange("A79:T79").merge()
     .setValue("🏢 UNITED ACROSS LOCATIONS - Our Collective Strength!")
     .setFontSize(14).setFontFamily("Roboto")
     .setFontWeight("bold")
@@ -28098,7 +28161,7 @@ function createDashboardLocationChartSection(sheet) {
     .setBackground(COLORS.ACCENT_PURPLE)
     .setFontColor("white");
 
-  sheet.getRange("A70:T70").merge()
+  sheet.getRange("A81:T81").merge()
     .setValue("💪 Every City, Every Worker - Together We Stand!")
     .setFontSize(12).setFontFamily("Roboto")
     .setFontWeight("bold")
@@ -28106,16 +28169,16 @@ function createDashboardLocationChartSection(sheet) {
     .setBackground(COLORS.ACCENT_TEAL)
     .setFontColor("white");
 
-  sheet.getRange("A71:T88")
+  sheet.getRange("A82:T99")
     .setBackground(COLORS.WHITE)
     .setBorder(true, true, true, true, false, false, COLORS.BORDER_GRAY, SpreadsheetApp.BorderStyle.SOLID);
 }
 
 /**
- * Creates data table section (rows 91-110)
+ * Creates data table section (rows 102-121) - adjusted for checkbox control panel
  */
 function createDashboardDataTableSection(sheet) {
-  sheet.getRange("A91:T91").merge()
+  sheet.getRange("A102:T102").merge()
     .setValue("📋 THE DETAILS THAT MATTER - Celebrating Excellence!")
     .setFontSize(14).setFontFamily("Roboto")
     .setFontWeight("bold")
@@ -28124,14 +28187,14 @@ function createDashboardDataTableSection(sheet) {
     .setFontColor("white");
 
   const tableHeaders = ["Rank", "Item", "Count", "Active", "Resolved", "Win Rate", "Status"];
-  sheet.getRange("A93:G93").setValues([tableHeaders])
+  sheet.getRange("A104:G104").setValues([tableHeaders])
     .setFontWeight("bold")
     .setBackground(COLORS.ACCENT_TEAL)
     .setFontColor("white")
     .setFontFamily("Roboto")
     .setHorizontalAlignment("center");
 
-  sheet.getRange("A94:G110")
+  sheet.getRange("A105:G121")
     .setBackground(COLORS.WHITE)
     .setBorder(true, true, true, true, true, true, COLORS.BORDER_GRAY, SpreadsheetApp.BorderStyle.SOLID);
 }
