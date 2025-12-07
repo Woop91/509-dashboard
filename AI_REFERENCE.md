@@ -38,14 +38,13 @@
 
 ## 🆕 Changelog - Version 3.3 (2025-12-07)
 
-**SEED FUNCTIONS RESTORED FOR DEMO/TESTING:**
+**SEED FUNCTIONS WITH SELF-DELETING NUKE:**
 
 ✅ **Restored All Seed Functions** (`Code.gs`)
 - **Restored:** SEED_MEMBERS_TOGGLE_1/2/3/4, SEED_20K_MEMBERS
 - **Restored:** SEED_GRIEVANCES_TOGGLE_1/2, SEED_5K_GRIEVANCES
 - **Restored:** All helper functions (seedMembersWithCount, validateSeedSheets, etc.)
 - Seed functions are available for demo/testing purposes
-- When `nukeSeedData()` is run, seed menu is hidden via SEED_NUKED flag
 
 ✅ **Restored Seed Menu** (`ReorganizedMenu.gs`)
 - **Menu:** `🔧 Setup > 🌱 Seed Demo Data`
@@ -53,9 +52,26 @@
   - `📋 Seed Grievances` submenu with 2 toggles (2,500 each)
   - `📝 Add Sample Feedback Entries`
 
+✅ **Self-Deleting Nuke Function** (`SeedNuke.gs`)
+- When `nukeSeedData()` is triggered, ALL seed code is **permanently deleted**:
+  - Removes seed data from Member Directory, Grievance Log, Steward Workload
+  - Clears Config tab demo entries (preserves organization info)
+  - Uses **Apps Script API** to delete seed functions from Code.gs
+  - Replaces SeedNuke.gs with minimal stub
+  - Removes seed menu items from ReorganizedMenu.gs
+  - Removes seed references from Getting Started/FAQ sheets
+- **Zero Trace Guarantee:** After nuke, there is NO evidence seed functionality ever existed
+- Fallback: If Apps Script API is unavailable, shows manual cleanup instructions
+
+**Apps Script API Requirements:**
+- Enable Apps Script API in Google Cloud project for automatic code removal
+- Required OAuth scope: `https://www.googleapis.com/auth/script.projects`
+- Without API: Data is cleared but seed code requires manual deletion
+
 **Files Modified:**
 - `Code.gs` - Restored all seed functions (~600 lines)
 - `ReorganizedMenu.gs` - Restored seed menu items
+- `SeedNuke.gs` - Added `removeSeedFunctionsFromScript()` with Apps Script API
 - `GettingStartedAndFAQ.gs` - Updated FAQ content
 - `SEED_NUKE_GUIDE.md` - Updated with Config clearing info
 
