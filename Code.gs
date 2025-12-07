@@ -895,94 +895,6 @@ function refreshGrievanceFormulas() {
   SpreadsheetApp.getActive().toast('✅ Grievance formulas refreshed!', 'Complete', 3);
 }
 
-/**
- * Check if Grievance Log ARRAYFORMULA cells are intact
- * Returns true if formulas exist, false if missing/corrupted
- */
-function checkGrievanceFormulasExist() {
-  const ss = SpreadsheetApp.getActive();
-  const grievanceLog = ss.getSheetByName(SHEETS.GRIEVANCE_LOG);
-
-  if (!grievanceLog) return false;
-
-  // Get column letters for formula cells
-  const gDaysOpenCol = getColumnLetter(GRIEVANCE_COLS.DAYS_OPEN);      // S
-  const gNextActionCol = getColumnLetter(GRIEVANCE_COLS.NEXT_ACTION_DUE);  // T
-  const gDaysToDeadlineCol = getColumnLetter(GRIEVANCE_COLS.DAYS_TO_DEADLINE);  // U
-
-  // Check if row 2 cells contain ARRAYFORMULA
-  const daysOpenFormula = grievanceLog.getRange(gDaysOpenCol + "2").getFormula();
-  const nextActionFormula = grievanceLog.getRange(gNextActionCol + "2").getFormula();
-  const daysToDeadlineFormula = grievanceLog.getRange(gDaysToDeadlineCol + "2").getFormula();
-
-  // All three should contain ARRAYFORMULA
-  const hasAllFormulas =
-    daysOpenFormula.includes('ARRAYFORMULA') &&
-    nextActionFormula.includes('ARRAYFORMULA') &&
-    daysToDeadlineFormula.includes('ARRAYFORMULA');
-
-  return hasAllFormulas;
-}
-
-/**
- * Auto-restore Grievance formulas if they are missing
- * Called by onChange trigger when rows are deleted
- */
-function autoRestoreGrievanceFormulas() {
-  if (!checkGrievanceFormulasExist()) {
-    Logger.log('Grievance formulas missing - auto-restoring...');
-    refreshGrievanceFormulas();
-    Logger.log('Grievance formulas auto-restored successfully');
-  }
-}
-
-/**
- * onChange trigger handler for Grievance Log
- * Detects row deletions and restores formulas if needed
- */
-function onGrievanceChange(e) {
-  try {
-    // Only process REMOVE_ROW or REMOVE_GRID events (row deletions)
-    if (!e || !e.changeType) return;
-
-    if (e.changeType === 'REMOVE_ROW' || e.changeType === 'REMOVE_GRID') {
-      // Small delay to let the deletion complete
-      Utilities.sleep(100);
-      autoRestoreGrievanceFormulas();
-    }
-  } catch (error) {
-    Logger.log('Error in onGrievanceChange: ' + error.message);
-  }
-}
-
-/**
- * Install the onChange trigger for auto-restoring Grievance formulas
- * Run this once to set up automatic formula protection
- */
-function setupGrievanceFormulaProtection() {
-  // Remove existing triggers to avoid duplicates
-  const triggers = ScriptApp.getProjectTriggers();
-  triggers.forEach(trigger => {
-    if (trigger.getHandlerFunction() === 'onGrievanceChange') {
-      ScriptApp.deleteTrigger(trigger);
-    }
-  });
-
-  // Create new onChange trigger
-  ScriptApp.newTrigger('onGrievanceChange')
-    .forSpreadsheet(SpreadsheetApp.getActiveSpreadsheet())
-    .onChange()
-    .create();
-
-  SpreadsheetApp.getUi().alert('Success',
-    'Grievance formula protection installed!\n\n' +
-    'The system will now automatically restore the Days Open, Next Action Due, ' +
-    'and Days to Deadline formulas if rows are deleted from the Grievance Log.',
-    SpreadsheetApp.getUi().ButtonSet.OK);
-
-  Logger.log('Grievance formula protection trigger installed');
-}
-
 /* --------------------- ANALYTICS DATA SHEET --------------------- */
 function createAnalyticsDataSheet() {
   const ss = SpreadsheetApp.getActive();
@@ -2082,9 +1994,6 @@ function onOpen() {
       .addItem("📊 Sort Grievances (Active First)", "sortGrievancesByStatus")
       .addItem("🔄 Refresh Progress Bar", "setupGrievanceProgressBar")
       .addItem("🧹 Cleanup Grievance Log", "cleanupGrievanceLog")
-      .addSeparator()
-      .addItem("🔄 Refresh Grievance Formulas", "refreshGrievanceFormulas")
-      .addItem("🛡️ Setup Formula Protection", "setupGrievanceFormulaProtection")
       .addSeparator()
       .addItem("🆔 Generate Next Grievance ID", "showNextGrievanceID"))
     .addSeparator()
