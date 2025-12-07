@@ -155,27 +155,32 @@ function calculateGrievanceTimeline(row, today) {
     }
   }
 
-  // Calculate days to deadline
+  // Calculate days to deadline and validate next action due
   let daysToDeadline = '';
+  let validNextActionDue = nextActionDue; // Will be cleared if in the past
+
   if (nextActionDue && nextActionDue !== '') {
     const deadline = new Date(nextActionDue);
     const daysDiff = Math.floor((deadline - today) / (1000 * 60 * 60 * 24));
 
-    // Format based on urgency for conditional formatting matching
+    // G2: Next Action Due shows only future dates or blank
+    // G3: Days to Deadline shows only positive numbers or blank
     if (daysDiff < 0) {
-      // Overdue - show as text for conditional formatting
-      daysToDeadline = 'OVERDUE: ' + Math.abs(daysDiff) + ' days';
+      // Overdue - clear both fields (show blank)
+      validNextActionDue = '';
+      daysToDeadline = '';
     } else if (daysDiff === 0) {
-      daysToDeadline = 'DUE TODAY';
+      // Due today - show 0 days
+      daysToDeadline = 0;
     } else {
-      // Future deadline - show as number
+      // Future deadline - show positive number
       daysToDeadline = daysDiff;
     }
   }
 
   return {
     daysOpen: daysOpen,
-    nextActionDue: nextActionDue,
+    nextActionDue: validNextActionDue,
     daysToDeadline: daysToDeadline
   };
 }

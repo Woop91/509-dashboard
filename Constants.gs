@@ -36,8 +36,9 @@ const SHEETS = {
   EXECUTIVE: "💼 Executive Dashboard",  // ALIAS: Intentional duplicate for backward compatibility - keep in sync!
   KPI_PERFORMANCE: "📊 KPI Performance Dashboard",
   KPI_BOARD: "📊 KPI Performance Dashboard",  // ALIAS: Intentional duplicate for backward compatibility - keep in sync!
-  MEMBER_ENGAGEMENT: "👥 Member Engagement",
-  COST_IMPACT: "💰 Cost Impact",
+  MEMBER_ENGAGEMENT: "👥 Member Engagement",  // DEPRECATED: Now part of Operations Analytics
+  COST_IMPACT: "💰 Cost Impact",  // DEPRECATED: Now part of Operations Analytics
+  OPERATIONS_ANALYTICS: "📊 Operations Analytics",  // NEW: Merged analytics dashboard
   QUICK_STATS: "⚡ Quick Stats",
   ARCHIVE: "📦 Archive",
   DIAGNOSTICS: "🔧 Diagnostics",

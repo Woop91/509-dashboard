@@ -62,18 +62,11 @@ function CREATE_509_DASHBOARD() {
     createStewardWorkloadSheet();
     Logger.log("Completed createStewardWorkloadSheet");
 
-    Logger.log("Starting createTrendsSheet...");
-    createTrendsSheet();
-    Logger.log("Completed createTrendsSheet");
-
-    Logger.log("Starting createLocationSheet...");
-    createLocationSheet();
-    Logger.log("Completed createLocationSheet");
-
-    Logger.log("Starting createTypeAnalysisSheet...");
-    createTypeAnalysisSheet();
-    Logger.log("Completed createTypeAnalysisSheet");
-    SpreadsheetApp.getActive().toast("✅ Analytics sheets created", "75%", 2);
+    // Create merged Operations Analytics sheet (combines Trends, Location, Type Analysis, Member Engagement, Cost Impact)
+    Logger.log("Starting createOperationsAnalyticsSheet...");
+    createOperationsAnalyticsSheet();
+    Logger.log("Completed createOperationsAnalyticsSheet");
+    SpreadsheetApp.getActive().toast("✅ Operations Analytics created", "75%", 2);
 
     Logger.log("Starting createExecutiveDashboard...");
     createExecutiveDashboard();
@@ -82,15 +75,7 @@ function CREATE_509_DASHBOARD() {
     Logger.log("Starting createKPIPerformanceDashboard...");
     createKPIPerformanceDashboard();
     Logger.log("Completed createKPIPerformanceDashboard");
-
-    Logger.log("Starting createMemberEngagementSheet...");
-    createMemberEngagementSheet();
-    Logger.log("Completed createMemberEngagementSheet");
-
-    Logger.log("Starting createCostImpactSheet...");
-    createCostImpactSheet();
-    Logger.log("Completed createCostImpactSheet");
-    SpreadsheetApp.getActive().toast("✅ Executive sheets created", "80%", 2);
+    SpreadsheetApp.getActive().toast("✅ Executive dashboards created", "80%", 2);
 
     // Create utility sheets
     Logger.log("Starting createArchiveSheet...");
@@ -576,6 +561,15 @@ function createMemberDirectory() {
 
   memberDir.setFrozenRows(1);
   memberDir.setRowHeight(1, 50);
+
+  // Ensure row 2 (first data row) has same formatting as all other data rows
+  // Clear any inherited formatting from row 2
+  memberDir.getRange(2, 1, 1, headers.length)
+    .setBackground(null)  // No background color
+    .setFontWeight("normal")
+    .setFontColor("#000000")
+    .setFontSize(10);
+
   memberDir.setColumnWidth(MEMBER_COLS.MEMBER_ID, 90);      // Member ID
   memberDir.setColumnWidth(MEMBER_COLS.EMAIL, 180);         // Email Address
   memberDir.setColumnWidth(MEMBER_COLS.COMMITTEES, 150);    // Committees (multi-select)
@@ -679,6 +673,13 @@ function createGrievanceLog() {
   if (totalCols > headers.length) {
     grievanceLog.deleteColumns(headers.length + 1, totalCols - headers.length);
   }
+
+  // Ensure row 2 has data row formatting (not header formatting)
+  grievanceLog.getRange(2, 1, 1, headers.length)
+    .setBackground(null)
+    .setFontWeight("normal")
+    .setFontColor("#000000")
+    .setFontSize(10);
 
   grievanceLog.setTabColor("#DC2626");
 }
@@ -1260,12 +1261,12 @@ function createExecutiveDashboard() {
   const execIsStewardCol = getColumnLetter(MEMBER_COLS.IS_STEWARD);
 
   const quickStats = [
-    ["Active Members", `=COUNTA('Member Directory'!${execMemberIdCol}2:${execMemberIdCol})`, "", ""],
-    ["Active Grievances", `=COUNTIF('Grievance Log'!${statusCol}:${statusCol},"Open")`, "", ""],
-    ["Win Rate", `=TEXT(IFERROR(COUNTIFS('Grievance Log'!${statusCol}:${statusCol},"Resolved*",'Grievance Log'!${resolutionCol}:${resolutionCol},"*Won*")/COUNTIF('Grievance Log'!${statusCol}:${statusCol},"Resolved*"),0),"0%")`, "", ""],
-    ["Avg Resolution (Days)", `=ROUND(AVERAGE('Grievance Log'!${daysOpenCol}:${daysOpenCol}),1)`, "", ""],
-    ["Overdue Cases", `=COUNTIF('Grievance Log'!${daysToDeadlineCol}:${daysToDeadlineCol},"OVERDUE*")`, "", ""],
-    ["Active Stewards", `=COUNTIF('Member Directory'!${execIsStewardCol}:${execIsStewardCol},"Yes")`, "", ""]
+    ["Active Members", `=COUNTA('Member Directory'!${execMemberIdCol}2:${execMemberIdCol})`, `=B6-B7`, `=IF(B6>B7,"📈 Up","📉 Down")`],
+    ["Active Grievances", `=COUNTIF('Grievance Log'!${statusCol}:${statusCol},"Open")`, `=IF(B7<10,"🟢 Low",IF(B7<25,"🟡 Normal","🔴 High"))`, `=IF(B7>10,"⚠️ Monitor","✅ Good")`],
+    ["Overall Win Rate", `=IFERROR(TEXT(COUNTIF('Grievance Log'!${statusCol}:${statusCol},"Settled")/(COUNTIF('Grievance Log'!${statusCol}:${statusCol},"Settled")+COUNTIF('Grievance Log'!${statusCol}:${statusCol},"Denied")),"0%"),"0%")`, "Target: 70%", `=IF(VALUE(SUBSTITUTE(B8,"%",""))>=70,"✅ On Target","⚠️ Below")`],
+    ["Avg Resolution (Days)", `=IFERROR(ROUND(AVERAGE('Grievance Log'!${daysOpenCol}:${daysOpenCol}),1),"-")`, "Target: <30", `=IF(B9<30,"✅ Fast",IF(B9<60,"🟡 Normal","🔴 Slow"))`],
+    ["Overdue Cases", `=COUNTIFS('Grievance Log'!${statusCol}:${statusCol},"Open",'Grievance Log'!${daysToDeadlineCol}:${daysToDeadlineCol},"<0")`, `=IF(B10=0,"None",B10&" need attention")`, `=IF(B10=0,"✅ Clear","🔴 Action Required")`],
+    ["Active Stewards", `=COUNTIF('Member Directory'!${execIsStewardCol}:${execIsStewardCol},"Yes")`, `=ROUND(B6/B11,0)&" members per steward"`, `=IF(B6/B11<100,"✅ Good Ratio","⚠️ Need More")`]
   ];
 
   sheet.getRange(6, 1, quickStats.length, 4).setValues(quickStats);
@@ -1285,14 +1286,14 @@ function createExecutiveDashboard() {
     .setBackground(COLORS.LIGHT_GRAY);
 
   const detailedKpis = [
-    ["Total Active Members", `=COUNTA('Member Directory'!${execMemberIdCol}2:${execMemberIdCol})`, ""],
-    ["Total Active Grievances", `=COUNTIF('Grievance Log'!${statusCol}:${statusCol},"Open")`, ""],
-    ["Overall Win Rate", `=TEXT(IFERROR(COUNTIFS('Grievance Log'!${statusCol}:${statusCol},"Resolved*",'Grievance Log'!${resolutionCol}:${resolutionCol},"*Won*")/COUNTIF('Grievance Log'!${statusCol}:${statusCol},"Resolved*"),0),"0.0%")`, ""],
-    ["Avg Resolution Time (Days)", `=ROUND(AVERAGE('Grievance Log'!${daysOpenCol}:${daysOpenCol}),1)`, ""],
-    ["Cases Overdue", `=COUNTIF('Grievance Log'!${daysToDeadlineCol}:${daysToDeadlineCol},"OVERDUE*")`, ""],
-    ["Member Satisfaction Score", "=TEXT(AVERAGE('Member Satisfaction'!C:C),\"0.0\")", ""],
-    ["Total Grievances Filed YTD", `=COUNTA('Grievance Log'!${grievanceIdCol}2:${grievanceIdCol})`, ""],
-    ["Resolved Grievances", `=COUNTIF('Grievance Log'!${statusCol}:${statusCol},"Resolved")`, ""]
+    ["Total Active Members", `=COUNTA('Member Directory'!${execMemberIdCol}2:${execMemberIdCol})`, `=IF(B15>0,"✅ Active","⚠️ No Data")`],
+    ["Total Active Grievances", `=COUNTIF('Grievance Log'!${statusCol}:${statusCol},"Open")`, `=IF(B16<25,"🟢 Manageable",IF(B16<50,"🟡 Busy","🔴 High Volume"))`],
+    ["Overall Win Rate", `=IFERROR(TEXT(COUNTIF('Grievance Log'!${statusCol}:${statusCol},"Settled")/(COUNTIF('Grievance Log'!${statusCol}:${statusCol},"Settled")+COUNTIF('Grievance Log'!${statusCol}:${statusCol},"Denied")),"0.0%"),"0%")`, `=IF(VALUE(SUBSTITUTE(B17,"%",""))>=70,"✅ Excellent",IF(VALUE(SUBSTITUTE(B17,"%",""))>=50,"🟡 Good","🔴 Needs Improvement"))`],
+    ["Avg Resolution Time (Days)", `=IFERROR(ROUND(AVERAGE('Grievance Log'!${daysOpenCol}:${daysOpenCol}),1),"-")`, `=IF(ISNUMBER(B18),IF(B18<30,"✅ Fast",IF(B18<60,"🟡 Average","🔴 Slow")),"-")`],
+    ["Cases Overdue", `=COUNTIFS('Grievance Log'!${statusCol}:${statusCol},"Open",'Grievance Log'!${daysToDeadlineCol}:${daysToDeadlineCol},"<0")`, `=IF(B19=0,"✅ All On Track","🔴 "&B19&" Require Attention")`],
+    ["Member Satisfaction Score", `=IFERROR(TEXT(AVERAGEIF('Member Satisfaction'!C:C,">0"),"0.0"),"-")`, `=IF(ISNUMBER(VALUE(B20)),IF(VALUE(B20)>=4,"✅ High",IF(VALUE(B20)>=3,"🟡 Average","🔴 Low")),"-")`],
+    ["Total Grievances Filed YTD", `=COUNTA('Grievance Log'!${grievanceIdCol}2:${grievanceIdCol})`, `=IF(B21>0,"📊 "&B21&" cases tracked","No cases")`],
+    ["Resolved Grievances", `=COUNTIF('Grievance Log'!${statusCol}:${statusCol},"Settled")+COUNTIF('Grievance Log'!${statusCol}:${statusCol},"Closed")+COUNTIF('Grievance Log'!${statusCol}:${statusCol},"Denied")`, `=IF(B22>0,"✅ "&B22&" resolved","No resolutions yet")`]
   ];
 
   sheet.getRange(15, 1, detailedKpis.length, 3).setValues(detailedKpis);
@@ -1367,6 +1368,29 @@ function createKPIPerformanceDashboard() {
     .setAllowInvalid(false)
     .build();
   sheet.getRange("F4:F1000").setDataValidation(statusRule);
+
+  // Add KPI data rows with formulas
+  const statusCol = getColumnLetter(GRIEVANCE_COLS.STATUS);
+  const daysOpenCol = getColumnLetter(GRIEVANCE_COLS.DAYS_OPEN);
+  const memberIdCol = getColumnLetter(MEMBER_COLS.MEMBER_ID);
+  const isStewardCol = getColumnLetter(MEMBER_COLS.IS_STEWARD);
+
+  const kpiData = [
+    // [KPI Name, Current Value, Target, Variance, % Change, Status, Last Month, YTD Avg, Best, Worst, Owner, Last Updated]
+    ["Total Members", `=COUNTA('Member Directory'!${memberIdCol}2:${memberIdCol})`, "20000", `=B4-C4`, `=IFERROR(TEXT((B4-C4)/C4,"0%"),"-")`, `=IF(B4>=C4,"On Track","At Risk")`, "-", `=B4`, `=B4`, `=B4`, "HR Team", `=TEXT(NOW(),"MM/dd/yy")`],
+    ["Active Grievances", `=COUNTIF('Grievance Log'!${statusCol}:${statusCol},"Open")`, "25", `=B5-C5`, `=IFERROR(TEXT((B5-C5)/C5,"0%"),"-")`, `=IF(B5<=C5,"On Track","At Risk")`, "-", `=B5`, `=B5`, `=B5`, "Steward Lead", `=TEXT(NOW(),"MM/dd/yy")`],
+    ["Win Rate %", `=IFERROR(ROUND(COUNTIF('Grievance Log'!${statusCol}:${statusCol},"Settled")/(COUNTIF('Grievance Log'!${statusCol}:${statusCol},"Settled")+COUNTIF('Grievance Log'!${statusCol}:${statusCol},"Denied"))*100,1),0)`, "70", `=B6-C6`, `=IFERROR(TEXT((B6-C6)/C6,"0%"),"-")`, `=IF(B6>=C6,"On Track","At Risk")`, "-", `=B6`, `=B6`, `=B6`, "Steward Lead", `=TEXT(NOW(),"MM/dd/yy")`],
+    ["Avg Days to Resolve", `=IFERROR(ROUND(AVERAGE('Grievance Log'!${daysOpenCol}:${daysOpenCol}),1),0)`, "30", `=B7-C7`, `=IFERROR(TEXT((B7-C7)/C7,"0%"),"-")`, `=IF(B7<=C7,"On Track","At Risk")`, "-", `=B7`, `=B7`, `=B7`, "Steward Lead", `=TEXT(NOW(),"MM/dd/yy")`],
+    ["Steward Coverage", `=COUNTIF('Member Directory'!${isStewardCol}:${isStewardCol},"Yes")`, "50", `=B8-C8`, `=IFERROR(TEXT((B8-C8)/C8,"0%"),"-")`, `=IF(B8>=C8,"On Track","At Risk")`, "-", `=B8`, `=B8`, `=B8`, "Coordinator", `=TEXT(NOW(),"MM/dd/yy")`],
+    ["Cases Settled", `=COUNTIF('Grievance Log'!${statusCol}:${statusCol},"Settled")`, "100", `=B9-C9`, `=IFERROR(TEXT((B9-C9)/C9,"0%"),"-")`, `=IF(B9>=C9,"Exceeding","On Track")`, "-", `=B9`, `=B9`, `=B9`, "Legal", `=TEXT(NOW(),"MM/dd/yy")`],
+    ["Cases Pending", `=COUNTIF('Grievance Log'!${statusCol}:${statusCol},"Pending Info")`, "10", `=B10-C10`, `=IFERROR(TEXT((B10-C10)/C10,"0%"),"-")`, `=IF(B10<=C10,"On Track","At Risk")`, "-", `=B10`, `=B10`, `=B10`, "Steward Lead", `=TEXT(NOW(),"MM/dd/yy")`],
+    ["Member/Steward Ratio", `=IFERROR(ROUND(COUNTA('Member Directory'!${memberIdCol}2:${memberIdCol})/COUNTIF('Member Directory'!${isStewardCol}:${isStewardCol},"Yes"),0),0)`, "100", `=B11-C11`, `=IFERROR(TEXT((B11-C11)/C11,"0%"),"-")`, `=IF(B11<=C11,"On Track","At Risk")`, "-", `=B11`, `=B11`, `=B11`, "HR Team", `=TEXT(NOW(),"MM/dd/yy")`]
+  ];
+
+  sheet.getRange(4, 1, kpiData.length, 12).setValues(kpiData);
+
+  // Add conditional formatting for Status column
+  sheet.getRange("F4:F20").setHorizontalAlignment("center");
 
   sheet.setFrozenRows(3);
   sheet.setTabColor(COLORS.UNION_GREEN);
@@ -2681,7 +2705,7 @@ No fake CPU/memory metrics - everything tracks actual union activity.
 
 /**
  * Shows info about when to refresh dropdowns
- * Called from Optional Extras menu to explain dropdown refresh
+ * Called from Setup menu to explain dropdown refresh
  */
 function showDropdownRefreshInfo() {
   const infoText = `

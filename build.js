@@ -123,6 +123,7 @@ const CORE_MODULES = [
   'MemberSearch.gs',
   'MobileOptimization.gs',
   'NotificationCenter.gs',
+  'OperationsAnalytics.gs',       // Merged analytics dashboard (Trends, Location, Type, Member Engagement, Cost Impact)
   'OptimizedDashboardRebuild.gs',
   'PerformanceAndBackup.gs',      // Performance monitoring and backup features
   'PerformanceMonitoring.gs',
