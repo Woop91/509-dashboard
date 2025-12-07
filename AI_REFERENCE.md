@@ -54,6 +54,16 @@
 - Added missing test modules: TestFramework.gs, Code.test.gs, Integration.test.gs
 - Synced all dropdown and validation improvements
 
+✅ **Renamed Interactive Dashboard Controls** (`InteractiveDashboard.gs`)
+- More descriptive labels for better user experience:
+  - `What to show (Chart 1):` - Select metric for primary chart
+  - `How to show it (Chart 1):` - Select chart type for primary chart
+  - `What to show (Chart 2):` - Select metric for secondary chart
+  - `How to show it (Chart 2):` - Select chart type for secondary chart
+  - `Color Scheme:` - Select dashboard color theme
+  - `Show both charts:` - Toggle to display both charts
+  - `Quick Action:` - Dropdown for common actions
+
 **Member Directory Dropdowns (Single-Select):**
 - Job Title (D)
 - Work Location (E)
@@ -78,6 +88,7 @@
 **Files Modified:**
 - `MemberDirectoryDropdowns.gs` - Added Has Open Grievance dropdown
 - `SecurityService.gs` - Fixed createAuditLogSheet()
+- `InteractiveDashboard.gs` - Renamed dashboard control labels
 - `ConsolidatedDashboard.gs` - Rebuilt with all fixes
 
 ---
