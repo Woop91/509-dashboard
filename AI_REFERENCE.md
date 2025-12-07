@@ -1,7 +1,7 @@
 # 509 Dashboard - Complete Feature Reference
 
-**Version:** 2.9
-**Last Updated:** 2025-12-06
+**Version:** 2.10
+**Last Updated:** 2025-12-07
 **Purpose:** Union grievance tracking and member engagement system for SEIU Local 509
 
 ---
@@ -36,7 +36,52 @@
 
 ---
 
-## 🆕 Changelog - Version 2.9 (2025-12-06)
+## 🆕 Changelog - Version 2.10 (2025-12-07)
+
+**INTERACTIVE DASHBOARD UI OVERHAUL & GRIEVANCE LOG FORMULA REMOVAL:**
+
+✅ **Replaced Dashboard Dropdowns with Checkbox Lists** (`InteractiveDashboard.gs`, `ConsolidatedDashboard.gs`)
+- **Control Panel (Rows 4-20):**
+  - Row 4: Section header
+  - Row 5: Metrics header
+  - Rows 6-15: Two columns of metric checkboxes (10 per column)
+  - Row 16: Chart type header
+  - Row 17: Chart type checkboxes (Donut, Pie, Bar, Column, Line)
+  - Row 18: Theme header
+  - Row 19: Theme checkboxes (Union Blue, Solidarity Red, Success Green, Professional Purple, Modern Dark)
+  - Row 20: Comparison toggle checkbox + Quick Action dropdown
+- **Added Helper Functions:**
+  - `getSelectedMetrics(sheet)` - Reads checked metrics from columns A and F
+  - `getSelectedChartType(sheet)` - Reads checked chart type from row 17
+  - `getSelectedTheme(sheet)` - Reads checked theme from row 19
+
+✅ **Updated Dashboard Layout** (all sections shifted +12 rows for expanded control panel)
+- **Rows 1-3:** Header section
+- **Rows 4-20:** Control panel with checkboxes
+- **Row 21:** Gap
+- **Rows 22-30:** Metric cards section (header at 22, cards at 24-30)
+- **Row 31:** Gap
+- **Rows 32-53:** Chart areas (header at 32, content 33-53)
+- **Rows 54-55:** Gap
+- **Rows 56-76:** Pie chart section (header at 56, content 58-76)
+- **Rows 77-78:** Gap
+- **Rows 79-99:** Location chart section (header at 79, content 81-99)
+- **Rows 100-101:** Gap
+- **Rows 102-121:** Data table section (header at 102, content 104-121)
+
+✅ **Removed All ARRAYFORMULAs from Grievance Log** (`Code.gs`)
+- Columns H, J, L, N, P, S, T, U now use code-calculated static values
+- `refreshGrievanceFormulas()` now calls `recalcAllGrievancesBatched()` from BatchGrievanceRecalc.gs
+- Prevents data corruption when rows are deleted from the sheet
+
+**Files Modified:**
+- `InteractiveDashboard.gs` - Checkbox UI, updated row numbers, helper functions
+- `ConsolidatedDashboard.gs` - Same changes synchronized
+- `Code.gs` - Removed ARRAYFORMULA setup, updated refreshGrievanceFormulas()
+
+---
+
+## Changelog - Version 2.9 (2025-12-06)
 
 **UTILITY FUNCTION & ADDITIONAL REFACTORING:**
 
@@ -108,12 +153,12 @@ Refactored 6 large multi-responsibility functions into smaller, focused helper f
 
 ✅ **`createInteractiveDashboardSheet()` (311 lines → 8 helper functions)** (`InteractiveDashboard.gs`)
 - `createDashboardHeaderSection()` - Header rows 1-3
-- `createDashboardControlPanel()` - Control panel rows 4-9
-- `createDashboardMetricCards()` - Metric cards rows 10-18
-- `createDashboardChartAreas()` - Chart areas rows 21-42
-- `createDashboardPieChartSection()` - Pie charts rows 45-65
-- `createDashboardLocationChartSection()` - Location chart rows 68-88
-- `createDashboardDataTableSection()` - Data table rows 91-110
+- `createDashboardControlPanel()` - Control panel rows 4-20 (checkboxes - see v2.10)
+- `createDashboardMetricCards()` - Metric cards rows 22-30
+- `createDashboardChartAreas()` - Chart areas rows 32-53
+- `createDashboardPieChartSection()` - Pie charts rows 56-76
+- `createDashboardLocationChartSection()` - Location chart rows 79-99
+- `createDashboardDataTableSection()` - Data table rows 102-121
 - `setDashboardDimensions()` - Column widths and row heights
 
 ✅ **`seedMembersWithCount()` (271 lines → 8 helper functions)** (`Code.gs`)

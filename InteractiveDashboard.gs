@@ -405,27 +405,40 @@ function createDashboardDataTableSection(sheet) {
 
 /**
  * Sets column widths, row heights, and frozen rows
+ * Row layout (with checkbox control panel):
+ *   Rows 1-3: Header
+ *   Rows 4-20: Control panel (checkboxes)
+ *   Row 21: Gap
+ *   Rows 22-30: Metric cards
+ *   Row 31: Gap
+ *   Rows 32-53: Chart areas
+ *   Rows 54-55: Gap
+ *   Rows 56-76: Pie chart section
+ *   Rows 77-78: Gap
+ *   Rows 79-99: Location chart section
+ *   Rows 100-101: Gap
+ *   Rows 102-121: Data table section
  */
 function setDashboardDimensions(sheet) {
   // Set column widths
-  sheet.setColumnWidth(1, 80);   // Rank
-  sheet.setColumnWidth(2, 250);  // Item
+  sheet.setColumnWidth(1, 80);   // Rank/Checkbox
+  sheet.setColumnWidth(2, 250);  // Item/Label
   sheet.setColumnWidth(3, 100);  // Count
   sheet.setColumnWidth(4, 100);  // Active
   sheet.setColumnWidth(5, 100);  // Resolved
-  sheet.setColumnWidth(6, 100);  // Win Rate
-  sheet.setColumnWidth(7, 120);  // Status
+  sheet.setColumnWidth(6, 100);  // Win Rate/Checkbox
+  sheet.setColumnWidth(7, 120);  // Status/Label
 
-  // Set row heights
-  sheet.setRowHeight(4, 35);
-  sheet.setRowHeight(10, 35);
-  sheet.setRowHeight(21, 35);
-  sheet.setRowHeight(45, 35);
-  sheet.setRowHeight(68, 35);
-  sheet.setRowHeight(91, 35);
+  // Set row heights for section headers
+  sheet.setRowHeight(4, 35);   // Control panel header
+  sheet.setRowHeight(22, 35);  // Metric cards header
+  sheet.setRowHeight(32, 35);  // Chart areas header
+  sheet.setRowHeight(56, 35);  // Pie chart section header
+  sheet.setRowHeight(79, 35);  // Location chart section header
+  sheet.setRowHeight(102, 35); // Data table section header
 
   // Freeze header rows
-  sheet.setFrozenRows(2);
+  sheet.setFrozenRows(3);
 }
 
 /**

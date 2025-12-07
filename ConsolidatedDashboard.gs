@@ -28201,180 +28201,100 @@ function createDashboardDataTableSection(sheet) {
 
 /**
  * Sets column widths, row heights, and frozen rows
+ * Row layout (with checkbox control panel):
+ *   Rows 1-3: Header
+ *   Rows 4-20: Control panel (checkboxes)
+ *   Row 21: Gap
+ *   Rows 22-30: Metric cards
+ *   Row 31: Gap
+ *   Rows 32-53: Chart areas
+ *   Rows 54-55: Gap
+ *   Rows 56-76: Pie chart section
+ *   Rows 77-78: Gap
+ *   Rows 79-99: Location chart section
+ *   Rows 100-101: Gap
+ *   Rows 102-121: Data table section
  */
 function setDashboardDimensions(sheet) {
   // Set column widths
-  sheet.setColumnWidth(1, 80);   // Rank
-  sheet.setColumnWidth(2, 250);  // Item
+  sheet.setColumnWidth(1, 80);   // Rank/Checkbox
+  sheet.setColumnWidth(2, 250);  // Item/Label
   sheet.setColumnWidth(3, 100);  // Count
   sheet.setColumnWidth(4, 100);  // Active
   sheet.setColumnWidth(5, 100);  // Resolved
-  sheet.setColumnWidth(6, 100);  // Win Rate
-  sheet.setColumnWidth(7, 120);  // Status
+  sheet.setColumnWidth(6, 100);  // Win Rate/Checkbox
+  sheet.setColumnWidth(7, 120);  // Status/Label
 
-  // Set row heights
-  sheet.setRowHeight(4, 35);
-  sheet.setRowHeight(10, 35);
-  sheet.setRowHeight(21, 35);
-  sheet.setRowHeight(45, 35);
-  sheet.setRowHeight(68, 35);
-  sheet.setRowHeight(91, 35);
+  // Set row heights for section headers
+  sheet.setRowHeight(4, 35);   // Control panel header
+  sheet.setRowHeight(22, 35);  // Metric cards header
+  sheet.setRowHeight(32, 35);  // Chart areas header
+  sheet.setRowHeight(56, 35);  // Pie chart section header
+  sheet.setRowHeight(79, 35);  // Location chart section header
+  sheet.setRowHeight(102, 35); // Data table section header
 
   // Freeze header rows
-  sheet.setFrozenRows(2);
+  sheet.setFrozenRows(3);
 }
 
 /**
- * Setup data validation for Interactive Dashboard controls
+ * Setup checkbox controls for Interactive Dashboard
+ * Checkboxes are created in createDashboardControlPanel(), this just ensures they're properly configured
  */
 function setupInteractiveDashboardControls() {
   const ss = SpreadsheetApp.getActiveSpreadsheet();
   const sheet = ss.getSheetByName(SHEETS.INTERACTIVE_DASHBOARD);
-  const configSheet = ss.getSheetByName(SHEETS.CONFIG);
 
-  if (!sheet || !configSheet) return;
+  if (!sheet) return;
 
-  // Available metrics for selection
-  const metrics = [
-    "Total Members",
-    "Active Members",
-    "Total Stewards",
-    "Unit 8 Members",
-    "Unit 10 Members",
-    "Total Grievances",
-    "Active Grievances",
-    "Resolved Grievances",
-    "Grievances Won",
-    "Grievances Lost",
-    "Win Rate %",
-    "Overdue Grievances",
-    "Due This Week",
-    "In Mediation",
-    "In Arbitration",
-    "Grievances by Type",
-    "Grievances by Location",
-    "Grievances by Step",
-    "Steward Workload",
-    "Monthly Trends"
-  ];
+  // Metrics checkboxes are in rows 6-15, columns A and F
+  // Ensure checkboxes exist (they're created in createDashboardControlPanel)
 
-  // Chart types
-  const chartTypes = [
-    "Donut Chart",
-    "Pie Chart",
-    "Bar Chart",
-    "Column Chart",
-    "Line Chart",
-    "Area Chart",
-    "Table"
-  ];
+  // Column 1 metrics (A6:A15)
+  for (let row = 6; row <= 15; row++) {
+    const cell = sheet.getRange(row, 1);
+    if (!cell.getDataValidation()) {
+      cell.insertCheckboxes();
+    }
+  }
 
-  // Themes
-  const themes = [
-    "Union Blue",
-    "Solidarity Red",
-    "Success Green",
-    "Professional Purple",
-    "Modern Dark",
-    "Light & Clean"
-  ];
+  // Column 2 metrics (F6:F15)
+  for (let row = 6; row <= 15; row++) {
+    const cell = sheet.getRange(row, 6);
+    if (!cell.getDataValidation()) {
+      cell.insertCheckboxes();
+    }
+  }
 
-  // Comparison options
-  const comparisonOptions = ["Yes", "No"];
+  // Chart type checkboxes (row 17: A, C, E, G, I)
+  const chartCols = [1, 3, 5, 7, 9];
+  chartCols.forEach(col => {
+    const cell = sheet.getRange(17, col);
+    if (!cell.getDataValidation()) {
+      cell.insertCheckboxes();
+    }
+  });
 
-  // Create dropdown rules with help text
-  const metricRule = SpreadsheetApp.newDataValidation()
-    .requireValueInList(metrics, true)
-    .setAllowInvalid(false)
-    .setHelpText('🎯 Click here to select a metric!')
-    .build();
+  // Theme checkboxes (row 19: A, C, E, G, I)
+  const themeCols = [1, 3, 5, 7, 9];
+  themeCols.forEach(col => {
+    const cell = sheet.getRange(19, col);
+    if (!cell.getDataValidation()) {
+      cell.insertCheckboxes();
+    }
+  });
 
-  const chartTypeRule = SpreadsheetApp.newDataValidation()
-    .requireValueInList(chartTypes, true)
-    .setAllowInvalid(false)
-    .setHelpText('📊 Click here to select chart type!')
-    .build();
+  // Comparison checkbox (C20)
+  const comparisonCell = sheet.getRange("C20");
+  if (!comparisonCell.getDataValidation()) {
+    comparisonCell.insertCheckboxes();
+  }
 
-  const themeRule = SpreadsheetApp.newDataValidation()
-    .requireValueInList(themes, true)
-    .setAllowInvalid(false)
-    .setHelpText('🎨 Click here to select a theme!')
-    .build();
-
-  const comparisonRule = SpreadsheetApp.newDataValidation()
-    .requireValueInList(comparisonOptions, true)
-    .setAllowInvalid(false)
-    .setHelpText('🔄 Click here to toggle comparison mode!')
-    .build();
-
-  // Apply data validation to control cells with enhanced visual styling
-  const dropdownStyle = {
-    background: "#DBEAFE",  // Light blue to stand out
-    border: "#3B82F6",      // Blue border
-    fontWeight: "bold"
-  };
-
-  // Metric 1
-  sheet.getRange("A7")
-    .setDataValidation(metricRule)
-    .setValue("Total Members")
-    .setBackground(dropdownStyle.background)
-    .setBorder(true, true, true, true, false, false, dropdownStyle.border, SpreadsheetApp.BorderStyle.SOLID_MEDIUM)
-    .setFontWeight(dropdownStyle.fontWeight);
-
-  // Chart Type 1
-  sheet.getRange("B7")
-    .setDataValidation(chartTypeRule)
-    .setValue("Donut Chart")
-    .setBackground(dropdownStyle.background)
-    .setBorder(true, true, true, true, false, false, dropdownStyle.border, SpreadsheetApp.BorderStyle.SOLID_MEDIUM)
-    .setFontWeight(dropdownStyle.fontWeight);
-
-  // Metric 2
-  sheet.getRange("C7")
-    .setDataValidation(metricRule)
-    .setValue("Active Grievances")
-    .setBackground(dropdownStyle.background)
-    .setBorder(true, true, true, true, false, false, dropdownStyle.border, SpreadsheetApp.BorderStyle.SOLID_MEDIUM)
-    .setFontWeight(dropdownStyle.fontWeight);
-
-  // Chart Type 2
-  sheet.getRange("D7")
-    .setDataValidation(chartTypeRule)
-    .setValue("Bar Chart")
-    .setBackground(dropdownStyle.background)
-    .setBorder(true, true, true, true, false, false, dropdownStyle.border, SpreadsheetApp.BorderStyle.SOLID_MEDIUM)
-    .setFontWeight(dropdownStyle.fontWeight);
-
-  // Theme
-  sheet.getRange("E7")
-    .setDataValidation(themeRule)
-    .setValue("Union Blue")
-    .setBackground("#FEF3C7")  // Yellow for theme selector
-    .setBorder(true, true, true, true, false, false, "#F59E0B", SpreadsheetApp.BorderStyle.SOLID_MEDIUM)
-    .setFontWeight(dropdownStyle.fontWeight);
-
-  // Comparison toggle
-  sheet.getRange("G7")
-    .setDataValidation(comparisonRule)
-    .setValue("Yes")
-    .setBackground("#D1FAE5")  // Green for toggle
-    .setBorder(true, true, true, true, false, false, "#10B981", SpreadsheetApp.BorderStyle.SOLID_MEDIUM)
-    .setFontWeight(dropdownStyle.fontWeight);
-
-  // Add visual dropdown indicators in row 8
-  sheet.getRange("A8:G8")
-    .setValues([["▼ Select", "▼ Select", "▼ Select", "▼ Select", "▼ Select", "", "▼ Select"]])
-    .setFontSize(8)
-    .setFontColor("#6B7280")
-    .setFontStyle("italic")
-    .setHorizontalAlignment("center");
-
-  Logger.log("Interactive Dashboard controls set up successfully with enhanced visibility");
+  Logger.log("Interactive Dashboard checkbox controls verified");
 }
 
 /**
- * Rebuilds the Interactive Dashboard based on user selections
+ * Rebuilds the Interactive Dashboard based on user checkbox selections
  */
 function rebuildInteractiveDashboard() {
   const ss = SpreadsheetApp.getActiveSpreadsheet();
@@ -28390,13 +28310,22 @@ function rebuildInteractiveDashboard() {
   try {
     SpreadsheetApp.getUi().alert('✨ Bringing your dashboard to life...\n\n🎨 Painting your data with insights!\n⏱️ Just a moment while we celebrate your work...');
 
-    // Get user selections
-    const metric1 = sheet.getRange("A7").getValue() || "Total Members";
-    const chartType1 = sheet.getRange("B7").getValue() || "Donut Chart";
-    const metric2 = sheet.getRange("C7").getValue() || "Active Grievances";
-    const chartType2 = sheet.getRange("D7").getValue() || "Bar Chart";
-    const theme = sheet.getRange("E7").getValue() || "Union Blue";
-    const enableComparison = sheet.getRange("G7").getValue() || "Yes";
+    // Get selected metrics from checkboxes
+    const selectedMetrics = getSelectedMetrics(sheet);
+    const metric1 = selectedMetrics[0] || "Total Members";
+    const metric2 = selectedMetrics[1] || "Active Grievances";
+
+    // Get selected chart type from checkboxes (row 17)
+    const chartType1 = getSelectedChartType(sheet);
+
+    // Get selected theme from checkboxes (row 19)
+    const theme = getSelectedTheme(sheet);
+
+    // Get comparison setting from checkbox (C20)
+    const enableComparison = sheet.getRange("C20").getValue() === true ? "Yes" : "No";
+
+    // Default chart type for metric 2
+    const chartType2 = "Bar Chart";
 
     // Get data
     const memberData = memberSheet.getDataRange().getValues();
