@@ -14,7 +14,7 @@
  * Build Info:
  * - Version: 2.1.0 (Security Enhanced + Code Review Improvements)
  * - Build ID: 20251202-improvements
- * - Build Date: 2025-12-06T19:35:17.007Z
+ * - Build Date: 2025-12-07T00:26:48.914Z
  * - Build Type: DEVELOPMENT
  * - Modules: 77 files
  * - Tests Included: Yes
@@ -41697,7 +41697,7 @@ function logAudit(eventType, description, metadata) {
  */
 function createAuditLogSheet() {
   const ss = SpreadsheetApp.getActiveSpreadsheet();
-  const sheetName = SHEET_NAMES.AUDIT_LOG || 'Audit Log';
+  const sheetName = 'Audit Log';
 
   // Check if sheet already exists
   let sheet = ss.getSheetByName(sheetName);
