@@ -86,12 +86,20 @@
 - Column W: Main organization address
 - Column X: Main phone, AO: Main fax, AP: Contact name, AQ: Contact email
 
+✅ **Automatic Trigger Installation** (`DashboardFixes.gs`, `Code.gs`)
+- `installEssentialTriggers()` - Automatically installs onEdit trigger during CREATE_509_DASHBOARD
+- `onGrievanceEditAutoCalc()` - Smart onEdit handler that auto-recalculates grievance timelines
+- `recalculateSingleGrievanceRow()` - Fast single-row recalculation
+- **Auto-recalc triggers on:** Incident Date, Date Filed, Step decisions, Date Closed, Status, Current Step
+- **No manual steps required** - Users just enter data, calculations happen automatically
+
 **Files Created:**
-- `DashboardFixes.gs` - New comprehensive fixes file (~500 lines)
+- `DashboardFixes.gs` - Comprehensive fixes file with auto-triggers (~900 lines)
 
 **Files Modified:**
 - `BatchGrievanceRecalc.gs` - Fixed calculateGrievanceTimeline() for negative days
 - `ReorganizedMenu.gs` - Added Admin Tab Visibility submenu and fix menu items
+- `Code.gs` - Added auto-population and trigger installation to CREATE_509_DASHBOARD
 - `AI_REFERENCE.md` - Updated documentation
 
 ---

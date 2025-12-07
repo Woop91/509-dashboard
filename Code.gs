@@ -149,6 +149,14 @@ function CREATE_509_DASHBOARD() {
     Logger.log("Completed admin tab organization");
     SpreadsheetApp.getActive().toast("✅ Tabs organized", "98%", 2);
 
+    // Install essential triggers (auto-recalculation on edit)
+    Logger.log("Starting installEssentialTriggers...");
+    if (typeof installEssentialTriggers === 'function') {
+      installEssentialTriggers();
+    }
+    Logger.log("Completed installEssentialTriggers");
+    SpreadsheetApp.getActive().toast("✅ Triggers installed", "99%", 2);
+
     onOpen();
 
     SpreadsheetApp.getActive().toast("✅ Dashboard ready! Use menu to seed data.", "Complete!", 5);
