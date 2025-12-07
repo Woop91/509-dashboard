@@ -64,10 +64,10 @@
 - Executive Dashboard: Fixed Win Rate formula (Settled vs Denied, not "Resolved*")
 - KPI Performance Dashboard: Added 8 KPI rows with live formulas
 
-✅ **Seed/Nuke Alignment for Feedback:**
-- Sample Feedback entries NO LONGER auto-added during CREATE_509_DASHBOARD
-- Sample Feedback now only added via: Demo > Seed Demo Data > Add Sample Feedback Entries
-- `nukeSeedData()` now clears Feedback & Development (added `clearFeedbackDevelopment()`)
+✅ **Feedback Auto-Population:**
+- Sample Feedback entries ARE auto-added during CREATE_509_DASHBOARD (3 sample entries)
+- Additional feedback can be added via: Demo > Seed Demo Data > Add Sample Feedback Entries
+- `nukeSeedData()` clears Feedback & Development (added `clearFeedbackDevelopment()`)
 - Updated nuke warning message to mention Feedback & Development
 
 ✅ **Data Validation Fixes:**
@@ -85,7 +85,7 @@
 - `InteractiveDashboard.gs` - Live data formulas
 - `BatchGrievanceRecalc.gs` - Data validation (future dates only, positive only)
 - `SeedNuke.gs` - Added clearFeedbackDevelopment()
-- `DashboardFixes.gs` - Removed auto-add sample feedback
+- `DashboardFixes.gs` - Added auto-populate sample feedback on CREATE_509_DASHBOARD
 - `Constants.gs` - Added OPERATIONS_ANALYTICS sheet name
 - `build.js` - Added OperationsAnalytics.gs to build
 
