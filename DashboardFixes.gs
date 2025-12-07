@@ -277,8 +277,9 @@ const ADMIN_TABS_WITH_EMOJIS = [
 
 /**
  * Hide all admin/diagnostic tabs
+ * @param {boolean} silent - If true, don't show UI alert (used during CREATE_509_DASHBOARD)
  */
-function hideAdminTabs() {
+function hideAdminTabs(silent) {
   const ss = SpreadsheetApp.getActiveSpreadsheet();
   let hiddenCount = 0;
 
@@ -297,11 +298,15 @@ function hideAdminTabs() {
     }
   });
 
-  SpreadsheetApp.getUi().alert(
-    'Admin Tabs Hidden',
-    'Hidden ' + hiddenCount + ' admin/diagnostic tabs.\n\nTo show them again, go to:\nAdministrator > Show Admin Tabs',
-    SpreadsheetApp.getUi().ButtonSet.OK
-  );
+  if (!silent) {
+    SpreadsheetApp.getUi().alert(
+      'Admin Tabs Hidden',
+      'Hidden ' + hiddenCount + ' admin/diagnostic tabs.\n\nTo show them again, go to:\nAdministrator > Show Admin Tabs',
+      SpreadsheetApp.getUi().ButtonSet.OK
+    );
+  }
+
+  Logger.log('Hidden ' + hiddenCount + ' admin tabs');
 }
 
 /**
@@ -407,7 +412,49 @@ function fixInteractiveDropdownHighlighting() {
 }
 
 /* ========================================================================
- * 5. ENHANCED POPULATE ALL ANALYTICS SHEETS
+ * 5. POPULATE ANALYTICS ON CREATE (Silent version for CREATE_509_DASHBOARD)
+ * ======================================================================== */
+
+/**
+ * Populates all analytics sheets silently (no UI alerts)
+ * Called automatically by CREATE_509_DASHBOARD
+ */
+function populateAllAnalyticsSheetsOnCreate() {
+  try {
+    // 1. Populate Type Analysis
+    populateTypeAnalysis();
+
+    // 2. Populate Trends sheet
+    populateTrendsSheet();
+
+    // 3. Populate Location Analytics
+    populateLocationAnalytics();
+
+    // 4. Populate Member Engagement
+    populateMemberEngagement();
+
+    // 5. Populate Cost Impact
+    populateCostImpact();
+
+    // 6. Populate Steward Workload (if function exists)
+    if (typeof populateStewardWorkload === 'function') {
+      populateStewardWorkload();
+    }
+
+    // 7. Populate Member Satisfaction (if function exists)
+    if (typeof populateMemberSatisfaction === 'function') {
+      populateMemberSatisfaction();
+    }
+
+    Logger.log('All analytics sheets populated during CREATE_509_DASHBOARD');
+  } catch (error) {
+    Logger.log('Error in populateAllAnalyticsSheetsOnCreate: ' + error.message);
+    // Don't throw - let CREATE_509_DASHBOARD continue
+  }
+}
+
+/* ========================================================================
+ * 6. ENHANCED POPULATE ALL ANALYTICS SHEETS (with UI)
  * ======================================================================== */
 
 /**
@@ -742,5 +789,148 @@ function runAllDashboardFixes() {
   } catch (error) {
     ui.alert('Error', 'Error running fixes: ' + error.message, ui.ButtonSet.OK);
     Logger.log('Error in runAllDashboardFixes: ' + error.stack);
+  }
+}
+
+/* ========================================================================
+ * 8. AUTOMATIC TRIGGER INSTALLATION
+ * ======================================================================== */
+
+/**
+ * Installs all essential triggers during CREATE_509_DASHBOARD
+ * Called automatically - no user action required
+ */
+function installEssentialTriggers() {
+  try {
+    // Remove any existing triggers to avoid duplicates
+    const triggers = ScriptApp.getProjectTriggers();
+    triggers.forEach(function(trigger) {
+      const handler = trigger.getHandlerFunction();
+      if (handler === 'onGrievanceEditAutoCalc' || handler === 'onGrievanceEdit') {
+        ScriptApp.deleteTrigger(trigger);
+      }
+    });
+
+    // Install the auto-calculation onEdit trigger
+    ScriptApp.newTrigger('onGrievanceEditAutoCalc')
+      .forSpreadsheet(SpreadsheetApp.getActiveSpreadsheet())
+      .onEdit()
+      .create();
+
+    Logger.log('Essential triggers installed successfully');
+    return true;
+  } catch (error) {
+    Logger.log('Error installing triggers: ' + error.message);
+    // Don't throw - let CREATE_509_DASHBOARD continue
+    return false;
+  }
+}
+
+/**
+ * OnEdit trigger that auto-recalculates grievance timelines
+ * Triggered when users manually edit grievances
+ */
+function onGrievanceEditAutoCalc(e) {
+  try {
+    if (!e || !e.range) return;
+
+    const sheet = e.range.getSheet();
+    const sheetName = sheet.getName();
+
+    // Only process Grievance Log edits
+    if (sheetName !== 'Grievance Log' && sheetName !== SHEETS.GRIEVANCE_LOG) return;
+
+    const row = e.range.getRow();
+    const col = e.range.getColumn();
+
+    // Skip header row
+    if (row < 2) return;
+
+    // Columns that trigger recalculation (dates and status)
+    const triggerColumns = [
+      GRIEVANCE_COLS.INCIDENT_DATE,      // G - Incident Date
+      GRIEVANCE_COLS.DATE_FILED,         // I - Date Filed
+      GRIEVANCE_COLS.STEP1_RCVD,         // K - Step I Decision Rcvd
+      GRIEVANCE_COLS.STEP2_APPEAL_FILED, // M - Step II Appeal Filed
+      GRIEVANCE_COLS.STEP2_RCVD,         // O - Step II Decision Rcvd
+      GRIEVANCE_COLS.STEP3_APPEAL_FILED, // Q - Step III Appeal Filed
+      GRIEVANCE_COLS.DATE_CLOSED,        // R - Date Closed
+      GRIEVANCE_COLS.STATUS,             // E - Status
+      GRIEVANCE_COLS.CURRENT_STEP        // F - Current Step
+    ];
+
+    // Check if edited column triggers recalculation
+    if (!triggerColumns.includes(col)) return;
+
+    // Recalculate just this row
+    recalculateSingleGrievanceRow(sheet, row);
+
+    Logger.log('Auto-recalculated grievance row ' + row);
+  } catch (error) {
+    // Silent fail - don't interrupt user
+    Logger.log('onGrievanceEditAutoCalc error: ' + error.message);
+  }
+}
+
+/**
+ * Recalculates a single grievance row's calculated columns
+ * Much faster than recalculating all grievances
+ */
+function recalculateSingleGrievanceRow(sheet, row) {
+  const lastCol = sheet.getLastColumn();
+  const rowData = sheet.getRange(row, 1, 1, lastCol).getValues()[0];
+  const today = new Date();
+
+  // Calculate deadlines
+  const deadlines = calculateGrievanceDeadlines(rowData);
+  const timeline = calculateGrievanceTimeline(rowData, today);
+
+  // Update calculated columns
+  const updates = [
+    [GRIEVANCE_COLS.FILING_DEADLINE, deadlines.filingDeadline],
+    [GRIEVANCE_COLS.STEP1_DUE, deadlines.step1Due],
+    [GRIEVANCE_COLS.STEP2_APPEAL_DUE, deadlines.step2AppealDeadline],
+    [GRIEVANCE_COLS.STEP2_DUE, deadlines.step2Due],
+    [GRIEVANCE_COLS.STEP3_APPEAL_DUE, deadlines.step3AppealDeadline],
+    [GRIEVANCE_COLS.DAYS_OPEN, timeline.daysOpen],
+    [GRIEVANCE_COLS.NEXT_ACTION_DUE, timeline.nextActionDue],
+    [GRIEVANCE_COLS.DAYS_TO_DEADLINE, timeline.daysToDeadline]
+  ];
+
+  // Apply updates (only non-empty values)
+  updates.forEach(function(update) {
+    const col = update[0];
+    let value = update[1];
+
+    // Format dates
+    if (value instanceof Date) {
+      value = Utilities.formatDate(value, Session.getScriptTimeZone(), 'MM/dd/yyyy');
+    }
+
+    // Only update if we have a value
+    if (value !== '' && value !== null && value !== undefined) {
+      sheet.getRange(row, col).setValue(value);
+    }
+  });
+}
+
+/**
+ * Also handle Coordinator Notification checkbox (Feature 95)
+ * This is a simplified version that can be expanded
+ */
+function handleCoordinatorCheckbox(sheet, row, col) {
+  // Check if the Coordinator Notified column was edited
+  if (col !== GRIEVANCE_COLS.COORDINATOR_NOTIFIED) return;
+
+  const checkboxValue = sheet.getRange(row, col).getValue();
+
+  if (checkboxValue === true) {
+    // Highlight the row
+    const lastCol = sheet.getLastColumn();
+    sheet.getRange(row, 1, 1, lastCol).setBackground('#FFF3CD'); // Light yellow highlight
+  } else {
+    // Remove highlight
+    const lastCol = sheet.getLastColumn();
+    sheet.getRange(row, 1, 1, lastCol).setBackground(null);
   }
 }
