@@ -2,9 +2,9 @@
 
 Future feature ideas and enhancements for the 509 Dashboard.
 
-**Status Summary:** 33 of 48 original features have been implemented. 15 remain pending.
+**Status Summary:** 33 of 50 features have been implemented. 17 remain pending (including 2 new high-priority features).
 
-**Last Updated:** 2025-12-06 (Version 2.6)
+**Last Updated:** 2025-12-07 (Version 3.3)
 
 ---
 
@@ -87,9 +87,33 @@ Implemented in `EnhancedValidation.gs`:
 
 ---
 
-### REMAINING PENDING FEATURES (15 items)
+### REMAINING PENDING FEATURES (17 items)
 
-### HIGH PRIORITY (2 items)
+### HIGH PRIORITY (4 items)
+
+#### Smart Member Import Feature
+**Complexity:** Complex | **Status:** Planned
+
+Create an import feature that smartly imports member log information from another uploaded document.
+- Support CSV and Excel file formats
+- Intelligent field mapping UI
+- Duplicate detection during import
+- Preview before final import
+- Handle partial matches and data conflicts
+
+---
+
+#### Nuke Safety Mode - Data Protection
+**Complexity:** Moderate | **Status:** Planned
+
+When nuke is enabled and data cleaned: prevent bulk data deletion or alteration in Grievance Log and Member Directory.
+- Add NUKE_SAFETY_MODE flag in Config
+- Block batch delete/edit operations after nuke
+- Allow single-row new data entry
+- Protect production data from accidental mass changes
+- Exclude new data entry from restrictions
+
+---
 
 #### 2. Extend Auto-Formula Coverage
 **Complexity:** Simple | **Status:** Planned
