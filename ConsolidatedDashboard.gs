@@ -14,7 +14,7 @@
  * Build Info:
  * - Version: 2.1.0 (Security Enhanced + Code Review Improvements)
  * - Build ID: 20251202-improvements
- * - Build Date: 2025-12-07T03:05:49.131Z
+ * - Build Date: 2025-12-07T03:11:12.268Z
  * - Build Type: DEVELOPMENT
  * - Modules: 77 files
  * - Tests Included: Yes
@@ -41574,7 +41574,7 @@ function clearStewardWorkload() {
  * Clears demo/seeded data from Config tab
  * Preserves row 1 headers, clears all data below
  *
- * Columns cleared:
+ * COLUMNS CLEARED (demo data):
  * - A: Job Titles (CONFIG_COLS.JOB_TITLES)
  * - B: Office Locations (CONFIG_COLS.OFFICE_LOCATIONS)
  * - C: Units (CONFIG_COLS.UNITS)
@@ -41583,6 +41583,19 @@ function clearStewardWorkload() {
  * - H: Stewards (CONFIG_COLS.STEWARDS)
  * - O: Grievance Coordinators (CONFIG_COLS.GRIEVANCE_COORDINATORS)
  * - AF: Home Towns (CONFIG_COLS.HOME_TOWNS)
+ * - AN: Office Addresses (CONFIG_COLS.OFFICE_ADDRESSES)
+ *
+ * COLUMNS PRESERVED (organization info - NEVER cleared):
+ * - U: Organization Name (CONFIG_COLS.ORG_NAME)
+ * - V: Local Number (CONFIG_COLS.LOCAL_NUMBER)
+ * - W: Main Address (CONFIG_COLS.MAIN_ADDRESS)
+ * - X: Main Phone (CONFIG_COLS.MAIN_PHONE)
+ * - AK: Union Parent (CONFIG_COLS.UNION_PARENT)
+ * - AL: State/Region (CONFIG_COLS.STATE_REGION)
+ * - AM: Organization Website (CONFIG_COLS.ORG_WEBSITE)
+ * - AO: Main Fax (CONFIG_COLS.MAIN_FAX)
+ * - AP: Toll Free (CONFIG_COLS.TOLL_FREE)
+ * - All deadline and contract columns
  */
 function clearConfigDemoData() {
   const ss = SpreadsheetApp.getActiveSpreadsheet();
@@ -41602,6 +41615,7 @@ function clearConfigDemoData() {
 
   // Define columns to clear (using CONFIG_COLS constants)
   // These columns contain demo/seeded data that should be removed
+  // NOTE: Organization info columns (U, V, W, X, AK, AL, AM, AO, AP) are NEVER cleared
   const columnsToClear = [
     CONFIG_COLS.JOB_TITLES,           // A (1) - Job Titles
     CONFIG_COLS.OFFICE_LOCATIONS,     // B (2) - Office Locations
@@ -41610,7 +41624,8 @@ function clearConfigDemoData() {
     CONFIG_COLS.MANAGERS,             // G (7) - Managers
     CONFIG_COLS.STEWARDS,             // H (8) - Stewards
     CONFIG_COLS.GRIEVANCE_COORDINATORS, // O (15) - Grievance Coordinators
-    CONFIG_COLS.HOME_TOWNS            // AF (32) - Home Towns
+    CONFIG_COLS.HOME_TOWNS,           // AF (32) - Home Towns
+    CONFIG_COLS.OFFICE_ADDRESSES      // AN (40) - Office Addresses
   ];
 
   // Clear each column from row 2 to lastRow (preserve header in row 1)
@@ -41626,6 +41641,7 @@ function clearConfigDemoData() {
   });
 
   Logger.log('Config demo data cleared: ' + columnsToClear.length + ' columns, ' + rowsToDelete + ' rows each');
+  Logger.log('Organization info preserved in columns U, V, W, X, AK, AL, AM, AO, AP');
 }
 
 /**
