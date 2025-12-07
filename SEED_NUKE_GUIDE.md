@@ -10,12 +10,25 @@ The **Seed Nuke** feature allows you to remove all test/seeded data from your da
 
 When you execute the **Nuke Seed Data** function, the system will:
 
-1. **Remove ALL Members**: Delete all 20,000+ seeded test members from Member Directory
-2. **Remove ALL Grievances**: Delete all 5,000+ seeded test grievances from Grievance Log
+1. **Remove ALL Members**: Delete all test members from Member Directory
+2. **Remove ALL Grievances**: Delete all test grievances from Grievance Log
 3. **Clear Steward Workload**: Remove all test steward assignments
-4. **Preserve Structure**: Keep all headers, formulas, and sheet structure intact
-5. **Rebuild Dashboards**: Recalculate all metrics and charts (will show zero until you add real data)
-6. **Hide Seed Menu**: Remove seed data options from the menu permanently
+4. **Clear Config Demo Data**: Remove demo entries from Config tab:
+   - Job Titles (Column A)
+   - Office Locations (Column B)
+   - Units (Column C)
+   - Supervisors (Column F)
+   - Managers (Column G)
+   - Stewards (Column H)
+   - Grievance Coordinators (Column O)
+   - Home Towns (Column AF)
+   - Office Addresses (Column AN)
+5. **Preserve Organization Info**: Keep your real organization settings:
+   - Organization Name, Local Number, Main Address, Phone
+   - Union Parent, State/Region, Website
+   - Main Fax, Toll Free numbers
+   - All deadline and contract reference columns
+6. **Preserve Structure**: Keep all headers, formulas, and sheet structure intact
 7. **Show Setup Guide**: Display getting started instructions
 
 ---
@@ -283,17 +296,18 @@ However, you can:
 ```
 
 ### What Gets Deleted
-- ❌ All members (20,000+)
-- ❌ All grievances (5,000+)
+- ❌ All members from Member Directory
+- ❌ All grievances from Grievance Log
 - ❌ All steward workload data
-- ❌ Seed menu options
+- ❌ Config demo data (job titles, locations, units, supervisors, managers, stewards, coordinators, home towns, office addresses)
 
 ### What Gets Preserved
 - ✅ Headers and structure
-- ✅ Config settings
+- ✅ Organization info (name, local number, address, phone, fax, toll-free, website)
+- ✅ Deadline settings and contract references
 - ✅ Dashboards and charts
 - ✅ All formulas and formatting
-- ✅ Menu system (except seed options)
+- ✅ Menu system
 
 ### Post-Nuke Priorities
 1. Enter steward contact info
@@ -328,4 +342,4 @@ Your dashboard is **production-ready**! 🚀
 ---
 
 **Last Updated**: 2025-12-07
-**Version**: 1.1.0
+**Version**: 1.2.0
