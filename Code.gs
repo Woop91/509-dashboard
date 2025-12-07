@@ -4221,3 +4221,12 @@ function updateMemberDirectorySnapshots() {
       const contactNotes = ["Discussed case progress", "Member updated on next steps", "Reviewed timeline and deadlines", "Answered member questions", "Scheduled follow-up meeting"][Math.floor(Math.random() * 5)];
       updateData.push([snapshot.status || "", snapshot.nextDeadline || "", contactDate, snapshot.stewardWhoContacted || "", contactNotes]);
     } else {
+      updateData.push(["", "", "", "", ""]);
+    }
+  }
+  if (updateData.length > 0) {
+    // Write to Member Directory columns for grievance snapshot data
+    // Columns: Status snapshot, Next deadline, Last contact date, Steward, Contact notes
+    memberDir.getRange(2, 10, updateData.length, 5).setValues(updateData);
+  }
+}
