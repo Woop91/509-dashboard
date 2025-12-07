@@ -14,7 +14,7 @@
  * Build Info:
  * - Version: 2.1.0 (Security Enhanced + Code Review Improvements)
  * - Build ID: 20251202-improvements
- * - Build Date: 2025-12-07T00:26:48.914Z
+ * - Build Date: 2025-12-07T00:54:29.219Z
  * - Build Type: DEVELOPMENT
  * - Modules: 77 files
  * - Tests Included: Yes
@@ -31330,6 +31330,7 @@ function CLEAR_CHART_CACHE() {
  * - Manager Name (M)
  * - Assigned Steward (P)
  * - Contact Steward (Z)
+ * - Has Open Grievance? (AB)
  *
  * MULTI-SELECT DROPDOWNS (comma-separated values allowed):
  * - Office Days (G)
@@ -31416,6 +31417,11 @@ function setupMemberDirectoryDropdowns() {
       setDropdownByCol(memberSheet, MEMBER_COLS.CONTACT_STEWARD, lastRow, stewards, 'Contact Steward', true);
     }
 
+    // Has Open Grievance? (Column AB / MEMBER_COLS.HAS_OPEN_GRIEVANCE)
+    if (yesNo.length > 0) {
+      setDropdownByCol(memberSheet, MEMBER_COLS.HAS_OPEN_GRIEVANCE, lastRow, yesNo, 'Has Open Grievance?', true);
+    }
+
     // ==================== MULTI-SELECT DROPDOWNS ====================
     // These allow comma-separated values (setAllowInvalid = true)
 
@@ -31453,7 +31459,7 @@ function setupMemberDirectoryDropdowns() {
     SpreadsheetApp.getUi().alert(
       'Dropdowns Setup Complete',
       'Data validation dropdowns have been added to the Member Directory.\n\n' +
-      'Single-select fields: Job Title, Work Location, Unit, Is Steward, Supervisor, Manager, Assigned Steward, Contact Steward\n\n' +
+      'Single-select fields: Job Title, Work Location, Unit, Is Steward, Supervisor, Manager, Assigned Steward, Contact Steward, Has Open Grievance?\n\n' +
       'Multi-select fields (comma-separated): Office Days, Preferred Communication, Best Time to Contact, Committees\n\n' +
       'Date fields: Recent Contact Date\n\n' +
       'To customize dropdown options, edit the Config sheet.',
@@ -31807,6 +31813,11 @@ function setupMemberDirectoryDropdownsSilent() {
     if (stewards.length > 0) {
       setDropdownByCol(memberSheet, MEMBER_COLS.ASSIGNED_STEWARD, lastRow, stewards, 'Assigned Steward', true);
       setDropdownByCol(memberSheet, MEMBER_COLS.CONTACT_STEWARD, lastRow, stewards, 'Contact Steward', true);
+    }
+
+    // Has Open Grievance? (uses same Yes/No values)
+    if (yesNo.length > 0) {
+      setDropdownByCol(memberSheet, MEMBER_COLS.HAS_OPEN_GRIEVANCE, lastRow, yesNo, 'Has Open Grievance?', true);
     }
 
     // Office Days (multi-select)
