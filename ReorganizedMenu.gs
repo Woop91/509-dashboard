@@ -3,18 +3,25 @@
  * REORGANIZED MENU SYSTEM
  * ------------------------------------------------------------------------====
  *
- * Organizes dashboard menus into three categories:
- * 1. Average User - Daily operations and common tasks
- * 2. Sheet Manager - Data management, performance, integrity, automations
- * 3. Administrator - System admin, seed functions, health monitoring
+ * Comprehensive menu system with 43+ features organized into four categories:
+ * 1. 👤 Dashboard - Daily operations, search, grievance tools, communications
+ * 2. 📊 Sheet Manager - Data, performance, integrity, automations, analytics
+ * 3. 🔧 Setup - Seed data, data management, dropdown configuration
+ * 4. ⚙️ Administrator - System health, workflow, column toggles, RBAC
  *
- * To use this menu instead of the default one:
- * - Rename the existing onOpen() function to onOpen_OLD()
- * - Rename this onOpen_Reorganized() function to onOpen()
+ * This file defines createReorganizedMenus(ui) which is called from Code.gs onOpen()
+ * The Tests menu and Optional Extras menu are defined separately in Code.gs
  */
 
-function onOpen_Reorganized() {
-  const ui = SpreadsheetApp.getUi();
+/**
+ * Creates the reorganized menus - called from Code.gs onOpen()
+ * This is the main entry point for menu creation
+ * @param {Ui} ui - The UI object from SpreadsheetApp
+ */
+function createReorganizedMenus(ui) {
+  if (!ui) {
+    ui = SpreadsheetApp.getUi();
+  }
 
   // ------------ AVERAGE USER MENU ------------
   ui.createMenu("👤 Dashboard")
@@ -339,4 +346,12 @@ function onOpen_Reorganized() {
     .addSeparator()
     .addItem("👁️ Toggle Setup Menu Visibility", "toggleSetupMenuVisibility")
     .addToUi();
+}
+
+/**
+ * Legacy wrapper for backwards compatibility
+ * Calls createReorganizedMenus() directly
+ */
+function onOpen_Reorganized() {
+  createReorganizedMenus();
 }
