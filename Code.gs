@@ -577,6 +577,13 @@ function createMemberDirectory() {
     .setFontColor("#000000")
     .setFontSize(10);
 
+  // Apply comma number formatting to numeric columns
+  const maxMemberRows = 25000;  // Support up to 25k members
+  // Open Rate (%) (column S = 19) - percentage format
+  memberDir.getRange(2, MEMBER_COLS.OPEN_RATE, maxMemberRows - 1, 1).setNumberFormat("#,##0");
+  // Volunteer Hours (column T = 20) - whole number format
+  memberDir.getRange(2, MEMBER_COLS.VOLUNTEER_HOURS, maxMemberRows - 1, 1).setNumberFormat("#,##0");
+
   memberDir.setColumnWidth(MEMBER_COLS.MEMBER_ID, 90);      // Member ID
   memberDir.setColumnWidth(MEMBER_COLS.EMAIL, 180);         // Email Address
   memberDir.setColumnWidth(MEMBER_COLS.COMMITTEES, 150);    // Committees (multi-select)
@@ -687,6 +694,13 @@ function createGrievanceLog() {
     .setFontWeight("normal")
     .setFontColor("#000000")
     .setFontSize(10);
+
+  // Apply comma number formatting to numeric columns
+  const maxRows = 1000;
+  // Days Open (column S = 19)
+  grievanceLog.getRange(2, GRIEVANCE_COLS.DAYS_OPEN, maxRows - 1, 1).setNumberFormat("#,##0");
+  // Days to Deadline (column U = 21)
+  grievanceLog.getRange(2, GRIEVANCE_COLS.DAYS_TO_DEADLINE, maxRows - 1, 1).setNumberFormat("#,##0");
 
   grievanceLog.setTabColor("#DC2626");
 }
@@ -1268,12 +1282,12 @@ function createExecutiveDashboard() {
   const execIsStewardCol = getColumnLetter(MEMBER_COLS.IS_STEWARD);
 
   const quickStats = [
-    ["Active Members", `=COUNTA('Member Directory'!${execMemberIdCol}2:${execMemberIdCol})`, `=B6-B7`, `=IF(B6>B7,"📈 Up","📉 Down")`],
-    ["Active Grievances", `=COUNTIF('Grievance Log'!${statusCol}:${statusCol},"Open")`, `=IF(B7<10,"🟢 Low",IF(B7<25,"🟡 Normal","🔴 High"))`, `=IF(B7>10,"⚠️ Monitor","✅ Good")`],
+    ["Active Members", `=TEXT(COUNTA('Member Directory'!${execMemberIdCol}2:${execMemberIdCol}),"#,##0")`, `=B6-B7`, `=IF(B6>B7,"📈 Up","📉 Down")`],
+    ["Active Grievances", `=TEXT(COUNTIF('Grievance Log'!${statusCol}:${statusCol},"Open"),"#,##0")`, `=IF(VALUE(B7)<10,"🟢 Low",IF(VALUE(B7)<25,"🟡 Normal","🔴 High"))`, `=IF(VALUE(B7)>10,"⚠️ Monitor","✅ Good")`],
     ["Overall Win Rate", `=IFERROR(TEXT(COUNTIF('Grievance Log'!${statusCol}:${statusCol},"Settled")/(COUNTIF('Grievance Log'!${statusCol}:${statusCol},"Settled")+COUNTIF('Grievance Log'!${statusCol}:${statusCol},"Denied")),"0%"),"0%")`, "Target: 70%", `=IF(VALUE(SUBSTITUTE(B8,"%",""))>=70,"✅ On Target","⚠️ Below")`],
-    ["Avg Resolution (Days)", `=IFERROR(ROUND(AVERAGE('Grievance Log'!${daysOpenCol}:${daysOpenCol}),1),"-")`, "Target: <30", `=IF(B9<30,"✅ Fast",IF(B9<60,"🟡 Normal","🔴 Slow"))`],
-    ["Overdue Cases", `=COUNTIFS('Grievance Log'!${statusCol}:${statusCol},"Open",'Grievance Log'!${daysToDeadlineCol}:${daysToDeadlineCol},"<0")`, `=IF(B10=0,"None",B10&" need attention")`, `=IF(B10=0,"✅ Clear","🔴 Action Required")`],
-    ["Active Stewards", `=COUNTIF('Member Directory'!${execIsStewardCol}:${execIsStewardCol},"Yes")`, `=ROUND(B6/B11,0)&" members per steward"`, `=IF(B6/B11<100,"✅ Good Ratio","⚠️ Need More")`]
+    ["Avg Resolution (Days)", `=IFERROR(TEXT(ROUND(AVERAGE('Grievance Log'!${daysOpenCol}:${daysOpenCol}),0),"#,##0"),"-")`, "Target: <30", `=IF(ISNUMBER(VALUE(B9)),IF(VALUE(B9)<30,"✅ Fast",IF(VALUE(B9)<60,"🟡 Normal","🔴 Slow")),"-")`],
+    ["Overdue Cases", `=TEXT(COUNTIFS('Grievance Log'!${statusCol}:${statusCol},"Open",'Grievance Log'!${daysToDeadlineCol}:${daysToDeadlineCol},"<0"),"#,##0")`, `=IF(VALUE(B10)=0,"None",B10&" need attention")`, `=IF(VALUE(B10)=0,"✅ Clear","🔴 Action Required")`],
+    ["Active Stewards", `=TEXT(COUNTIF('Member Directory'!${execIsStewardCol}:${execIsStewardCol},"Yes"),"#,##0")`, `=TEXT(ROUND(VALUE(SUBSTITUTE(B6,",",""))/VALUE(SUBSTITUTE(B11,",","")),0),"#,##0")&" members per steward"`, `=IF(VALUE(SUBSTITUTE(B6,",",""))/VALUE(SUBSTITUTE(B11,",",""))<100,"✅ Good Ratio","⚠️ Need More")`]
   ];
 
   sheet.getRange(6, 1, quickStats.length, 4).setValues(quickStats);
@@ -1293,14 +1307,14 @@ function createExecutiveDashboard() {
     .setBackground(COLORS.LIGHT_GRAY);
 
   const detailedKpis = [
-    ["Total Active Members", `=COUNTA('Member Directory'!${execMemberIdCol}2:${execMemberIdCol})`, `=IF(B15>0,"✅ Active","⚠️ No Data")`],
-    ["Total Active Grievances", `=COUNTIF('Grievance Log'!${statusCol}:${statusCol},"Open")`, `=IF(B16<25,"🟢 Manageable",IF(B16<50,"🟡 Busy","🔴 High Volume"))`],
+    ["Total Active Members", `=TEXT(COUNTA('Member Directory'!${execMemberIdCol}2:${execMemberIdCol}),"#,##0")`, `=IF(VALUE(SUBSTITUTE(B15,",",""))>0,"✅ Active","⚠️ No Data")`],
+    ["Total Active Grievances", `=TEXT(COUNTIF('Grievance Log'!${statusCol}:${statusCol},"Open"),"#,##0")`, `=IF(VALUE(SUBSTITUTE(B16,",",""))<25,"🟢 Manageable",IF(VALUE(SUBSTITUTE(B16,",",""))<50,"🟡 Busy","🔴 High Volume"))`],
     ["Overall Win Rate", `=IFERROR(TEXT(COUNTIF('Grievance Log'!${statusCol}:${statusCol},"Settled")/(COUNTIF('Grievance Log'!${statusCol}:${statusCol},"Settled")+COUNTIF('Grievance Log'!${statusCol}:${statusCol},"Denied")),"0.0%"),"0%")`, `=IF(VALUE(SUBSTITUTE(B17,"%",""))>=70,"✅ Excellent",IF(VALUE(SUBSTITUTE(B17,"%",""))>=50,"🟡 Good","🔴 Needs Improvement"))`],
-    ["Avg Resolution Time (Days)", `=IFERROR(ROUND(AVERAGE('Grievance Log'!${daysOpenCol}:${daysOpenCol}),1),"-")`, `=IF(ISNUMBER(B18),IF(B18<30,"✅ Fast",IF(B18<60,"🟡 Average","🔴 Slow")),"-")`],
-    ["Cases Overdue", `=COUNTIFS('Grievance Log'!${statusCol}:${statusCol},"Open",'Grievance Log'!${daysToDeadlineCol}:${daysToDeadlineCol},"<0")`, `=IF(B19=0,"✅ All On Track","🔴 "&B19&" Require Attention")`],
+    ["Avg Resolution Time (Days)", `=IFERROR(TEXT(ROUND(AVERAGE('Grievance Log'!${daysOpenCol}:${daysOpenCol}),0),"#,##0"),"-")`, `=IF(ISNUMBER(VALUE(SUBSTITUTE(B18,",",""))),IF(VALUE(SUBSTITUTE(B18,",",""))<30,"✅ Fast",IF(VALUE(SUBSTITUTE(B18,",",""))<60,"🟡 Average","🔴 Slow")),"-")`],
+    ["Cases Overdue", `=TEXT(COUNTIFS('Grievance Log'!${statusCol}:${statusCol},"Open",'Grievance Log'!${daysToDeadlineCol}:${daysToDeadlineCol},"<0"),"#,##0")`, `=IF(VALUE(SUBSTITUTE(B19,",",""))=0,"✅ All On Track","🔴 "&B19&" Require Attention")`],
     ["Member Satisfaction Score", `=IFERROR(TEXT(AVERAGEIF('Member Satisfaction'!F:F,">0"),"0.0"),"-")`, `=IF(ISNUMBER(VALUE(B20)),IF(VALUE(B20)>=4,"✅ High",IF(VALUE(B20)>=3,"🟡 Average","🔴 Low")),"-")`],
-    ["Total Grievances Filed YTD", `=COUNTA('Grievance Log'!${grievanceIdCol}2:${grievanceIdCol})`, `=IF(B21>0,"📊 "&B21&" cases tracked","No cases")`],
-    ["Resolved Grievances", `=COUNTIF('Grievance Log'!${statusCol}:${statusCol},"Settled")+COUNTIF('Grievance Log'!${statusCol}:${statusCol},"Closed")+COUNTIF('Grievance Log'!${statusCol}:${statusCol},"Denied")`, `=IF(B22>0,"✅ "&B22&" resolved","No resolutions yet")`]
+    ["Total Grievances Filed YTD", `=TEXT(COUNTA('Grievance Log'!${grievanceIdCol}2:${grievanceIdCol}),"#,##0")`, `=IF(VALUE(SUBSTITUTE(B21,",",""))>0,"📊 "&B21&" cases tracked","No cases")`],
+    ["Resolved Grievances", `=TEXT(COUNTIF('Grievance Log'!${statusCol}:${statusCol},"Settled")+COUNTIF('Grievance Log'!${statusCol}:${statusCol},"Closed")+COUNTIF('Grievance Log'!${statusCol}:${statusCol},"Denied"),"#,##0")`, `=IF(VALUE(SUBSTITUTE(B22,",",""))>0,"✅ "&B22&" resolved","No resolutions yet")`]
   ];
 
   sheet.getRange(15, 1, detailedKpis.length, 3).setValues(detailedKpis);
@@ -1389,14 +1403,15 @@ function createKPIPerformanceDashboard() {
   const kpiData = [
     // [KPI Name, Current Value, Target, Variance, % Change, Status, Last Month, YTD Avg, Best, Worst, Owner, Last Updated]
     // Last Month column (G) shows values from the previous calendar month
-    ["Total Members", `=COUNTA('Member Directory'!${memberIdCol}2:${memberIdCol})`, "20000", `=B4-C4`, `=IFERROR(TEXT((B4-C4)/C4,"0%"),"-")`, `=IF(B4>=C4,"On Track","At Risk")`, `=B4`, `=B4`, `=B4`, `=B4`, "HR Team", `=TEXT(NOW(),"MM/dd/yy")`],
-    ["Active Grievances", `=COUNTIF('Grievance Log'!${statusCol}:${statusCol},"Open")`, "25", `=B5-C5`, `=IFERROR(TEXT((B5-C5)/C5,"0%"),"-")`, `=IF(B5<=C5,"On Track","At Risk")`, `=COUNTIFS('Grievance Log'!${dateFiledCol}:${dateFiledCol},">="&EOMONTH(TODAY(),-2)+1,'Grievance Log'!${dateFiledCol}:${dateFiledCol},"<="&EOMONTH(TODAY(),-1),'Grievance Log'!${statusCol}:${statusCol},"Open")`, `=B5`, `=B5`, `=B5`, "Steward Lead", `=TEXT(NOW(),"MM/dd/yy")`],
+    // All numeric values use TEXT(value,"#,##0") for comma formatting
+    ["Total Members", `=TEXT(COUNTA('Member Directory'!${memberIdCol}2:${memberIdCol}),"#,##0")`, "20,000", `=TEXT(VALUE(SUBSTITUTE(B4,",",""))-VALUE(SUBSTITUTE(C4,",","")),"#,##0")`, `=IFERROR(TEXT((VALUE(SUBSTITUTE(B4,",",""))-VALUE(SUBSTITUTE(C4,",","")))/VALUE(SUBSTITUTE(C4,",","")),"0%"),"-")`, `=IF(VALUE(SUBSTITUTE(B4,",",""))>=VALUE(SUBSTITUTE(C4,",","")),"On Track","At Risk")`, `=B4`, `=B4`, `=B4`, `=B4`, "HR Team", `=TEXT(NOW(),"MM/dd/yy")`],
+    ["Active Grievances", `=TEXT(COUNTIF('Grievance Log'!${statusCol}:${statusCol},"Open"),"#,##0")`, "25", `=TEXT(VALUE(SUBSTITUTE(B5,",",""))-C5,"#,##0")`, `=IFERROR(TEXT((VALUE(SUBSTITUTE(B5,",",""))-C5)/C5,"0%"),"-")`, `=IF(VALUE(SUBSTITUTE(B5,",",""))<=C5,"On Track","At Risk")`, `=TEXT(COUNTIFS('Grievance Log'!${dateFiledCol}:${dateFiledCol},">="&EOMONTH(TODAY(),-2)+1,'Grievance Log'!${dateFiledCol}:${dateFiledCol},"<="&EOMONTH(TODAY(),-1),'Grievance Log'!${statusCol}:${statusCol},"Open"),"#,##0")`, `=B5`, `=B5`, `=B5`, "Steward Lead", `=TEXT(NOW(),"MM/dd/yy")`],
     ["Win Rate %", `=IFERROR(ROUND(COUNTIF('Grievance Log'!${statusCol}:${statusCol},"Settled")/(COUNTIF('Grievance Log'!${statusCol}:${statusCol},"Settled")+COUNTIF('Grievance Log'!${statusCol}:${statusCol},"Denied"))*100,1),0)`, "70", `=B6-C6`, `=IFERROR(TEXT((B6-C6)/C6,"0%"),"-")`, `=IF(B6>=C6,"On Track","At Risk")`, `=IFERROR(ROUND(COUNTIFS('Grievance Log'!${statusCol}:${statusCol},"Settled",'Grievance Log'!${dateClosedCol}:${dateClosedCol},">="&EOMONTH(TODAY(),-2)+1,'Grievance Log'!${dateClosedCol}:${dateClosedCol},"<="&EOMONTH(TODAY(),-1))/(COUNTIFS('Grievance Log'!${statusCol}:${statusCol},"Settled",'Grievance Log'!${dateClosedCol}:${dateClosedCol},">="&EOMONTH(TODAY(),-2)+1,'Grievance Log'!${dateClosedCol}:${dateClosedCol},"<="&EOMONTH(TODAY(),-1))+COUNTIFS('Grievance Log'!${statusCol}:${statusCol},"Denied",'Grievance Log'!${dateClosedCol}:${dateClosedCol},">="&EOMONTH(TODAY(),-2)+1,'Grievance Log'!${dateClosedCol}:${dateClosedCol},"<="&EOMONTH(TODAY(),-1)))*100,1),0)`, `=B6`, `=B6`, `=B6`, "Steward Lead", `=TEXT(NOW(),"MM/dd/yy")`],
-    ["Avg Days to Resolve", `=IFERROR(ROUND(AVERAGE('Grievance Log'!${daysOpenCol}:${daysOpenCol}),1),0)`, "30", `=B7-C7`, `=IFERROR(TEXT((B7-C7)/C7,"0%"),"-")`, `=IF(B7<=C7,"On Track","At Risk")`, `=IFERROR(ROUND(AVERAGEIFS('Grievance Log'!${daysOpenCol}:${daysOpenCol},'Grievance Log'!${dateClosedCol}:${dateClosedCol},">="&EOMONTH(TODAY(),-2)+1,'Grievance Log'!${dateClosedCol}:${dateClosedCol},"<="&EOMONTH(TODAY(),-1)),1),0)`, `=B7`, `=B7`, `=B7`, "Steward Lead", `=TEXT(NOW(),"MM/dd/yy")`],
-    ["Steward Coverage", `=COUNTIF('Member Directory'!${isStewardCol}:${isStewardCol},"Yes")`, "50", `=B8-C8`, `=IFERROR(TEXT((B8-C8)/C8,"0%"),"-")`, `=IF(B8>=C8,"On Track","At Risk")`, `=B8`, `=B8`, `=B8`, `=B8`, "Coordinator", `=TEXT(NOW(),"MM/dd/yy")`],
-    ["Cases Settled", `=COUNTIF('Grievance Log'!${statusCol}:${statusCol},"Settled")`, "100", `=B9-C9`, `=IFERROR(TEXT((B9-C9)/C9,"0%"),"-")`, `=IF(B9>=C9,"Exceeding","On Track")`, `=COUNTIFS('Grievance Log'!${statusCol}:${statusCol},"Settled",'Grievance Log'!${dateClosedCol}:${dateClosedCol},">="&EOMONTH(TODAY(),-2)+1,'Grievance Log'!${dateClosedCol}:${dateClosedCol},"<="&EOMONTH(TODAY(),-1))`, `=B9`, `=B9`, `=B9`, "Legal", `=TEXT(NOW(),"MM/dd/yy")`],
-    ["Cases Pending", `=COUNTIF('Grievance Log'!${statusCol}:${statusCol},"Pending Info")`, "10", `=B10-C10`, `=IFERROR(TEXT((B10-C10)/C10,"0%"),"-")`, `=IF(B10<=C10,"On Track","At Risk")`, `=COUNTIFS('Grievance Log'!${statusCol}:${statusCol},"Pending Info",'Grievance Log'!${dateFiledCol}:${dateFiledCol},">="&EOMONTH(TODAY(),-2)+1,'Grievance Log'!${dateFiledCol}:${dateFiledCol},"<="&EOMONTH(TODAY(),-1))`, `=B10`, `=B10`, `=B10`, "Steward Lead", `=TEXT(NOW(),"MM/dd/yy")`],
-    ["Member/Steward Ratio", `=IFERROR(ROUND(COUNTA('Member Directory'!${memberIdCol}2:${memberIdCol})/COUNTIF('Member Directory'!${isStewardCol}:${isStewardCol},"Yes"),0),0)`, "100", `=B11-C11`, `=IFERROR(TEXT((B11-C11)/C11,"0%"),"-")`, `=IF(B11<=C11,"On Track","At Risk")`, `=B11`, `=B11`, `=B11`, `=B11`, "HR Team", `=TEXT(NOW(),"MM/dd/yy")`]
+    ["Avg Days to Resolve", `=IFERROR(TEXT(ROUND(AVERAGE('Grievance Log'!${daysOpenCol}:${daysOpenCol}),0),"#,##0"),0)`, "30", `=TEXT(VALUE(SUBSTITUTE(B7,",",""))-C7,"#,##0")`, `=IFERROR(TEXT((VALUE(SUBSTITUTE(B7,",",""))-C7)/C7,"0%"),"-")`, `=IF(VALUE(SUBSTITUTE(B7,",",""))<=C7,"On Track","At Risk")`, `=IFERROR(TEXT(ROUND(AVERAGEIFS('Grievance Log'!${daysOpenCol}:${daysOpenCol},'Grievance Log'!${dateClosedCol}:${dateClosedCol},">="&EOMONTH(TODAY(),-2)+1,'Grievance Log'!${dateClosedCol}:${dateClosedCol},"<="&EOMONTH(TODAY(),-1)),0),"#,##0"),0)`, `=B7`, `=B7`, `=B7`, "Steward Lead", `=TEXT(NOW(),"MM/dd/yy")`],
+    ["Steward Coverage", `=TEXT(COUNTIF('Member Directory'!${isStewardCol}:${isStewardCol},"Yes"),"#,##0")`, "50", `=TEXT(VALUE(SUBSTITUTE(B8,",",""))-C8,"#,##0")`, `=IFERROR(TEXT((VALUE(SUBSTITUTE(B8,",",""))-C8)/C8,"0%"),"-")`, `=IF(VALUE(SUBSTITUTE(B8,",",""))>=C8,"On Track","At Risk")`, `=B8`, `=B8`, `=B8`, `=B8`, "Coordinator", `=TEXT(NOW(),"MM/dd/yy")`],
+    ["Cases Settled", `=TEXT(COUNTIF('Grievance Log'!${statusCol}:${statusCol},"Settled"),"#,##0")`, "100", `=TEXT(VALUE(SUBSTITUTE(B9,",",""))-C9,"#,##0")`, `=IFERROR(TEXT((VALUE(SUBSTITUTE(B9,",",""))-C9)/C9,"0%"),"-")`, `=IF(VALUE(SUBSTITUTE(B9,",",""))>=C9,"Exceeding","On Track")`, `=TEXT(COUNTIFS('Grievance Log'!${statusCol}:${statusCol},"Settled",'Grievance Log'!${dateClosedCol}:${dateClosedCol},">="&EOMONTH(TODAY(),-2)+1,'Grievance Log'!${dateClosedCol}:${dateClosedCol},"<="&EOMONTH(TODAY(),-1)),"#,##0")`, `=B9`, `=B9`, `=B9`, "Legal", `=TEXT(NOW(),"MM/dd/yy")`],
+    ["Cases Pending", `=TEXT(COUNTIF('Grievance Log'!${statusCol}:${statusCol},"Pending Info"),"#,##0")`, "10", `=TEXT(VALUE(SUBSTITUTE(B10,",",""))-C10,"#,##0")`, `=IFERROR(TEXT((VALUE(SUBSTITUTE(B10,",",""))-C10)/C10,"0%"),"-")`, `=IF(VALUE(SUBSTITUTE(B10,",",""))<=C10,"On Track","At Risk")`, `=TEXT(COUNTIFS('Grievance Log'!${statusCol}:${statusCol},"Pending Info",'Grievance Log'!${dateFiledCol}:${dateFiledCol},">="&EOMONTH(TODAY(),-2)+1,'Grievance Log'!${dateFiledCol}:${dateFiledCol},"<="&EOMONTH(TODAY(),-1)),"#,##0")`, `=B10`, `=B10`, `=B10`, "Steward Lead", `=TEXT(NOW(),"MM/dd/yy")`],
+    ["Member/Steward Ratio", `=TEXT(IFERROR(ROUND(COUNTA('Member Directory'!${memberIdCol}2:${memberIdCol})/COUNTIF('Member Directory'!${isStewardCol}:${isStewardCol},"Yes"),0),0),"#,##0")`, "100", `=TEXT(VALUE(SUBSTITUTE(B11,",",""))-C11,"#,##0")`, `=IFERROR(TEXT((VALUE(SUBSTITUTE(B11,",",""))-C11)/C11,"0%"),"-")`, `=IF(VALUE(SUBSTITUTE(B11,",",""))<=C11,"On Track","At Risk")`, `=B11`, `=B11`, `=B11`, `=B11`, "HR Team", `=TEXT(NOW(),"MM/dd/yy")`]
   ];
 
   sheet.getRange(4, 1, kpiData.length, 12).setValues(kpiData);

@@ -1,6 +1,6 @@
 # 509 Dashboard - Complete Feature Reference
 
-**Version:** 3.8
+**Version:** 3.10
 **Last Updated:** 2025-12-07
 **Purpose:** Union grievance tracking and member engagement system for SEIU Local 509
 
@@ -88,6 +88,43 @@
 - `DashboardFixes.gs` - Removed auto-add sample feedback
 - `Constants.gs` - Added OPERATIONS_ANALYTICS sheet name
 - `build.js` - Added OperationsAnalytics.gs to build
+
+---
+
+## Changelog - Version 3.10 (2025-12-07)
+
+**COMPREHENSIVE NUMBER FORMATTING WITH COMMAS:**
+
+✅ **Executive Dashboard** (`Code.gs`)
+- All numeric values now use TEXT(value,"#,##0") for comma formatting
+- Updated Quick Stats: Active Members, Active Grievances, Overdue Cases, Active Stewards
+- Updated Detailed KPIs: All member/grievance counts with comma separators
+- Comparison formulas updated to handle comma-formatted values with SUBSTITUTE()
+
+✅ **KPI Dashboard** (`Code.gs`)
+- All KPI numeric values now use TEXT(value,"#,##0")
+- Current Value, Variance, Last Month columns all show commas (20,000 not 20000)
+- Target column updated to use comma format (20,000 not 20000)
+
+✅ **Grievance Log** (`Code.gs`)
+- Applied setNumberFormat("#,##0") to Days Open column (S)
+- Applied setNumberFormat("#,##0") to Days to Deadline column (U)
+- Supports up to 1,000 rows of data
+
+✅ **Member Directory** (`Code.gs`)
+- Applied setNumberFormat("#,##0") to Open Rate column (S)
+- Applied setNumberFormat("#,##0") to Volunteer Hours column (T)
+- Supports up to 25,000 members
+
+✅ **Operations Analytics** (already had formatting via setNumberFormat)
+- Verified all numeric columns use "#,##0" format
+
+✅ **Interactive Dashboard** (already updated in v3.8)
+- Verified metric cards use TEXT(value,"#,##0")
+
+**Files Modified:**
+- `Code.gs` - Executive Dashboard, KPI Dashboard, Grievance Log, Member Directory number formatting
+- `ConsolidatedDashboard.gs` - Rebuilt with all changes
 
 ---
 
