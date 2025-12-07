@@ -14,7 +14,7 @@
  * Build Info:
  * - Version: 2.1.0 (Security Enhanced + Code Review Improvements)
  * - Build ID: 20251202-improvements
- * - Build Date: 2025-12-07T18:49:08.923Z
+ * - Build Date: 2025-12-07T19:12:28.671Z
  * - Build Type: DEVELOPMENT
  * - Modules: 78 files
  * - Tests Included: Yes
@@ -5082,33 +5082,6 @@ function onOpen() {
     // UI not available in this context (trigger, API call, etc.) - skip menu creation
     Logger.log('onOpen: UI not available, skipping menu creation. Context: ' + e.message);
     return;
-  }
-
-  // ============ 🚀 OPTIONAL EXTRAS MENU ============
-  // NOTE: CREATE_509_DASHBOARD already sets up all sheets, validations, and dropdowns.
-  // This menu contains OPTIONAL extras - automations and verification tools.
-  // Can be hidden via Admin > View & Display > Hide Setup Menu
-  if (!isSetupMenuHidden()) {
-    ui.createMenu("🚀 Optional Extras")
-      .addItem("📚 Getting Started Guide", "showGettingStartedGuide")
-      .addItem("❓ Help", "showHelp")
-      .addSeparator()
-      .addSubMenu(ui.createMenu("⚡ Enable Automations (Optional)")
-        .addItem("✅ Enable Automated Backups", "setupAutomatedBackups")
-        .addItem("✅ Enable Daily Deadline Notifications", "setupDailyDeadlineNotifications")
-        .addItem("✅ Enable Monthly Reports", "setupMonthlyReports")
-        .addItem("✅ Enable Quarterly Reports", "setupQuarterlyReports"))
-      .addSeparator()
-      .addSubMenu(ui.createMenu("🔄 Refresh Dropdowns (If Needed)")
-        .addItem("🔄 Refresh Steward Dropdowns", "refreshStewardDropdowns")
-        .addItem("ℹ️ Note: Only use if stewards changed", "showDropdownRefreshInfo"))
-      .addSeparator()
-      .addSubMenu(ui.createMenu("🔍 Verify & Diagnose")
-        .addItem("🧪 Run All Tests", "runAllTests")
-        .addItem("📊 View Test Results", "showTestResults")
-        .addItem("🔧 Diagnose Setup", "DIAGNOSE_SETUP")
-        .addItem("🏥 Run Health Check", "performSystemHealthCheck"))
-      .addToUi();
   }
 
   // ============ CREATE ALL MAIN MENUS ============
@@ -40468,14 +40441,15 @@ function checkForUpdates() {
  * REORGANIZED MENU SYSTEM
  * ------------------------------------------------------------------------====
  *
- * Comprehensive menu system with 43+ features organized into four categories:
+ * Comprehensive menu system with 43+ features organized into five categories:
  * 1. 👤 Dashboard - Daily operations, search, grievance tools, communications
  * 2. 📊 Sheet Manager - Data, performance, integrity, automations, analytics
- * 3. 🔧 Setup - Seed data, data management, dropdown configuration
- * 4. ⚙️ Administrator - System health, workflow, column toggles, RBAC
+ * 3. 🔧 Setup - Dropdown configuration, dashboard setup
+ * 4. 🎭 Demo - Seed demo data, data management (nuke/clear)
+ * 5. ⚙️ Administrator - System health, workflow, column toggles, RBAC
  *
  * This file defines createReorganizedMenus(ui) which is called from Code.gs onOpen()
- * The Tests menu and Optional Extras menu are defined separately in Code.gs
+ * The 🧪 Tests menu is defined separately in Code.gs
  */
 
 /**
@@ -40684,6 +40658,23 @@ function createReorganizedMenus(ui) {
 
   // ------------ SETUP MENU ------------
   ui.createMenu("🔧 Setup")
+    .addSubMenu(ui.createMenu("📋 Dropdown Configuration")
+      .addItem("📋 Setup All Dropdowns", "setupAllDropdowns")
+      .addItem("📋 Setup Member Directory Dropdowns", "setupMemberDirectoryDropdowns")
+      .addItem("📋 Setup Grievance Log Dropdowns", "setupGrievanceLogDropdowns")
+      .addItem("🔄 Refresh Steward Dropdowns", "refreshStewardDropdowns")
+      .addSeparator()
+      .addItem("📈 Extend Validations (10k rows)", "extendValidationsForLargeDataset"))
+    .addSeparator()
+    .addSubMenu(ui.createMenu("🎨 Dashboard Setup")
+      .addItem("🎨 Setup Dashboard Enhancements", "SETUP_DASHBOARD_ENHANCEMENTS")
+      .addItem("📊 Populate Analytics Sheets", "populateAllAnalyticsSheets"))
+    .addSeparator()
+    .addItem("📝 Open Member Google Form", "openMemberGoogleForm")
+    .addToUi();
+
+  // ------------ DEMO MENU ------------
+  ui.createMenu("🎭 Demo")
     .addSubMenu(ui.createMenu("🌱 Seed Demo Data")
       .addSubMenu(ui.createMenu("👥 Seed Members")
         .addItem("Seed Members - Toggle 1 (5,000)", "SEED_MEMBERS_TOGGLE_1")
@@ -40704,20 +40695,6 @@ function createReorganizedMenus(ui) {
       .addItem("🚨 Nuke All Data (Production Reset)", "nukeSeedData")
       .addItem("🗑️ Nuke ALL Sheet Data (Comprehensive)", "nukeAllSheetData")
       .addItem("⚠️ Clear Core Data Only", "clearAllData"))
-    .addSeparator()
-    .addSubMenu(ui.createMenu("📋 Dropdown Configuration")
-      .addItem("📋 Setup All Dropdowns", "setupAllDropdowns")
-      .addItem("📋 Setup Member Directory Dropdowns", "setupMemberDirectoryDropdowns")
-      .addItem("📋 Setup Grievance Log Dropdowns", "setupGrievanceLogDropdowns")
-      .addItem("🔄 Refresh Steward Dropdowns", "refreshStewardDropdowns")
-      .addSeparator()
-      .addItem("📈 Extend Validations (10k rows)", "extendValidationsForLargeDataset"))
-    .addSeparator()
-    .addSubMenu(ui.createMenu("🎨 Dashboard Setup")
-      .addItem("🎨 Setup Dashboard Enhancements", "SETUP_DASHBOARD_ENHANCEMENTS")
-      .addItem("📊 Populate Analytics Sheets", "populateAllAnalyticsSheets"))
-    .addSeparator()
-    .addItem("📝 Open Member Google Form", "openMemberGoogleForm")
     .addToUi();
 
   // ------------ ADMINISTRATOR MENU ------------
@@ -40779,21 +40756,6 @@ function createReorganizedMenus(ui) {
       .addItem("🔍 Mobile Unified Search", "showMobileUnifiedSearch")
       .addSeparator()
       .addItem("📄 Paginated Data Viewer", "showPaginatedViewer"))
-    .addSeparator()
-    .addSubMenu(ui.createMenu("🧪 Testing")
-      .addItem("🧪 Run All Tests", "runAllTests")
-      .addItem("🧪 Run Unit Tests", "runUnitTests")
-      .addItem("🧪 Run Validation Tests", "runValidationTests")
-      .addItem("🧪 Run Integration Tests", "runIntegrationTests")
-      .addSeparator()
-      .addItem("🧪 Test Deadline Notifications", "testDeadlineNotifications")
-      .addItem("🧪 Test Monthly Report", "generateMonthlyReport")
-      .addItem("🧪 Test Quarterly Report", "generateQuarterlyReport")
-      .addSeparator()
-      .addItem("📊 View Test Results", "showTestResults")
-      .addItem("🔧 Diagnose Setup", "DIAGNOSE_SETUP")
-      .addItem("⚙️ Shortcuts Configuration", "showKeyboardShortcutsConfig")
-      .addItem("F1 Context Help", "showContextHelp"))
     .addSeparator()
     .addSubMenu(ui.createMenu("👥 User Roles (RBAC)")
       .addItem("Initialize RBAC", "initializeRBAC")

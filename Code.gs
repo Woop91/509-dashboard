@@ -2066,33 +2066,6 @@ function onOpen() {
     return;
   }
 
-  // ============ 🚀 OPTIONAL EXTRAS MENU ============
-  // NOTE: CREATE_509_DASHBOARD already sets up all sheets, validations, and dropdowns.
-  // This menu contains OPTIONAL extras - automations and verification tools.
-  // Can be hidden via Admin > View & Display > Hide Setup Menu
-  if (!isSetupMenuHidden()) {
-    ui.createMenu("🚀 Optional Extras")
-      .addItem("📚 Getting Started Guide", "showGettingStartedGuide")
-      .addItem("❓ Help", "showHelp")
-      .addSeparator()
-      .addSubMenu(ui.createMenu("⚡ Enable Automations (Optional)")
-        .addItem("✅ Enable Automated Backups", "setupAutomatedBackups")
-        .addItem("✅ Enable Daily Deadline Notifications", "setupDailyDeadlineNotifications")
-        .addItem("✅ Enable Monthly Reports", "setupMonthlyReports")
-        .addItem("✅ Enable Quarterly Reports", "setupQuarterlyReports"))
-      .addSeparator()
-      .addSubMenu(ui.createMenu("🔄 Refresh Dropdowns (If Needed)")
-        .addItem("🔄 Refresh Steward Dropdowns", "refreshStewardDropdowns")
-        .addItem("ℹ️ Note: Only use if stewards changed", "showDropdownRefreshInfo"))
-      .addSeparator()
-      .addSubMenu(ui.createMenu("🔍 Verify & Diagnose")
-        .addItem("🧪 Run All Tests", "runAllTests")
-        .addItem("📊 View Test Results", "showTestResults")
-        .addItem("🔧 Diagnose Setup", "DIAGNOSE_SETUP")
-        .addItem("🏥 Run Health Check", "performSystemHealthCheck"))
-      .addToUi();
-  }
-
   // ============ CREATE ALL MAIN MENUS ============
   // Use the comprehensive reorganized menu system with all 43+ features
   // This calls the reorganized menu from ReorganizedMenu.gs
