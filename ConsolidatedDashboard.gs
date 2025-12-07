@@ -27862,73 +27862,95 @@ function createDashboardHeaderSection(sheet) {
 }
 
 /**
- * Creates control panel section (rows 4-9)
+ * Creates control panel section with checkbox lists instead of dropdowns
+ * Layout: Two columns of metrics, chart types row, themes row
  */
 function createDashboardControlPanel(sheet) {
   sheet.getRange("A4:T4").merge()
-    .setValue("🎛️ YOUR COMMAND CENTER - Make This Dashboard Your Own!")
+    .setValue("🎛️ YOUR COMMAND CENTER - Select What You Want to See!")
     .setFontSize(14).setFontFamily("Roboto")
     .setFontWeight("bold")
     .setHorizontalAlignment("center")
     .setBackground(COLORS.ACCENT_TEAL)
     .setFontColor("white");
 
-  const controls = [
-    ["Metric 1:", "Chart Type 1:", "Metric 2:", "Chart Type 2:", "Theme:"],
-    ["", "", "", "", ""]
+  // Metrics section header
+  sheet.getRange("A5:J5").merge()
+    .setValue("📊 SELECT METRICS TO DISPLAY (check all that apply)")
+    .setFontSize(11).setFontFamily("Roboto")
+    .setFontWeight("bold")
+    .setBackground(COLORS.LIGHT_GRAY);
+
+  // Define metrics split into two columns
+  const metricsCol1 = [
+    "Total Members", "Active Members", "Total Stewards", "Unit 8 Members", "Unit 10 Members",
+    "Total Grievances", "Active Grievances", "Resolved Grievances", "Grievances Won", "Grievances Lost"
+  ];
+  const metricsCol2 = [
+    "Win Rate %", "Overdue Grievances", "Due This Week", "In Mediation", "In Arbitration",
+    "Grievances by Type", "Grievances by Location", "Grievances by Step", "Steward Workload", "Monthly Trends"
   ];
 
-  sheet.getRange("A6:E6").setValues([controls[0]])
-    .setFontWeight("bold")
-    .setFontSize(10).setFontFamily("Roboto")
-    .setBackground(COLORS.LIGHT_GRAY)
-    .setHorizontalAlignment("right");
+  // Column 1 metrics (A-E)
+  for (let i = 0; i < metricsCol1.length; i++) {
+    const row = 6 + i;
+    sheet.getRange(row, 1).insertCheckboxes();
+    sheet.getRange(row, 2, 1, 4).merge().setValue(metricsCol1[i]).setFontSize(10).setFontFamily("Roboto").setVerticalAlignment("middle");
+  }
 
-  sheet.getRange("A7:E7")
-    .setBackground(COLORS.WHITE)
-    .setBorder(true, true, true, true, true, true, COLORS.BORDER_GRAY, SpreadsheetApp.BorderStyle.SOLID);
+  // Column 2 metrics (F-J)
+  for (let i = 0; i < metricsCol2.length; i++) {
+    const row = 6 + i;
+    sheet.getRange(row, 6).insertCheckboxes();
+    sheet.getRange(row, 7, 1, 4).merge().setValue(metricsCol2[i]).setFontSize(10).setFontFamily("Roboto").setVerticalAlignment("middle");
+  }
 
-  sheet.getRange("G6").setValue("Enable Comparison:")
-    .setFontWeight("bold")
-    .setFontSize(10).setFontFamily("Roboto")
-    .setBackground(COLORS.LIGHT_GRAY)
-    .setHorizontalAlignment("right");
+  // Set default checked metrics
+  sheet.getRange("A6").setValue(true);
+  sheet.getRange("A13").setValue(true);
+  sheet.getRange("F6").setValue(true);
 
-  sheet.getRange("G7")
-    .setBackground(COLORS.WHITE)
-    .setBorder(true, true, true, true, true, true, COLORS.BORDER_GRAY, SpreadsheetApp.BorderStyle.SOLID);
+  // Chart Types section (row 16-17)
+  sheet.getRange("A16:J16").merge().setValue("📈 CHART TYPE").setFontSize(11).setFontFamily("Roboto").setFontWeight("bold").setBackground(COLORS.LIGHT_GRAY);
+  sheet.getRange("A17").insertCheckboxes().setValue(true);
+  sheet.getRange("B17").setValue("Donut").setFontSize(9);
+  sheet.getRange("C17").insertCheckboxes();
+  sheet.getRange("D17").setValue("Pie").setFontSize(9);
+  sheet.getRange("E17").insertCheckboxes();
+  sheet.getRange("F17").setValue("Bar").setFontSize(9);
+  sheet.getRange("G17").insertCheckboxes();
+  sheet.getRange("H17").setValue("Column").setFontSize(9);
+  sheet.getRange("I17").insertCheckboxes();
+  sheet.getRange("J17").setValue("Line").setFontSize(9);
 
-  sheet.getRange("I6").setValue("Quick Action:")
-    .setFontWeight("bold")
-    .setFontSize(10).setFontFamily("Roboto")
-    .setBackground(COLORS.LIGHT_GRAY)
-    .setHorizontalAlignment("right");
+  // Themes section (row 18-19)
+  sheet.getRange("A18:J18").merge().setValue("🎨 THEME").setFontSize(11).setFontFamily("Roboto").setFontWeight("bold").setBackground(COLORS.LIGHT_GRAY);
+  sheet.getRange("A19").insertCheckboxes().setValue(true);
+  sheet.getRange("B19").setValue("Union Blue").setFontSize(9);
+  sheet.getRange("C19").insertCheckboxes();
+  sheet.getRange("D19").setValue("Solidarity Red").setFontSize(9);
+  sheet.getRange("E19").insertCheckboxes();
+  sheet.getRange("F19").setValue("Success Green").setFontSize(9);
+  sheet.getRange("G19").insertCheckboxes();
+  sheet.getRange("H19").setValue("Professional Purple").setFontSize(9);
+  sheet.getRange("I19").insertCheckboxes();
+  sheet.getRange("J19").setValue("Modern Dark").setFontSize(9);
 
-  const actionDropdown = SpreadsheetApp.newDataValidation()
-    .requireValueInList([
-      "Select Action...",
-      "Refresh Charts",
-      "Reset All Filters",
-      "Show All Data",
-      "Export Summary"
-    ], true)
-    .setAllowInvalid(false)
-    .build();
+  // Comparison toggle (row 20)
+  sheet.getRange("A20:B20").merge().setValue("🔄 Enable Comparison:").setFontSize(10).setFontFamily("Roboto").setFontWeight("bold").setBackground(COLORS.LIGHT_GRAY);
+  sheet.getRange("C20").insertCheckboxes().setValue(true);
 
-  sheet.getRange("I7")
-    .setValue("Select Action...")
-    .setDataValidation(actionDropdown)
-    .setFontSize(10).setFontFamily("Roboto")
-    .setBackground(COLORS.WHITE)
-    .setBorder(true, true, true, true, true, true, COLORS.BORDER_GRAY, SpreadsheetApp.BorderStyle.SOLID)
-    .setHorizontalAlignment("center");
+  // Quick Action dropdown
+  sheet.getRange("E20:F20").merge().setValue("Quick Action:").setFontSize(10).setFontFamily("Roboto").setFontWeight("bold").setBackground(COLORS.LIGHT_GRAY).setHorizontalAlignment("right");
+  const actionDropdown = SpreadsheetApp.newDataValidation().requireValueInList(["Select Action...", "Refresh Charts", "Reset All Filters", "Show All Data", "Export Summary"], true).setAllowInvalid(false).build();
+  sheet.getRange("G20").setValue("Select Action...").setDataValidation(actionDropdown).setFontSize(10).setFontFamily("Roboto").setBackground(COLORS.WHITE).setBorder(true, true, true, true, true, true, COLORS.BORDER_GRAY, SpreadsheetApp.BorderStyle.SOLID).setHorizontalAlignment("center");
 }
 
 /**
- * Creates metric cards section (rows 10-18)
+ * Creates metric cards section (rows 22-30) - adjusted for checkbox control panel
  */
 function createDashboardMetricCards(sheet) {
-  sheet.getRange("A10:T10").merge()
+  sheet.getRange("A22:T22").merge()
     .setValue("📈 YOUR VICTORIES AT A GLANCE - Watch These Numbers Grow!")
     .setFontSize(14).setFontFamily("Roboto")
     .setFontWeight("bold")

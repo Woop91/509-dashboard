@@ -3254,7 +3254,55 @@ Removed ALL ARRAYFORMULAs from Grievance Log. All calculated columns are now han
 
 ---
 
-**Document Version:** 2.3
+### Version 2.4 - Interactive Dashboard Checkbox UI
+
+**Change:**
+Replaced dropdown selectors in the Interactive Dashboard with checkbox lists for better visibility and easier multi-selection.
+
+**New Control Panel Layout (rows 4-20):**
+- Row 4: Header
+- Row 5: "SELECT METRICS TO DISPLAY" header
+- Rows 6-15: Metrics checkboxes in TWO COLUMNS (10 metrics per column)
+  - Column A: Checkboxes | Column B-E: Metric names (left side)
+  - Column F: Checkboxes | Column G-J: Metric names (right side)
+- Row 16-17: Chart Type checkboxes (Donut, Pie, Bar, Column, Line)
+- Row 18-19: Theme checkboxes (Union Blue, Solidarity Red, etc.)
+- Row 20: Enable Comparison checkbox + Quick Action dropdown
+
+**Metrics Available (20 total):**
+| Column 1 | Column 2 |
+|----------|----------|
+| Total Members | Win Rate % |
+| Active Members | Overdue Grievances |
+| Total Stewards | Due This Week |
+| Unit 8 Members | In Mediation |
+| Unit 10 Members | In Arbitration |
+| Total Grievances | Grievances by Type |
+| Active Grievances | Grievances by Location |
+| Resolved Grievances | Grievances by Step |
+| Grievances Won | Steward Workload |
+| Grievances Lost | Monthly Trends |
+
+**Helper Functions Added:**
+- `getSelectedMetrics(sheet)` - Returns array of checked metric names
+- `getSelectedChartType(sheet)` - Returns selected chart type
+- `getSelectedTheme(sheet)` - Returns selected theme
+
+**Row Adjustments (all sections shifted +12 rows):**
+- Metric Cards: rows 22-30 (was 10-18)
+- Chart Areas: rows 32-53 (was 21-42)
+- Pie Charts: rows 56-76 (was 45-65)
+- Location Chart: rows 79-99 (was 68-88)
+- Data Table: rows 102-121 (was 91-110)
+
+**Files Changed:**
+- InteractiveDashboard.gs: Complete checkbox UI implementation
+- ConsolidatedDashboard.gs: Partial update (control panel function)
+- AI_REFERENCE.md: Documentation
+
+---
+
+**Document Version:** 2.4
 **Last Updated:** 2025-12-07
 **Maintained By:** Claude (AI Assistant)
 **Repository:** [Add GitHub URL]
