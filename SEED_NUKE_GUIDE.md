@@ -318,5 +318,14 @@ Your dashboard is **production-ready**! 🚀
 
 ---
 
-**Last Updated**: 2025-11-23
-**Version**: 1.0.0
+## See Also
+
+- **`nukeAllSheetData()`** - Comprehensive clear that also removes analytics, surveys, feedback, archive
+  - Menu: `509 Tools > Data Management > 🗑️ Nuke ALL Sheet Data (Comprehensive)`
+- **`clearAllData()`** - Basic clear that only removes Member Directory and Grievance Log
+  - Menu: `509 Tools > Data Management > ⚠️ Clear Core Data Only`
+
+---
+
+**Last Updated**: 2025-12-07
+**Version**: 1.1.0

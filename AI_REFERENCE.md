@@ -1,6 +1,6 @@
 # 509 Dashboard - Complete Feature Reference
 
-**Version:** 3.0
+**Version:** 3.1
 **Last Updated:** 2025-12-07
 **Purpose:** Union grievance tracking and member engagement system for SEIU Local 509
 
@@ -36,7 +36,41 @@
 
 ---
 
-## 🆕 Changelog - Version 3.0 (2025-12-07)
+## 🆕 Changelog - Version 3.1 (2025-12-07)
+
+**NUKE FUNCTION FIX & DOCUMENTATION:**
+
+✅ **Fixed Duplicate `nukeSeedData()` Function** (`Code.gs`, `SeedNuke.gs`)
+- **Issue:** Two functions with same name existed in Code.gs and SeedNuke.gs
+- **Solution:** Renamed Code.gs version to `nukeAllSheetData()` to eliminate conflict
+- SeedNuke.gs version remains as `nukeSeedData()` (Exit Demo Mode)
+
+✅ **Three Clear Data Clearing Options Now Available:**
+1. **`nukeSeedData()`** (SeedNuke.gs) - Exit Demo Mode
+   - Clears Member Directory, Grievance Log, Steward Workload
+   - Sets SEED_NUKED flag to hide seed menu
+   - Shows post-nuke guidance dialog
+   - Menu: `🚨 Nuke Seed Data (Exit Demo Mode)`
+
+2. **`nukeAllSheetData()`** (Code.gs) - Comprehensive Clear
+   - Clears all sheets: Members, Grievances, Analytics, Satisfaction, Feedback, Archive
+   - Logs to Diagnostics
+   - Does NOT set SEED_NUKED flag
+   - Menu: `🗑️ Nuke ALL Sheet Data (Comprehensive)`
+
+3. **`clearAllData()`** (Code.gs) - Basic Clear
+   - Clears only Member Directory and Grievance Log
+   - Menu: `⚠️ Clear Core Data Only`
+
+**Files Modified:**
+- `Code.gs` - Renamed nukeSeedData() to nukeAllSheetData(), updated menu items
+- `ReorganizedMenu.gs` - Updated menu items for consistency
+- `AI_REFERENCE.md` - Updated documentation for all three functions
+- `SEED_NUKE_GUIDE.md` - Updated version and date
+
+---
+
+## Changelog - Version 3.0 (2025-12-07)
 
 **DROPDOWN & VALIDATION IMPROVEMENTS:**
 
@@ -1542,31 +1576,82 @@ const resolution = isClosed ? [
 
 ### nukeSeedData()
 
-**Purpose:** Complete nuclear option - delete ALL seed data across all sheets
+**Purpose:** Exit Demo Mode - Remove seed/test data and prepare for production use
 
 **Implementation:**
-1. Shows comprehensive warning dialog
-2. Requires explicit confirmation
-3. Clears data from:
+1. Shows comprehensive warning dialog with TWO confirmation steps
+2. Clears data from:
+   - Member Directory (deletes all rows, keeps headers)
+   - Grievance Log (deletes all rows, keeps headers)
+   - Steward Workload (deletes all rows, keeps headers)
+3. Sets `SEED_NUKED` flag in Script Properties
+4. Rebuilds dashboards to recalculate metrics (will show zeros)
+5. Shows post-nuke guidance dialog with setup checklist
+
+**What Happens After Nuking:**
+- Empty sheets (with headers intact)
+- All dashboards show zero metrics
+- Seed menu options are hidden (SEED_NUKED flag set)
+- Getting started guidance appears
+
+**Safety Features:**
+- Dual confirmation dialogs (two-step confirmation)
+- Clear warning about irreversibility
+- Can be cancelled at any point
+- Null-safe (won't error if sheets don't exist)
+
+**File:** SeedNuke.gs
+
+**Menu:** `509 Tools > 📊 Data Management > 🚨 Nuke Seed Data (Exit Demo Mode)`
+
+**Related:** See SEED_NUKE_GUIDE.md for complete documentation
+
+---
+
+### nukeAllSheetData()
+
+**Purpose:** Comprehensive data clear - Delete ALL data from all sheets (more thorough than nukeSeedData)
+
+**Implementation:**
+1. Shows warning dialog with single confirmation
+2. Clears data from:
    - Member Directory (all member rows)
    - Grievance Log (all grievance rows)
    - Analytics Data (computed rows)
    - Member Satisfaction (survey rows)
    - Feedback & Development (feedback rows)
    - Archive (archived items)
-4. Keeps all headers and structure intact
-5. Logs action to Diagnostics sheet
-6. Toast notification
+3. Keeps all headers and structure intact
+4. Logs action to Diagnostics sheet
+5. Toast notification on completion
 
-**Safety Features:**
-- Dual confirmation dialogs
-- Clear warning about irreversibility
-- Can be cancelled at any point
-- Null-safe (won't error if sheets don't exist)
+**Difference from nukeSeedData():**
+- More comprehensive - clears analytics, surveys, feedback, archive
+- Does NOT set SEED_NUKED flag (seed menu stays visible)
+- Does NOT show guidance dialog
+- Single confirmation instead of dual
 
-**File:** Code.gs (lines 1463-1538)
+**File:** Code.gs
 
-**Note:** This is NOT the same as clearAllData() - it's much more comprehensive and clears test data from all sheets, not just Member Directory and Grievance Log.
+**Menu:** `509 Tools > 📊 Data Management > 🗑️ Nuke ALL Sheet Data (Comprehensive)`
+
+---
+
+### clearAllData()
+
+**Purpose:** Basic clear - Delete only core data (Member Directory and Grievance Log)
+
+**Implementation:**
+1. Shows warning dialog
+2. Clears only:
+   - Member Directory (all rows except header)
+   - Grievance Log (all rows except header)
+3. Keeps headers intact
+4. Toast notification on completion
+
+**File:** Code.gs
+
+**Menu:** `509 Tools > 📊 Data Management > ⚠️ Clear Core Data Only`
 
 ---
 
