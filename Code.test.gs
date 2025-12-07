@@ -237,14 +237,14 @@ function testMemberDirectoryFormulas() {
       'Test member should exist in Member Directory'
     );
 
-    // Check "Has Open Grievance?" (column Y = 25, index 24)
+    // Check "Has Open Grievance?" - using MEMBER_COLS constant (column AB = 28, index 27)
     const hasOpenGrievance = memberData[testMemberRow][MEMBER_COLS.HAS_OPEN_GRIEVANCE - 1];
     Assert.assertTrue(
       hasOpenGrievance === 'Yes' || hasOpenGrievance === true,
       'Member with open grievance should show "Yes" in Has Open Grievance column'
     );
 
-    // Check "Grievance Status Snapshot" (column Z = 26, index 25)
+    // Check "Grievance Status Snapshot" - using MEMBER_COLS constant (column AC = 29, index 28)
     const statusSnapshot = memberData[testMemberRow][MEMBER_COLS.GRIEVANCE_STATUS - 1];
     Assert.assertEquals(
       'Open',
@@ -337,12 +337,12 @@ function testMemberValidationRules() {
   const ss = SpreadsheetApp.getActive();
   const memberDir = ss.getSheetByName(SHEETS.MEMBER_DIR);
 
-  // Check critical validations exist
+  // Check critical validations exist - using MEMBER_COLS constants
   const columnsToCheck = [
-    { col: 4, name: 'Job Title' },
-    { col: 5, name: 'Work Location' },
-    { col: 6, name: 'Unit' },
-    { col: 10, name: 'Is Steward' }
+    { col: MEMBER_COLS.JOB_TITLE, name: 'Job Title' },        // Column D (4)
+    { col: MEMBER_COLS.WORK_LOCATION, name: 'Work Location' }, // Column E (5)
+    { col: MEMBER_COLS.UNIT, name: 'Unit' },                   // Column F (6)
+    { col: MEMBER_COLS.IS_STEWARD, name: 'Is Steward' }        // Column N (14)
   ];
 
   columnsToCheck.forEach(function(item) {
@@ -365,12 +365,12 @@ function testGrievanceValidationRules() {
   const ss = SpreadsheetApp.getActive();
   const grievanceLog = ss.getSheetByName(SHEETS.GRIEVANCE_LOG);
 
-  // Check critical validations exist
+  // Check critical validations exist - using GRIEVANCE_COLS constants
   const columnsToCheck = [
-    { col: 5, name: 'Status' },
-    { col: 6, name: 'Current Step' },
-    { col: 23, name: 'Issue Category' },
-    { col: 22, name: 'Articles Violated' }
+    { col: GRIEVANCE_COLS.STATUS, name: 'Status' },             // Column E (5)
+    { col: GRIEVANCE_COLS.CURRENT_STEP, name: 'Current Step' }, // Column F (6)
+    { col: GRIEVANCE_COLS.ISSUE_CATEGORY, name: 'Issue Category' }, // Column W (23)
+    { col: GRIEVANCE_COLS.ARTICLES, name: 'Articles Violated' }  // Column V (22)
   ];
 
   columnsToCheck.forEach(function(item) {
