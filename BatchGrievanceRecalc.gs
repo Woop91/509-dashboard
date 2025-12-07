@@ -126,7 +126,9 @@ function calculateGrievanceTimeline(row, today) {
   if (dateFiled) {
     const endDate = dateClosed ? new Date(dateClosed) : today;
     const filed = new Date(dateFiled);
-    daysOpen = Math.floor((endDate - filed) / (1000 * 60 * 60 * 24));
+    const daysDiff = Math.floor((endDate - filed) / (1000 * 60 * 60 * 24));
+    // If negative (future date filed), show 0 - no negative days open allowed
+    daysOpen = daysDiff < 0 ? 0 : daysDiff;
   }
 
   // Determine next action due based on current step
@@ -157,7 +159,18 @@ function calculateGrievanceTimeline(row, today) {
   let daysToDeadline = '';
   if (nextActionDue && nextActionDue !== '') {
     const deadline = new Date(nextActionDue);
-    daysToDeadline = Math.floor((deadline - today) / (1000 * 60 * 60 * 24));
+    const daysDiff = Math.floor((deadline - today) / (1000 * 60 * 60 * 24));
+
+    // Format based on urgency for conditional formatting matching
+    if (daysDiff < 0) {
+      // Overdue - show as text for conditional formatting
+      daysToDeadline = 'OVERDUE: ' + Math.abs(daysDiff) + ' days';
+    } else if (daysDiff === 0) {
+      daysToDeadline = 'DUE TODAY';
+    } else {
+      // Future deadline - show as number
+      daysToDeadline = daysDiff;
+    }
   }
 
   return {

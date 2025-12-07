@@ -1,6 +1,6 @@
 # 509 Dashboard - Complete Feature Reference
 
-**Version:** 3.4
+**Version:** 3.5
 **Last Updated:** 2025-12-07
 **Purpose:** Union grievance tracking and member engagement system for SEIU Local 509
 
@@ -36,7 +36,67 @@
 
 ---
 
-## 🆕 Changelog - Version 3.4 (2025-12-07)
+## 🆕 Changelog - Version 3.5 (2025-12-07)
+
+**COMPREHENSIVE DASHBOARD FIXES:**
+
+✅ **Fixed Grievance Log Negative Days Issue** (`BatchGrievanceRecalc.gs`)
+- **Days Open:** Now shows 0 instead of negative when date filed is in future
+- **Days to Deadline:** Shows "OVERDUE: X days" text for past deadlines instead of negative numbers
+- Shows "DUE TODAY" when deadline is today
+- Positive numbers shown for future deadlines (works with conditional formatting)
+
+✅ **Fixed Row Formatting Issues** (`DashboardFixes.gs`)
+- Added `clearGrievanceLogRowFormatting()` to fix row 2 highlighting issue
+- Added `resetGrievanceLogFormatting()` for complete formatting reset
+- Added `setupDaysToDeadlineConditionalFormatting()` to reapply conditional rules
+
+✅ **Fixed Non-Populating Analytics Tabs** (`DashboardFixes.gs`)
+- Added `populateTypeAnalysis()` - populates Type Analysis with win rates, trends, etc.
+- Added `populateTrendsSheet()` - monthly trend data with formulas
+- Added `populateLocationAnalytics()` - location-based metrics
+- Added `populateKPIPerformanceDashboard()` - KPI refresh
+- Added `populateMemberEngagement()` - engagement metrics
+- Added `populateCostImpact()` - cost tracking formulas
+- Added `populateAllAnalyticsSheetsEnhanced()` - master populate function
+
+✅ **Added Admin Tab Hide/Unhide Toggle** (`DashboardFixes.gs`, `ReorganizedMenu.gs`)
+- **Tabs that can be hidden:** Error_Log, Test Results, Backup Log, Audit Log, Error_Trends, Archive, Diagnostics
+- Added `hideAdminTabs()` - hides all admin/diagnostic tabs
+- Added `showAdminTabs()` - shows all admin/diagnostic tabs
+- Added `toggleAdminTabs()` - toggle visibility
+- Added `moveAdminTabsToEnd()` - reorders admin tabs to end of sheet list
+- **Menu:** Administrator > Column Toggles & View > Admin Tab Visibility
+
+✅ **Fixed Interactive Dashboard Quick Action Dropdown** (`DashboardFixes.gs`)
+- Added `fixInteractiveDropdownHighlighting()` - applies consistent blue styling
+- Quick Action dropdown now matches other dropdown styling
+
+✅ **Added Master Fix Function** (`DashboardFixes.gs`)
+- `runAllDashboardFixes()` - runs all fixes at once:
+  - Clears row formatting issues
+  - Populates all analytics sheets
+  - Fixes dropdown styling
+  - Moves and hides admin tabs
+  - Refreshes grievance calculations
+
+**Office Locations Config Documented:**
+- Column B: Office Locations (site names)
+- Column AN: Office Addresses (corresponding addresses)
+- Column W: Main organization address
+- Column X: Main phone, AO: Main fax, AP: Contact name, AQ: Contact email
+
+**Files Created:**
+- `DashboardFixes.gs` - New comprehensive fixes file (~500 lines)
+
+**Files Modified:**
+- `BatchGrievanceRecalc.gs` - Fixed calculateGrievanceTimeline() for negative days
+- `ReorganizedMenu.gs` - Added Admin Tab Visibility submenu and fix menu items
+- `AI_REFERENCE.md` - Updated documentation
+
+---
+
+## Changelog - Version 3.4 (2025-12-07)
 
 **FEATURE ROADMAP UPDATES:**
 
