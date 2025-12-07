@@ -68,6 +68,13 @@ function CREATE_509_DASHBOARD() {
     Logger.log("Completed createOperationsAnalyticsSheet");
     SpreadsheetApp.getActive().toast("✅ Operations Analytics created", "75%", 2);
 
+    // Delete standalone analytics tabs that are now merged into Operations Analytics
+    Logger.log("Starting deleteStandaloneAnalyticsTabs...");
+    if (typeof deleteStandaloneAnalyticsTabs === 'function') {
+      deleteStandaloneAnalyticsTabs();
+    }
+    Logger.log("Completed deleteStandaloneAnalyticsTabs");
+
     Logger.log("Starting createExecutiveDashboard...");
     createExecutiveDashboard();
     Logger.log("Completed createExecutiveDashboard");
