@@ -288,20 +288,24 @@ function runAllTests() {
   const startTime = new Date();
 
   // Discover and run all test functions
+  // Note: All tests are defined in Code.test.gs and Integration.test.gs
   const testFunctions = [
-    // Code.gs tests
+    // Code.test.gs - Formula calculation tests
     'testFilingDeadlineCalculation',
     'testStepIDeadlineCalculation',
     'testStepIIAppealDeadlineCalculation',
     'testDaysOpenCalculation',
+    'testDaysOpenForClosedGrievance',
     'testNextActionDueLogic',
     'testMemberDirectoryFormulas',
+
+    // Code.test.gs - Data validation tests
     'testDataValidationSetup',
     'testConfigDropdownValues',
     'testMemberValidationRules',
     'testGrievanceValidationRules',
 
-    // Seeding tests
+    // Code.test.gs - Seeding validation tests
     'testMemberSeedingValidation',
     'testGrievanceSeedingValidation',
     'testMemberEmailFormat',
@@ -309,21 +313,46 @@ function runAllTests() {
     'testGrievanceMemberLinking',
     'testOpenRateRange',
 
-    // GrievanceWorkflow tests
-    'testGetMemberList',
-    'testGetMemberListEmpty',
-    'testGetMemberListFiltersEmptyRows',
-    'testMemberSelectionDialog',
+    // Code.test.gs - Edge case tests
+    'testEmptySheetsHandling',
+    'testFutureDateHandling',
+    'testPastDeadlineHandling',
 
-    // SeedNuke tests
-    'testClearMemberDirectoryPreservesHeaders',
-    'testClearGrievanceLogPreservesHeaders',
-    'testNukePropertySet',
+    // Code.test.gs - Column constant tests
+    'testMemberColsConstants',
+    'testGrievanceColsConstants',
+    'testConfigColsConstants',
+    'testInternalSchemaConstants',
+    'testSheetsConstants',
+    'testColumnLetterConversion',
+    'testColumnIndexing',
 
-    // Integration tests
+    // Code.test.gs - Input validation tests
+    'testValidateRequired',
+    'testValidateString',
+    'testValidatePositiveInt',
+    'testValidateGrievanceId',
+    'testValidateMemberId',
+    'testValidateEmail',
+    'testValidateEnum',
+    'testSafeExecute',
+    'testGrievanceStatusValidation',
+    'testGrievanceStepValidation',
+    'testIssueCategoryValidation',
+    'testErrorMessageContext',
+    'testDateValidationEdgeCases',
+    'testArrayValidation',
+
+    // Integration.test.gs - Workflow tests
     'testCompleteGrievanceWorkflow',
     'testDashboardMetricsUpdate',
-    'testMemberGrievanceSnapshot'
+    'testMemberGrievanceSnapshot',
+    'testConfigChangesPropagateToDropdowns',
+    'testMultipleGrievancesSameMember',
+    'testDashboardHandlesEmptyData',
+    'testDashboardRefreshPerformance',
+    'testFormulaPerformanceWithData',
+    'testGrievanceUpdatesTriggersRecalculation'
   ];
 
   // Run each test

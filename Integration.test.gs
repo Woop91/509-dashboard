@@ -90,38 +90,39 @@ function testCompleteGrievanceWorkflow() {
 
     Assert.assertNotNull(memberRow, 'Member should exist');
 
-    const hasOpenGrievance = memberRow[MEMBER_COLS.HAS_OPEN_GRIEVANCE - 1]; // Column Y (index 24)
+    // Using MEMBER_COLS constant - column AB (28), index 27
+    const hasOpenGrievance = memberRow[MEMBER_COLS.HAS_OPEN_GRIEVANCE - 1];
     Assert.assertTrue(
       hasOpenGrievance === 'Yes' || hasOpenGrievance === true,
       'Member should show as having open grievance'
     );
 
-    // Step 4: Progress grievance to Step II
-    grievanceLog.getRange(initialGrievanceRow, 11).setValue(new Date(2025, 1, 10)); // Step I Decision Rcvd
-    grievanceLog.getRange(initialGrievanceRow, 13).setValue(new Date(2025, 1, 15)); // Step II Appeal Filed
-    grievanceLog.getRange(initialGrievanceRow, 6).setValue('Step II'); // Update current step
+    // Step 4: Progress grievance to Step II - using GRIEVANCE_COLS constants
+    grievanceLog.getRange(initialGrievanceRow, GRIEVANCE_COLS.STEP1_RCVD).setValue(new Date(2025, 1, 10)); // Step I Decision Rcvd
+    grievanceLog.getRange(initialGrievanceRow, GRIEVANCE_COLS.STEP2_APPEAL_FILED).setValue(new Date(2025, 1, 15)); // Step II Appeal Filed
+    grievanceLog.getRange(initialGrievanceRow, GRIEVANCE_COLS.CURRENT_STEP).setValue('Step II'); // Update current step
 
     SpreadsheetApp.flush();
     Utilities.sleep(2000);
 
     // Verify Step II deadline calculated
-    const stepIIDeadline = grievanceLog.getRange(initialGrievanceRow, 14).getValue();
+    const stepIIDeadline = grievanceLog.getRange(initialGrievanceRow, GRIEVANCE_COLS.STEP2_DUE).getValue();
     Assert.assertNotNull(
       stepIIDeadline,
       'Step II deadline should be auto-calculated'
     );
 
-    // Step 5: Close the grievance
+    // Step 5: Close the grievance - using GRIEVANCE_COLS constants
     const closedDate = new Date(2025, 2, 1); // March 1, 2025
-    grievanceLog.getRange(initialGrievanceRow, 5).setValue('Settled'); // Status
-    grievanceLog.getRange(initialGrievanceRow, 18).setValue(closedDate); // Date Closed
-    grievanceLog.getRange(initialGrievanceRow, 28).setValue('Resolved favorably'); // Resolution
+    grievanceLog.getRange(initialGrievanceRow, GRIEVANCE_COLS.STATUS).setValue('Settled'); // Status
+    grievanceLog.getRange(initialGrievanceRow, GRIEVANCE_COLS.DATE_CLOSED).setValue(closedDate); // Date Closed
+    grievanceLog.getRange(initialGrievanceRow, GRIEVANCE_COLS.RESOLUTION).setValue('Resolved favorably'); // Resolution
 
     SpreadsheetApp.flush();
     Utilities.sleep(2000);
 
-    // Verify Days Open is calculated correctly
-    const daysOpen = grievanceLog.getRange(initialGrievanceRow, 19).getValue();
+    // Verify Days Open is calculated correctly - using GRIEVANCE_COLS constant
+    const daysOpen = grievanceLog.getRange(initialGrievanceRow, GRIEVANCE_COLS.DAYS_OPEN).getValue();
     Assert.assertTrue(
       daysOpen > 0,
       'Days Open should be calculated for closed grievance'
@@ -131,7 +132,8 @@ function testCompleteGrievanceWorkflow() {
     const updatedMemberData = memberDir.getRange(2, 1, memberDir.getLastRow() - 1, 31).getValues();
     const updatedMemberRow = updatedMemberData.find(function(row) { return row[0] === testMemberId; });
 
-    const updatedStatus = updatedMemberRow[MEMBER_COLS.GRIEVANCE_STATUS - 1]; // Column Z (index 25)
+    // Using MEMBER_COLS constant - column AC (29), index 28
+    const updatedStatus = updatedMemberRow[MEMBER_COLS.GRIEVANCE_STATUS - 1];
     Assert.assertEquals(
       'Settled',
       updatedStatus,
@@ -234,7 +236,7 @@ function testMemberGrievanceSnapshot() {
 
     Assert.assertNotNull(memberRow, 'Member should exist');
 
-    // Check status snapshot (column Z = 26, index 25)
+    // Check status snapshot - using MEMBER_COLS constant (column AC = 29, index 28)
     const statusSnapshot = memberRow[MEMBER_COLS.GRIEVANCE_STATUS - 1];
     Assert.assertEquals(
       'Pending Info',
@@ -242,11 +244,11 @@ function testMemberGrievanceSnapshot() {
       'Status snapshot should match grievance status'
     );
 
-    // Update grievance status
-    const grievanceRow = grievanceLog.getRange(2, 1, grievanceLog.getLastRow() - 1, 5).getValues()
+    // Update grievance status - using GRIEVANCE_COLS constant
+    const grievanceRow = grievanceLog.getRange(2, 1, grievanceLog.getLastRow() - 1, GRIEVANCE_COLS.STATUS).getValues()
       .findIndex(function(row) { return row[0] === 'TEST-G-SNAPSHOT-001'; }) + 2;
 
-    grievanceLog.getRange(grievanceRow, 5).setValue('Open');
+    grievanceLog.getRange(grievanceRow, GRIEVANCE_COLS.STATUS).setValue('Open');
 
     SpreadsheetApp.flush();
     Utilities.sleep(2000);
@@ -379,7 +381,8 @@ function testMultipleGrievancesSameMember() {
     const memberData = memberDir.getRange(2, 1, memberDir.getLastRow() - 1, 31).getValues();
     const memberRow = memberData.find(function(row) { return row[0] === testMemberId; });
 
-    const hasOpenGrievance = memberRow[MEMBER_COLS.HAS_OPEN_GRIEVANCE - 1]; // Column Y (index 24)
+    // Using MEMBER_COLS constant - column AB (28), index 27
+    const hasOpenGrievance = memberRow[MEMBER_COLS.HAS_OPEN_GRIEVANCE - 1];
     Assert.assertTrue(
       hasOpenGrievance === 'Yes' || hasOpenGrievance === true,
       'Member with multiple grievances should show as having open grievance'
