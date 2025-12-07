@@ -1371,41 +1371,31 @@ Applied to rows 2-5000 for each column.
 
 ## Formula System
 
-### Auto-Calculated Formulas
+### Grievance Log - Code-Calculated Values (No Sheet Formulas)
 
-Set via `setupFormulasAndCalculations()` for rows 2-100:
+**IMPORTANT (v2.3):** The Grievance Log has NO formulas in the sheet body. All calculated columns are computed by `recalcAllGrievancesBatched()` in BatchGrievanceRecalc.gs and written as static values. This prevents data corruption when rows are deleted.
 
-**Grievance Log Formulas:**
+**Calculated Columns (via BatchGrievanceRecalc.gs):**
 
-```javascript
-// Filing Deadline (Column H)
-grievanceLog.getRange(row, 8).setFormula(`=IF(G${row}<>"",G${row}+21,"")`);
+| Column | Name | Calculation |
+|--------|------|-------------|
+| H (8)  | Filing Deadline | INCIDENT_DATE + 21 days |
+| J (10) | Step I Decision Due | DATE_FILED + 30 days |
+| L (12) | Step II Appeal Due | STEP1_DECISION_RCVD + 10 days |
+| N (14) | Step II Decision Due | STEP2_APPEAL_FILED + 30 days |
+| P (16) | Step III Appeal Due | STEP2_DECISION_RCVD + 30 days |
+| S (19) | Days Open | DATE_CLOSED - DATE_FILED (or TODAY - DATE_FILED) |
+| T (20) | Next Action Due | Based on Current Step |
+| U (21) | Days to Deadline | NEXT_ACTION_DUE - TODAY |
 
-// Step I Decision Due (Column J)
-grievanceLog.getRange(row, 10).setFormula(`=IF(I${row}<>"",I${row}+30,"")`);
+**To Recalculate:**
+- Menu: Dashboard → Grievance Tools → Refresh Grievance Formulas
+- Or run: `recalcAllGrievancesBatched()` from Apps Script
 
-// Step II Appeal Due (Column L)
-grievanceLog.getRange(row, 12).setFormula(`=IF(K${row}<>"",K${row}+10,"")`);
-
-// Step II Decision Due (Column N)
-grievanceLog.getRange(row, 14).setFormula(`=IF(M${row}<>"",M${row}+30,"")`);
-
-// Step III Appeal Due (Column P)
-grievanceLog.getRange(row, 16).setFormula(`=IF(O${row}<>"",O${row}+30,"")`);
-
-// Days Open (Column S)
-grievanceLog.getRange(row, 19).setFormula(
-  `=IF(I${row}<>"",IF(R${row}<>"",R${row}-I${row},TODAY()-I${row}),"")`
-);
-
-// Next Action Due (Column T)
-grievanceLog.getRange(row, 20).setFormula(
-  `=IF(E${row}="Open",IF(F${row}="Step I",J${row},IF(F${row}="Step II",N${row},IF(F${row}="Step III",P${row},H${row}))),"")`
-);
-
-// Days to Deadline (Column U)
-grievanceLog.getRange(row, 21).setFormula(`=IF(T${row}<>"",T${row}-TODAY(),"")`);
-```
+**Key Functions:**
+- `recalcAllGrievancesBatched()` - Recalculates all 8 columns for all rows
+- `calculateGrievanceDeadlines(row)` - Returns deadline calculations for a single row
+- `calculateGrievanceTimeline(row, today)` - Returns Days Open, Next Action Due, Days to Deadline
 
 **Member Directory Formulas:**
 
@@ -3277,8 +3267,41 @@ All coordinator notifications and steward acknowledgments are logged to Audit_Lo
 
 ---
 
-**Document Version:** 2.2
-**Last Updated:** 2025-12-06
+### Version 2.3 - Grievance Calculated Columns Fix
+
+**Problem Fixed:**
+When rows were deleted from Grievance Log, calculated columns would show stale/corrupted data because they used ARRAYFORMULA in row 2.
+
+**Solution:**
+Removed ALL ARRAYFORMULAs from Grievance Log. All calculated columns are now handled by `recalcAllGrievancesBatched()` in BatchGrievanceRecalc.gs and written as static values.
+
+**Files Changed:**
+- Code.gs: Removed all ARRAYFORMULA setup for columns H, J, L, N, P, S, T, U in createGrievanceLog()
+- Code.gs: Updated refreshGrievanceFormulas() to call recalcAllGrievancesBatched() instead
+- AI_REFERENCE.md: Updated documentation
+
+**How to Recalculate Values:**
+- Menu: Dashboard → Grievance Tools → Refresh Grievance Formulas
+- Or run: `recalcAllGrievancesBatched()` from Apps Script
+
+**Calculated Columns (via BatchGrievanceRecalc.gs - NO formulas in sheet):**
+| Column | Name | Calculation |
+|--------|------|-------------|
+| H (8)  | Filing Deadline | INCIDENT_DATE + 21 days |
+| J (10) | Step I Decision Due | DATE_FILED + 30 days |
+| L (12) | Step II Appeal Due | STEP1_DECISION_RCVD + 10 days |
+| N (14) | Step II Decision Due | STEP2_APPEAL_FILED + 30 days |
+| P (16) | Step III Appeal Due | STEP2_DECISION_RCVD + 30 days |
+| S (19) | Days Open | DATE_CLOSED - DATE_FILED (or TODAY - DATE_FILED if open) |
+| T (20) | Next Action Due | Based on CURRENT_STEP: Step I→J, Step II→N, Step III→P |
+| U (21) | Days to Deadline | NEXT_ACTION_DUE - TODAY |
+
+**Important:** There are NO formulas in the Grievance Log sheet body. All values are static data calculated by Apps Script.
+
+---
+
+**Document Version:** 2.3
+**Last Updated:** 2025-12-07
 **Maintained By:** Claude (AI Assistant)
 **Repository:** [Add GitHub URL]
 
