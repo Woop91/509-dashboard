@@ -33,6 +33,7 @@ function nukeSeedData() {
     '⚠️ WARNING: Remove All Seeded Data & Functions',
     'This will PERMANENTLY remove:\n\n' +
     '• All test data from Member Directory, Grievance Log, Steward Workload\n' +
+    '• All sample entries from Feedback & Development\n' +
     '• Config Tab Demo Entries (Job Titles, Locations, etc.)\n' +
     '• ALL seed functions from the script code\n' +
     '• ALL seed menu items\n' +
@@ -79,6 +80,9 @@ function nukeSeedData() {
 
     // Step 4: Clear Config tab demo entries (keep headers)
     clearConfigDemoData();
+
+    // Step 4.5: Clear Feedback & Development (keep headers)
+    clearFeedbackDevelopment();
 
     // Step 5: Remove seed-related content from Getting Started and FAQ sheets
     removeSeedContentFromSheets();
@@ -284,6 +288,28 @@ function clearMemberDirectory() {
   }
 
   Logger.log('Member Directory cleared: ' + (lastRow - 1) + ' members removed');
+}
+
+/**
+ * Clear Feedback & Development sheet (keep headers)
+ */
+function clearFeedbackDevelopment() {
+  const ss = SpreadsheetApp.getActiveSpreadsheet();
+  const sheet = ss.getSheetByName(SHEETS.FEEDBACK);
+
+  if (!sheet) {
+    Logger.log('Feedback & Development sheet not found - skipping');
+    return;
+  }
+
+  const lastRow = sheet.getLastRow();
+
+  if (lastRow > 1) {
+    // Delete all rows except header
+    sheet.deleteRows(2, lastRow - 1);
+  }
+
+  Logger.log('Feedback & Development cleared: ' + (lastRow - 1) + ' entries removed');
 }
 
 /**

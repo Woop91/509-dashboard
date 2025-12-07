@@ -14,7 +14,7 @@
  * Build Info:
  * - Version: 2.1.0 (Security Enhanced + Code Review Improvements)
  * - Build ID: 20251202-improvements
- * - Build Date: 2025-12-07T21:12:25.147Z
+ * - Build Date: 2025-12-07T21:28:02.216Z
  * - Build Type: DEVELOPMENT
  * - Modules: 79 files
  * - Tests Included: Yes
@@ -17754,34 +17754,10 @@ function populateAllAnalyticsSheetsOnCreate() {
       populateMemberSatisfaction();
     }
 
-    // 8. Add sample Feedback & Development entries
-    if (typeof addSampleFeedbackEntriesSilent === 'function') {
-      addSampleFeedbackEntriesSilent();
-    } else if (typeof addSampleFeedbackEntries === 'function') {
-      // Silently add sample feedback (skip the UI alert)
-      try {
-        const ss = SpreadsheetApp.getActiveSpreadsheet();
-        const feedback = ss.getSheetByName(SHEETS.FEEDBACK);
-        if (feedback) {
-          const today = new Date();
-          const lastWeek = new Date(today.getTime() - 7 * 24 * 60 * 60 * 1000);
-          const twoWeeksAgo = new Date(today.getTime() - 14 * 24 * 60 * 60 * 1000);
-          const nextMonth = new Date(today.getTime() + 30 * 24 * 60 * 60 * 1000);
-
-          const sampleEntries = [
-            ['Feedback', Utilities.formatDate(lastWeek, Session.getScriptTimeZone(), 'MM/dd/yyyy'), 'Maria Gonzalez', 'Medium', 'Dashboard load time could be improved', 'When opening the Interactive Dashboard with 20k+ members, it takes 5-8 seconds to load.', 'Under Review', 25, 'Moderate', Utilities.formatDate(nextMonth, Session.getScriptTimeZone(), 'MM/dd/yyyy'), 'Tech Team', 'None', 'Investigating caching options', Utilities.formatDate(today, Session.getScriptTimeZone(), 'MM/dd/yyyy')],
-            ['Future Feature', Utilities.formatDate(twoWeeksAgo, Session.getScriptTimeZone(), 'MM/dd/yyyy'), 'James Wilson', 'High', 'Automated weekly steward workload reports', 'Send automated email reports to stewards every Monday morning.', 'Planned', 10, 'Complex', Utilities.formatDate(nextMonth, Session.getScriptTimeZone(), 'MM/dd/yyyy'), 'Development Team', 'Need Gmail API', 'Aligns with automation goals', Utilities.formatDate(today, Session.getScriptTimeZone(), 'MM/dd/yyyy')],
-            ['Bug Report', Utilities.formatDate(today, Session.getScriptTimeZone(), 'MM/dd/yyyy'), 'Sarah Chen', 'High', 'Member search not finding partial matches', 'Search only works with exact matches.', 'New', 0, 'Simple', Utilities.formatDate(new Date(today.getTime() + 7 * 24 * 60 * 60 * 1000), Session.getScriptTimeZone(), 'MM/dd/yyyy'), 'Unassigned', 'None', 'Update search algorithm', Utilities.formatDate(today, Session.getScriptTimeZone(), 'MM/dd/yyyy')]
-          ];
-
-          const lastRow = feedback.getLastRow();
-          feedback.getRange(lastRow + 1, 1, sampleEntries.length, sampleEntries[0].length).setValues(sampleEntries);
-          Logger.log('Added sample feedback entries');
-        }
-      } catch (e) {
-        Logger.log('Error adding sample feedback: ' + e.message);
-      }
-    }
+    // Note: Sample Feedback & Development entries are NOT added during dashboard creation.
+    // Per user requirements, all fictional data must come from seed functions.
+    // Use Demo menu > Seed Demo Data > Add Sample Feedback Entries to add sample data.
+    // Use Demo menu > Data Management > Nuke All Data to remove all seeded data.
 
     Logger.log('All analytics sheets populated during CREATE_509_DASHBOARD');
   } catch (error) {
@@ -43545,6 +43521,7 @@ function nukeSeedData() {
     '⚠️ WARNING: Remove All Seeded Data & Functions',
     'This will PERMANENTLY remove:\n\n' +
     '• All test data from Member Directory, Grievance Log, Steward Workload\n' +
+    '• All sample entries from Feedback & Development\n' +
     '• Config Tab Demo Entries (Job Titles, Locations, etc.)\n' +
     '• ALL seed functions from the script code\n' +
     '• ALL seed menu items\n' +
@@ -43591,6 +43568,9 @@ function nukeSeedData() {
 
     // Step 4: Clear Config tab demo entries (keep headers)
     clearConfigDemoData();
+
+    // Step 4.5: Clear Feedback & Development (keep headers)
+    clearFeedbackDevelopment();
 
     // Step 5: Remove seed-related content from Getting Started and FAQ sheets
     removeSeedContentFromSheets();
@@ -43796,6 +43776,28 @@ function clearMemberDirectory() {
   }
 
   Logger.log('Member Directory cleared: ' + (lastRow - 1) + ' members removed');
+}
+
+/**
+ * Clear Feedback & Development sheet (keep headers)
+ */
+function clearFeedbackDevelopment() {
+  const ss = SpreadsheetApp.getActiveSpreadsheet();
+  const sheet = ss.getSheetByName(SHEETS.FEEDBACK);
+
+  if (!sheet) {
+    Logger.log('Feedback & Development sheet not found - skipping');
+    return;
+  }
+
+  const lastRow = sheet.getLastRow();
+
+  if (lastRow > 1) {
+    // Delete all rows except header
+    sheet.deleteRows(2, lastRow - 1);
+  }
+
+  Logger.log('Feedback & Development cleared: ' + (lastRow - 1) + ' entries removed');
 }
 
 /**
