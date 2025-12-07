@@ -436,34 +436,10 @@ function populateAllAnalyticsSheetsOnCreate() {
       populateMemberSatisfaction();
     }
 
-    // 8. Add sample Feedback & Development entries
-    if (typeof addSampleFeedbackEntriesSilent === 'function') {
-      addSampleFeedbackEntriesSilent();
-    } else if (typeof addSampleFeedbackEntries === 'function') {
-      // Silently add sample feedback (skip the UI alert)
-      try {
-        const ss = SpreadsheetApp.getActiveSpreadsheet();
-        const feedback = ss.getSheetByName(SHEETS.FEEDBACK);
-        if (feedback) {
-          const today = new Date();
-          const lastWeek = new Date(today.getTime() - 7 * 24 * 60 * 60 * 1000);
-          const twoWeeksAgo = new Date(today.getTime() - 14 * 24 * 60 * 60 * 1000);
-          const nextMonth = new Date(today.getTime() + 30 * 24 * 60 * 60 * 1000);
-
-          const sampleEntries = [
-            ['Feedback', Utilities.formatDate(lastWeek, Session.getScriptTimeZone(), 'MM/dd/yyyy'), 'Maria Gonzalez', 'Medium', 'Dashboard load time could be improved', 'When opening the Interactive Dashboard with 20k+ members, it takes 5-8 seconds to load.', 'Under Review', 25, 'Moderate', Utilities.formatDate(nextMonth, Session.getScriptTimeZone(), 'MM/dd/yyyy'), 'Tech Team', 'None', 'Investigating caching options', Utilities.formatDate(today, Session.getScriptTimeZone(), 'MM/dd/yyyy')],
-            ['Future Feature', Utilities.formatDate(twoWeeksAgo, Session.getScriptTimeZone(), 'MM/dd/yyyy'), 'James Wilson', 'High', 'Automated weekly steward workload reports', 'Send automated email reports to stewards every Monday morning.', 'Planned', 10, 'Complex', Utilities.formatDate(nextMonth, Session.getScriptTimeZone(), 'MM/dd/yyyy'), 'Development Team', 'Need Gmail API', 'Aligns with automation goals', Utilities.formatDate(today, Session.getScriptTimeZone(), 'MM/dd/yyyy')],
-            ['Bug Report', Utilities.formatDate(today, Session.getScriptTimeZone(), 'MM/dd/yyyy'), 'Sarah Chen', 'High', 'Member search not finding partial matches', 'Search only works with exact matches.', 'New', 0, 'Simple', Utilities.formatDate(new Date(today.getTime() + 7 * 24 * 60 * 60 * 1000), Session.getScriptTimeZone(), 'MM/dd/yyyy'), 'Unassigned', 'None', 'Update search algorithm', Utilities.formatDate(today, Session.getScriptTimeZone(), 'MM/dd/yyyy')]
-          ];
-
-          const lastRow = feedback.getLastRow();
-          feedback.getRange(lastRow + 1, 1, sampleEntries.length, sampleEntries[0].length).setValues(sampleEntries);
-          Logger.log('Added sample feedback entries');
-        }
-      } catch (e) {
-        Logger.log('Error adding sample feedback: ' + e.message);
-      }
-    }
+    // Note: Sample Feedback & Development entries are NOT added during dashboard creation.
+    // Per user requirements, all fictional data must come from seed functions.
+    // Use Demo menu > Seed Demo Data > Add Sample Feedback Entries to add sample data.
+    // Use Demo menu > Data Management > Nuke All Data to remove all seeded data.
 
     Logger.log('All analytics sheets populated during CREATE_509_DASHBOARD');
   } catch (error) {
