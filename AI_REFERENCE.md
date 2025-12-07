@@ -3231,8 +3231,56 @@ All coordinator notifications and steward acknowledgments are logged to Audit_Lo
 
 ---
 
-**Document Version:** 2.2
-**Last Updated:** 2025-12-06
+### Feature: Grievance Formula Protection (Auto-Restore)
+
+**Problem Solved:**
+When rows are deleted from the Grievance Log, the ARRAYFORMULA in row 2 for columns S (Days Open), T (Next Action Due), and U (Days to Deadline) can be accidentally deleted, leaving static data or empty cells.
+
+**Solution:**
+An onChange trigger automatically detects row deletions and restores the formulas if missing.
+
+**Files Changed:**
+- Code.gs: Added formula protection functions (lines 898-984)
+
+**New Functions:**
+
+| Function | Purpose |
+|----------|---------|
+| `checkGrievanceFormulasExist()` | Returns true if all 3 ARRAYFORMULA cells (S2, T2, U2) contain formulas |
+| `autoRestoreGrievanceFormulas()` | Checks and restores formulas if missing |
+| `onGrievanceChange(e)` | onChange trigger handler - detects REMOVE_ROW events |
+| `setupGrievanceFormulaProtection()` | One-time setup to install the onChange trigger |
+
+**Setup Instructions:**
+
+1. **One-Time Setup:**
+   - Menu: Dashboard → Grievance Tools → Setup Formula Protection
+   - This installs the onChange trigger to monitor row deletions
+
+2. **Manual Refresh (if needed):**
+   - Menu: Dashboard → Grievance Tools → Refresh Grievance Formulas
+   - Use this to manually restore formulas without setting up the trigger
+
+**How It Works:**
+1. User deletes rows from Grievance Log
+2. onChange trigger fires with changeType = 'REMOVE_ROW'
+3. System checks if T2 (Next Action Due) and U2 (Days to Deadline) still contain ARRAYFORMULA
+4. If formulas are missing, `refreshGrievanceFormulas()` is called automatically
+5. All three calculated columns (S, T, U) are restored
+
+**Formula Locations (Row 2):**
+- Column S (Days Open): `=ARRAYFORMULA(IF(I2:I<>"",IF(R2:R<>"",R2:R-I2:I,TODAY()-I2:I),""))`
+- Column T (Next Action Due): `=ARRAYFORMULA(IF(E2:E="Open",IF(F2:F="Step I",J2:J,IF(F2:F="Step II",N2:N,IF(F2:F="Step III",P2:P,H2:H))),""))`
+- Column U (Days to Deadline): `=ARRAYFORMULA(IF(T2:T<>"",IF(T2:T-TODAY()<0,"OVERDUE "&ABS(T2:T-TODAY())&"d",IF(T2:T-TODAY()=0,"DUE TODAY",T2:T-TODAY())),""))`
+
+**Menu Location:** Dashboard → Grievance Tools → Setup Formula Protection
+
+**File Location:** Code.gs (lines 898-984)
+
+---
+
+**Document Version:** 2.3
+**Last Updated:** 2025-12-07
 **Maintained By:** Claude (AI Assistant)
 **Repository:** [Add GitHub URL]
 
