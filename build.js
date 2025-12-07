@@ -96,6 +96,7 @@ const CORE_MODULES = [
   'CoordinatorNotification.gs',      // Feature 95: Coordinator notification system
   'CustomReportBuilder.gs',
   'DarkModeThemes.gs',
+  'DashboardFixes.gs',            // Dashboard fix utilities and analytics population
   'DataBackupRecovery.gs',
   'DataCachingLayer.gs',
   'DataIntegrityEnhancements.gs',
