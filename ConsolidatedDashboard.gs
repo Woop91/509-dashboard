@@ -14,7 +14,7 @@
  * Build Info:
  * - Version: 2.1.0 (Security Enhanced + Code Review Improvements)
  * - Build ID: 20251202-improvements
- * - Build Date: 2025-12-07T17:45:39.621Z
+ * - Build Date: 2025-12-07T19:07:23.772Z
  * - Build Type: DEVELOPMENT
  * - Modules: 78 files
  * - Tests Included: Yes
@@ -3142,6 +3142,30 @@ function CREATE_509_DASHBOARD() {
     setupAllDropdowns();
     Logger.log("Completed setupAllDropdowns");
     SpreadsheetApp.getActive().toast("✅ Dropdowns configured", "95%", 2);
+
+    // Populate all analytics sheets with formulas
+    Logger.log("Starting populateAllAnalyticsSheetsOnCreate...");
+    populateAllAnalyticsSheetsOnCreate();
+    Logger.log("Completed populateAllAnalyticsSheetsOnCreate");
+    SpreadsheetApp.getActive().toast("✅ Analytics populated", "97%", 2);
+
+    // Fix Interactive Dashboard dropdown styling
+    Logger.log("Starting fixInteractiveDropdownHighlighting...");
+    if (typeof fixInteractiveDropdownHighlighting === 'function') {
+      fixInteractiveDropdownHighlighting();
+    }
+    Logger.log("Completed fixInteractiveDropdownHighlighting");
+
+    // Move admin tabs to end and hide them by default
+    Logger.log("Starting moveAdminTabsToEnd...");
+    if (typeof moveAdminTabsToEnd === 'function') {
+      moveAdminTabsToEnd();
+    }
+    if (typeof hideAdminTabs === 'function') {
+      hideAdminTabs(true); // Silent mode - no UI alerts during creation
+    }
+    Logger.log("Completed admin tab organization");
+    SpreadsheetApp.getActive().toast("✅ Tabs organized", "98%", 2);
 
     onOpen();
 
@@ -17763,8 +17787,9 @@ const ADMIN_TABS_WITH_EMOJIS = [
 
 /**
  * Hide all admin/diagnostic tabs
+ * @param {boolean} silent - If true, don't show UI alert (used during CREATE_509_DASHBOARD)
  */
-function hideAdminTabs() {
+function hideAdminTabs(silent) {
   const ss = SpreadsheetApp.getActiveSpreadsheet();
   let hiddenCount = 0;
 
@@ -17783,11 +17808,15 @@ function hideAdminTabs() {
     }
   });
 
-  SpreadsheetApp.getUi().alert(
-    'Admin Tabs Hidden',
-    'Hidden ' + hiddenCount + ' admin/diagnostic tabs.\n\nTo show them again, go to:\nAdministrator > Show Admin Tabs',
-    SpreadsheetApp.getUi().ButtonSet.OK
-  );
+  if (!silent) {
+    SpreadsheetApp.getUi().alert(
+      'Admin Tabs Hidden',
+      'Hidden ' + hiddenCount + ' admin/diagnostic tabs.\n\nTo show them again, go to:\nAdministrator > Show Admin Tabs',
+      SpreadsheetApp.getUi().ButtonSet.OK
+    );
+  }
+
+  Logger.log('Hidden ' + hiddenCount + ' admin tabs');
 }
 
 /**
@@ -17893,7 +17922,49 @@ function fixInteractiveDropdownHighlighting() {
 }
 
 /* ========================================================================
- * 5. ENHANCED POPULATE ALL ANALYTICS SHEETS
+ * 5. POPULATE ANALYTICS ON CREATE (Silent version for CREATE_509_DASHBOARD)
+ * ======================================================================== */
+
+/**
+ * Populates all analytics sheets silently (no UI alerts)
+ * Called automatically by CREATE_509_DASHBOARD
+ */
+function populateAllAnalyticsSheetsOnCreate() {
+  try {
+    // 1. Populate Type Analysis
+    populateTypeAnalysis();
+
+    // 2. Populate Trends sheet
+    populateTrendsSheet();
+
+    // 3. Populate Location Analytics
+    populateLocationAnalytics();
+
+    // 4. Populate Member Engagement
+    populateMemberEngagement();
+
+    // 5. Populate Cost Impact
+    populateCostImpact();
+
+    // 6. Populate Steward Workload (if function exists)
+    if (typeof populateStewardWorkload === 'function') {
+      populateStewardWorkload();
+    }
+
+    // 7. Populate Member Satisfaction (if function exists)
+    if (typeof populateMemberSatisfaction === 'function') {
+      populateMemberSatisfaction();
+    }
+
+    Logger.log('All analytics sheets populated during CREATE_509_DASHBOARD');
+  } catch (error) {
+    Logger.log('Error in populateAllAnalyticsSheetsOnCreate: ' + error.message);
+    // Don't throw - let CREATE_509_DASHBOARD continue
+  }
+}
+
+/* ========================================================================
+ * 6. ENHANCED POPULATE ALL ANALYTICS SHEETS (with UI)
  * ======================================================================== */
 
 /**
