@@ -8,10 +8,11 @@
  *
  * Features:
  * - Removes all seeded members and grievances
+ * - Clears Config tab demo entries (Job Titles, Locations, etc.)
  * - Keeps headers and structure intact
  * - Recalculates all dashboards
+ * - Hides seed menu options permanently
  * - Shows getting started reminder
- * - Hides seed menu options after nuke
  *
  * ------------------------------------------------------------------------====
  */
@@ -28,8 +29,13 @@ function nukeSeedData() {
     'This will PERMANENTLY remove all test data from:\n\n' +
     '• Member Directory (all members)\n' +
     '• Grievance Log (all grievances)\n' +
-    '• Steward Workload (all records)\n\n' +
-    'Headers and sheet structure will be preserved.\n\n' +
+    '• Steward Workload (all records)\n' +
+    '• Config Tab Demo Entries:\n' +
+    '   - Job Titles, Office Locations, Units\n' +
+    '   - Supervisors, Managers, Stewards\n' +
+    '   - Grievance Coordinators, Home Towns\n\n' +
+    'Headers and sheet structure will be preserved.\n' +
+    'Seed menu options will be hidden.\n\n' +
     'This action CANNOT be undone!\n\n' +
     'Are you sure you want to proceed?',
     ui.ButtonSet.YES_NO
@@ -44,7 +50,8 @@ function nukeSeedData() {
   const finalConfirm = ui.alert(
     '🚨 FINAL CONFIRMATION',
     'This is your last chance!\n\n' +
-    'ALL test data will be permanently deleted.\n\n' +
+    'ALL test data will be permanently deleted.\n' +
+    'ALL seed functions will be hidden from menus.\n\n' +
     'Click YES to proceed with data removal.',
     ui.ButtonSet.YES_NO
   );
@@ -68,13 +75,16 @@ function nukeSeedData() {
     // Step 3: Clear Steward Workload (keep headers)
     clearStewardWorkload();
 
-    // Step 4: Recalculate all dashboards
+    // Step 4: Clear Config tab demo entries (keep headers)
+    clearConfigDemoData();
+
+    // Step 5: Recalculate all dashboards
     rebuildDashboard();
 
-    // Step 5: Set flag that data has been nuked
+    // Step 6: Set flag that data has been nuked (hides seed menu)
     PropertiesService.getScriptProperties().setProperty('SEED_NUKED', 'true');
 
-    // Step 6: Show getting started reminder
+    // Step 7: Show getting started reminder
     showPostNukeGuidance();
 
   } catch (error) {
@@ -145,6 +155,64 @@ function clearStewardWorkload() {
   }
 
   Logger.log('Steward Workload cleared');
+}
+
+/**
+ * Clears demo/seeded data from Config tab
+ * Preserves row 1 headers, clears all data below
+ *
+ * Columns cleared:
+ * - A: Job Titles (CONFIG_COLS.JOB_TITLES)
+ * - B: Office Locations (CONFIG_COLS.OFFICE_LOCATIONS)
+ * - C: Units (CONFIG_COLS.UNITS)
+ * - F: Supervisors (CONFIG_COLS.SUPERVISORS)
+ * - G: Managers (CONFIG_COLS.MANAGERS)
+ * - H: Stewards (CONFIG_COLS.STEWARDS)
+ * - O: Grievance Coordinators (CONFIG_COLS.GRIEVANCE_COORDINATORS)
+ * - AF: Home Towns (CONFIG_COLS.HOME_TOWNS)
+ */
+function clearConfigDemoData() {
+  const ss = SpreadsheetApp.getActiveSpreadsheet();
+  const sheet = ss.getSheetByName(SHEETS.CONFIG);
+
+  if (!sheet) {
+    Logger.log('Config sheet not found, skipping');
+    return;
+  }
+
+  const lastRow = sheet.getLastRow();
+
+  if (lastRow <= 1) {
+    Logger.log('Config sheet has only headers, nothing to clear');
+    return;
+  }
+
+  // Define columns to clear (using CONFIG_COLS constants)
+  // These columns contain demo/seeded data that should be removed
+  const columnsToClear = [
+    CONFIG_COLS.JOB_TITLES,           // A (1) - Job Titles
+    CONFIG_COLS.OFFICE_LOCATIONS,     // B (2) - Office Locations
+    CONFIG_COLS.UNITS,                // C (3) - Units
+    CONFIG_COLS.SUPERVISORS,          // F (6) - Supervisors
+    CONFIG_COLS.MANAGERS,             // G (7) - Managers
+    CONFIG_COLS.STEWARDS,             // H (8) - Stewards
+    CONFIG_COLS.GRIEVANCE_COORDINATORS, // O (15) - Grievance Coordinators
+    CONFIG_COLS.HOME_TOWNS            // AF (32) - Home Towns
+  ];
+
+  // Clear each column from row 2 to lastRow (preserve header in row 1)
+  const rowsToDelete = lastRow - 1;
+
+  columnsToClear.forEach(function(col) {
+    try {
+      const range = sheet.getRange(2, col, rowsToDelete, 1);
+      range.clearContent();
+    } catch (e) {
+      Logger.log('Error clearing column ' + col + ': ' + e.message);
+    }
+  });
+
+  Logger.log('Config demo data cleared: ' + columnsToClear.length + ' columns, ' + rowsToDelete + ' rows each');
 }
 
 /**

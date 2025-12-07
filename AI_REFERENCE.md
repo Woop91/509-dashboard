@@ -1,6 +1,6 @@
 # 509 Dashboard - Complete Feature Reference
 
-**Version:** 3.1
+**Version:** 3.2
 **Last Updated:** 2025-12-07
 **Purpose:** Union grievance tracking and member engagement system for SEIU Local 509
 
@@ -36,7 +36,46 @@
 
 ---
 
-## 🆕 Changelog - Version 3.1 (2025-12-07)
+## 🆕 Changelog - Version 3.2 (2025-12-07)
+
+**PRODUCTION DEPLOYMENT - SEED FUNCTIONS REMOVED:**
+
+✅ **Removed All Seed Functions from Codebase** (`Code.gs`)
+- **Removed:** SEED_MEMBERS_TOGGLE_1/2/3/4, SEED_20K_MEMBERS
+- **Removed:** SEED_GRIEVANCES_TOGGLE_1/2, SEED_5K_GRIEVANCES
+- **Removed:** All helper functions (seedMembersWithCount, validateSeedSheets, etc.)
+- **Result:** ~600 lines of code removed, lighter production deployment
+
+✅ **Enhanced `nukeSeedData()` Function** (`SeedNuke.gs`)
+- Now clears **Config tab demo entries**:
+  - Job Titles (Column A)
+  - Office Locations (Column B)
+  - Units (Column C)
+  - Supervisors (Column F)
+  - Managers (Column G)
+  - Stewards (Column H)
+  - Grievance Coordinators (Column O)
+  - Home Towns (Column AF)
+- Clears Member Directory, Grievance Log, Steward Workload
+- Sets SEED_NUKED flag
+- Shows post-nuke guidance dialog
+
+✅ **Simplified Menu Structure:**
+- Seed menu completely removed (functions no longer exist)
+- Data Management menu now contains:
+  1. `🚨 Nuke All Data (Production Reset)` - nukeSeedData()
+  2. `🗑️ Nuke ALL Sheet Data (Comprehensive)` - nukeAllSheetData()
+  3. `⚠️ Clear Core Data Only` - clearAllData()
+
+**Files Modified:**
+- `Code.gs` - Removed all seed functions (~600 lines), simplified menu
+- `ReorganizedMenu.gs` - Removed seed menu items
+- `SeedNuke.gs` - Added clearConfigDemoData() function
+- `AI_REFERENCE.md` - Updated for production deployment
+
+---
+
+## Changelog - Version 3.1 (2025-12-07)
 
 **COLUMN CLEANUP - NO MORE UNUSED COLUMNS:**
 
