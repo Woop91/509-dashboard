@@ -1,6 +1,6 @@
 # 509 Dashboard - Complete Feature Reference
 
-**Version:** 3.4
+**Version:** 3.5
 **Last Updated:** 2025-12-07
 **Purpose:** Union grievance tracking and member engagement system for SEIU Local 509
 
@@ -36,18 +36,96 @@
 
 ---
 
-## 🆕 Changelog - Version 3.4 (2025-12-07)
+## 🆕 Changelog - Version 3.5 (2025-12-07)
+
+**MENU SYSTEM RESTORATION - 43 Missing Features Added:**
+
+Features existed in codebase but were not accessible from menu. All restored:
+
+✅ **Search & Filter Features** (`👤 Dashboard > 🔍 Search & Filter`)
+- Advanced Search (`showSearchDialog`) - Multi-criteria grievance search
+- Advanced Filtering (`showFilterDialog`) - Complex filter combinations
+- Quick Filters (`showQuickFilterMenu`) - One-click filter presets
+- Saved Searches (`showSavedSearches`) - Load saved filter configurations
+- Bookmarks (`showBookmarks`) - Quick navigation to saved locations
+
+✅ **Export/Import Wizards** (`👤 Dashboard > 📊 Reports & Export`)
+- Export Wizard (`showExportWizard`) - Guided data export with format options
+- Import Wizard (`showImportWizard`) - Guided data import from CSV/Excel
+- Advanced Export Options (`showAdvancedExport`) - Detailed export controls
+
+✅ **Quick Actions** (`👤 Dashboard > ⚡ Quick Actions`)
+- Quick Actions Sidebar (`showQuickActionsSidebar`) - Persistent action panel
+- Member Quick Actions (`showMemberQuickActions`) - Context menu for members
+- Grievance Quick Actions (`showGrievanceQuickActions`) - Context menu for grievances
+- Quick Capture Notepad (`showQuickCaptureNotepad`) - Rapid note-taking
+- My Assigned Grievances (`showMyAssignedGrievances`) - Personal case list
+
+✅ **Dashboard/Analytics** (`👤 Dashboard > 📊 Dashboards`)
+- Benchmark Dashboard (`showBenchmarkDashboard`) - Performance comparisons
+- Visualization Builder (`showVisualizationBuilder`) - Custom chart creation
+- Cached Dashboard (`showCachedDashboard`) - Fast cached view
+
+✅ **Performance Monitoring** (`📊 Sheet Manager > ⚡ Performance`)
+- Performance Summary (`showPerformanceSummary`) - System metrics overview
+- Device Analytics (`showDeviceAnalyticsDashboard`) - Usage by device
+- Session Dashboard (`showSessionDashboard`) - Active user sessions
+
+✅ **Mobile Features** (`⚙️ Administrator > 📱 Mobile & Viewing`)
+- Mobile Grievance Browser (`showMobileGrievanceBrowser`) - Touch-optimized browsing
+- Mobile Member Browser (`showMobileMemberBrowser`) - Touch-optimized member view
+- Mobile Unified Search (`showMobileUnifiedSearch`) - Mobile search interface
+
+✅ **Help & Onboarding** (`👤 Dashboard > ❓ Help & Support`)
+- Welcome Wizard (`showWelcomeWizard`) - First-time user setup
+- Getting Started Guide (`showGettingStartedGuide`) - Onboarding walkthrough
+- Enhanced Help (`showEnhancedHelp`) - Comprehensive help system
+- Column Help (`showColumnHelp`) - Field-specific documentation
+- Quick Tips (`showQuickTips`) - Contextual hints
+- Version History (`showVersionHistory`) - Change history viewer
+
+✅ **Accessibility Toggles** (`👤 Dashboard > ♿ Accessibility`)
+- Toggle Zebra Stripes (`toggleZebraStripes`) - Alternating row colors
+- Toggle Gridlines ADHD (`toggleGridlinesADHD`) - Focus-friendly gridlines
+- Toggle Reduced Motion (`toggleReducedMotion`) - Minimize animations
+
+✅ **Column View Toggles** (`⚙️ Administrator > 👁️ Column Toggles & View`)
+- Toggle Engagement Metrics (`toggleEngagementMetricsColumns`)
+- Toggle Member Interests (`toggleMemberInterestsColumns`)
+- Toggle Engagement & Interests (`toggleEngagementAndInterestsColumns`)
+- Toggle Complexity Indicators (`toggleComplexityIndicators`)
+
+✅ **Automations & Setup** (`📊 Sheet Manager > 🤖 Automations`)
+- Auto-Refresh Settings (`showAutoRefreshSettings`) - Configure refresh behavior
+- Setup Keyboard Shortcuts (`setupKeyboardShortcuts`) - Hotkey configuration
+- Setup Auto-Refresh Trigger (`setupAutoRefreshTrigger`) - Enable auto-refresh
+- Setup Security Monitoring (`setupSuspiciousActivityMonitoring`) - Security alerts
+
+✅ **Data & Utilities**
+- Validation Report (`showValidationReport`) - Data quality summary
+- Notification Center (`showNotificationCenter`) - Central alert hub
+- Preferences Editor (`showPreferencesEditor`) - User settings
+- Language Selector (`showLanguageSelector`) - i18n language selection
+
+**Files Modified:**
+- `ReorganizedMenu.gs` - Added 43 missing menu items across all menus
+- `AI_REFERENCE.md` - Updated to v3.5 with complete feature documentation
+- `ConsolidatedDashboard.gs` - Rebuilt with updated menu
+
+---
+
+## Changelog - Version 3.4 (2025-12-07)
 
 **FEATURE ROADMAP UPDATES:**
 
-✅ **Added Smart Member Import Feature** (High Priority)
+✅ **Added Smart Member Import Feature** (High Priority) - *PLANNED, NOT YET IMPLEMENTED*
 - Import member log information from uploaded CSV/Excel documents
 - Intelligent field mapping with UI
 - Duplicate detection during import
 - Preview before final import
 - Handle partial matches and data conflicts
 
-✅ **Added Nuke Safety Mode - Data Protection** (High Priority)
+✅ **Added Nuke Safety Mode - Data Protection** (High Priority) - *PLANNED, NOT YET IMPLEMENTED*
 - When nuke is enabled and data cleaned: prevent bulk data deletion/alteration
 - Protects Grievance Log and Member Directory from accidental mass changes
 - New data entry still permitted (single-row inserts allowed)

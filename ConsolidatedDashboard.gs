@@ -14,7 +14,7 @@
  * Build Info:
  * - Version: 2.1.0 (Security Enhanced + Code Review Improvements)
  * - Build ID: 20251202-improvements
- * - Build Date: 2025-12-07T16:52:51.538Z
+ * - Build Date: 2025-12-07T18:29:20.636Z
  * - Build Type: DEVELOPMENT
  * - Modules: 77 files
  * - Tests Included: Yes
@@ -22807,36 +22807,45 @@ function createGettingStartedSheet(ss) {
   ];
 
   row++;
-  for (let i = 0; i < quickStartSteps.length; i++) {
-    const step = quickStartSteps[i];
+  // OPTIMIZED: Batch operations for quick start steps
+  const numSteps = quickStartSteps.length;
+  const stepStartRow = row;
 
-    // Step number
-    sheet.getRange(row, 1)
-      .setValue(step[0])
-      .setFontWeight("bold")
-      .setFontSize(14)
-      .setBackground(COLORS.INFO_LIGHT)
-      .setVerticalAlignment("top")
-      .setBorder(true, true, true, true, false, false);
+  // Set all values at once (steps 1-2 in columns 1-2, description in column 3)
+  const stepData = quickStartSteps.map(step => [step[0], step[1], step[2], ""]);
+  sheet.getRange(stepStartRow, 1, numSteps, 4).setValues(stepData);
 
-    // Step title
-    sheet.getRange(row, 2)
-      .setValue(step[1])
-      .setFontWeight("bold")
-      .setFontSize(12)
-      .setVerticalAlignment("top")
-      .setBorder(true, true, true, true, false, false);
-
-    // Step description
-    sheet.getRange(row, 3, 1, 2).merge()
-      .setValue(step[2])
-      .setWrap(true)
-      .setVerticalAlignment("top")
-      .setBorder(true, true, true, true, false, false);
-
-    sheet.setRowHeight(row, 60);
-    row++;
+  // Merge column 3-4 for descriptions
+  for (let i = 0; i < numSteps; i++) {
+    sheet.getRange(stepStartRow + i, 3, 1, 2).merge();
   }
+
+  // Format column 1 (step numbers) - batch
+  sheet.getRange(stepStartRow, 1, numSteps, 1)
+    .setFontWeight("bold")
+    .setFontSize(14)
+    .setBackground(COLORS.INFO_LIGHT)
+    .setVerticalAlignment("top")
+    .setBorder(true, true, true, true, false, false);
+
+  // Format column 2 (step titles) - batch
+  sheet.getRange(stepStartRow, 2, numSteps, 1)
+    .setFontWeight("bold")
+    .setFontSize(12)
+    .setVerticalAlignment("top")
+    .setBorder(true, true, true, true, false, false);
+
+  // Format columns 3-4 (descriptions) - batch
+  sheet.getRange(stepStartRow, 3, numSteps, 2)
+    .setWrap(true)
+    .setVerticalAlignment("top")
+    .setBorder(true, true, true, true, false, false);
+
+  // Set row heights
+  for (let i = 0; i < numSteps; i++) {
+    sheet.setRowHeight(stepStartRow + i, 60);
+  }
+  row = stepStartRow + numSteps;
 
   // Key Features Section
   row += 2;
@@ -22860,28 +22869,39 @@ function createGettingStartedSheet(ss) {
   ];
 
   row++;
-  for (let i = 0; i < features.length; i++) {
-    const feature = features[i];
+  // OPTIMIZED: Batch operations for features
+  const numFeatures = features.length;
+  const featureStartRow = row;
 
-    // Feature name
-    sheet.getRange(row, 1, 1, 2).merge()
-      .setValue(feature[0])
-      .setFontWeight("bold")
-      .setFontSize(11)
-      .setVerticalAlignment("top")
-      .setBorder(true, true, true, true, false, false)
-      .setBackground(COLORS.LIGHT_GRAY);
+  // Set all values at once
+  const featureData = features.map(f => [f[0], "", f[1], ""]);
+  sheet.getRange(featureStartRow, 1, numFeatures, 4).setValues(featureData);
 
-    // Feature description
-    sheet.getRange(row, 3, 1, 2).merge()
-      .setValue(feature[1])
-      .setWrap(true)
-      .setVerticalAlignment("top")
-      .setBorder(true, true, true, true, false, false);
-
-    sheet.setRowHeight(row, 50);
-    row++;
+  // Merge cells for each row
+  for (let i = 0; i < numFeatures; i++) {
+    sheet.getRange(featureStartRow + i, 1, 1, 2).merge();
+    sheet.getRange(featureStartRow + i, 3, 1, 2).merge();
   }
+
+  // Format feature names (columns 1-2) - batch
+  sheet.getRange(featureStartRow, 1, numFeatures, 2)
+    .setFontWeight("bold")
+    .setFontSize(11)
+    .setVerticalAlignment("top")
+    .setBorder(true, true, true, true, false, false)
+    .setBackground(COLORS.LIGHT_GRAY);
+
+  // Format descriptions (columns 3-4) - batch
+  sheet.getRange(featureStartRow, 3, numFeatures, 2)
+    .setWrap(true)
+    .setVerticalAlignment("top")
+    .setBorder(true, true, true, true, false, false);
+
+  // Set row heights
+  for (let i = 0; i < numFeatures; i++) {
+    sheet.setRowHeight(featureStartRow + i, 50);
+  }
+  row = featureStartRow + numFeatures;
 
   // Important Links Section
   row += 2;
@@ -22903,24 +22923,36 @@ function createGettingStartedSheet(ss) {
   ];
 
   row++;
-  for (let i = 0; i < links.length; i++) {
-    const link = links[i];
+  // OPTIMIZED: Batch operations for links
+  const numLinks = links.length;
+  const linkStartRow = row;
 
-    sheet.getRange(row, 2)
-      .setValue(link[0])
-      .setFontWeight("bold")
-      .setVerticalAlignment("middle")
-      .setBorder(true, true, true, true, false, false);
+  // Set all values at once
+  const linkData = links.map(l => ["", l[0], l[1], ""]);
+  sheet.getRange(linkStartRow, 1, numLinks, 4).setValues(linkData);
 
-    sheet.getRange(row, 3, 1, 2).merge()
-      .setValue(link[1])
-      .setVerticalAlignment("middle")
-      .setBorder(true, true, true, true, false, false)
-      .setFontColor("#1155CC");
-
-    sheet.setRowHeight(row, 30);
-    row++;
+  // Merge column 3-4 for URLs
+  for (let i = 0; i < numLinks; i++) {
+    sheet.getRange(linkStartRow + i, 3, 1, 2).merge();
   }
+
+  // Format link names (column 2) - batch
+  sheet.getRange(linkStartRow, 2, numLinks, 1)
+    .setFontWeight("bold")
+    .setVerticalAlignment("middle")
+    .setBorder(true, true, true, true, false, false);
+
+  // Format URLs (columns 3-4) - batch
+  sheet.getRange(linkStartRow, 3, numLinks, 2)
+    .setVerticalAlignment("middle")
+    .setBorder(true, true, true, true, false, false)
+    .setFontColor("#1155CC");
+
+  // Set row heights
+  for (let i = 0; i < numLinks; i++) {
+    sheet.setRowHeight(linkStartRow + i, 30);
+  }
+  row = linkStartRow + numLinks;
 
   // Support Section
   row += 2;
@@ -23131,49 +23163,56 @@ function createFAQSheet(ss) {
 }
 
 /**
- * Helper function to add FAQ section rows
+ * Helper function to add FAQ section rows - OPTIMIZED for batch operations
+ * Reduces API calls from 4+ per FAQ to batch operations
  */
 function addFAQSection(sheet, startRow, faqs) {
-  let row = startRow;
+  const numFaqs = faqs.length;
+  if (numFaqs === 0) return startRow;
 
-  for (let i = 0; i < faqs.length; i++) {
-    const faq = faqs[i];
+  // Build all data at once
+  const data = faqs.map((faq, i) => ["Q" + (i + 1), faq[0], faq[1]]);
 
-    // Number
-    sheet.getRange(row, 1)
-      .setValue("Q" + (i + 1))
-      .setFontWeight("bold")
-      .setFontSize(12)
-      .setBackground(COLORS.INFO_LIGHT)
-      .setVerticalAlignment("top")
-      .setHorizontalAlignment("center")
-      .setBorder(true, true, true, true, false, false);
+  // Set all values in one batch call
+  const dataRange = sheet.getRange(startRow, 1, numFaqs, 3);
+  dataRange.setValues(data);
 
-    // Question
-    sheet.getRange(row, 2)
-      .setValue(faq[0])
-      .setFontWeight("bold")
-      .setFontSize(11)
-      .setVerticalAlignment("top")
-      .setBorder(true, true, true, true, false, false)
-      .setWrap(true);
+  // Apply formatting to entire columns at once (batch operations)
+  // Column 1 (Q numbers) - format entire column range at once
+  const col1Range = sheet.getRange(startRow, 1, numFaqs, 1);
+  col1Range
+    .setFontWeight("bold")
+    .setFontSize(12)
+    .setBackground(COLORS.INFO_LIGHT)
+    .setVerticalAlignment("top")
+    .setHorizontalAlignment("center")
+    .setBorder(true, true, true, true, false, false);
 
-    // Answer
-    sheet.getRange(row, 3)
-      .setValue(faq[1])
-      .setWrap(true)
-      .setVerticalAlignment("top")
-      .setBorder(true, true, true, true, false, false);
+  // Column 2 (Questions) - format entire column range at once
+  const col2Range = sheet.getRange(startRow, 2, numFaqs, 1);
+  col2Range
+    .setFontWeight("bold")
+    .setFontSize(11)
+    .setVerticalAlignment("top")
+    .setBorder(true, true, true, true, false, false)
+    .setWrap(true);
 
-    // Auto-adjust row height based on content
-    const contentLength = faq[1].length;
+  // Column 3 (Answers) - format entire column range at once
+  const col3Range = sheet.getRange(startRow, 3, numFaqs, 1);
+  col3Range
+    .setWrap(true)
+    .setVerticalAlignment("top")
+    .setBorder(true, true, true, true, false, false);
+
+  // Set row heights based on content (unfortunately must be done per row)
+  // But batch the height calculations first to minimize switching
+  for (let i = 0; i < numFaqs; i++) {
+    const contentLength = faqs[i][1].length;
     const estimatedHeight = Math.max(40, Math.min(150, Math.ceil(contentLength / 80) * 20));
-    sheet.setRowHeight(row, estimatedHeight);
-
-    row++;
+    sheet.setRowHeight(startRow + i, estimatedHeight);
   }
 
-  return row;
+  return startRow + numFaqs;
 }
 
 
@@ -39886,14 +39925,27 @@ function onOpen_Reorganized() {
       .addItem("🎯 Unified Operations Monitor", "showUnifiedOperationsMonitor")
       .addItem("📊 Main Dashboard", "goToDashboard")
       .addItem("✨ Interactive Dashboard", "openInteractiveDashboard")
-      .addItem("🔄 Refresh Interactive Dashboard", "rebuildInteractiveDashboard"))
+      .addItem("🔄 Refresh Interactive Dashboard", "rebuildInteractiveDashboard")
+      .addSeparator()
+      .addItem("📊 Benchmark Dashboard", "showBenchmarkDashboard")
+      .addItem("📈 Visualization Builder", "showVisualizationBuilder")
+      .addItem("⚡ Cached Dashboard (Fast)", "showCachedDashboard"))
     .addSeparator()
-    .addSubMenu(ui.createMenu("🔍 Search & Lookup")
+    .addSubMenu(ui.createMenu("🔍 Search & Filter")
       .addItem("🔍 Search Members", "showMemberSearch")
-      .addItem("🔍 Quick Member Search", "quickMemberSearch"))
+      .addItem("🔍 Quick Member Search", "quickMemberSearch")
+      .addSeparator()
+      .addItem("🔎 Advanced Search", "showSearchDialog")
+      .addItem("🎛️ Advanced Filtering", "showFilterDialog")
+      .addItem("⚡ Quick Filters", "showQuickFilterMenu")
+      .addSeparator()
+      .addItem("💾 Saved Searches", "showSavedSearches")
+      .addItem("🔖 Bookmarks", "showBookmarks"))
     .addSeparator()
     .addSubMenu(ui.createMenu("📋 Grievance Tools")
       .addItem("➕ Start New Grievance", "showStartGrievanceDialog")
+      .addItem("📋 My Assigned Grievances", "showMyAssignedGrievances")
+      .addSeparator()
       .addItem("🔄 Grievance Float Toggle", "toggleGrievanceFloat")
       .addItem("🎛️ Float Control Panel", "showGrievanceFloatPanel")
       .addSeparator()
@@ -39909,16 +39961,22 @@ function onOpen_Reorganized() {
       .addItem("📧 Compose Email", "composeGrievanceEmail")
       .addItem("📝 Email Templates", "showEmailTemplateManager")
       .addSeparator()
+      .addItem("🔔 Notification Center", "showNotificationCenter")
+      .addSeparator()
       .addItem("📧 Email Opt-Out Management", "showOptOutManagementPanel")
       .addItem("📊 Opt-Out Statistics", "showOptOutStatistics")
       .addSeparator()
       .addItem("📞 View Communications Log", "showGrievanceCommunications"))
     .addSeparator()
-    .addSubMenu(ui.createMenu("📊 Reports")
+    .addSubMenu(ui.createMenu("📊 Reports & Export")
       .addItem("📊 Custom Report Builder", "showCustomReportBuilder")
       .addSeparator()
+      .addItem("📤 Export Wizard", "showExportWizard")
+      .addItem("📥 Import Wizard", "showImportWizard")
+      .addSeparator()
       .addItem("📄 Export Grievances to CSV", "exportGrievancesToCSV")
-      .addItem("📄 Export Members to CSV", "exportMembersToCSV"))
+      .addItem("📄 Export Members to CSV", "exportMembersToCSV")
+      .addItem("📊 Advanced Export Options", "showAdvancedExport"))
     .addSeparator()
     .addSubMenu(ui.createMenu("♿ Accessibility")
       .addItem("♿ ADHD Control Panel", "showADHDControlPanel")
@@ -39926,20 +39984,38 @@ function onOpen_Reorganized() {
       .addSeparator()
       .addItem("🌙 Quick Toggle Dark Mode", "quickToggleDarkMode")
       .addItem("🎯 Activate Focus Mode", "activateFocusMode")
-      .addItem("🎯 Deactivate Focus Mode", "deactivateFocusMode"))
+      .addItem("🎯 Deactivate Focus Mode", "deactivateFocusMode")
+      .addSeparator()
+      .addItem("🦓 Toggle Zebra Stripes", "toggleZebraStripes")
+      .addItem("🔲 Toggle Gridlines (ADHD)", "toggleGridlinesADHD")
+      .addItem("🐢 Toggle Reduced Motion", "toggleReducedMotion"))
     .addSeparator()
     .addSubMenu(ui.createMenu("❓ Help & Support")
-      .addItem("🚀 Quick Start Guide", "showQuickStartGuide")
+      .addItem("👋 Welcome Wizard", "showWelcomeWizard")
+      .addItem("🚀 Getting Started Guide", "showGettingStartedGuide")
       .addItem("📚 Interactive Tutorial", "showInteractiveTutorial")
       .addItem("🎥 Video Tutorials", "showVideoTutorials")
       .addSeparator()
       .addItem("❓ Context Help (F1)", "showContextHelp")
+      .addItem("📖 Enhanced Help", "showEnhancedHelp")
+      .addItem("📋 Column Help", "showColumnHelp")
+      .addItem("💡 Quick Tips", "showQuickTips")
+      .addSeparator()
       .addItem("🔍 Search Help", "showHelpSearch")
       .addItem("⌨️ Keyboard Shortcuts", "showKeyboardShortcuts")
       .addSeparator()
       .addItem("📋 Release Notes", "showReleaseNotes")
-      .addItem("🆕 What's New", "showWhatsNew"))
-    .addItem("⚡ Quick Actions", "showQuickActionsMenu")
+      .addItem("🆕 What's New", "showWhatsNew")
+      .addItem("📜 Version History", "showVersionHistory"))
+    .addSeparator()
+    .addSubMenu(ui.createMenu("⚡ Quick Actions")
+      .addItem("⚡ Quick Actions Menu", "showQuickActionsMenu")
+      .addItem("📌 Quick Actions Sidebar", "showQuickActionsSidebar")
+      .addSeparator()
+      .addItem("👤 Member Quick Actions", "showMemberQuickActions")
+      .addItem("📋 Grievance Quick Actions", "showGrievanceQuickActions")
+      .addSeparator()
+      .addItem("📝 Quick Capture Notepad", "showQuickCaptureNotepad"))
     .addToUi();
 
   // ------------ SHEET MANAGER MENU ------------
@@ -39955,6 +40031,9 @@ function onOpen_Reorganized() {
     .addSeparator()
     .addSubMenu(ui.createMenu("⚡ Performance")
       .addItem("🗄️ Cache Status Dashboard", "showCacheStatusDashboard")
+      .addItem("📊 Performance Summary", "showPerformanceSummary")
+      .addItem("📱 Device Analytics", "showDeviceAnalyticsDashboard")
+      .addItem("👥 Session Dashboard", "showSessionDashboard")
       .addSeparator()
       .addItem("🔥 Warm Up All Caches", "warmUpCaches")
       .addItem("🗑️ Clear All Caches", "invalidateAllCaches"))
@@ -39962,6 +40041,7 @@ function onOpen_Reorganized() {
     .addSubMenu(ui.createMenu("🔒 Data Integrity")
       .addItem("📊 Data Quality Dashboard", "showDataQualityDashboard")
       .addItem("🔍 Check Referential Integrity", "checkReferentialIntegrity")
+      .addItem("📋 Validation Report", "showValidationReport")
       .addSeparator()
       .addItem("✅ Run Bulk Validation", "runBulkValidation")
       .addItem("⚙️ Validation Settings", "showValidationSettings")
@@ -39981,13 +40061,18 @@ function onOpen_Reorganized() {
     .addSubMenu(ui.createMenu("🤖 Automations")
       .addItem("📬 Notification Settings", "showNotificationSettings")
       .addItem("📊 Report Automation Settings", "showReportAutomationSettings")
+      .addItem("🔄 Auto-Refresh Settings", "showAutoRefreshSettings")
       .addSeparator()
       .addItem("✅ Enable Daily Deadline Notifications", "setupDailyDeadlineNotifications")
       .addItem("🔕 Disable Deadline Notifications", "disableDailyDeadlineNotifications")
       .addSeparator()
       .addItem("✅ Enable Monthly Reports", "setupMonthlyReports")
       .addItem("✅ Enable Quarterly Reports", "setupQuarterlyReports")
-      .addItem("🔕 Disable All Reports", "disableAutomatedReports"))
+      .addItem("🔕 Disable All Reports", "disableAutomatedReports")
+      .addSeparator()
+      .addItem("⌨️ Setup Keyboard Shortcuts", "setupKeyboardShortcuts")
+      .addItem("🔄 Setup Auto-Refresh Trigger", "setupAutoRefreshTrigger")
+      .addItem("🔒 Setup Security Monitoring", "setupSuspiciousActivityMonitoring"))
     .addSeparator()
     .addSubMenu(ui.createMenu("📁 Google Drive Integration")
       .addItem("📁 Batch Create All Folders", "batchCreateGrievanceFolders")
@@ -40085,6 +40170,9 @@ function onOpen_Reorganized() {
     .addSeparator()
     .addSubMenu(ui.createMenu("👁️ Column Toggles & View")
       .addItem("Toggle Level 2 Member Columns", "toggleLevel2Columns")
+      .addItem("Toggle Engagement Metrics", "toggleEngagementMetricsColumns")
+      .addItem("Toggle Member Interests", "toggleMemberInterestsColumns")
+      .addItem("Toggle Engagement & Interests", "toggleEngagementAndInterestsColumns")
       .addItem("Show All Member Columns", "showAllMemberColumns")
       .addSeparator()
       .addItem("📨 Toggle Admin Message Columns", "toggleAdminMessageColumns")
@@ -40100,6 +40188,7 @@ function onOpen_Reorganized() {
       .addItem("Reorder Sheets Logically", "reorderSheetsLogically")
       .addItem("Hide Gridlines (Focus Mode)", "hideAllGridlines")
       .addItem("Show Gridlines", "showAllGridlines")
+      .addItem("🎯 Toggle Complexity Indicators", "toggleComplexityIndicators")
       .addItem("Setup ADHD Defaults", "setupADHDDefaults"))
     .addSeparator()
     .addSubMenu(ui.createMenu("↩️ History & Undo")
@@ -40114,6 +40203,9 @@ function onOpen_Reorganized() {
     .addSubMenu(ui.createMenu("📱 Mobile & Viewing")
       .addItem("📱 Mobile Dashboard", "showMobileDashboard")
       .addItem("📋 Mobile Grievance List", "showMobileGrievanceList")
+      .addItem("📋 Mobile Grievance Browser", "showMobileGrievanceBrowser")
+      .addItem("👥 Mobile Member Browser", "showMobileMemberBrowser")
+      .addItem("🔍 Mobile Unified Search", "showMobileUnifiedSearch")
       .addSeparator()
       .addItem("📄 Paginated Data Viewer", "showPaginatedViewer"))
     .addSeparator()
@@ -40141,6 +40233,10 @@ function onOpen_Reorganized() {
       .addItem("Add Viewer", "addViewer")
       .addSeparator()
       .addItem("My Permissions", "showMyPermissions"))
+    .addSeparator()
+    .addSubMenu(ui.createMenu("⚙️ User Settings")
+      .addItem("⚙️ Preferences Editor", "showPreferencesEditor")
+      .addItem("🌐 Language Selector", "showLanguageSelector"))
     .addSeparator()
     .addItem("👁️ Toggle Setup Menu Visibility", "toggleSetupMenuVisibility")
     .addToUi();
