@@ -1,6 +1,6 @@
 # 509 Dashboard - Complete Feature Reference
 
-**Version:** 3.16
+**Version:** 3.17
 **Last Updated:** 2025-12-08
 **Purpose:** Union grievance tracking and member engagement system for SEIU Local 509
 
@@ -3003,6 +3003,52 @@ const SHEETS = {
 ---
 
 ## Changelog
+
+### v3.17 - Sheet Initialization & Self-Healing (2025-12-08)
+
+**New Feature: Automatic Sheet Setup**
+
+Added `setupRequiredSheets()` function that creates missing sheets with proper headers:
+- Creates Member Directory (31 columns A-AE) with all headers
+- Creates Grievance Log (34 columns A-AH) with all headers
+- Creates Config sheet with Setting/Value headers
+- All sheets get frozen header rows and styled headers
+
+**New Constants:**
+- `MEMBER_DIRECTORY_HEADERS` - Full 31-column header array for Member Directory
+- `GRIEVANCE_LOG_HEADERS` - Full 34-column header array for Grievance Log
+
+**New Functions:**
+- `setupRequiredSheets()` - Creates all required sheets if missing, returns {created, existing, errors}
+- `showSetupRequiredSheets()` - UI wrapper showing results in dialog
+
+**Menu Addition:**
+- Setup > Sheet Initialization > Initialize Required Sheets
+- Setup > Sheet Initialization > Schema Health Check (duplicate from Administrator for discoverability)
+
+**Why This Matters:**
+- Fixes "Member Directory sheet not found" errors on new installations
+- Eliminates manual sheet creation with correct headers
+- Ensures column constants match actual sheet structure
+
+---
+
+### v3.15-v3.16 - Column Constant Fixes & Schema Validation (2025-12-08)
+
+**v3.15 Bug Fixes:**
+- Added 11 GRIEVANCE_COLS aliases for backward compatibility
+- Added MEMBER_COLS.LOCATION alias
+- Added CACHE_CONFIG.ENABLE_LOGGING
+- Added getGrievanceMemberName() and getMemberFullName() helper functions
+- Updated MobileOptimization.gs call sites
+
+**v3.16 Enhancements:**
+- Added mapMemberRow() and mapGrievanceRow() row mapper functions
+- Added MEMBER_EXPECTED_HEADERS and GRIEVANCE_EXPECTED_HEADERS
+- Added schema validation functions
+- Added Schema Health Check to Administrator menu
+
+---
 
 ### Version 2.4 (Current)
 

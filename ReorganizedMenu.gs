@@ -233,6 +233,10 @@ function createReorganizedMenus(ui) {
       .addItem("🎨 Setup Dashboard Enhancements", "SETUP_DASHBOARD_ENHANCEMENTS")
       .addItem("📊 Populate Analytics Sheets", "populateAllAnalyticsSheets"))
     .addSeparator()
+    .addSubMenu(ui.createMenu("🏗️ Sheet Initialization")
+      .addItem("🏗️ Initialize Required Sheets", "showSetupRequiredSheets")
+      .addItem("📋 Schema Health Check", "showSchemaHealthCheck"))
+    .addSeparator()
     .addItem("📝 Open Member Google Form", "openMemberGoogleForm")
     .addToUi();
 
