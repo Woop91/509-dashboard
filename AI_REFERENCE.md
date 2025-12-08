@@ -1,6 +1,6 @@
 # 509 Dashboard - Complete Feature Reference
 
-**Version:** 3.12
+**Version:** 3.13
 **Last Updated:** 2025-12-08
 **Purpose:** Union grievance tracking and member engagement system for SEIU Local 509
 
@@ -46,7 +46,40 @@
 
 ---
 
-## 🆕 Changelog - Version 3.12 (2025-12-08)
+## 🆕 Changelog - Version 3.13 (2025-12-08)
+
+**DATA VALIDATION FIX FOR USER-POPULATED FIELDS:**
+
+✅ **Data Validation Now Allows Blank Values** (`Code.gs`)
+- Fixed issue where empty values for user-populated fields were rejected by data validation
+- User-populated columns now use `.setAllowInvalid(true)` to allow blank/custom values:
+  - **Member Directory:** Job Title, Work Location, Unit, Supervisor, Manager, Assigned Steward, Home Town
+  - **Grievance Log:** Unit, Location, Steward
+- System-required columns still use strict validation (`.setAllowInvalid(false)`):
+  - Is Steward (Yes/No), Interest columns (Yes/No)
+  - Status, Current Step, Articles Violated, Issue Category
+
+✅ **Test Fixes** (`TestFramework.gs`, `Code.test.gs`, `Integration.test.gs`, `TestConfig.gs`)
+- Removed all hardcoded sample values (Boston HQ, Unit A - Administrative, Jane Smith, Sarah Johnson, etc.)
+- Test helper `createTestMember()` now uses empty strings for dropdown fields
+- `testConfigDropdownValues()` now checks column readability instead of asserting specific values
+
+**Why This Was Needed:**
+- v3.11 removed sample data from Config tab (users populate their own)
+- But data validation rules still rejected blank values
+- Tests failed because they couldn't insert empty dropdown values
+- Now users can enter blank values until they populate Config
+
+**Files Modified:**
+- `Code.gs` - Data validation rules updated to allow invalid for user-populated fields
+- `TestFramework.gs` - createTestMember() uses empty strings
+- `Code.test.gs` - Removed hardcoded assertions for specific Config values
+- `Integration.test.gs` - Removed hardcoded dropdown values from test data
+- `TestConfig.gs` - seedTestData() uses empty strings for dropdown fields
+
+---
+
+## Changelog - Version 3.12 (2025-12-08)
 
 **GRIEVANCE LOG COLUMN RENAME & COMPREHENSIVE DASHBOARD MERGE:**
 

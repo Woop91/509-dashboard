@@ -14,7 +14,7 @@
  * Build Info:
  * - Version: 2.1.0 (Security Enhanced + Code Review Improvements)
  * - Build ID: 20251202-improvements
- * - Build Date: 2025-12-08T00:42:26.789Z
+ * - Build Date: 2025-12-08T00:49:45.939Z
  * - Build Type: DEVELOPMENT
  * - Modules: 79 files
  * - Tests Included: Yes
@@ -4750,11 +4750,22 @@ function setupDataValidations() {
     { col: MEMBER_COLS.INTEREST_ALLIED, configCol: CONFIG_COLS.YES_NO }      // Interest: Allied (24)
   ];
 
+  // Columns that should allow blank/custom values (user populates Config)
+  const userPopulatedCols = [
+    MEMBER_COLS.JOB_TITLE,      // Job Title
+    MEMBER_COLS.WORK_LOCATION,  // Work Location
+    MEMBER_COLS.UNIT,           // Unit
+    MEMBER_COLS.ASSIGNED_STEWARD, // Assigned Steward
+    MEMBER_COLS.HOME_TOWN       // Home Town
+  ];
+
   memberValidations.forEach(function(v) {
     const configRange = config.getRange(3, v.configCol, 50, 1);
+    // Allow invalid for user-populated fields (they may be empty if Config not yet filled)
+    const allowInvalid = userPopulatedCols.indexOf(v.col) >= 0;
     const rule = SpreadsheetApp.newDataValidation()
       .requireValueInRange(configRange, true)
-      .setAllowInvalid(false)
+      .setAllowInvalid(allowInvalid)
       .build();
     memberDir.getRange(2, v.col, VALIDATION_ROWS, 1).setDataValidation(rule);
   });
@@ -4814,11 +4825,20 @@ function setupDataValidations() {
     { col: GRIEVANCE_COLS.STEWARD, configCol: CONFIG_COLS.STEWARDS }                 // Assigned Steward
   ];
 
+  // Grievance columns that should allow blank/custom values (user populates Config)
+  const userPopulatedGrievanceCols = [
+    GRIEVANCE_COLS.UNIT,      // Unit
+    GRIEVANCE_COLS.LOCATION,  // Work Location
+    GRIEVANCE_COLS.STEWARD    // Assigned Steward
+  ];
+
   grievanceValidations.forEach(function(v) {
     const configRange = config.getRange(3, v.configCol, 50, 1);
+    // Allow invalid for user-populated fields (they may be empty if Config not yet filled)
+    const allowInvalid = userPopulatedGrievanceCols.indexOf(v.col) >= 0;
     const rule = SpreadsheetApp.newDataValidation()
       .requireValueInRange(configRange, true)
-      .setAllowInvalid(false)
+      .setAllowInvalid(allowInvalid)
       .build();
     grievanceLog.getRange(2, v.col, VALIDATION_ROWS, 1).setDataValidation(rule);
   });
@@ -4880,11 +4900,18 @@ function extendValidationsForLargeDataset() {
     { col: MEMBER_COLS.INTEREST_ALLIED, configCol: CONFIG_COLS.YES_NO }
   ];
 
+  // User-populated columns that should allow blank/custom values
+  const userPopulatedMemberCols = [
+    MEMBER_COLS.JOB_TITLE, MEMBER_COLS.WORK_LOCATION, MEMBER_COLS.UNIT,
+    MEMBER_COLS.ASSIGNED_STEWARD, MEMBER_COLS.HOME_TOWN
+  ];
+
   memberValidations.forEach(function(v) {
     const configRange = config.getRange(3, v.configCol, 50, 1);
+    const allowInvalid = userPopulatedMemberCols.indexOf(v.col) >= 0;
     const rule = SpreadsheetApp.newDataValidation()
       .requireValueInRange(configRange, true)
-      .setAllowInvalid(false)
+      .setAllowInvalid(allowInvalid)
       .build();
     memberDir.getRange(2, v.col, EXTENDED_ROWS, 1).setDataValidation(rule);
   });
@@ -4900,11 +4927,17 @@ function extendValidationsForLargeDataset() {
     { col: GRIEVANCE_COLS.STEWARD, configCol: CONFIG_COLS.STEWARDS }
   ];
 
+  // User-populated grievance columns that should allow blank/custom values
+  const userPopulatedGrievanceCols = [
+    GRIEVANCE_COLS.UNIT, GRIEVANCE_COLS.LOCATION, GRIEVANCE_COLS.STEWARD
+  ];
+
   grievanceValidations.forEach(function(v) {
     const configRange = config.getRange(3, v.configCol, 50, 1);
+    const allowInvalid = userPopulatedGrievanceCols.indexOf(v.col) >= 0;
     const rule = SpreadsheetApp.newDataValidation()
       .requireValueInRange(configRange, true)
-      .setAllowInvalid(false)
+      .setAllowInvalid(allowInvalid)
       .build();
     grievanceLog.getRange(2, v.col, EXTENDED_ROWS, 1).setDataValidation(rule);
   });
@@ -6446,29 +6479,29 @@ function setupMemberDirectoryValidations() {
   // Define dropdown ranges (2 = first data row, 5000 = max rows)
   const MAX_ROWS = 5000;
 
-  // Job Title (Column D = 4)
+  // Job Title (Column D = 4) - Allow blank/custom values (user populates Config)
   if (jobTitles.length > 0) {
     const jobTitleRule = SpreadsheetApp.newDataValidation()
       .requireValueInList(jobTitles, true)
-      .setAllowInvalid(false)
+      .setAllowInvalid(true)
       .build();
     memberDir.getRange(2, 4, MAX_ROWS, 1).setDataValidation(jobTitleRule);
   }
 
-  // Work Location (Column E = 5)
+  // Work Location (Column E = 5) - Allow blank/custom values (user populates Config)
   if (locations.length > 0) {
     const locationRule = SpreadsheetApp.newDataValidation()
       .requireValueInList(locations, true)
-      .setAllowInvalid(false)
+      .setAllowInvalid(true)
       .build();
     memberDir.getRange(2, 5, MAX_ROWS, 1).setDataValidation(locationRule);
   }
 
-  // Unit (Column F = 6)
+  // Unit (Column F = 6) - Allow blank/custom values (user populates Config)
   if (units.length > 0) {
     const unitRule = SpreadsheetApp.newDataValidation()
       .requireValueInList(units, true)
-      .setAllowInvalid(false)
+      .setAllowInvalid(true)
       .build();
     memberDir.getRange(2, 6, MAX_ROWS, 1).setDataValidation(unitRule);
   }
@@ -6488,29 +6521,30 @@ function setupMemberDirectoryValidations() {
     .build();
   memberDir.getRange(2, 10, MAX_ROWS, 1).setDataValidation(yesNoRule);
 
-  // Supervisor (Column K = 11)
+  // Supervisor (Column K = 11) - Allow blank/custom values (user populates Config)
   if (supervisors.length > 0) {
     const supervisorRule = SpreadsheetApp.newDataValidation()
       .requireValueInList(supervisors, true)
-      .setAllowInvalid(false)
+      .setAllowInvalid(true)
       .build();
     memberDir.getRange(2, 11, MAX_ROWS, 1).setDataValidation(supervisorRule);
   }
 
-  // Manager (Column L = 12)
+  // Manager (Column L = 12) - Allow blank/custom values (user populates Config)
   if (managers.length > 0) {
     const managerRule = SpreadsheetApp.newDataValidation()
       .requireValueInList(managers, true)
-      .setAllowInvalid(false)
+      .setAllowInvalid(true)
       .build();
     memberDir.getRange(2, 12, MAX_ROWS, 1).setDataValidation(managerRule);
   }
 
   // Assigned Steward (Column M = 13) and Steward Who Contacted Member (Column AD = 30)
+  // Allow blank/custom values (user populates Config)
   if (stewards.length > 0) {
     const stewardRule = SpreadsheetApp.newDataValidation()
       .requireValueInList(stewards, true)
-      .setAllowInvalid(false)
+      .setAllowInvalid(true)
       .build();
     memberDir.getRange(2, 13, MAX_ROWS, 1).setDataValidation(stewardRule);
     memberDir.getRange(2, 30, MAX_ROWS, 1).setDataValidation(stewardRule);
