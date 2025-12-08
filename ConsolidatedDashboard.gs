@@ -22646,6 +22646,12 @@ function logError(level, category, message, context = '', error = null, recovere
       errorSheet.getRange(1, 1, 1, headers.length).setValues([headers]);
       errorSheet.getRange(1, 1, 1, headers.length).setFontWeight('bold').setBackground('#f44336').setFontColor('#ffffff');
       errorSheet.setFrozenRows(1);
+
+      // Delete unused columns beyond the defined headers (8 columns)
+      const totalCols = errorSheet.getMaxColumns();
+      if (totalCols > headers.length) {
+        errorSheet.deleteColumns(headers.length + 1, totalCols - headers.length);
+      }
     }
 
     // Prepare log entry
