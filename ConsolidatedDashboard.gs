@@ -14,7 +14,7 @@
  * Build Info:
  * - Version: 2.1.0 (Security Enhanced + Code Review Improvements)
  * - Build ID: 20251202-improvements
- * - Build Date: 2025-12-07T23:16:55.981Z
+ * - Build Date: 2025-12-08T00:35:14.787Z
  * - Build Type: DEVELOPMENT
  * - Modules: 79 files
  * - Tests Included: Yes
@@ -234,7 +234,7 @@ const GRIEVANCE_COLS = {
   // Section 10: Resolution (AB)
   RESOLUTION: 28,         // AB - Resolution Summary
   // Section 11: Coordinator Notifications (AC-AF) - Feature 95
-  COORDINATOR_NOTIFIED: 29,  // AC - Checkbox for coordinator message
+  MESSAGE_ALERT: 29,  // AC - Message Alert checkbox (formerly Coordinator Notified)
   COORDINATOR_MESSAGE: 30,   // AD - Coordinator's message text
   ACKNOWLEDGED_BY: 31,       // AE - Steward who acknowledged
   ACKNOWLEDGED_DATE: 32,     // AF - When steward acknowledged
@@ -3081,27 +3081,22 @@ function CREATE_509_DASHBOARD() {
     createStewardWorkloadSheet();
     Logger.log("Completed createStewardWorkloadSheet");
 
-    // Create merged Operations Analytics sheet (combines Trends, Location, Type Analysis, Member Engagement, Cost Impact)
-    Logger.log("Starting createOperationsAnalyticsSheet...");
-    createOperationsAnalyticsSheet();
-    Logger.log("Completed createOperationsAnalyticsSheet");
-    SpreadsheetApp.getActive().toast("✅ Operations Analytics created", "75%", 2);
-
-    // Delete standalone analytics tabs that are now merged into Operations Analytics
-    Logger.log("Starting deleteStandaloneAnalyticsTabs...");
-    if (typeof deleteStandaloneAnalyticsTabs === 'function') {
-      deleteStandaloneAnalyticsTabs();
-    }
-    Logger.log("Completed deleteStandaloneAnalyticsTabs");
-
+    // Create comprehensive Executive Dashboard (includes Quick Stats, KPI Performance, Location Analytics, Type Analysis)
+    // NOTE: Operations Analytics and KPI Performance Dashboard are now MERGED into Executive Dashboard
     Logger.log("Starting createExecutiveDashboard...");
     createExecutiveDashboard();
     Logger.log("Completed createExecutiveDashboard");
+    SpreadsheetApp.getActive().toast("✅ Executive Dashboard created (merged analytics)", "80%", 2);
 
-    Logger.log("Starting createKPIPerformanceDashboard...");
-    createKPIPerformanceDashboard();
-    Logger.log("Completed createKPIPerformanceDashboard");
-    SpreadsheetApp.getActive().toast("✅ Executive dashboards created", "80%", 2);
+    // Delete standalone tabs that are now merged into Executive Dashboard
+    Logger.log("Deleting standalone tabs merged into Executive Dashboard...");
+    deleteStandaloneMergedTabs();
+    Logger.log("Completed deletion of merged tabs");
+
+    // Hide Member Satisfaction tab (to be wired later by user)
+    Logger.log("Hiding Member Satisfaction tab...");
+    hideMemberSatisfactionTab();
+    Logger.log("Completed hiding Member Satisfaction");
 
     // Create utility sheets
     Logger.log("Starting createArchiveSheet...");
@@ -3225,162 +3220,165 @@ function createConfigTab() {
 
     // Data rows - first row has default/example values for settings columns
     // IMPORTANT: Organization info (cols 21-24, 37-43) should NOT be deleted by nuke operations
-    ["Coordinator", "Boston HQ", "Unit A - Administrative", "Monday", "Yes",
-     "Sarah Johnson", "Michael Chen",
-     "Jane Smith", "Grievance Committee",
+    // NOTE: Job Titles, Office Locations, Units, Supervisors, Managers, Stewards,
+    // Grievance Coordinators, and Home Towns are intentionally left empty -
+    // users should populate these from their own data
+    ["", "", "", "Monday", "Yes",
+     "", "",
+     "", "Grievance Committee",
      "Open", "Informal", "Discipline", "Art. 1 - Recognition", "Email",
-     "Jane Smith, John Doe, Mary Johnson", "", "",
+     "", "", "",
      "", "3, 7, 14", "",
      "SEIU Local 509", "509", "293 Boston Post Road West, 4th Floor, Marlborough, MA 01752", "774-843-7509",
      "", "",
      "21", "30", "10", "30",
-     "Morning (8am-12pm)", "Boston",
+     "Morning (8am-12pm)", "",
      "Article 23A", "Article 12", "Article 15", "2023-2026 CBA",
      "SEIU", "Massachusetts", "https://www.seiu509.org/",
      "", "508-485-8529", "Marc", "marc@seiu509.org"],
 
-    ["Analyst", "Worcester Office", "Unit B - Technical", "Tuesday", "No",
-     "Mike Wilson", "Lisa Anderson",
-     "John Doe", "Bargaining Committee",
+    ["", "", "", "Tuesday", "No",
+     "", "",
+     "", "Bargaining Committee",
      "Pending Info", "Step I", "Workload", "Art. 2 - Union Security", "Phone",
-     "Bob Wilson, Alice Brown", "", "",
+     "", "", "",
      "", "", "",
      "", "", "", "",
      "", "",
      "", "", "", "",
-     "Afternoon (12pm-5pm)", "Worcester",
+     "Afternoon (12pm-5pm)", "",
      "", "", "", "",
      "", "", "",
      "", "", "", ""],
 
-    ["Case Manager", "Springfield Branch", "Unit C - Support Services", "Wednesday", "",
-     "Emily Davis", "Robert Brown",
-     "Mary Johnson", "Health & Safety Committee",
+    ["", "", "", "Wednesday", "",
+     "", "",
+     "", "Health & Safety Committee",
      "Settled", "Step II", "Scheduling", "Art. 3 - Management Rights", "Text",
-     "Sarah Martinez, Kevin Jones", "", "",
+     "", "", "",
      "", "", "",
      "", "", "", "",
      "", "",
      "", "", "", "",
-     "Evening (5pm-8pm)", "Springfield",
+     "Evening (5pm-8pm)", "",
      "", "", "", "",
      "", "", "",
      "", "", "", ""],
 
-    ["Specialist", "Cambridge Office", "Unit D - Operations", "Thursday", "",
-     "Tom Harris", "Jennifer Lee",
-     "Bob Wilson", "Political Action Committee",
+    ["", "", "", "Thursday", "",
+     "", "",
+     "", "Political Action Committee",
      "Withdrawn", "Step III", "Pay", "Art. 4 - No Discrimination", "In Person",
-     "Daniel Kim, Rachel Adams", "", "",
+     "", "", "",
      "", "", "",
      "", "", "", "",
      "", "",
      "", "", "", "",
-     "Weekends", "Cambridge",
+     "Weekends", "",
      "", "", "", "",
      "", "", "",
      "", "", "", ""],
 
-    ["Senior Analyst", "Lowell Center", "Unit E - Field Services", "Friday", "",
-     "Amanda White", "David Martinez",
-     "Alice Brown", "Membership Committee",
+    ["", "", "", "Friday", "",
+     "", "",
+     "", "Membership Committee",
      "Closed", "Mediation", "Discrimination", "Art. 5 - Union Business", "",
-     "John Doe, Mary Johnson", "", "",
+     "", "", "",
      "", "", "",
      "", "", "", "",
      "", "",
      "", "", "", "",
-     "Flexible", "Lowell",
+     "Flexible", "",
      "", "", "", "",
      "", "", "",
      "", "", "", ""],
 
-    ["Team Lead", "Quincy Station", "", "Saturday", "",
-     "Chris Taylor", "Susan Garcia",
-     "Tom Davis", "Executive Board",
+    ["", "", "", "Saturday", "",
+     "", "",
+     "", "Executive Board",
      "Appealed", "Arbitration", "Safety", "Art. 23 - Grievance Procedure", "",
-     "Alice Brown, Tom Davis", "", "",
+     "", "", "",
      "", "", "",
      "", "", "", "",
      "", "",
      "", "", "", "",
-     "", "Quincy",
+     "", "",
      "", "", "", "",
      "", "", "",
      "", "", "", ""],
 
-    ["Director", "Remote/Hybrid", "", "Sunday", "",
-     "Patricia Moore", "James Wilson",
-     "Sarah Martinez", "Communications Committee",
+    ["", "", "", "Sunday", "",
+     "", "",
+     "", "Communications Committee",
      "", "", "Benefits", "Art. 24 - Discipline", "",
-     "Kevin Jones, Linda Garcia", "", "",
+     "", "", "",
      "", "", "",
      "", "", "", "",
      "", "",
      "", "", "", "",
-     "", "Brockton",
+     "", "",
      "", "", "", "",
      "", "", "",
      "", "", "", ""],
 
-    ["Manager", "Brockton Office", "", "", "",
-     "Kevin Anderson", "Nancy Taylor",
-     "Kevin Jones", "Contract Action Team",
+    ["", "", "", "", "",
+     "", "",
+     "", "Contract Action Team",
      "", "", "Training", "Art. 25 - Hours of Work", "",
-     "Rachel Adams", "", "",
+     "", "", "",
      "", "", "",
      "", "", "", "",
      "", "",
      "", "", "", "",
-     "", "Lynn",
+     "", "",
      "", "", "", "",
      "", "", "",
      "", "", "", ""],
 
-    ["Assistant", "Lynn Location", "", "", "",
-     "Michelle Lee", "Richard White",
-     "Linda Garcia", "Organizing Committee",
+    ["", "", "", "", "",
+     "", "",
+     "", "Organizing Committee",
      "", "", "Other", "Art. 26 - Overtime", "",
      "", "", "",
      "", "", "",
      "", "", "", "",
      "", "",
      "", "", "", "",
-     "", "Salem",
+     "", "",
      "", "", "", "",
      "", "", "",
      "", "", "", ""],
 
-    ["Associate", "Salem Office", "", "", "",
-     "Brandon Scott", "Angela Moore",
-     "Daniel Kim", "COPE Committee",
+    ["", "", "", "", "",
+     "", "",
+     "", "COPE Committee",
      "", "", "Harassment", "Art. 27 - Seniority", "",
      "", "", "",
      "", "", "",
      "", "", "", "",
      "", "",
      "", "", "", "",
-     "", "Framingham",
+     "", "",
      "", "", "", "",
      "", "", "",
      "", "", "", ""],
 
-    ["Technician", "", "", "", "",
-     "Jessica Green", "Christopher Lee",
-     "Rachel Adams", "Young Workers Committee",
+    ["", "", "", "", "",
+     "", "",
+     "", "Young Workers Committee",
      "", "", "Equipment", "Art. 28 - Layoff", "",
      "", "", "",
      "", "", "",
      "", "", "", "",
      "", "",
      "", "", "", "",
-     "", "Newton",
+     "", "",
      "", "", "", "",
      "", "", "",
      "", "", "", ""],
 
-    ["Administrator", "", "", "", "",
-     "Andrew Clark", "Melissa Wright",
+    ["", "", "", "", "",
+     "", "",
      "", "",
      "", "", "Leave", "Art. 29 - Sick Leave", "",
      "", "", "",
@@ -3388,13 +3386,13 @@ function createConfigTab() {
      "", "", "", "",
      "", "",
      "", "", "", "",
-     "", "Somerville",
+     "", "",
      "", "", "", "",
      "", "", "",
      "", "", "", ""],
 
-    ["Support Staff", "", "", "", "",
-     "Rachel Brown", "Timothy Davis",
+    ["", "", "", "", "",
+     "", "",
      "", "",
      "", "", "Grievance Process", "Art. 30 - Vacation", "",
      "", "", "",
@@ -3402,7 +3400,7 @@ function createConfigTab() {
      "", "", "", "",
      "", "",
      "", "", "", "",
-     "", "Malden",
+     "", "",
      "", "", "", "",
      "", "", "",
      "", "", "", ""]
@@ -3667,7 +3665,7 @@ function createGrievanceLog() {
     "Work Location (Site)",            // Z - 26
     "Assigned Steward (Name)",         // AA - 27
     "Resolution Summary",              // AB - 28
-    "Coordinator Notified",            // AC - 29 (Feature 95: Checkbox)
+    "Message Alert",                    // AC - 29 (Feature 95: Checkbox)
     "Coordinator Message",             // AD - 30 (Feature 95: Message text)
     "Acknowledged By",                 // AE - 31 (Feature 95: Steward email)
     "Acknowledged Date",               // AF - 32 (Feature 95: Timestamp)
@@ -3694,7 +3692,7 @@ function createGrievanceLog() {
 
   // Add checkbox validation for Coordinator Notified column (AC) - Feature 95
   const lastRow = 1000; // Reasonable max rows
-  const checkboxRange = grievanceLog.getRange(2, GRIEVANCE_COLS.COORDINATOR_NOTIFIED, lastRow - 1, 1);
+  const checkboxRange = grievanceLog.getRange(2, GRIEVANCE_COLS.MESSAGE_ALERT, lastRow - 1, 1);
   const checkboxValidation = SpreadsheetApp.newDataValidation()
     .requireCheckbox()
     .setAllowInvalid(false)
@@ -4249,7 +4247,8 @@ function createTypeAnalysisSheet() {
   }
 }
 
-/* --------------------- EXECUTIVE DASHBOARD (Merged Summary + Quick Stats) --------------------- */
+/* --------------------- EXECUTIVE DASHBOARD (Comprehensive Merged Dashboard) --------------------- */
+/* Merges: Quick Stats, Detailed KPIs, KPI Performance, Location Analytics, Type Analysis */
 function createExecutiveDashboard() {
   const ss = SpreadsheetApp.getActive();
   let sheet = ss.getSheetByName("💼 Executive Dashboard");
@@ -4259,24 +4258,39 @@ function createExecutiveDashboard() {
   }
   sheet.clear();
 
-  // Header
-  sheet.getRange("A1:F1").merge()
+  // Dynamic column references for formulas
+  const statusCol = getColumnLetter(GRIEVANCE_COLS.STATUS);
+  const daysOpenCol = getColumnLetter(GRIEVANCE_COLS.DAYS_OPEN);
+  const daysToDeadlineCol = getColumnLetter(GRIEVANCE_COLS.DAYS_TO_DEADLINE);
+  const grievanceIdCol = getColumnLetter(GRIEVANCE_COLS.GRIEVANCE_ID);
+  const dateFiledCol = getColumnLetter(GRIEVANCE_COLS.DATE_FILED);
+  const dateClosedCol = getColumnLetter(GRIEVANCE_COLS.DATE_CLOSED);
+  const gLocationCol = getColumnLetter(GRIEVANCE_COLS.LOCATION);
+  const gIssueCategoryCol = getColumnLetter(GRIEVANCE_COLS.ISSUE_CATEGORY);
+
+  const memberIdCol = getColumnLetter(MEMBER_COLS.MEMBER_ID);
+  const isStewardCol = getColumnLetter(MEMBER_COLS.IS_STEWARD);
+  const mLocationCol = getColumnLetter(MEMBER_COLS.LOCATION);
+  const hasOpenGrievanceCol = getColumnLetter(MEMBER_COLS.HAS_OPEN_GRIEVANCE);
+
+  // ============ HEADER ============
+  sheet.getRange("A1:L1").merge()
     .setValue("💼 EXECUTIVE DASHBOARD")
-    .setFontSize(18)
+    .setFontSize(20)
     .setFontWeight("bold")
     .setHorizontalAlignment("center")
     .setBackground(COLORS.PRIMARY_PURPLE)
     .setFontColor("white");
 
-  sheet.getRange("A2:F2").merge()
-    .setValue("⚡ At-a-Glance Metrics & Key Performance Indicators")
+  sheet.getRange("A2:L2").merge()
+    .setValue("Comprehensive analytics: Quick Stats | KPI Performance | Location Analytics | Issue Analysis")
     .setFontSize(10)
     .setFontStyle("italic")
     .setHorizontalAlignment("center")
     .setBackground(COLORS.LIGHT_GRAY)
     .setFontColor(COLORS.TEXT_GRAY);
 
-  // Section 1: Quick Stats
+  // ============ SECTION 1: QUICK STATS (Rows 4-11) ============
   sheet.getRange("A4:D4").merge()
     .setValue("⚡ QUICK STATS")
     .setFontWeight("bold")
@@ -4285,73 +4299,156 @@ function createExecutiveDashboard() {
     .setFontColor("white")
     .setHorizontalAlignment("center");
 
-  const quickHeaders = ["Metric", "Value", "Comparison", "Trend"];
-  sheet.getRange(5, 1, 1, quickHeaders.length).setValues([quickHeaders])
+  sheet.getRange(5, 1, 1, 4).setValues([["Metric", "Value", "Comparison", "Trend"]])
     .setFontWeight("bold")
     .setBackground(COLORS.LIGHT_GRAY);
 
-  // Dynamic column references for formulas
-  const resolutionCol = getColumnLetter(GRIEVANCE_COLS.RESOLUTION);
-  const statusCol = getColumnLetter(GRIEVANCE_COLS.STATUS);
-  const daysOpenCol = getColumnLetter(GRIEVANCE_COLS.DAYS_OPEN);
-  const daysToDeadlineCol = getColumnLetter(GRIEVANCE_COLS.DAYS_TO_DEADLINE);
-  const grievanceIdCol = getColumnLetter(GRIEVANCE_COLS.GRIEVANCE_ID);
-
-  const execMemberIdCol = getColumnLetter(MEMBER_COLS.MEMBER_ID);
-  const execIsStewardCol = getColumnLetter(MEMBER_COLS.IS_STEWARD);
-
   const quickStats = [
-    ["Active Members", `=TEXT(COUNTA('Member Directory'!${execMemberIdCol}2:${execMemberIdCol}),"#,##0")`, `=B6-B7`, `=IF(B6>B7,"📈 Up","📉 Down")`],
-    ["Active Grievances", `=TEXT(COUNTIF('Grievance Log'!${statusCol}:${statusCol},"Open"),"#,##0")`, `=IF(VALUE(B7)<10,"🟢 Low",IF(VALUE(B7)<25,"🟡 Normal","🔴 High"))`, `=IF(VALUE(B7)>10,"⚠️ Monitor","✅ Good")`],
+    ["Active Members", `=TEXT(COUNTA('Member Directory'!${memberIdCol}2:${memberIdCol}),"#,##0")`, `=IF(VALUE(SUBSTITUTE(B6,",",""))>0,"📊 Data","⚠️ Empty")`, `=IF(VALUE(SUBSTITUTE(B6,",",""))>100,"✅ Strong","⚠️ Growing")`],
+    ["Active Grievances", `=TEXT(COUNTIF('Grievance Log'!${statusCol}:${statusCol},"Open"),"#,##0")`, `=IF(VALUE(SUBSTITUTE(B7,",",""))<10,"🟢 Low",IF(VALUE(SUBSTITUTE(B7,",",""))<25,"🟡 Normal","🔴 High"))`, `=IF(VALUE(SUBSTITUTE(B7,",",""))>10,"⚠️ Monitor","✅ Good")`],
     ["Overall Win Rate", `=IFERROR(TEXT(COUNTIF('Grievance Log'!${statusCol}:${statusCol},"Settled")/(COUNTIF('Grievance Log'!${statusCol}:${statusCol},"Settled")+COUNTIF('Grievance Log'!${statusCol}:${statusCol},"Denied")),"0%"),"0%")`, "Target: 70%", `=IF(VALUE(SUBSTITUTE(B8,"%",""))>=70,"✅ On Target","⚠️ Below")`],
     ["Avg Resolution (Days)", `=IFERROR(TEXT(ROUND(AVERAGE('Grievance Log'!${daysOpenCol}:${daysOpenCol}),0),"#,##0"),"-")`, "Target: <30", `=IF(ISNUMBER(VALUE(B9)),IF(VALUE(B9)<30,"✅ Fast",IF(VALUE(B9)<60,"🟡 Normal","🔴 Slow")),"-")`],
-    ["Overdue Cases", `=TEXT(COUNTIFS('Grievance Log'!${statusCol}:${statusCol},"Open",'Grievance Log'!${daysToDeadlineCol}:${daysToDeadlineCol},"<0"),"#,##0")`, `=IF(VALUE(B10)=0,"None",B10&" need attention")`, `=IF(VALUE(B10)=0,"✅ Clear","🔴 Action Required")`],
-    ["Active Stewards", `=TEXT(COUNTIF('Member Directory'!${execIsStewardCol}:${execIsStewardCol},"Yes"),"#,##0")`, `=TEXT(ROUND(VALUE(SUBSTITUTE(B6,",",""))/VALUE(SUBSTITUTE(B11,",","")),0),"#,##0")&" members per steward"`, `=IF(VALUE(SUBSTITUTE(B6,",",""))/VALUE(SUBSTITUTE(B11,",",""))<100,"✅ Good Ratio","⚠️ Need More")`]
+    ["Overdue Cases", `=TEXT(COUNTIFS('Grievance Log'!${statusCol}:${statusCol},"Open",'Grievance Log'!${daysToDeadlineCol}:${daysToDeadlineCol},"<0"),"#,##0")`, `=IF(VALUE(SUBSTITUTE(B10,",",""))=0,"✅ None",B10&" need attention")`, `=IF(VALUE(SUBSTITUTE(B10,",",""))=0,"✅ Clear","🔴 Action Required")`],
+    ["Active Stewards", `=TEXT(COUNTIF('Member Directory'!${isStewardCol}:${isStewardCol},"Yes"),"#,##0")`, `=IFERROR(TEXT(ROUND(VALUE(SUBSTITUTE(B6,",",""))/VALUE(SUBSTITUTE(B11,",","")),0),"#,##0")&" per steward","-")`, `=IF(IFERROR(VALUE(SUBSTITUTE(B6,",",""))/VALUE(SUBSTITUTE(B11,",","")),999)<100,"✅ Good Ratio","⚠️ Need More")`]
   ];
-
   sheet.getRange(6, 1, quickStats.length, 4).setValues(quickStats);
 
-  // Section 2: Detailed KPIs
-  sheet.getRange("A13:C13").merge()
-    .setValue("📊 DETAILED KEY PERFORMANCE INDICATORS")
+  // ============ SECTION 2: KPI PERFORMANCE TABLE (Rows 13-22) ============
+  sheet.getRange("A13:L13").merge()
+    .setValue("📊 KPI PERFORMANCE TRACKING")
     .setFontWeight("bold")
     .setFontSize(14)
-    .setBackground(COLORS.PRIMARY_PURPLE)
+    .setBackground(COLORS.UNION_GREEN)
     .setFontColor("white")
     .setHorizontalAlignment("center");
 
-  const kpiHeaders = ["Metric", "Value", "Status"];
+  const kpiHeaders = ["KPI Name", "Current", "Target", "Variance", "% Change", "Status", "Last Month", "YTD Avg", "Best", "Worst", "Owner", "Updated"];
   sheet.getRange(14, 1, 1, kpiHeaders.length).setValues([kpiHeaders])
     .setFontWeight("bold")
     .setBackground(COLORS.LIGHT_GRAY);
 
-  const detailedKpis = [
-    ["Total Active Members", `=TEXT(COUNTA('Member Directory'!${execMemberIdCol}2:${execMemberIdCol}),"#,##0")`, `=IF(VALUE(SUBSTITUTE(B15,",",""))>0,"✅ Active","⚠️ No Data")`],
-    ["Total Active Grievances", `=TEXT(COUNTIF('Grievance Log'!${statusCol}:${statusCol},"Open"),"#,##0")`, `=IF(VALUE(SUBSTITUTE(B16,",",""))<25,"🟢 Manageable",IF(VALUE(SUBSTITUTE(B16,",",""))<50,"🟡 Busy","🔴 High Volume"))`],
-    ["Overall Win Rate", `=IFERROR(TEXT(COUNTIF('Grievance Log'!${statusCol}:${statusCol},"Settled")/(COUNTIF('Grievance Log'!${statusCol}:${statusCol},"Settled")+COUNTIF('Grievance Log'!${statusCol}:${statusCol},"Denied")),"0.0%"),"0%")`, `=IF(VALUE(SUBSTITUTE(B17,"%",""))>=70,"✅ Excellent",IF(VALUE(SUBSTITUTE(B17,"%",""))>=50,"🟡 Good","🔴 Needs Improvement"))`],
-    ["Avg Resolution Time (Days)", `=IFERROR(TEXT(ROUND(AVERAGE('Grievance Log'!${daysOpenCol}:${daysOpenCol}),0),"#,##0"),"-")`, `=IF(ISNUMBER(VALUE(SUBSTITUTE(B18,",",""))),IF(VALUE(SUBSTITUTE(B18,",",""))<30,"✅ Fast",IF(VALUE(SUBSTITUTE(B18,",",""))<60,"🟡 Average","🔴 Slow")),"-")`],
-    ["Cases Overdue", `=TEXT(COUNTIFS('Grievance Log'!${statusCol}:${statusCol},"Open",'Grievance Log'!${daysToDeadlineCol}:${daysToDeadlineCol},"<0"),"#,##0")`, `=IF(VALUE(SUBSTITUTE(B19,",",""))=0,"✅ All On Track","🔴 "&B19&" Require Attention")`],
-    ["Member Satisfaction Score", `=IFERROR(TEXT(AVERAGEIF('Member Satisfaction'!F:F,">0"),"0.0"),"-")`, `=IF(ISNUMBER(VALUE(B20)),IF(VALUE(B20)>=4,"✅ High",IF(VALUE(B20)>=3,"🟡 Average","🔴 Low")),"-")`],
-    ["Total Grievances Filed YTD", `=TEXT(COUNTA('Grievance Log'!${grievanceIdCol}2:${grievanceIdCol}),"#,##0")`, `=IF(VALUE(SUBSTITUTE(B21,",",""))>0,"📊 "&B21&" cases tracked","No cases")`],
-    ["Resolved Grievances", `=TEXT(COUNTIF('Grievance Log'!${statusCol}:${statusCol},"Settled")+COUNTIF('Grievance Log'!${statusCol}:${statusCol},"Closed")+COUNTIF('Grievance Log'!${statusCol}:${statusCol},"Denied"),"#,##0")`, `=IF(VALUE(SUBSTITUTE(B22,",",""))>0,"✅ "&B22&" resolved","No resolutions yet")`]
+  const kpiData = [
+    ["Total Members", `=TEXT(COUNTA('Member Directory'!${memberIdCol}2:${memberIdCol}),"#,##0")`, "20,000", `=TEXT(VALUE(SUBSTITUTE(B15,",",""))-VALUE(SUBSTITUTE(C15,",","")),"#,##0")`, `=IFERROR(TEXT((VALUE(SUBSTITUTE(B15,",",""))-VALUE(SUBSTITUTE(C15,",","")))/VALUE(SUBSTITUTE(C15,",","")),"0%"),"-")`, `=IF(VALUE(SUBSTITUTE(B15,",",""))>=VALUE(SUBSTITUTE(C15,",","")),"On Track","At Risk")`, `=B15`, `=B15`, `=B15`, `=B15`, "HR Team", `=TEXT(NOW(),"MM/dd")`],
+    ["Active Grievances", `=TEXT(COUNTIF('Grievance Log'!${statusCol}:${statusCol},"Open"),"#,##0")`, "25", `=TEXT(VALUE(SUBSTITUTE(B16,",",""))-C16,"#,##0")`, `=IFERROR(TEXT((VALUE(SUBSTITUTE(B16,",",""))-C16)/C16,"0%"),"-")`, `=IF(VALUE(SUBSTITUTE(B16,",",""))<=C16,"On Track","At Risk")`, `=B16`, `=B16`, `=B16`, `=B16`, "Steward Lead", `=TEXT(NOW(),"MM/dd")`],
+    ["Win Rate %", `=IFERROR(ROUND(COUNTIF('Grievance Log'!${statusCol}:${statusCol},"Settled")/(COUNTIF('Grievance Log'!${statusCol}:${statusCol},"Settled")+COUNTIF('Grievance Log'!${statusCol}:${statusCol},"Denied"))*100,1),0)`, "70", `=B17-C17`, `=IFERROR(TEXT((B17-C17)/C17,"0%"),"-")`, `=IF(B17>=C17,"On Track","At Risk")`, `=B17`, `=B17`, `=B17`, `=B17`, "Steward Lead", `=TEXT(NOW(),"MM/dd")`],
+    ["Avg Days to Resolve", `=IFERROR(TEXT(ROUND(AVERAGE('Grievance Log'!${daysOpenCol}:${daysOpenCol}),0),"#,##0"),0)`, "30", `=TEXT(VALUE(SUBSTITUTE(B18,",",""))-C18,"#,##0")`, `=IFERROR(TEXT((VALUE(SUBSTITUTE(B18,",",""))-C18)/C18,"0%"),"-")`, `=IF(VALUE(SUBSTITUTE(B18,",",""))<=C18,"On Track","At Risk")`, `=B18`, `=B18`, `=B18`, `=B18`, "Steward Lead", `=TEXT(NOW(),"MM/dd")`],
+    ["Steward Coverage", `=TEXT(COUNTIF('Member Directory'!${isStewardCol}:${isStewardCol},"Yes"),"#,##0")`, "50", `=TEXT(VALUE(SUBSTITUTE(B19,",",""))-C19,"#,##0")`, `=IFERROR(TEXT((VALUE(SUBSTITUTE(B19,",",""))-C19)/C19,"0%"),"-")`, `=IF(VALUE(SUBSTITUTE(B19,",",""))>=C19,"On Track","At Risk")`, `=B19`, `=B19`, `=B19`, `=B19`, "Coordinator", `=TEXT(NOW(),"MM/dd")`],
+    ["Cases Settled", `=TEXT(COUNTIF('Grievance Log'!${statusCol}:${statusCol},"Settled"),"#,##0")`, "100", `=TEXT(VALUE(SUBSTITUTE(B20,",",""))-C20,"#,##0")`, `=IFERROR(TEXT((VALUE(SUBSTITUTE(B20,",",""))-C20)/C20,"0%"),"-")`, `=IF(VALUE(SUBSTITUTE(B20,",",""))>=C20,"Exceeding","On Track")`, `=B20`, `=B20`, `=B20`, `=B20`, "Legal", `=TEXT(NOW(),"MM/dd")`],
+    ["Cases Pending", `=TEXT(COUNTIF('Grievance Log'!${statusCol}:${statusCol},"Pending Info"),"#,##0")`, "10", `=TEXT(VALUE(SUBSTITUTE(B21,",",""))-C21,"#,##0")`, `=IFERROR(TEXT((VALUE(SUBSTITUTE(B21,",",""))-C21)/C21,"0%"),"-")`, `=IF(VALUE(SUBSTITUTE(B21,",",""))<=C21,"On Track","At Risk")`, `=B21`, `=B21`, `=B21`, `=B21`, "Steward Lead", `=TEXT(NOW(),"MM/dd")`]
   ];
+  sheet.getRange(15, 1, kpiData.length, 12).setValues(kpiData);
 
-  sheet.getRange(15, 1, detailedKpis.length, 3).setValues(detailedKpis);
+  // Add Status dropdown validation
+  const statusRule = SpreadsheetApp.newDataValidation()
+    .requireValueInList(['On Track', 'At Risk', 'Off Track', 'Exceeding'], true)
+    .setAllowInvalid(false)
+    .build();
+  sheet.getRange("F15:F22").setDataValidation(statusRule);
 
-  sheet.setFrozenRows(4);
+  // ============ SECTION 3: LOCATION ANALYTICS (Rows 24-38) ============
+  sheet.getRange("A24:K24").merge()
+    .setValue("🗺️ LOCATION ANALYTICS")
+    .setFontWeight("bold")
+    .setFontSize(14)
+    .setBackground(COLORS.ACCENT_TEAL)
+    .setFontColor("white")
+    .setHorizontalAlignment("center");
+
+  const locHeaders = ["Location", "Members", "With Grievances", "Total Cases", "Open Cases", "Win Rate", "Avg Days", "Stewards", "Risk", "Priority", "Notes"];
+  sheet.getRange(25, 1, 1, locHeaders.length).setValues([locHeaders])
+    .setFontWeight("bold")
+    .setBackground(COLORS.LIGHT_GRAY);
+
+  // Summary row
+  sheet.getRange(26, 1).setValue("ALL LOCATIONS").setFontWeight("bold");
+  sheet.getRange(26, 2).setFormula(`=IFERROR(TEXT(MAX(0,COUNTA('Member Directory'!$${memberIdCol}:$${memberIdCol})-1),"#,##0"),0)`);
+  sheet.getRange(26, 3).setFormula(`=IFERROR(TEXT(COUNTIF('Member Directory'!$${hasOpenGrievanceCol}:$${hasOpenGrievanceCol},"Yes"),"#,##0"),0)`);
+  sheet.getRange(26, 4).setFormula(`=IFERROR(TEXT(MAX(0,COUNTA('Grievance Log'!$${grievanceIdCol}:$${grievanceIdCol})-1),"#,##0"),0)`);
+  sheet.getRange(26, 5).setFormula(`=IFERROR(TEXT(COUNTIF('Grievance Log'!$${statusCol}:$${statusCol},"Open"),"#,##0"),0)`);
+  sheet.getRange(26, 6).setFormula(`=IFERROR(TEXT(COUNTIF('Grievance Log'!$${statusCol}:$${statusCol},"Settled")/(COUNTIF('Grievance Log'!$${statusCol}:$${statusCol},"Settled")+COUNTIF('Grievance Log'!$${statusCol}:$${statusCol},"Denied")),"0%"),"0%")`);
+  sheet.getRange(26, 7).setFormula(`=IFERROR(ROUND(AVERAGEIF('Grievance Log'!$${daysOpenCol}:$${daysOpenCol},">0"),0),"-")`);
+  sheet.getRange(26, 8).setFormula(`=IFERROR(TEXT(COUNTIF('Member Directory'!$${isStewardCol}:$${isStewardCol},"Yes"),"#,##0"),0)`);
+  sheet.getRange(26, 9).setFormula(`=IF(E26>20,"High",IF(E26>10,"Medium","Low"))`);
+  sheet.getRange(26, 10).setFormula(`=IF(I26="High","🔴 Critical",IF(I26="Medium","🟡 Monitor","🟢 Normal"))`);
+  sheet.getRange(26, 11).setValue("Summary");
+  sheet.getRange(26, 1, 1, 11).setBackground(COLORS.WARNING_LIGHT);
+
+  // Dynamic location rows using UNIQUE formula
+  sheet.getRange(27, 1).setFormula(`=IFERROR(UNIQUE(FILTER('Member Directory'!$${mLocationCol}:$${mLocationCol},'Member Directory'!$${mLocationCol}:$${mLocationCol}<>"",'Member Directory'!$${mLocationCol}:$${mLocationCol}<>"Work Location (Site)")),"No locations yet")`);
+
+  // Add formulas for location analytics (rows 27-38)
+  for (let i = 0; i < 12; i++) {
+    const row = 27 + i;
+    sheet.getRange(row, 2).setFormula(`=IFERROR(IF(A${row}="","",IF(A${row}="No locations yet","0",TEXT(COUNTIF('Member Directory'!$${mLocationCol}:$${mLocationCol},A${row}),"#,##0"))),"0")`);
+    sheet.getRange(row, 3).setFormula(`=IFERROR(IF(A${row}="","",IF(A${row}="No locations yet","0",TEXT(COUNTIFS('Member Directory'!$${mLocationCol}:$${mLocationCol},A${row},'Member Directory'!$${hasOpenGrievanceCol}:$${hasOpenGrievanceCol},"Yes"),"#,##0"))),"0")`);
+    sheet.getRange(row, 4).setFormula(`=IFERROR(IF(A${row}="","",IF(A${row}="No locations yet","0",TEXT(COUNTIF('Grievance Log'!$${gLocationCol}:$${gLocationCol},A${row}),"#,##0"))),"0")`);
+    sheet.getRange(row, 5).setFormula(`=IFERROR(IF(A${row}="","",IF(A${row}="No locations yet","0",TEXT(COUNTIFS('Grievance Log'!$${gLocationCol}:$${gLocationCol},A${row},'Grievance Log'!$${statusCol}:$${statusCol},"Open"),"#,##0"))),"0")`);
+    sheet.getRange(row, 6).setFormula(`=IFERROR(IF(A${row}="","",IF(A${row}="No locations yet","0%",TEXT(COUNTIFS('Grievance Log'!$${gLocationCol}:$${gLocationCol},A${row},'Grievance Log'!$${statusCol}:$${statusCol},"Settled")/(COUNTIFS('Grievance Log'!$${gLocationCol}:$${gLocationCol},A${row},'Grievance Log'!$${statusCol}:$${statusCol},"Settled")+COUNTIFS('Grievance Log'!$${gLocationCol}:$${gLocationCol},A${row},'Grievance Log'!$${statusCol}:$${statusCol},"Denied")),"0%"))),"0%")`);
+    sheet.getRange(row, 7).setFormula(`=IFERROR(IF(A${row}="","",IF(A${row}="No locations yet","-",ROUND(AVERAGEIFS('Grievance Log'!$${daysOpenCol}:$${daysOpenCol},'Grievance Log'!$${gLocationCol}:$${gLocationCol},A${row},'Grievance Log'!$${daysOpenCol}:$${daysOpenCol},">0"),0))),"-")`);
+    sheet.getRange(row, 8).setFormula(`=IFERROR(IF(A${row}="","",IF(A${row}="No locations yet","0",TEXT(COUNTIFS('Member Directory'!$${mLocationCol}:$${mLocationCol},A${row},'Member Directory'!$${isStewardCol}:$${isStewardCol},"Yes"),"#,##0"))),"0")`);
+    sheet.getRange(row, 9).setFormula(`=IF(A${row}="","",IF(E${row}>5,"High",IF(E${row}>2,"Medium","Low")))`);
+    sheet.getRange(row, 10).setFormula(`=IF(A${row}="","",IF(I${row}="High","🔴",IF(I${row}="Medium","🟡","🟢")))`);
+  }
+
+  // ============ SECTION 4: ISSUE TYPE ANALYSIS (Rows 40-54) ============
+  sheet.getRange("A40:K40").merge()
+    .setValue("📊 GRIEVANCE TYPE ANALYSIS")
+    .setFontWeight("bold")
+    .setFontSize(14)
+    .setBackground(COLORS.PRIMARY_BLUE)
+    .setFontColor("white")
+    .setHorizontalAlignment("center");
+
+  const typeHeaders = ["Issue Type", "Total", "Open", "Resolved", "Win Rate", "Avg Days", "Top Location", "Top Article", "Trend", "Priority", "Notes"];
+  sheet.getRange(41, 1, 1, typeHeaders.length).setValues([typeHeaders])
+    .setFontWeight("bold")
+    .setBackground(COLORS.LIGHT_GRAY);
+
+  // Dynamic issue type rows using UNIQUE formula
+  sheet.getRange(42, 1).setFormula(`=IFERROR(UNIQUE(FILTER('Grievance Log'!$${gIssueCategoryCol}:$${gIssueCategoryCol},'Grievance Log'!$${gIssueCategoryCol}:$${gIssueCategoryCol}<>"",'Grievance Log'!$${gIssueCategoryCol}:$${gIssueCategoryCol}<>"Issue Category")),"No issue types yet")`);
+
+  // Add formulas for type analytics (rows 42-54)
+  for (let i = 0; i < 13; i++) {
+    const row = 42 + i;
+    sheet.getRange(row, 2).setFormula(`=IFERROR(IF(A${row}="","",IF(A${row}="No issue types yet","0",TEXT(COUNTIF('Grievance Log'!$${gIssueCategoryCol}:$${gIssueCategoryCol},A${row}),"#,##0"))),"0")`);
+    sheet.getRange(row, 3).setFormula(`=IFERROR(IF(A${row}="","",IF(A${row}="No issue types yet","0",TEXT(COUNTIFS('Grievance Log'!$${gIssueCategoryCol}:$${gIssueCategoryCol},A${row},'Grievance Log'!$${statusCol}:$${statusCol},"Open"),"#,##0"))),"0")`);
+    sheet.getRange(row, 4).setFormula(`=IFERROR(IF(A${row}="","",IF(A${row}="No issue types yet","0",TEXT(COUNTIFS('Grievance Log'!$${gIssueCategoryCol}:$${gIssueCategoryCol},A${row},'Grievance Log'!$${statusCol}:$${statusCol},"Settled")+COUNTIFS('Grievance Log'!$${gIssueCategoryCol}:$${gIssueCategoryCol},A${row},'Grievance Log'!$${statusCol}:$${statusCol},"Denied")+COUNTIFS('Grievance Log'!$${gIssueCategoryCol}:$${gIssueCategoryCol},A${row},'Grievance Log'!$${statusCol}:$${statusCol},"Closed"),"#,##0"))),"0")`);
+    sheet.getRange(row, 5).setFormula(`=IFERROR(IF(A${row}="","",IF(A${row}="No issue types yet","N/A",TEXT(COUNTIFS('Grievance Log'!$${gIssueCategoryCol}:$${gIssueCategoryCol},A${row},'Grievance Log'!$${statusCol}:$${statusCol},"Settled")/(COUNTIFS('Grievance Log'!$${gIssueCategoryCol}:$${gIssueCategoryCol},A${row},'Grievance Log'!$${statusCol}:$${statusCol},"Settled")+COUNTIFS('Grievance Log'!$${gIssueCategoryCol}:$${gIssueCategoryCol},A${row},'Grievance Log'!$${statusCol}:$${statusCol},"Denied")),"0%"))),"N/A")`);
+    sheet.getRange(row, 6).setFormula(`=IFERROR(IF(A${row}="","",IF(A${row}="No issue types yet","N/A",ROUND(AVERAGEIFS('Grievance Log'!$${daysOpenCol}:$${daysOpenCol},'Grievance Log'!$${gIssueCategoryCol}:$${gIssueCategoryCol},A${row},'Grievance Log'!$${daysOpenCol}:$${daysOpenCol},">0"),0))),"N/A")`);
+    sheet.getRange(row, 7).setValue("-");
+    sheet.getRange(row, 8).setValue("-");
+    sheet.getRange(row, 9).setFormula(`=IF(A${row}="","",IF(B${row}>0,"📊 Active","➖ None"))`);
+    sheet.getRange(row, 10).setFormula(`=IF(A${row}="","",IF(C${row}>5,"🔴 High",IF(C${row}>2,"🟡 Medium","🟢 Low")))`);
+  }
+
+  // ============ FORMATTING ============
+  sheet.setFrozenRows(2);
   sheet.setTabColor(COLORS.PRIMARY_PURPLE);
 
   // Set column widths
-  sheet.setColumnWidth(1, 250);
-  sheet.setColumnWidth(2, 150);
+  sheet.setColumnWidth(1, 180);
+  sheet.setColumnWidth(2, 100);
   sheet.setColumnWidth(3, 100);
   sheet.setColumnWidth(4, 100);
+  sheet.setColumnWidth(5, 100);
+  sheet.setColumnWidth(6, 100);
+  sheet.setColumnWidth(7, 100);
+  sheet.setColumnWidth(8, 100);
+  sheet.setColumnWidth(9, 80);
+  sheet.setColumnWidth(10, 80);
+  sheet.setColumnWidth(11, 100);
+  sheet.setColumnWidth(12, 80);
 
-  // Delete unused columns beyond the defined columns (4 columns used)
+  // Center align numeric columns
+  sheet.getRange("B6:D11").setHorizontalAlignment("center");
+  sheet.getRange("B15:L22").setHorizontalAlignment("center");
+  sheet.getRange("B26:K38").setHorizontalAlignment("center");
+  sheet.getRange("B42:K54").setHorizontalAlignment("center");
+
+  // Delete unused columns beyond L (12 columns)
   const totalCols = sheet.getMaxColumns();
-  const usedCols = 4;  // Executive Dashboard uses columns A-D
-  if (totalCols > usedCols) {
-    sheet.deleteColumns(usedCols + 1, totalCols - usedCols);
+  if (totalCols > 12) {
+    sheet.deleteColumns(13, totalCols - 12);
   }
 }
 
@@ -4459,6 +4556,69 @@ function createKPIPerformanceDashboard() {
   const totalCols = sheet.getMaxColumns();
   if (totalCols > headers.length) {
     sheet.deleteColumns(headers.length + 1, totalCols - headers.length);
+  }
+}
+
+/* --------------------- HELPER FUNCTIONS FOR DASHBOARD MANAGEMENT --------------------- */
+
+/**
+ * Delete standalone tabs that are now merged into Executive Dashboard
+ * Tabs deleted: Operations Analytics, KPI Performance Dashboard
+ */
+function deleteStandaloneMergedTabs() {
+  const ss = SpreadsheetApp.getActive();
+  const tabsToDelete = [
+    "📊 Operations Analytics",
+    "📊 KPI Performance Dashboard"
+  ];
+
+  for (const tabName of tabsToDelete) {
+    try {
+      const sheet = ss.getSheetByName(tabName);
+      if (sheet) {
+        ss.deleteSheet(sheet);
+        Logger.log(`Deleted merged tab: ${tabName}`);
+      }
+    } catch (e) {
+      Logger.log(`Could not delete ${tabName}: ${e.message}`);
+    }
+  }
+}
+
+/**
+ * Hide the Member Satisfaction tab (to be wired later by user)
+ * TODO: User will wire this to Grievance Log and Member Directory later
+ */
+function hideMemberSatisfactionTab() {
+  const ss = SpreadsheetApp.getActive();
+  const tabName = "Member Satisfaction";
+
+  try {
+    const sheet = ss.getSheetByName(tabName);
+    if (sheet) {
+      sheet.hideSheet();
+      Logger.log(`Hidden tab: ${tabName} (to be wired later)`);
+    }
+  } catch (e) {
+    Logger.log(`Could not hide ${tabName}: ${e.message}`);
+  }
+}
+
+/**
+ * Show the Member Satisfaction tab (when ready to wire)
+ */
+function showMemberSatisfactionTab() {
+  const ss = SpreadsheetApp.getActive();
+  const tabName = "Member Satisfaction";
+
+  try {
+    const sheet = ss.getSheetByName(tabName);
+    if (sheet) {
+      sheet.showSheet();
+      Logger.log(`Shown tab: ${tabName}`);
+    }
+  } catch (e) {
+    Logger.log(`Could not show ${tabName}: ${e.message}`);
   }
 }
 
@@ -15386,7 +15546,7 @@ function onGrievanceEdit(e) {
     const col = e.range.getColumn();
 
     // Only process if editing the Coordinator Notified column (AC = column 29)
-    if (col !== GRIEVANCE_COLS.COORDINATOR_NOTIFIED) return;
+    if (col !== GRIEVANCE_COLS.MESSAGE_ALERT) return;
 
     // Skip header row
     if (row === 1) return;
@@ -15749,7 +15909,7 @@ function showCoordinatorMessageDialog() {
     sheet.getRange(activeRow, GRIEVANCE_COLS.COORDINATOR_MESSAGE).setValue(message);
 
     // Check the checkbox to trigger notification
-    sheet.getRange(activeRow, GRIEVANCE_COLS.COORDINATOR_NOTIFIED).setValue(true);
+    sheet.getRange(activeRow, GRIEVANCE_COLS.MESSAGE_ALERT).setValue(true);
 
     ui.alert('Success',
       'Coordinator message saved and notifications sent!\n\n' +
@@ -15795,7 +15955,7 @@ function showBatchCoordinatorNotification() {
 
   for (let i = 1; i < data.length; i++) { // Skip header
     const row = i + 1;
-    const isChecked = data[i][GRIEVANCE_COLS.COORDINATOR_NOTIFIED - 1];
+    const isChecked = data[i][GRIEVANCE_COLS.MESSAGE_ALERT - 1];
 
     if (isChecked === true || isChecked === 'TRUE' || isChecked === 'Yes' || isChecked === '✓') {
       // Update message
@@ -15845,7 +16005,7 @@ function clearAllCoordinatorNotifications() {
 
   // Clear all checkboxes and highlighting (skip header)
   for (let row = 2; row <= lastRow; row++) {
-    sheet.getRange(row, GRIEVANCE_COLS.COORDINATOR_NOTIFIED).setValue(false);
+    sheet.getRange(row, GRIEVANCE_COLS.MESSAGE_ALERT).setValue(false);
     removeRowHighlight(sheet, row);
   }
 
@@ -18306,8 +18466,8 @@ function recalculateSingleGrievanceRow(sheet, row) {
  * This is a simplified version that can be expanded
  */
 function handleCoordinatorCheckbox(sheet, row, col) {
-  // Check if the Coordinator Notified column was edited
-  if (col !== GRIEVANCE_COLS.COORDINATOR_NOTIFIED) return;
+  // Check if the Message Alert column was edited
+  if (col !== GRIEVANCE_COLS.MESSAGE_ALERT) return;
 
   const checkboxValue = sheet.getRange(row, col).getValue();
 
@@ -36066,43 +36226,46 @@ function createLocationSectionDynamic(sheet, startRow, cols) {
   sheet.getRange(summaryRow, 11).setValue("Summary");
   sheet.getRange(summaryRow, 1, 1, 11).setBackground(COLORS.WARNING_LIGHT);
 
-  // Get locations from Config sheet
-  const ss = SpreadsheetApp.getActiveSpreadsheet();
-  const configSheet = ss.getSheetByName(SHEETS.CONFIG);
-  let locations = [];
+  // Get unique locations dynamically from Member Directory
+  // NOTE: Locations are pulled from actual data in Member Directory, not from Config
+  // This ensures the analytics always reflect real data
+  const dataRow1 = startRow + 3;
 
-  if (configSheet) {
-    const locationCol = CONFIG_COLS.OFFICE_LOCATIONS;
-    const lastRow = configSheet.getLastRow();
-    if (lastRow > 1) {
-      const values = configSheet.getRange(2, locationCol, lastRow - 1, 1).getValues();
-      locations = values.map(r => r[0]).filter(v => v !== '' && v !== null);
-    }
-  }
+  // Use UNIQUE formula to get locations from Member Directory (up to 15 locations)
+  // Row format: Location | Members | With Grievances | Total Cases | Open | Win Rate | Avg Days | Stewards | Risk | Priority | Notes
+  sheet.getRange(dataRow1, 1).setFormula(`=IFERROR(UNIQUE(FILTER('Member Directory'!$${cols.mLocation}:$${cols.mLocation},'Member Directory'!$${cols.mLocation}:$${cols.mLocation}<>"",'Member Directory'!$${cols.mLocation}:$${cols.mLocation}<>"Work Location (Site)")),"No locations yet")`);
 
-  if (locations.length === 0) {
-    locations = ["Boston HQ", "Springfield Office", "Worcester Office", "Cambridge Office", "Lowell Office"];
-  }
-
-  // Data rows for each location
-  for (let i = 0; i < Math.min(locations.length, 15); i++) {
+  // Add ARRAYFORMULA for all location analytics (will auto-populate based on locations in column A)
+  for (let i = 0; i < 15; i++) {
     const dataRow = startRow + 3 + i;
-    const location = locations[i];
+    // Skip first row which has the UNIQUE formula - other rows will auto-populate from UNIQUE
+    if (i > 0) {
+      // These cells will be populated by the UNIQUE array spill, no need to set formulas
+    }
 
-    sheet.getRange(dataRow, 1).setValue(location);
-    sheet.getRange(dataRow, 2).setFormula(`=IFERROR(TEXT(COUNTIF('Member Directory'!$${cols.mLocation}:$${cols.mLocation},"${location}"),"#,##0"),0)`);
-    sheet.getRange(dataRow, 3).setFormula(`=IFERROR(TEXT(COUNTIFS('Member Directory'!$${cols.mLocation}:$${cols.mLocation},"${location}",'Member Directory'!$${cols.mHasOpenGrievance}:$${cols.mHasOpenGrievance},"Yes"),"#,##0"),0)`);
-    sheet.getRange(dataRow, 4).setFormula(`=IFERROR(TEXT(COUNTIF('Grievance Log'!$${cols.gLocation}:$${cols.gLocation},"${location}"),"#,##0"),0)`);
-    sheet.getRange(dataRow, 5).setFormula(`=IFERROR(TEXT(COUNTIFS('Grievance Log'!$${cols.gLocation}:$${cols.gLocation},"${location}",'Grievance Log'!$${cols.gStatus}:$${cols.gStatus},"Open"),"#,##0"),0)`);
-    sheet.getRange(dataRow, 6).setFormula(`=IFERROR(TEXT(COUNTIFS('Grievance Log'!$${cols.gLocation}:$${cols.gLocation},"${location}",'Grievance Log'!$${cols.gStatus}:$${cols.gStatus},"Settled")/(COUNTIFS('Grievance Log'!$${cols.gLocation}:$${cols.gLocation},"${location}",'Grievance Log'!$${cols.gStatus}:$${cols.gStatus},"Settled")+COUNTIFS('Grievance Log'!$${cols.gLocation}:$${cols.gLocation},"${location}",'Grievance Log'!$${cols.gStatus}:$${cols.gStatus},"Denied")),"0%"),"0%")`);
-    sheet.getRange(dataRow, 7).setFormula(`=IFERROR(ROUND(AVERAGEIFS('Grievance Log'!$${cols.gDaysOpen}:$${cols.gDaysOpen},'Grievance Log'!$${cols.gLocation}:$${cols.gLocation},"${location}",'Grievance Log'!$${cols.gDaysOpen}:$${cols.gDaysOpen},">0"),0),"-")`);
-    sheet.getRange(dataRow, 8).setFormula(`=IFERROR(TEXT(COUNTIFS('Member Directory'!$${cols.mLocation}:$${cols.mLocation},"${location}",'Member Directory'!$${cols.mIsSteward}:$${cols.mIsSteward},"Yes"),"#,##0"),0)`);
-    sheet.getRange(dataRow, 9).setFormula(`=IF(E${dataRow}>5,"High",IF(E${dataRow}>2,"Medium","Low"))`);
-    sheet.getRange(dataRow, 10).setFormula(`=IF(I${dataRow}="High","🔴",IF(I${dataRow}="Medium","🟡","🟢"))`);
+    // Total Members at this location
+    sheet.getRange(dataRow, 2).setFormula(`=IFERROR(IF(A${dataRow}="","",IF(A${dataRow}="No locations yet","0",TEXT(COUNTIF('Member Directory'!$${cols.mLocation}:$${cols.mLocation},A${dataRow}),"#,##0"))),"0")`);
+    // Members with grievances
+    sheet.getRange(dataRow, 3).setFormula(`=IFERROR(IF(A${dataRow}="","",IF(A${dataRow}="No locations yet","0",TEXT(COUNTIFS('Member Directory'!$${cols.mLocation}:$${cols.mLocation},A${dataRow},'Member Directory'!$${cols.mHasOpenGrievance}:$${cols.mHasOpenGrievance},"Yes"),"#,##0"))),"0")`);
+    // Total Cases
+    sheet.getRange(dataRow, 4).setFormula(`=IFERROR(IF(A${dataRow}="","",IF(A${dataRow}="No locations yet","0",TEXT(COUNTIF('Grievance Log'!$${cols.gLocation}:$${cols.gLocation},A${dataRow}),"#,##0"))),"0")`);
+    // Open Cases
+    sheet.getRange(dataRow, 5).setFormula(`=IFERROR(IF(A${dataRow}="","",IF(A${dataRow}="No locations yet","0",TEXT(COUNTIFS('Grievance Log'!$${cols.gLocation}:$${cols.gLocation},A${dataRow},'Grievance Log'!$${cols.gStatus}:$${cols.gStatus},"Open"),"#,##0"))),"0")`);
+    // Win Rate
+    sheet.getRange(dataRow, 6).setFormula(`=IFERROR(IF(A${dataRow}="","",IF(A${dataRow}="No locations yet","0%",TEXT(COUNTIFS('Grievance Log'!$${cols.gLocation}:$${cols.gLocation},A${dataRow},'Grievance Log'!$${cols.gStatus}:$${cols.gStatus},"Settled")/(COUNTIFS('Grievance Log'!$${cols.gLocation}:$${cols.gLocation},A${dataRow},'Grievance Log'!$${cols.gStatus}:$${cols.gStatus},"Settled")+COUNTIFS('Grievance Log'!$${cols.gLocation}:$${cols.gLocation},A${dataRow},'Grievance Log'!$${cols.gStatus}:$${cols.gStatus},"Denied")),"0%"))),"0%")`);
+    // Avg Days
+    sheet.getRange(dataRow, 7).setFormula(`=IFERROR(IF(A${dataRow}="","",IF(A${dataRow}="No locations yet","-",ROUND(AVERAGEIFS('Grievance Log'!$${cols.gDaysOpen}:$${cols.gDaysOpen},'Grievance Log'!$${cols.gLocation}:$${cols.gLocation},A${dataRow},'Grievance Log'!$${cols.gDaysOpen}:$${cols.gDaysOpen},">0"),0))),"-")`);
+    // Stewards at location
+    sheet.getRange(dataRow, 8).setFormula(`=IFERROR(IF(A${dataRow}="","",IF(A${dataRow}="No locations yet","0",TEXT(COUNTIFS('Member Directory'!$${cols.mLocation}:$${cols.mLocation},A${dataRow},'Member Directory'!$${cols.mIsSteward}:$${cols.mIsSteward},"Yes"),"#,##0"))),"0")`);
+    // Risk Level
+    sheet.getRange(dataRow, 9).setFormula(`=IF(A${dataRow}="","",IF(E${dataRow}>5,"High",IF(E${dataRow}>2,"Medium","Low")))`);
+    // Priority indicator
+    sheet.getRange(dataRow, 10).setFormula(`=IF(A${dataRow}="","",IF(I${dataRow}="High","🔴",IF(I${dataRow}="Medium","🟡","🟢")))`);
+    // Notes
     sheet.getRange(dataRow, 11).setValue("");
   }
 
-  sheet.getRange(startRow + 2, 2, locations.length + 1, 9).setHorizontalAlignment("center");
+  sheet.getRange(startRow + 2, 2, 16, 9).setHorizontalAlignment("center");
 }
 
 /**
@@ -36127,49 +36290,32 @@ function createTypeAnalysisSectionDynamic(sheet, startRow, cols) {
     .setFontWeight("bold")
     .setBackground(COLORS.LIGHT_GRAY);
 
-  // Get issue categories from ISSUE_CATEGORIES constant or Config
-  let issueTypes = [];
-  if (typeof ISSUE_CATEGORIES !== 'undefined' && Array.isArray(ISSUE_CATEGORIES)) {
-    issueTypes = ISSUE_CATEGORIES;
-  } else {
-    const ss = SpreadsheetApp.getActiveSpreadsheet();
-    const configSheet = ss.getSheetByName(SHEETS.CONFIG);
-    if (configSheet) {
-      const catCol = CONFIG_COLS.ISSUE_CATEGORY;
-      const lastRow = configSheet.getLastRow();
-      if (lastRow > 1) {
-        const values = configSheet.getRange(2, catCol, lastRow - 1, 1).getValues();
-        issueTypes = values.map(r => r[0]).filter(v => v !== '' && v !== null);
-      }
-    }
-  }
+  // Get unique issue categories dynamically from Grievance Log
+  // NOTE: Issue types are pulled from actual data in Grievance Log, not from Config
+  // This ensures the analytics always reflect real data
+  const dataRow1 = startRow + 2;
 
-  if (issueTypes.length === 0) {
-    issueTypes = ["Discipline", "Workload", "Scheduling", "Pay/Compensation", "Discrimination",
-                  "Safety", "Benefits", "Performance Evaluation", "Job Classification", "Layoff/Recall"];
-  }
+  // Use UNIQUE formula to get issue categories from Grievance Log (up to 15 types)
+  sheet.getRange(dataRow1, 1).setFormula(`=IFERROR(UNIQUE(FILTER('Grievance Log'!$${cols.gIssueCategory}:$${cols.gIssueCategory},'Grievance Log'!$${cols.gIssueCategory}:$${cols.gIssueCategory}<>"",'Grievance Log'!$${cols.gIssueCategory}:$${cols.gIssueCategory}<>"Issue Category")),"No issue types yet")`);
 
-  // Data rows for each issue type
-  for (let i = 0; i < Math.min(issueTypes.length, 15); i++) {
+  // Add formulas for all issue type analytics (will auto-populate based on types in column A)
+  for (let i = 0; i < 15; i++) {
     const dataRow = startRow + 2 + i;
-    const issueType = issueTypes[i];
-
-    sheet.getRange(dataRow, 1).setValue(issueType);
 
     // Total Cases
-    sheet.getRange(dataRow, 2).setFormula(`=IFERROR(TEXT(COUNTIF('Grievance Log'!$${cols.gIssueCategory}:$${cols.gIssueCategory},"*${issueType}*"),"#,##0"),0)`);
+    sheet.getRange(dataRow, 2).setFormula(`=IFERROR(IF(A${dataRow}="","",IF(A${dataRow}="No issue types yet","0",TEXT(COUNTIF('Grievance Log'!$${cols.gIssueCategory}:$${cols.gIssueCategory},A${dataRow}),"#,##0"))),"0")`);
 
     // Open Cases
-    sheet.getRange(dataRow, 3).setFormula(`=IFERROR(TEXT(COUNTIFS('Grievance Log'!$${cols.gIssueCategory}:$${cols.gIssueCategory},"*${issueType}*",'Grievance Log'!$${cols.gStatus}:$${cols.gStatus},"Open"),"#,##0"),0)`);
+    sheet.getRange(dataRow, 3).setFormula(`=IFERROR(IF(A${dataRow}="","",IF(A${dataRow}="No issue types yet","0",TEXT(COUNTIFS('Grievance Log'!$${cols.gIssueCategory}:$${cols.gIssueCategory},A${dataRow},'Grievance Log'!$${cols.gStatus}:$${cols.gStatus},"Open"),"#,##0"))),"0")`);
 
     // Resolved (Settled + Denied + Closed)
-    sheet.getRange(dataRow, 4).setFormula(`=IFERROR(TEXT(COUNTIFS('Grievance Log'!$${cols.gIssueCategory}:$${cols.gIssueCategory},"*${issueType}*",'Grievance Log'!$${cols.gStatus}:$${cols.gStatus},"Settled")+COUNTIFS('Grievance Log'!$${cols.gIssueCategory}:$${cols.gIssueCategory},"*${issueType}*",'Grievance Log'!$${cols.gStatus}:$${cols.gStatus},"Denied")+COUNTIFS('Grievance Log'!$${cols.gIssueCategory}:$${cols.gIssueCategory},"*${issueType}*",'Grievance Log'!$${cols.gStatus}:$${cols.gStatus},"Closed"),"#,##0"),0)`);
+    sheet.getRange(dataRow, 4).setFormula(`=IFERROR(IF(A${dataRow}="","",IF(A${dataRow}="No issue types yet","0",TEXT(COUNTIFS('Grievance Log'!$${cols.gIssueCategory}:$${cols.gIssueCategory},A${dataRow},'Grievance Log'!$${cols.gStatus}:$${cols.gStatus},"Settled")+COUNTIFS('Grievance Log'!$${cols.gIssueCategory}:$${cols.gIssueCategory},A${dataRow},'Grievance Log'!$${cols.gStatus}:$${cols.gStatus},"Denied")+COUNTIFS('Grievance Log'!$${cols.gIssueCategory}:$${cols.gIssueCategory},A${dataRow},'Grievance Log'!$${cols.gStatus}:$${cols.gStatus},"Closed"),"#,##0"))),"0")`);
 
     // Win Rate %
-    sheet.getRange(dataRow, 5).setFormula(`=IFERROR(TEXT(COUNTIFS('Grievance Log'!$${cols.gIssueCategory}:$${cols.gIssueCategory},"*${issueType}*",'Grievance Log'!$${cols.gStatus}:$${cols.gStatus},"Settled")/(COUNTIFS('Grievance Log'!$${cols.gIssueCategory}:$${cols.gIssueCategory},"*${issueType}*",'Grievance Log'!$${cols.gStatus}:$${cols.gStatus},"Settled")+COUNTIFS('Grievance Log'!$${cols.gIssueCategory}:$${cols.gIssueCategory},"*${issueType}*",'Grievance Log'!$${cols.gStatus}:$${cols.gStatus},"Denied")),"0%"),"N/A")`);
+    sheet.getRange(dataRow, 5).setFormula(`=IFERROR(IF(A${dataRow}="","",IF(A${dataRow}="No issue types yet","N/A",TEXT(COUNTIFS('Grievance Log'!$${cols.gIssueCategory}:$${cols.gIssueCategory},A${dataRow},'Grievance Log'!$${cols.gStatus}:$${cols.gStatus},"Settled")/(COUNTIFS('Grievance Log'!$${cols.gIssueCategory}:$${cols.gIssueCategory},A${dataRow},'Grievance Log'!$${cols.gStatus}:$${cols.gStatus},"Settled")+COUNTIFS('Grievance Log'!$${cols.gIssueCategory}:$${cols.gIssueCategory},A${dataRow},'Grievance Log'!$${cols.gStatus}:$${cols.gStatus},"Denied")),"0%"))),"N/A")`);
 
     // Avg Days
-    sheet.getRange(dataRow, 6).setFormula(`=IFERROR(ROUND(AVERAGEIFS('Grievance Log'!$${cols.gDaysOpen}:$${cols.gDaysOpen},'Grievance Log'!$${cols.gIssueCategory}:$${cols.gIssueCategory},"*${issueType}*",'Grievance Log'!$${cols.gDaysOpen}:$${cols.gDaysOpen},">0"),0),"N/A")`);
+    sheet.getRange(dataRow, 6).setFormula(`=IFERROR(IF(A${dataRow}="","",IF(A${dataRow}="No issue types yet","N/A",ROUND(AVERAGEIFS('Grievance Log'!$${cols.gDaysOpen}:$${cols.gDaysOpen},'Grievance Log'!$${cols.gIssueCategory}:$${cols.gIssueCategory},A${dataRow},'Grievance Log'!$${cols.gDaysOpen}:$${cols.gDaysOpen},">0"),0))),"N/A")`);
 
     // Top Location - simplified to avoid #ERROR!
     sheet.getRange(dataRow, 7).setValue("-");
@@ -36178,16 +36324,16 @@ function createTypeAnalysisSectionDynamic(sheet, startRow, cols) {
     sheet.getRange(dataRow, 8).setValue("-");
 
     // Trend
-    sheet.getRange(dataRow, 9).setFormula(`=IF(B${dataRow}>0,"📊 Active","➖ None")`);
+    sheet.getRange(dataRow, 9).setFormula(`=IF(A${dataRow}="","",IF(B${dataRow}>0,"📊 Active","➖ None"))`);
 
     // Priority Level
-    sheet.getRange(dataRow, 10).setFormula(`=IF(C${dataRow}>5,"🔴 High",IF(C${dataRow}>2,"🟡 Medium","🟢 Low"))`);
+    sheet.getRange(dataRow, 10).setFormula(`=IF(A${dataRow}="","",IF(C${dataRow}>5,"🔴 High",IF(C${dataRow}>2,"🟡 Medium","🟢 Low")))`);
 
     // Notes
     sheet.getRange(dataRow, 11).setValue("");
   }
 
-  sheet.getRange(startRow + 2, 2, issueTypes.length, 9).setHorizontalAlignment("center");
+  sheet.getRange(startRow + 2, 2, 15, 9).setHorizontalAlignment("center");
 }
 
 /**

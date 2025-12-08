@@ -66,7 +66,7 @@ function onGrievanceEdit(e) {
     const col = e.range.getColumn();
 
     // Only process if editing the Coordinator Notified column (AC = column 29)
-    if (col !== GRIEVANCE_COLS.COORDINATOR_NOTIFIED) return;
+    if (col !== GRIEVANCE_COLS.MESSAGE_ALERT) return;
 
     // Skip header row
     if (row === 1) return;
@@ -429,7 +429,7 @@ function showCoordinatorMessageDialog() {
     sheet.getRange(activeRow, GRIEVANCE_COLS.COORDINATOR_MESSAGE).setValue(message);
 
     // Check the checkbox to trigger notification
-    sheet.getRange(activeRow, GRIEVANCE_COLS.COORDINATOR_NOTIFIED).setValue(true);
+    sheet.getRange(activeRow, GRIEVANCE_COLS.MESSAGE_ALERT).setValue(true);
 
     ui.alert('Success',
       'Coordinator message saved and notifications sent!\n\n' +
@@ -475,7 +475,7 @@ function showBatchCoordinatorNotification() {
 
   for (let i = 1; i < data.length; i++) { // Skip header
     const row = i + 1;
-    const isChecked = data[i][GRIEVANCE_COLS.COORDINATOR_NOTIFIED - 1];
+    const isChecked = data[i][GRIEVANCE_COLS.MESSAGE_ALERT - 1];
 
     if (isChecked === true || isChecked === 'TRUE' || isChecked === 'Yes' || isChecked === '✓') {
       // Update message
@@ -525,7 +525,7 @@ function clearAllCoordinatorNotifications() {
 
   // Clear all checkboxes and highlighting (skip header)
   for (let row = 2; row <= lastRow; row++) {
-    sheet.getRange(row, GRIEVANCE_COLS.COORDINATOR_NOTIFIED).setValue(false);
+    sheet.getRange(row, GRIEVANCE_COLS.MESSAGE_ALERT).setValue(false);
     removeRowHighlight(sheet, row);
   }
 

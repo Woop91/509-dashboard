@@ -1,7 +1,7 @@
 # 509 Dashboard - Complete Feature Reference
 
-**Version:** 3.10
-**Last Updated:** 2025-12-07
+**Version:** 3.12
+**Last Updated:** 2025-12-08
 **Purpose:** Union grievance tracking and member engagement system for SEIU Local 509
 
 ---
@@ -46,7 +46,83 @@
 
 ---
 
-## 🆕 Changelog - Version 3.8 (2025-12-07)
+## 🆕 Changelog - Version 3.12 (2025-12-08)
+
+**GRIEVANCE LOG COLUMN RENAME & COMPREHENSIVE DASHBOARD MERGE:**
+
+✅ **Grievance Log Column AC Renamed** (`Code.gs`, `Constants.gs`, `CoordinatorNotification.gs`, `DashboardFixes.gs`)
+- Renamed column AC from "Coordinator Notified" to **"Message Alert"**
+- Updated `GRIEVANCE_COLS.COORDINATOR_NOTIFIED` to `GRIEVANCE_COLS.MESSAGE_ALERT`
+- All references updated throughout the codebase
+
+✅ **Comprehensive Executive Dashboard** (`Code.gs`)
+- **MERGED into Executive Dashboard:**
+  - Quick Stats (existing)
+  - KPI Performance Tracking (from KPI Performance Dashboard)
+  - Location Analytics (from Operations Analytics)
+  - Grievance Type Analysis (from Operations Analytics)
+- **DELETED standalone tabs:**
+  - 📊 Operations Analytics
+  - 📊 KPI Performance Dashboard
+- New `deleteStandaloneMergedTabs()` function removes merged tabs during CREATE_509_DASHBOARD
+
+✅ **Member Satisfaction Tab Hidden**
+- Tab is now HIDDEN during CREATE_509_DASHBOARD
+- **TODO:** User will wire this tab to Grievance Log and Member Directory later
+- Use `showMemberSatisfactionTab()` to unhide when ready
+
+**New Helper Functions:**
+- `deleteStandaloneMergedTabs()` - Deletes Operations Analytics and KPI Performance Dashboard tabs
+- `hideMemberSatisfactionTab()` - Hides Member Satisfaction tab
+- `showMemberSatisfactionTab()` - Shows Member Satisfaction tab (when ready to wire)
+
+**Files Modified:**
+- `Code.gs` - Comprehensive merged Executive Dashboard, helper functions, CREATE_509_DASHBOARD updates
+- `Constants.gs` - COORDINATOR_NOTIFIED → MESSAGE_ALERT
+- `CoordinatorNotification.gs` - Updated all MESSAGE_ALERT references
+- `DashboardFixes.gs` - Updated MESSAGE_ALERT reference
+- `AI_REFERENCE.md` - Updated documentation
+
+---
+
+## Changelog - Version 3.11 (2025-12-08)
+
+**REMOVED SAMPLE DATA FROM CONFIG TAB & DYNAMIC ANALYTICS:**
+
+✅ **Config Tab Sample Data Removed** (`Code.gs`)
+- The following fields are now LEFT EMPTY during CREATE_509_DASHBOARD (users populate their own data):
+  - Job Titles (Column A)
+  - Office Locations (Column B)
+  - Units (Column C)
+  - Supervisors (Column F)
+  - Managers (Column G)
+  - Stewards (Column H)
+  - Grievance Coordinators (Column O)
+  - Home Towns (Column AF)
+- **PRESERVED:** Organization info, Grievance Settings, Deadlines, Contract References, Office Days, Yes/No values, Issue Categories, Articles Violated, Communication Methods, Steward Committees
+
+✅ **Operations Analytics Now Fully Dynamic** (`OperationsAnalytics.gs`)
+- **Location Analytics Section:** Now uses `UNIQUE()` formula to pull locations directly from Member Directory
+  - No more hardcoded fallback locations
+  - Dynamically shows only locations that exist in Member Directory
+  - All metrics (members, grievances, win rate, etc.) reference actual Member Directory and Grievance Log data
+- **Type Analysis Section:** Now uses `UNIQUE()` formula to pull issue categories directly from Grievance Log
+  - No more hardcoded fallback issue types
+  - Dynamically shows only issue types that exist in Grievance Log data
+
+✅ **Dashboard Tabs Already Wired (Verified):**
+- Member Satisfaction: Uses formulas referencing its own data columns
+- Executive Dashboard: All metrics reference 'Member Directory' and 'Grievance Log'
+- KPI Performance Dashboard: All KPIs reference 'Member Directory' and 'Grievance Log'
+
+**Files Modified:**
+- `Code.gs` - Removed sample data from createConfigTab() for specified fields
+- `OperationsAnalytics.gs` - Updated Location Analytics and Type Analysis to use UNIQUE() formulas
+- `AI_REFERENCE.md` - Updated documentation
+
+---
+
+## Changelog - Version 3.8 (2025-12-07)
 
 **COMPREHENSIVE DASHBOARD FIXES & SEED/NUKE ALIGNMENT:**
 
@@ -402,11 +478,12 @@ Features existed in codebase but were not accessible from menu. All restored:
 **CONFIG TAB ENHANCEMENTS & NUKE IMPROVEMENTS:**
 
 ✅ **Enhanced `nukeSeedData()` Function** (`SeedNuke.gs`)
-- Clears **Config tab demo entries** (demo data):
+- Clears **Config tab demo entries** (demo data) if any exist:
   - Job Titles (A), Office Locations (B), Units (C)
   - Supervisors (F), Managers (G), Stewards (H)
   - Grievance Coordinators (O), Home Towns (AF)
   - Office Addresses (AN)
+- **NOTE (v3.11+):** These fields are now LEFT EMPTY during CREATE_509_DASHBOARD, so there's nothing to clear unless user added their own data
 - **PRESERVES Organization Info** (never cleared):
   - Org Name (U), Local Number (V), Main Address (W), Main Phone (X)
   - Union Parent (AK), State/Region (AL), Website (AM)
@@ -959,20 +1036,24 @@ The 509 Dashboard is a comprehensive Google Apps Script-based union management s
 
 **Columns (13 total):**
 ```
-A: Job Titles (Coordinator, Analyst, Case Manager, etc.)
-B: Office Locations (Boston HQ, Worcester Office, etc.)
-C: Units (Unit A - Administrative, Unit B - Technical, etc.)
+A: Job Titles (EMPTY - user populates)
+B: Office Locations (EMPTY - user populates)
+C: Units (EMPTY - user populates)
 D: Office Days (Monday-Sunday)
 E: Yes/No (generic Y/N validation)
-F: Supervisors (names)
-G: Managers (names)
-H: Stewards (names)
+F: Supervisors (EMPTY - user populates)
+G: Managers (EMPTY - user populates)
+H: Stewards (EMPTY - user populates)
 I: Grievance Status (Open, Pending Info, Settled, Withdrawn, etc.)
 J: Grievance Step (Informal, Step I, Step II, Step III, Mediation, Arbitration)
 K: Issue Category (Discipline, Workload, Scheduling, Pay, etc.)
 L: Articles Violated (Art. 1 - Recognition, Art. 23 - Grievance Procedure, etc.)
 M: Communication Methods (Email, Phone, Text, In Person)
+O: Grievance Coordinators (EMPTY - user populates)
+AF: Home Towns (EMPTY - user populates)
 ```
+
+**NOTE:** Job Titles, Office Locations, Units, Supervisors, Managers, Stewards, Grievance Coordinators, and Home Towns are intentionally left empty during CREATE_509_DASHBOARD. Users should populate these columns with their organization's specific data.
 
 **Styling:**
 - Header row: Bold, dark gray background (#4A5568), white text
@@ -3474,7 +3555,7 @@ All errors logged here with timestamps.
 **Purpose:** Checkbox-based row highlighting and email notifications for grievance coordinator messages with steward acknowledgment tracking
 
 **Grievance Log Columns Added:**
-- **Column AC (29):** ✓ Coordinator Notified - Checkbox column (checked by coordinator, unchecked by steward)
+- **Column AC (29):** ✓ Message Alert - Checkbox column (checked by coordinator, unchecked by steward)
 - **Column AD (30):** Coordinator Message - Text message from coordinator (PERMANENT - never cleared)
 - **Column AE (31):** Acknowledged By - Email of steward who acknowledged (auto-filled when unchecked)
 - **Column AF (32):** Acknowledged Date - Timestamp of acknowledgment (auto-filled when unchecked)
@@ -3596,7 +3677,7 @@ When a steward unchecks the "Coordinator Notified" checkbox:
 5. Acknowledgment is logged to Audit_Log
 
 **Grievance Log Columns Added:**
-- **Column AC (29):** ✓ Coordinator Notified - Checkbox column (checked by coordinator, unchecked by steward)
+- **Column AC (29):** ✓ Message Alert - Checkbox column (checked by coordinator, unchecked by steward)
 - **Column AD (30):** Coordinator Message - Text message from coordinator (PERMANENT - never cleared)
 - **Column AE (31):** Acknowledged By - Email of steward who acknowledged (auto-filled when unchecked)
 - **Column AF (32):** Acknowledged Date - Timestamp of acknowledgment (auto-filled when unchecked)
@@ -3749,7 +3830,7 @@ SEIU Local 509 Grievance Coordinator
 **Menu Location:** Grievance Tools submenu
 
 **Data Validation:**
-- Column AC (Coordinator Notified): Checkbox validation (true/false)
+- Column AC (Message Alert): Checkbox validation (true/false)
 - Column AD (Coordinator Message): Free text entry (permanent record)
 - Column AE (Acknowledged By): Auto-filled (steward email)
 - Column AF (Acknowledged Date): Auto-filled (timestamp)

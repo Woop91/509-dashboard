@@ -204,7 +204,7 @@ const GRIEVANCE_COLS = {
   // Section 10: Resolution (AB)
   RESOLUTION: 28,         // AB - Resolution Summary
   // Section 11: Coordinator Notifications (AC-AF) - Feature 95
-  COORDINATOR_NOTIFIED: 29,  // AC - Checkbox for coordinator message
+  MESSAGE_ALERT: 29,  // AC - Message Alert checkbox (formerly Coordinator Notified)
   COORDINATOR_MESSAGE: 30,   // AD - Coordinator's message text
   ACKNOWLEDGED_BY: 31,       // AE - Steward who acknowledged
   ACKNOWLEDGED_DATE: 32,     // AF - When steward acknowledged
