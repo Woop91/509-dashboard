@@ -346,10 +346,16 @@ function writeDashboardData(metrics, chartData) {
   Logger.log('Writing dashboard data...');
 
   const ss = SpreadsheetApp.getActiveSpreadsheet();
-  const dashboard = ss.getSheetByName(SHEETS.DASHBOARD);
+  let dashboard = ss.getSheetByName(SHEETS.DASHBOARD);
 
+  // Auto-create Dashboard sheet if missing
   if (!dashboard) {
-    throw new Error('Dashboard sheet not found');
+    Logger.log('Dashboard sheet not found - auto-creating via setupRequiredSheets()');
+    setupRequiredSheets();
+    dashboard = ss.getSheetByName(SHEETS.DASHBOARD);
+    if (!dashboard) {
+      throw new Error('Failed to create Dashboard sheet');
+    }
   }
 
   // Prepare all data to write

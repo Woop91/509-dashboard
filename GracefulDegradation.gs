@@ -133,17 +133,29 @@ function rebuildDashboardMinimal() {
   Logger.log('Building minimal dashboard (KPIs only)...');
 
   const ss = SpreadsheetApp.getActiveSpreadsheet();
-  const dashboard = ss.getSheetByName(SHEETS.DASHBOARD);
+  let dashboard = ss.getSheetByName(SHEETS.DASHBOARD);
 
+  // Auto-create missing sheets
   if (!dashboard) {
-    throw new Error('Dashboard sheet not found');
+    Logger.log('Dashboard sheet not found - auto-creating via setupRequiredSheets()');
+    setupRequiredSheets();
+    dashboard = ss.getSheetByName(SHEETS.DASHBOARD);
+    if (!dashboard) {
+      throw new Error('Failed to create Dashboard sheet');
+    }
   }
 
-  const memberSheet = ss.getSheetByName(SHEETS.MEMBER_DIR);
-  const grievanceSheet = ss.getSheetByName(SHEETS.GRIEVANCE_LOG);
+  let memberSheet = ss.getSheetByName(SHEETS.MEMBER_DIR);
+  let grievanceSheet = ss.getSheetByName(SHEETS.GRIEVANCE_LOG);
 
   if (!memberSheet || !grievanceSheet) {
-    throw new Error('Required sheets not found');
+    Logger.log('Required sheets not found - auto-creating via setupRequiredSheets()');
+    setupRequiredSheets();
+    memberSheet = ss.getSheetByName(SHEETS.MEMBER_DIR);
+    grievanceSheet = ss.getSheetByName(SHEETS.GRIEVANCE_LOG);
+    if (!memberSheet || !grievanceSheet) {
+      throw new Error('Failed to create required sheets');
+    }
   }
 
   try {
@@ -208,10 +220,16 @@ function showCachedDashboard() {
   Logger.log('Attempting to show cached dashboard...');
 
   const ss = SpreadsheetApp.getActiveSpreadsheet();
-  const dashboard = ss.getSheetByName(SHEETS.DASHBOARD);
+  let dashboard = ss.getSheetByName(SHEETS.DASHBOARD);
 
+  // Auto-create Dashboard sheet if missing
   if (!dashboard) {
-    throw new Error('Dashboard sheet not found');
+    Logger.log('Dashboard sheet not found - auto-creating via setupRequiredSheets()');
+    setupRequiredSheets();
+    dashboard = ss.getSheetByName(SHEETS.DASHBOARD);
+    if (!dashboard) {
+      throw new Error('Failed to create Dashboard sheet');
+    }
   }
 
   // Check if we have cached data

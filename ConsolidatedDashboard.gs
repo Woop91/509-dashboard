@@ -14,7 +14,7 @@
  * Build Info:
  * - Version: 2.1.0 (Security Enhanced + Code Review Improvements)
  * - Build ID: 20251202-improvements
- * - Build Date: 2025-12-08T02:19:06.291Z
+ * - Build Date: 2025-12-08T04:44:48.260Z
  * - Build Type: DEVELOPMENT
  * - Modules: 79 files
  * - Tests Included: Yes
@@ -1259,6 +1259,38 @@ function setupRequiredSheets() {
     }
   } catch (e) {
     results.errors.push('Config: ' + e.message);
+  }
+
+  // Setup Dashboard sheet
+  try {
+    let dashboardSheet = ss.getSheetByName(SHEETS.DASHBOARD);
+    if (!dashboardSheet) {
+      dashboardSheet = ss.insertSheet(SHEETS.DASHBOARD);
+      dashboardSheet.getRange(1, 1).setValue('Dashboard').setFontWeight('bold').setFontSize(14);
+      results.created.push(SHEETS.DASHBOARD);
+    } else {
+      results.existing.push(SHEETS.DASHBOARD);
+    }
+  } catch (e) {
+    results.errors.push('Dashboard: ' + e.message);
+  }
+
+  // Setup Analytics Data sheet (hidden)
+  try {
+    let analyticsSheet = ss.getSheetByName(SHEETS.ANALYTICS);
+    if (!analyticsSheet) {
+      analyticsSheet = ss.insertSheet(SHEETS.ANALYTICS);
+      analyticsSheet.getRange(1, 1, 1, 5)
+        .setValues([['Metric', 'Value', 'Date', 'Category', 'Notes']])
+        .setFontWeight('bold')
+        .setBackground('#E8F0FE');
+      analyticsSheet.setFrozenRows(1);
+      results.created.push(SHEETS.ANALYTICS);
+    } else {
+      results.existing.push(SHEETS.ANALYTICS);
+    }
+  } catch (e) {
+    results.errors.push('Analytics Data: ' + e.message);
   }
 
   return results;
@@ -26617,17 +26649,29 @@ function rebuildDashboardMinimal() {
   Logger.log('Building minimal dashboard (KPIs only)...');
 
   const ss = SpreadsheetApp.getActiveSpreadsheet();
-  const dashboard = ss.getSheetByName(SHEETS.DASHBOARD);
+  let dashboard = ss.getSheetByName(SHEETS.DASHBOARD);
 
+  // Auto-create missing sheets
   if (!dashboard) {
-    throw new Error('Dashboard sheet not found');
+    Logger.log('Dashboard sheet not found - auto-creating via setupRequiredSheets()');
+    setupRequiredSheets();
+    dashboard = ss.getSheetByName(SHEETS.DASHBOARD);
+    if (!dashboard) {
+      throw new Error('Failed to create Dashboard sheet');
+    }
   }
 
-  const memberSheet = ss.getSheetByName(SHEETS.MEMBER_DIR);
-  const grievanceSheet = ss.getSheetByName(SHEETS.GRIEVANCE_LOG);
+  let memberSheet = ss.getSheetByName(SHEETS.MEMBER_DIR);
+  let grievanceSheet = ss.getSheetByName(SHEETS.GRIEVANCE_LOG);
 
   if (!memberSheet || !grievanceSheet) {
-    throw new Error('Required sheets not found');
+    Logger.log('Required sheets not found - auto-creating via setupRequiredSheets()');
+    setupRequiredSheets();
+    memberSheet = ss.getSheetByName(SHEETS.MEMBER_DIR);
+    grievanceSheet = ss.getSheetByName(SHEETS.GRIEVANCE_LOG);
+    if (!memberSheet || !grievanceSheet) {
+      throw new Error('Failed to create required sheets');
+    }
   }
 
   try {
@@ -26692,10 +26736,16 @@ function showCachedDashboard() {
   Logger.log('Attempting to show cached dashboard...');
 
   const ss = SpreadsheetApp.getActiveSpreadsheet();
-  const dashboard = ss.getSheetByName(SHEETS.DASHBOARD);
+  let dashboard = ss.getSheetByName(SHEETS.DASHBOARD);
 
+  // Auto-create Dashboard sheet if missing
   if (!dashboard) {
-    throw new Error('Dashboard sheet not found');
+    Logger.log('Dashboard sheet not found - auto-creating via setupRequiredSheets()');
+    setupRequiredSheets();
+    dashboard = ss.getSheetByName(SHEETS.DASHBOARD);
+    if (!dashboard) {
+      throw new Error('Failed to create Dashboard sheet');
+    }
   }
 
   // Check if we have cached data
@@ -37591,10 +37641,16 @@ function writeDashboardData(metrics, chartData) {
   Logger.log('Writing dashboard data...');
 
   const ss = SpreadsheetApp.getActiveSpreadsheet();
-  const dashboard = ss.getSheetByName(SHEETS.DASHBOARD);
+  let dashboard = ss.getSheetByName(SHEETS.DASHBOARD);
 
+  // Auto-create Dashboard sheet if missing
   if (!dashboard) {
-    throw new Error('Dashboard sheet not found');
+    Logger.log('Dashboard sheet not found - auto-creating via setupRequiredSheets()');
+    setupRequiredSheets();
+    dashboard = ss.getSheetByName(SHEETS.DASHBOARD);
+    if (!dashboard) {
+      throw new Error('Failed to create Dashboard sheet');
+    }
   }
 
   // Prepare all data to write
