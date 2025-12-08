@@ -367,6 +367,12 @@ function createCommunicationsLogSheet(ss) {
   sheet.setFrozenRows(1);
   sheet.setColumnWidth(7, 400); // Message column wider
 
+  // Delete unused columns beyond the defined headers (9 columns)
+  const totalCols = sheet.getMaxColumns();
+  if (totalCols > headers.length) {
+    sheet.deleteColumns(headers.length + 1, totalCols - headers.length);
+  }
+
   return sheet;
 }
 

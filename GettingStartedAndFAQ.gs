@@ -291,6 +291,12 @@ function createGettingStartedSheet(ss) {
   // Freeze header row
   sheet.setFrozenRows(1);
 
+  // Delete unused columns beyond column D (4 columns)
+  const totalCols = sheet.getMaxColumns();
+  if (totalCols > 4) {
+    sheet.deleteColumns(5, totalCols - 4);
+  }
+
   return sheet;
 }
 
@@ -474,6 +480,12 @@ function createFAQSheet(ss) {
 
   // Freeze header row
   sheet.setFrozenRows(1);
+
+  // Delete unused columns beyond column C (3 columns)
+  const totalColsFAQ = sheet.getMaxColumns();
+  if (totalColsFAQ > 3) {
+    sheet.deleteColumns(4, totalColsFAQ - 3);
+  }
 
   return sheet;
 }

@@ -64,6 +64,12 @@ function recreateAuditLogSheet() {
   // Set tab color
   auditLog.setTabColor('#DC2626'); // Red for security/audit
 
+  // Delete unused columns beyond the defined headers (10 columns)
+  const totalCols = auditLog.getMaxColumns();
+  if (totalCols > headers.length) {
+    auditLog.deleteColumns(headers.length + 1, totalCols - headers.length);
+  }
+
   Logger.log('Audit_Log sheet created successfully');
 }
 

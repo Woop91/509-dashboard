@@ -357,6 +357,12 @@ function createUserSettingsSheet() {
   sheet.setColumnWidth(3, 200);
   sheet.setColumnWidth(6, 300);
 
+  // Delete unused columns beyond column F (6 columns)
+  const totalCols = sheet.getMaxColumns();
+  if (totalCols > 6) {
+    sheet.deleteColumns(7, totalCols - 6);
+  }
+
   // Hide gridlines
   sheet.setHiddenGridlines(true);
 

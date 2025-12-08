@@ -82,6 +82,12 @@ function createFAQDatabaseSheet() {
   // Freeze header
   faqSheet.setFrozenRows(1);
 
+  // Delete unused columns beyond the defined headers (11 columns)
+  const totalCols = faqSheet.getMaxColumns();
+  if (totalCols > headers.length) {
+    faqSheet.deleteColumns(headers.length + 1, totalCols - headers.length);
+  }
+
   // Add initial FAQs
   seedInitialFAQs();
 
