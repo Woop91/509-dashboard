@@ -262,43 +262,46 @@ function createLocationSectionDynamic(sheet, startRow, cols) {
   sheet.getRange(summaryRow, 11).setValue("Summary");
   sheet.getRange(summaryRow, 1, 1, 11).setBackground(COLORS.WARNING_LIGHT);
 
-  // Get locations from Config sheet
-  const ss = SpreadsheetApp.getActiveSpreadsheet();
-  const configSheet = ss.getSheetByName(SHEETS.CONFIG);
-  let locations = [];
+  // Get unique locations dynamically from Member Directory
+  // NOTE: Locations are pulled from actual data in Member Directory, not from Config
+  // This ensures the analytics always reflect real data
+  const dataRow1 = startRow + 3;
 
-  if (configSheet) {
-    const locationCol = CONFIG_COLS.OFFICE_LOCATIONS;
-    const lastRow = configSheet.getLastRow();
-    if (lastRow > 1) {
-      const values = configSheet.getRange(2, locationCol, lastRow - 1, 1).getValues();
-      locations = values.map(r => r[0]).filter(v => v !== '' && v !== null);
-    }
-  }
+  // Use UNIQUE formula to get locations from Member Directory (up to 15 locations)
+  // Row format: Location | Members | With Grievances | Total Cases | Open | Win Rate | Avg Days | Stewards | Risk | Priority | Notes
+  sheet.getRange(dataRow1, 1).setFormula(`=IFERROR(UNIQUE(FILTER('Member Directory'!$${cols.mLocation}:$${cols.mLocation},'Member Directory'!$${cols.mLocation}:$${cols.mLocation}<>"",'Member Directory'!$${cols.mLocation}:$${cols.mLocation}<>"Work Location (Site)")),"No locations yet")`);
 
-  if (locations.length === 0) {
-    locations = ["Boston HQ", "Springfield Office", "Worcester Office", "Cambridge Office", "Lowell Office"];
-  }
-
-  // Data rows for each location
-  for (let i = 0; i < Math.min(locations.length, 15); i++) {
+  // Add ARRAYFORMULA for all location analytics (will auto-populate based on locations in column A)
+  for (let i = 0; i < 15; i++) {
     const dataRow = startRow + 3 + i;
-    const location = locations[i];
+    // Skip first row which has the UNIQUE formula - other rows will auto-populate from UNIQUE
+    if (i > 0) {
+      // These cells will be populated by the UNIQUE array spill, no need to set formulas
+    }
 
-    sheet.getRange(dataRow, 1).setValue(location);
-    sheet.getRange(dataRow, 2).setFormula(`=IFERROR(TEXT(COUNTIF('Member Directory'!$${cols.mLocation}:$${cols.mLocation},"${location}"),"#,##0"),0)`);
-    sheet.getRange(dataRow, 3).setFormula(`=IFERROR(TEXT(COUNTIFS('Member Directory'!$${cols.mLocation}:$${cols.mLocation},"${location}",'Member Directory'!$${cols.mHasOpenGrievance}:$${cols.mHasOpenGrievance},"Yes"),"#,##0"),0)`);
-    sheet.getRange(dataRow, 4).setFormula(`=IFERROR(TEXT(COUNTIF('Grievance Log'!$${cols.gLocation}:$${cols.gLocation},"${location}"),"#,##0"),0)`);
-    sheet.getRange(dataRow, 5).setFormula(`=IFERROR(TEXT(COUNTIFS('Grievance Log'!$${cols.gLocation}:$${cols.gLocation},"${location}",'Grievance Log'!$${cols.gStatus}:$${cols.gStatus},"Open"),"#,##0"),0)`);
-    sheet.getRange(dataRow, 6).setFormula(`=IFERROR(TEXT(COUNTIFS('Grievance Log'!$${cols.gLocation}:$${cols.gLocation},"${location}",'Grievance Log'!$${cols.gStatus}:$${cols.gStatus},"Settled")/(COUNTIFS('Grievance Log'!$${cols.gLocation}:$${cols.gLocation},"${location}",'Grievance Log'!$${cols.gStatus}:$${cols.gStatus},"Settled")+COUNTIFS('Grievance Log'!$${cols.gLocation}:$${cols.gLocation},"${location}",'Grievance Log'!$${cols.gStatus}:$${cols.gStatus},"Denied")),"0%"),"0%")`);
-    sheet.getRange(dataRow, 7).setFormula(`=IFERROR(ROUND(AVERAGEIFS('Grievance Log'!$${cols.gDaysOpen}:$${cols.gDaysOpen},'Grievance Log'!$${cols.gLocation}:$${cols.gLocation},"${location}",'Grievance Log'!$${cols.gDaysOpen}:$${cols.gDaysOpen},">0"),0),"-")`);
-    sheet.getRange(dataRow, 8).setFormula(`=IFERROR(TEXT(COUNTIFS('Member Directory'!$${cols.mLocation}:$${cols.mLocation},"${location}",'Member Directory'!$${cols.mIsSteward}:$${cols.mIsSteward},"Yes"),"#,##0"),0)`);
-    sheet.getRange(dataRow, 9).setFormula(`=IF(E${dataRow}>5,"High",IF(E${dataRow}>2,"Medium","Low"))`);
-    sheet.getRange(dataRow, 10).setFormula(`=IF(I${dataRow}="High","🔴",IF(I${dataRow}="Medium","🟡","🟢"))`);
+    // Total Members at this location
+    sheet.getRange(dataRow, 2).setFormula(`=IFERROR(IF(A${dataRow}="","",IF(A${dataRow}="No locations yet","0",TEXT(COUNTIF('Member Directory'!$${cols.mLocation}:$${cols.mLocation},A${dataRow}),"#,##0"))),"0")`);
+    // Members with grievances
+    sheet.getRange(dataRow, 3).setFormula(`=IFERROR(IF(A${dataRow}="","",IF(A${dataRow}="No locations yet","0",TEXT(COUNTIFS('Member Directory'!$${cols.mLocation}:$${cols.mLocation},A${dataRow},'Member Directory'!$${cols.mHasOpenGrievance}:$${cols.mHasOpenGrievance},"Yes"),"#,##0"))),"0")`);
+    // Total Cases
+    sheet.getRange(dataRow, 4).setFormula(`=IFERROR(IF(A${dataRow}="","",IF(A${dataRow}="No locations yet","0",TEXT(COUNTIF('Grievance Log'!$${cols.gLocation}:$${cols.gLocation},A${dataRow}),"#,##0"))),"0")`);
+    // Open Cases
+    sheet.getRange(dataRow, 5).setFormula(`=IFERROR(IF(A${dataRow}="","",IF(A${dataRow}="No locations yet","0",TEXT(COUNTIFS('Grievance Log'!$${cols.gLocation}:$${cols.gLocation},A${dataRow},'Grievance Log'!$${cols.gStatus}:$${cols.gStatus},"Open"),"#,##0"))),"0")`);
+    // Win Rate
+    sheet.getRange(dataRow, 6).setFormula(`=IFERROR(IF(A${dataRow}="","",IF(A${dataRow}="No locations yet","0%",TEXT(COUNTIFS('Grievance Log'!$${cols.gLocation}:$${cols.gLocation},A${dataRow},'Grievance Log'!$${cols.gStatus}:$${cols.gStatus},"Settled")/(COUNTIFS('Grievance Log'!$${cols.gLocation}:$${cols.gLocation},A${dataRow},'Grievance Log'!$${cols.gStatus}:$${cols.gStatus},"Settled")+COUNTIFS('Grievance Log'!$${cols.gLocation}:$${cols.gLocation},A${dataRow},'Grievance Log'!$${cols.gStatus}:$${cols.gStatus},"Denied")),"0%"))),"0%")`);
+    // Avg Days
+    sheet.getRange(dataRow, 7).setFormula(`=IFERROR(IF(A${dataRow}="","",IF(A${dataRow}="No locations yet","-",ROUND(AVERAGEIFS('Grievance Log'!$${cols.gDaysOpen}:$${cols.gDaysOpen},'Grievance Log'!$${cols.gLocation}:$${cols.gLocation},A${dataRow},'Grievance Log'!$${cols.gDaysOpen}:$${cols.gDaysOpen},">0"),0))),"-")`);
+    // Stewards at location
+    sheet.getRange(dataRow, 8).setFormula(`=IFERROR(IF(A${dataRow}="","",IF(A${dataRow}="No locations yet","0",TEXT(COUNTIFS('Member Directory'!$${cols.mLocation}:$${cols.mLocation},A${dataRow},'Member Directory'!$${cols.mIsSteward}:$${cols.mIsSteward},"Yes"),"#,##0"))),"0")`);
+    // Risk Level
+    sheet.getRange(dataRow, 9).setFormula(`=IF(A${dataRow}="","",IF(E${dataRow}>5,"High",IF(E${dataRow}>2,"Medium","Low")))`);
+    // Priority indicator
+    sheet.getRange(dataRow, 10).setFormula(`=IF(A${dataRow}="","",IF(I${dataRow}="High","🔴",IF(I${dataRow}="Medium","🟡","🟢")))`);
+    // Notes
     sheet.getRange(dataRow, 11).setValue("");
   }
 
-  sheet.getRange(startRow + 2, 2, locations.length + 1, 9).setHorizontalAlignment("center");
+  sheet.getRange(startRow + 2, 2, 16, 9).setHorizontalAlignment("center");
 }
 
 /**
@@ -323,49 +326,32 @@ function createTypeAnalysisSectionDynamic(sheet, startRow, cols) {
     .setFontWeight("bold")
     .setBackground(COLORS.LIGHT_GRAY);
 
-  // Get issue categories from ISSUE_CATEGORIES constant or Config
-  let issueTypes = [];
-  if (typeof ISSUE_CATEGORIES !== 'undefined' && Array.isArray(ISSUE_CATEGORIES)) {
-    issueTypes = ISSUE_CATEGORIES;
-  } else {
-    const ss = SpreadsheetApp.getActiveSpreadsheet();
-    const configSheet = ss.getSheetByName(SHEETS.CONFIG);
-    if (configSheet) {
-      const catCol = CONFIG_COLS.ISSUE_CATEGORY;
-      const lastRow = configSheet.getLastRow();
-      if (lastRow > 1) {
-        const values = configSheet.getRange(2, catCol, lastRow - 1, 1).getValues();
-        issueTypes = values.map(r => r[0]).filter(v => v !== '' && v !== null);
-      }
-    }
-  }
+  // Get unique issue categories dynamically from Grievance Log
+  // NOTE: Issue types are pulled from actual data in Grievance Log, not from Config
+  // This ensures the analytics always reflect real data
+  const dataRow1 = startRow + 2;
 
-  if (issueTypes.length === 0) {
-    issueTypes = ["Discipline", "Workload", "Scheduling", "Pay/Compensation", "Discrimination",
-                  "Safety", "Benefits", "Performance Evaluation", "Job Classification", "Layoff/Recall"];
-  }
+  // Use UNIQUE formula to get issue categories from Grievance Log (up to 15 types)
+  sheet.getRange(dataRow1, 1).setFormula(`=IFERROR(UNIQUE(FILTER('Grievance Log'!$${cols.gIssueCategory}:$${cols.gIssueCategory},'Grievance Log'!$${cols.gIssueCategory}:$${cols.gIssueCategory}<>"",'Grievance Log'!$${cols.gIssueCategory}:$${cols.gIssueCategory}<>"Issue Category")),"No issue types yet")`);
 
-  // Data rows for each issue type
-  for (let i = 0; i < Math.min(issueTypes.length, 15); i++) {
+  // Add formulas for all issue type analytics (will auto-populate based on types in column A)
+  for (let i = 0; i < 15; i++) {
     const dataRow = startRow + 2 + i;
-    const issueType = issueTypes[i];
-
-    sheet.getRange(dataRow, 1).setValue(issueType);
 
     // Total Cases
-    sheet.getRange(dataRow, 2).setFormula(`=IFERROR(TEXT(COUNTIF('Grievance Log'!$${cols.gIssueCategory}:$${cols.gIssueCategory},"*${issueType}*"),"#,##0"),0)`);
+    sheet.getRange(dataRow, 2).setFormula(`=IFERROR(IF(A${dataRow}="","",IF(A${dataRow}="No issue types yet","0",TEXT(COUNTIF('Grievance Log'!$${cols.gIssueCategory}:$${cols.gIssueCategory},A${dataRow}),"#,##0"))),"0")`);
 
     // Open Cases
-    sheet.getRange(dataRow, 3).setFormula(`=IFERROR(TEXT(COUNTIFS('Grievance Log'!$${cols.gIssueCategory}:$${cols.gIssueCategory},"*${issueType}*",'Grievance Log'!$${cols.gStatus}:$${cols.gStatus},"Open"),"#,##0"),0)`);
+    sheet.getRange(dataRow, 3).setFormula(`=IFERROR(IF(A${dataRow}="","",IF(A${dataRow}="No issue types yet","0",TEXT(COUNTIFS('Grievance Log'!$${cols.gIssueCategory}:$${cols.gIssueCategory},A${dataRow},'Grievance Log'!$${cols.gStatus}:$${cols.gStatus},"Open"),"#,##0"))),"0")`);
 
     // Resolved (Settled + Denied + Closed)
-    sheet.getRange(dataRow, 4).setFormula(`=IFERROR(TEXT(COUNTIFS('Grievance Log'!$${cols.gIssueCategory}:$${cols.gIssueCategory},"*${issueType}*",'Grievance Log'!$${cols.gStatus}:$${cols.gStatus},"Settled")+COUNTIFS('Grievance Log'!$${cols.gIssueCategory}:$${cols.gIssueCategory},"*${issueType}*",'Grievance Log'!$${cols.gStatus}:$${cols.gStatus},"Denied")+COUNTIFS('Grievance Log'!$${cols.gIssueCategory}:$${cols.gIssueCategory},"*${issueType}*",'Grievance Log'!$${cols.gStatus}:$${cols.gStatus},"Closed"),"#,##0"),0)`);
+    sheet.getRange(dataRow, 4).setFormula(`=IFERROR(IF(A${dataRow}="","",IF(A${dataRow}="No issue types yet","0",TEXT(COUNTIFS('Grievance Log'!$${cols.gIssueCategory}:$${cols.gIssueCategory},A${dataRow},'Grievance Log'!$${cols.gStatus}:$${cols.gStatus},"Settled")+COUNTIFS('Grievance Log'!$${cols.gIssueCategory}:$${cols.gIssueCategory},A${dataRow},'Grievance Log'!$${cols.gStatus}:$${cols.gStatus},"Denied")+COUNTIFS('Grievance Log'!$${cols.gIssueCategory}:$${cols.gIssueCategory},A${dataRow},'Grievance Log'!$${cols.gStatus}:$${cols.gStatus},"Closed"),"#,##0"))),"0")`);
 
     // Win Rate %
-    sheet.getRange(dataRow, 5).setFormula(`=IFERROR(TEXT(COUNTIFS('Grievance Log'!$${cols.gIssueCategory}:$${cols.gIssueCategory},"*${issueType}*",'Grievance Log'!$${cols.gStatus}:$${cols.gStatus},"Settled")/(COUNTIFS('Grievance Log'!$${cols.gIssueCategory}:$${cols.gIssueCategory},"*${issueType}*",'Grievance Log'!$${cols.gStatus}:$${cols.gStatus},"Settled")+COUNTIFS('Grievance Log'!$${cols.gIssueCategory}:$${cols.gIssueCategory},"*${issueType}*",'Grievance Log'!$${cols.gStatus}:$${cols.gStatus},"Denied")),"0%"),"N/A")`);
+    sheet.getRange(dataRow, 5).setFormula(`=IFERROR(IF(A${dataRow}="","",IF(A${dataRow}="No issue types yet","N/A",TEXT(COUNTIFS('Grievance Log'!$${cols.gIssueCategory}:$${cols.gIssueCategory},A${dataRow},'Grievance Log'!$${cols.gStatus}:$${cols.gStatus},"Settled")/(COUNTIFS('Grievance Log'!$${cols.gIssueCategory}:$${cols.gIssueCategory},A${dataRow},'Grievance Log'!$${cols.gStatus}:$${cols.gStatus},"Settled")+COUNTIFS('Grievance Log'!$${cols.gIssueCategory}:$${cols.gIssueCategory},A${dataRow},'Grievance Log'!$${cols.gStatus}:$${cols.gStatus},"Denied")),"0%"))),"N/A")`);
 
     // Avg Days
-    sheet.getRange(dataRow, 6).setFormula(`=IFERROR(ROUND(AVERAGEIFS('Grievance Log'!$${cols.gDaysOpen}:$${cols.gDaysOpen},'Grievance Log'!$${cols.gIssueCategory}:$${cols.gIssueCategory},"*${issueType}*",'Grievance Log'!$${cols.gDaysOpen}:$${cols.gDaysOpen},">0"),0),"N/A")`);
+    sheet.getRange(dataRow, 6).setFormula(`=IFERROR(IF(A${dataRow}="","",IF(A${dataRow}="No issue types yet","N/A",ROUND(AVERAGEIFS('Grievance Log'!$${cols.gDaysOpen}:$${cols.gDaysOpen},'Grievance Log'!$${cols.gIssueCategory}:$${cols.gIssueCategory},A${dataRow},'Grievance Log'!$${cols.gDaysOpen}:$${cols.gDaysOpen},">0"),0))),"N/A")`);
 
     // Top Location - simplified to avoid #ERROR!
     sheet.getRange(dataRow, 7).setValue("-");
@@ -374,16 +360,16 @@ function createTypeAnalysisSectionDynamic(sheet, startRow, cols) {
     sheet.getRange(dataRow, 8).setValue("-");
 
     // Trend
-    sheet.getRange(dataRow, 9).setFormula(`=IF(B${dataRow}>0,"📊 Active","➖ None")`);
+    sheet.getRange(dataRow, 9).setFormula(`=IF(A${dataRow}="","",IF(B${dataRow}>0,"📊 Active","➖ None"))`);
 
     // Priority Level
-    sheet.getRange(dataRow, 10).setFormula(`=IF(C${dataRow}>5,"🔴 High",IF(C${dataRow}>2,"🟡 Medium","🟢 Low"))`);
+    sheet.getRange(dataRow, 10).setFormula(`=IF(A${dataRow}="","",IF(C${dataRow}>5,"🔴 High",IF(C${dataRow}>2,"🟡 Medium","🟢 Low")))`);
 
     // Notes
     sheet.getRange(dataRow, 11).setValue("");
   }
 
-  sheet.getRange(startRow + 2, 2, issueTypes.length, 9).setHorizontalAlignment("center");
+  sheet.getRange(startRow + 2, 2, 15, 9).setHorizontalAlignment("center");
 }
 
 /**
