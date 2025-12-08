@@ -59,6 +59,12 @@ function createPerformanceLogSheet() {
   // Set tab color
   perfLog.setTabColor('#059669'); // Green for monitoring
 
+  // Delete unused columns beyond the defined headers (8 columns)
+  const totalCols = perfLog.getMaxColumns();
+  if (totalCols > headers.length) {
+    perfLog.deleteColumns(headers.length + 1, totalCols - headers.length);
+  }
+
   Logger.log('Performance_Log sheet created successfully');
 }
 

@@ -149,6 +149,12 @@ function createBackupLogSheet() {
 
   sheet.setFrozenRows(1);
 
+  // Delete unused columns beyond the defined headers (6 columns)
+  const totalCols = sheet.getMaxColumns();
+  if (totalCols > 6) {
+    sheet.deleteColumns(7, totalCols - 6);
+  }
+
   return sheet;
 }
 

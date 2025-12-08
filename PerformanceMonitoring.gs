@@ -176,6 +176,12 @@ function createPerformanceMonitoringSheet() {
   // Auto-resize columns
   perfSheet.autoResizeColumns(1, 7);
 
+  // Delete unused columns beyond the defined headers (7 columns)
+  const totalCols = perfSheet.getMaxColumns();
+  if (totalCols > 7) {
+    perfSheet.deleteColumns(8, totalCols - 7);
+  }
+
   Logger.log('✅ Performance monitoring sheet created/updated');
 
   return perfSheet;

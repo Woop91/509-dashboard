@@ -56,6 +56,12 @@ function createAuditLogSheetRBAC() {
     auditLog.setColumnWidth(7, 150); // Old Value
     auditLog.setColumnWidth(8, 150); // New Value
     auditLog.setColumnWidth(9, 300); // Details
+
+    // Delete unused columns beyond the defined headers (9 columns)
+    const totalCols = auditLog.getMaxColumns();
+    if (totalCols > headers.length) {
+      auditLog.deleteColumns(headers.length + 1, totalCols - headers.length);
+    }
   }
 
   return auditLog;

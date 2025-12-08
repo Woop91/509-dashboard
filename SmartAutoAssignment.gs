@@ -369,6 +369,12 @@ function createAutoAssignmentLogSheet() {
   // Freeze header
   sheet.setFrozenRows(1);
 
+  // Delete unused columns beyond the defined headers (7 columns)
+  const totalCols = sheet.getMaxColumns();
+  if (totalCols > 7) {
+    sheet.deleteColumns(8, totalCols - 7);
+  }
+
   return sheet;
 }
 

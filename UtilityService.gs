@@ -632,3 +632,103 @@ function clearOrgConfigCache() {
 
   Logger.log('Org config cache cleared');
 }
+
+/* --------------------= SHEET CLEANUP UTILITIES --------------------= */
+
+/**
+ * Sheet column configurations - defines how many columns each sheet should have
+ * @const {Object}
+ */
+const SHEET_COLUMN_CONFIG = {
+  // Getting Started & FAQ
+  "📚 Getting Started": 4,
+  "❓ FAQ": 3,
+
+  // Error & Audit Logs
+  "Error_Log": 8,
+  "Audit_Log": 6,
+  "Audit Log": 6,
+
+  // Communications & State Logs
+  "📞 Communications Log": 9,
+  "🔄 State Change Log": 5,
+  "📝 Change Log": 8,
+
+  // Performance & Backup Logs
+  "Performance_Log": 8,
+  "⚡ Performance Monitor": 7,
+  "💾 Backup Log": 6,
+
+  // Assignment & Roles
+  "🤖 Auto-Assignment Log": 7,
+  "User Roles": 4,
+
+  // FAQ & Knowledge Base
+  "📚 FAQ Database": 11,
+
+  // Settings
+  "⚙️ User Settings": 6
+};
+
+/**
+ * Removes unused columns from all sheets based on SHEET_COLUMN_CONFIG
+ * Call this function to clean up existing sheets that have extra columns
+ */
+function cleanAllSheetColumns() {
+  const ss = SpreadsheetApp.getActiveSpreadsheet();
+  const sheets = ss.getSheets();
+  let cleaned = 0;
+  let skipped = 0;
+
+  sheets.forEach(function(sheet) {
+    const sheetName = sheet.getName();
+    const expectedCols = SHEET_COLUMN_CONFIG[sheetName];
+
+    if (expectedCols) {
+      const totalCols = sheet.getMaxColumns();
+      if (totalCols > expectedCols) {
+        try {
+          sheet.deleteColumns(expectedCols + 1, totalCols - expectedCols);
+          Logger.log('Cleaned ' + sheetName + ': removed ' + (totalCols - expectedCols) + ' columns');
+          cleaned++;
+        } catch (e) {
+          Logger.log('Error cleaning ' + sheetName + ': ' + e.message);
+        }
+      } else {
+        skipped++;
+      }
+    }
+  });
+
+  const message = '✅ Sheet cleanup complete!\n\n' +
+    'Cleaned: ' + cleaned + ' sheets\n' +
+    'Already clean: ' + skipped + ' sheets';
+
+  SpreadsheetApp.getUi().alert('Column Cleanup', message, SpreadsheetApp.getUi().ButtonSet.OK);
+
+  return { cleaned: cleaned, skipped: skipped };
+}
+
+/**
+ * Cleans unused columns from a specific sheet
+ * @param {string} sheetName - Name of the sheet to clean
+ * @param {number} expectedColumns - Number of columns the sheet should have
+ */
+function cleanSheetColumns(sheetName, expectedColumns) {
+  const ss = SpreadsheetApp.getActiveSpreadsheet();
+  const sheet = ss.getSheetByName(sheetName);
+
+  if (!sheet) {
+    Logger.log('Sheet not found: ' + sheetName);
+    return false;
+  }
+
+  const totalCols = sheet.getMaxColumns();
+  if (totalCols > expectedColumns) {
+    sheet.deleteColumns(expectedColumns + 1, totalCols - expectedColumns);
+    Logger.log('Cleaned ' + sheetName + ': removed ' + (totalCols - expectedColumns) + ' columns');
+    return true;
+  }
+
+  return false;
+}

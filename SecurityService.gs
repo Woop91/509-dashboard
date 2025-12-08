@@ -217,6 +217,13 @@ function createUserRolesSheet() {
     .setFontColor('#FFFFFF');
 
   sheet.setFrozenRows(1);
+
+  // Delete unused columns beyond the defined headers (4 columns)
+  const totalCols = sheet.getMaxColumns();
+  if (totalCols > headers.length) {
+    sheet.deleteColumns(headers.length + 1, totalCols - headers.length);
+  }
+
   sheet.hideSheet(); // Hide from regular users
 
   return sheet;
@@ -394,6 +401,12 @@ function createAuditLogSheet() {
 
   sheet.setFrozenRows(1);
   sheet.autoResizeColumns(1, headers.length);
+
+  // Delete unused columns beyond the defined headers (6 columns)
+  const totalCols = sheet.getMaxColumns();
+  if (totalCols > headers.length) {
+    sheet.deleteColumns(headers.length + 1, totalCols - headers.length);
+  }
 
   return sheet;
 }

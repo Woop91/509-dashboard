@@ -206,6 +206,12 @@ function createChangeLogSheet() {
   changeLog.setColumnWidth(7, 200); // Old Value
   changeLog.setColumnWidth(8, 200); // New Value
 
+  // Delete unused columns beyond the defined headers (8 columns)
+  const totalCols = changeLog.getMaxColumns();
+  if (totalCols > headers.length) {
+    changeLog.deleteColumns(headers.length + 1, totalCols - headers.length);
+  }
+
   SpreadsheetApp.getUi().alert(
     '✅ Change Log Created',
     'The Change Log sheet has been created.\n\n' +
