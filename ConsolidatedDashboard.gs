@@ -5981,51 +5981,6 @@ function cleanupGrievanceLog() {
   SpreadsheetApp.getActive().toast('✅ Grievance Log cleaned up and formulas reapplied', 'Complete', 3);
 }
 
-/* --------------------- SETUP MENU VISIBILITY --------------------- */
-/**
- * Property key for storing Setup menu visibility state
- */
-const SETUP_MENU_HIDDEN_KEY = 'setupMenuHidden';
-
-/**
- * Checks if the Setup menu should be hidden
- * @returns {boolean} True if Setup menu should be hidden
- */
-function isSetupMenuHidden() {
-  const props = PropertiesService.getDocumentProperties();
-  return props.getProperty(SETUP_MENU_HIDDEN_KEY) === 'true';
-}
-
-/**
- * Sets the Setup menu visibility state
- * @param {boolean} hidden - True to hide the Setup menu
- */
-function setSetupMenuHidden(hidden) {
-  const props = PropertiesService.getDocumentProperties();
-  props.setProperty(SETUP_MENU_HIDDEN_KEY, hidden ? 'true' : 'false');
-}
-
-/**
- * Toggles the Setup menu visibility
- * Called from Admin menu
- */
-function toggleSetupMenuVisibility() {
-  const currentlyHidden = isSetupMenuHidden();
-  setSetupMenuHidden(!currentlyHidden);
-
-  const ui = SpreadsheetApp.getUi();
-  const newState = !currentlyHidden ? 'hidden' : 'visible';
-
-  ui.alert(
-    '🚀 Setup Menu ' + (newState === 'hidden' ? 'Hidden' : 'Restored'),
-    'The Setup menu is now ' + newState + '.\n\n' +
-    'Please refresh the page (F5) or close and reopen the spreadsheet to see the change.\n\n' +
-    'You can toggle this setting anytime from:\n⚙️ Admin > 👁️ View & Display > ' +
-    (newState === 'hidden' ? 'Show Setup Menu' : 'Hide Setup Menu'),
-    ui.ButtonSet.OK
-  );
-}
-
 /* --------------------- MENU --------------------- */
 /**
  * Runs when spreadsheet opens - creates menu and validates configuration
@@ -33661,19 +33616,40 @@ function setDropdownByCol(sheet, colNum, lastRow, values, name, strictValidation
           configSheet.getRange(2, targetCol, Math.max(existingLastRow - 1, 1), 1).clearContent();
         }
 
-        // Write the values
-        const valuesToWrite = values.map(function(v) { return [v]; });
-        configSheet.getRange(2, targetCol, values.length, 1).setValues(valuesToWrite);
+        // Limit values for large lists to prevent API errors
+        // Google Sheets has limits on data validation and cell writes
+        const MAX_DROPDOWN_VALUES = 2000;
+        let valuesToUse = values;
+        if (values.length > MAX_DROPDOWN_VALUES) {
+          Logger.log(`${name} has ${values.length} items - limiting to ${MAX_DROPDOWN_VALUES} for dropdown`);
+          valuesToUse = values.slice(0, MAX_DROPDOWN_VALUES);
+          valuesToUse.push('(More options available)');
+        }
+
+        // Write values in batches to avoid "Argument too large" error
+        const BATCH_SIZE = 500;
+        const valuesToWrite = valuesToUse.map(function(v) { return [v]; });
+
+        for (let i = 0; i < valuesToWrite.length; i += BATCH_SIZE) {
+          const batchEnd = Math.min(i + BATCH_SIZE, valuesToWrite.length);
+          const batch = valuesToWrite.slice(i, batchEnd);
+          configSheet.getRange(2 + i, targetCol, batch.length, 1).setValues(batch);
+
+          // Flush periodically for large writes
+          if (valuesToWrite.length > 1000 && i > 0 && i % 1000 === 0) {
+            SpreadsheetApp.flush();
+          }
+        }
 
         // Create validation using range reference
-        const configRange = configSheet.getRange(2, targetCol, values.length, 1);
+        const configRange = configSheet.getRange(2, targetCol, valuesToUse.length, 1);
         const rule = SpreadsheetApp.newDataValidation()
           .requireValueInRange(configRange, true)
           .setAllowInvalid(!strictValidation)
           .build();
 
         range.setDataValidation(rule);
-        Logger.log(`Set dropdown for ${name} (column ${colLetter}): ${values.length} options via range reference, strict=${strictValidation}`);
+        Logger.log(`Set dropdown for ${name} (column ${colLetter}): ${valuesToUse.length} options via range reference, strict=${strictValidation}`);
       } else {
         // Fallback: use text validation with help text
         const rule = SpreadsheetApp.newDataValidation()
@@ -42598,28 +42574,6 @@ function createReorganizedMenus(ui) {
       .addItem("📝 Create FAQ Database", "createFAQSheet"))
     .addToUi();
 
-  // ------------ SETUP MENU ------------
-  ui.createMenu("🔧 Setup")
-    .addSubMenu(ui.createMenu("📋 Dropdown Configuration")
-      .addItem("📋 Setup All Dropdowns", "setupAllDropdowns")
-      .addItem("📋 Setup Member Directory Dropdowns", "setupMemberDirectoryDropdowns")
-      .addItem("📋 Setup Grievance Log Dropdowns", "setupGrievanceLogDropdowns")
-      .addItem("🔄 Refresh Steward Dropdowns", "refreshStewardDropdowns")
-      .addSeparator()
-      .addItem("🔄 Refresh Data Validations (v3.13+)", "refreshAllValidations")
-      .addItem("📈 Extend Validations (10k rows)", "extendValidationsForLargeDataset"))
-    .addSeparator()
-    .addSubMenu(ui.createMenu("🎨 Dashboard Setup")
-      .addItem("🎨 Setup Dashboard Enhancements", "SETUP_DASHBOARD_ENHANCEMENTS")
-      .addItem("📊 Populate Analytics Sheets", "populateAllAnalyticsSheets"))
-    .addSeparator()
-    .addSubMenu(ui.createMenu("🏗️ Sheet Initialization")
-      .addItem("🏗️ Initialize Required Sheets", "showSetupRequiredSheets")
-      .addItem("📋 Schema Health Check", "showSchemaHealthCheck"))
-    .addSeparator()
-    .addItem("📝 Open Member Google Form", "openMemberGoogleForm")
-    .addToUi();
-
   // ------------ DEMO MENU ------------
   ui.createMenu("🎭 Demo")
     .addSubMenu(ui.createMenu("🌱 Seed Demo Data")
@@ -42718,8 +42672,6 @@ function createReorganizedMenus(ui) {
     .addSubMenu(ui.createMenu("⚙️ User Settings")
       .addItem("⚙️ Preferences Editor", "showPreferencesEditor")
       .addItem("🌐 Language Selector", "showLanguageSelector"))
-    .addSeparator()
-    .addItem("👁️ Toggle Setup Menu Visibility", "toggleSetupMenuVisibility")
     .addToUi();
 }
 

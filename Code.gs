@@ -2324,51 +2324,6 @@ function cleanupGrievanceLog() {
   SpreadsheetApp.getActive().toast('✅ Grievance Log cleaned up and formulas reapplied', 'Complete', 3);
 }
 
-/* --------------------- SETUP MENU VISIBILITY --------------------- */
-/**
- * Property key for storing Setup menu visibility state
- */
-const SETUP_MENU_HIDDEN_KEY = 'setupMenuHidden';
-
-/**
- * Checks if the Setup menu should be hidden
- * @returns {boolean} True if Setup menu should be hidden
- */
-function isSetupMenuHidden() {
-  const props = PropertiesService.getDocumentProperties();
-  return props.getProperty(SETUP_MENU_HIDDEN_KEY) === 'true';
-}
-
-/**
- * Sets the Setup menu visibility state
- * @param {boolean} hidden - True to hide the Setup menu
- */
-function setSetupMenuHidden(hidden) {
-  const props = PropertiesService.getDocumentProperties();
-  props.setProperty(SETUP_MENU_HIDDEN_KEY, hidden ? 'true' : 'false');
-}
-
-/**
- * Toggles the Setup menu visibility
- * Called from Admin menu
- */
-function toggleSetupMenuVisibility() {
-  const currentlyHidden = isSetupMenuHidden();
-  setSetupMenuHidden(!currentlyHidden);
-
-  const ui = SpreadsheetApp.getUi();
-  const newState = !currentlyHidden ? 'hidden' : 'visible';
-
-  ui.alert(
-    '🚀 Setup Menu ' + (newState === 'hidden' ? 'Hidden' : 'Restored'),
-    'The Setup menu is now ' + newState + '.\n\n' +
-    'Please refresh the page (F5) or close and reopen the spreadsheet to see the change.\n\n' +
-    'You can toggle this setting anytime from:\n⚙️ Admin > 👁️ View & Display > ' +
-    (newState === 'hidden' ? 'Show Setup Menu' : 'Hide Setup Menu'),
-    ui.ButtonSet.OK
-  );
-}
-
 /* --------------------- MENU --------------------- */
 /**
  * Runs when spreadsheet opens - creates menu and validates configuration
