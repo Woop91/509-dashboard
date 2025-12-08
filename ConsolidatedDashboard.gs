@@ -37683,12 +37683,35 @@ function writeDashboardData(metrics, chartData) {
   // Add deadline rows (top 10)
   const deadlines = metrics.upcomingDeadlines.slice(0, 10);
   for (const d of deadlines) {
-    updates.push([
-      d.grievanceId,
-      d.memberName,
-      Utilities.formatDate(d.deadline, Session.getScriptTimeZone(), 'MM/dd/yyyy'),
-      d.daysUntil
-    ]);
+    // Ensure d is an object with expected properties (not an array from Object.entries)
+    if (d && typeof d === 'object' && !Array.isArray(d)) {
+      // Ensure deadline is a proper Date object
+      let formattedDeadline = '';
+      if (d.deadline) {
+        const deadlineDate = d.deadline instanceof Date ? d.deadline : new Date(d.deadline);
+        if (!isNaN(deadlineDate.getTime())) {
+          formattedDeadline = Utilities.formatDate(deadlineDate, Session.getScriptTimeZone(), 'MM/dd/yyyy');
+        }
+      }
+      updates.push([
+        d.grievanceId || '',
+        d.memberName || '',
+        formattedDeadline,
+        d.daysUntil !== undefined ? d.daysUntil : ''
+      ]);
+    }
+  }
+
+  // Validate all rows have exactly 4 columns before writing
+  for (let i = 0; i < updates.length; i++) {
+    if (!Array.isArray(updates[i]) || updates[i].length !== 4) {
+      Logger.log(`Row ${i} has invalid length: ${updates[i] ? updates[i].length : 'undefined'}. Fixing...`);
+      // Ensure row has exactly 4 columns
+      const row = Array.isArray(updates[i]) ? updates[i] : ['', '', '', ''];
+      while (row.length < 4) row.push('');
+      if (row.length > 4) row.length = 4;
+      updates[i] = row;
+    }
   }
 
   // Write all data at once
