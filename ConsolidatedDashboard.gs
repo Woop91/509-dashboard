@@ -37337,27 +37337,14 @@ function rebuildDashboardOptimized() {
 /**
  * Build in-memory cache of all data
  * Single read of all sheets
+ * Note: Does not use CacheService for raw data as it exceeds 100KB limit with large datasets
  */
 function buildDataCache() {
   Logger.log('Building data cache...');
 
   const ss = SpreadsheetApp.getActiveSpreadsheet();
 
-  // Use cached data if available and recent (< 5 minutes old)
-  const cache = CacheService.getScriptCache();
-  const cachedData = cache.get('dashboard_data_cache');
-
-  if (cachedData) {
-    const data = JSON.parse(cachedData);
-    const age = Date.now() - data.timestamp;
-
-    if (age < 300000) { // 5 minutes
-      Logger.log(`Using cached data (${Math.floor(age/1000)}s old)`);
-      return data;
-    }
-  }
-
-  // Build fresh cache
+  // Build fresh cache (in-memory only - no CacheService for large raw data)
   const dataCache = {
     timestamp: Date.now(),
     members: null,
@@ -37380,9 +37367,6 @@ function buildDataCache() {
     if (configSheet) {
       dataCache.config = configSheet.getDataRange().getValues();
     }
-
-    // Cache for 5 minutes
-    cache.put('dashboard_data_cache', JSON.stringify(dataCache), 300);
 
     Logger.log('✅ Data cache built');
 
