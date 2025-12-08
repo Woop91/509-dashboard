@@ -1,6 +1,6 @@
 # 509 Dashboard - Complete Feature Reference
 
-**Version:** 3.13
+**Version:** 3.14
 **Last Updated:** 2025-12-08
 **Purpose:** Union grievance tracking and member engagement system for SEIU Local 509
 
@@ -46,7 +46,33 @@
 
 ---
 
-## 🆕 Changelog - Version 3.13 (2025-12-08)
+## 🆕 Changelog - Version 3.14 (2025-12-08)
+
+**TEST FRAMEWORK FIX FOR APPS SCRIPT COMPATIBILITY:**
+
+✅ **Fixed Test Runner Function Lookup** (`TestFramework.gs`)
+- Added `TEST_FUNCTION_REGISTRY` to map test names to their functions
+- Apps Script doesn't support `this[functionName]` in `forEach` callbacks
+- Fixed `runAllTests()` and `runTestCategory()` to use registry lookup
+- All 49 test functions now properly registered and callable
+
+✅ **Resolved Duplicate Function Conflicts** (`Code.test.gs`)
+- Renamed duplicate `runAllTests()` → `runQuickTests()` (runs column + input validation tests only)
+- Renamed duplicate `runValidationTests()` → `runInputValidationTests()` (tests validate* helper functions)
+- Main `runAllTests()` in `TestFramework.gs` is now the canonical version
+
+**Why This Was Needed:**
+- Tests weren't running because `this[testName]` returns `undefined` in Apps Script
+- Duplicate function definitions caused only one version to execute
+- Menu items for tests appeared but clicking them did nothing
+
+**Files Modified:**
+- `TestFramework.gs` - Added `getTestFunctionRegistry()`, `ensureTestRegistry()`, `TEST_FUNCTION_REGISTRY`
+- `Code.test.gs` - Renamed conflicting functions
+
+---
+
+## Changelog - Version 3.13 (2025-12-08)
 
 **DATA VALIDATION FIX FOR USER-POPULATED FIELDS:**
 
@@ -3105,6 +3131,34 @@ Commit f1b28a9 completed the dynamic column conversion. ALL formulas now use dyn
 ---
 
 ## Code Quality & Known Issues
+
+### Recent Code Review (Version 3.14)
+
+**✅ FIXED: Duplicate Function Definitions (21 duplicates resolved)**
+
+All duplicate function definitions have been resolved. Each function now has a single canonical version, with alternates renamed uniquely:
+
+| Original Duplicate | Canonical Location | Renamed Versions |
+|-------------------|-------------------|------------------|
+| `getUserRole` | SecurityUtils.gs | `getUserRoleFromSheet` (SecurityService.gs), `getUserRoleRBAC` (AuditLoggingRBAC.gs) |
+| `checkUserPermission` | AuditLoggingRBAC.gs | `checkUserPermissionCSV` (SecurityAndAdmin.gs) |
+| `validateEmail` | Constants.gs (throws) | `isValidEmailFormat` (EnhancedErrorHandling.gs) |
+| `showContextHelp` | ContextSensitiveHelp.gs | `showContextHelpKeyboard` (KeyboardShortcuts.gs), `showContextHelpPlainText` (EnhancedHelp.gs) |
+| `cleanupOldBackups` | PerformanceAndBackup.gs | `cleanupOldBackupsInFolder` (IncrementalBackupSystem.gs) |
+| `exportToCSV` | AdvancedExport.gs | `exportDataArrayToCSV` (UIFeatures.gs) |
+| `trackPerformance` | PerformanceAndBackup.gs | `trackPerformanceDecorator` (PerformanceMonitoring.gs) |
+| `withErrorHandling` | EnhancedErrorHandling.gs | `withSimpleErrorHandling` (UtilityService.gs) |
+| `isValidEmail` | SecurityUtils.gs | `isValidEmailForCoordinator` (CoordinatorNotification.gs), `isValidEmailForNotifications` (AutomatedNotifications.gs) |
+| `createAuditLogSheet` | SecurityService.gs | `recreateAuditLogSheet` (SecurityAndAdmin.gs), `createAuditLogSheetRBAC` (AuditLoggingRBAC.gs) |
+| `getStewardEmail` | CoordinatorNotification.gs | `getStewardEmailForAdmin` (AdminGrievanceMessages.gs) |
+| `validateRequiredFields` | EnhancedErrorHandling.gs | `validateRequiredFieldsOrThrow` (UtilityService.gs) |
+| `validateDate` | Constants.gs (throws) | `isValidDateFormat` (EnhancedErrorHandling.gs) |
+| `createCommunicationsLogSheet` | Code.gs | `createGmailCommunicationsLogSheet` (GmailIntegration.gs) |
+| `exportToPDF` | AdvancedExport.gs | `exportToPDFStub` (UIFeatures.gs) |
+| `exportToExcel` | AdvancedExport.gs | `exportToExcelStub` (UIFeatures.gs) |
+| `logDataModification` | AuditLoggingRBAC.gs | `logDataModificationAdmin` (SecurityAndAdmin.gs) |
+
+---
 
 ### Recent Code Review (Version 2.2)
 

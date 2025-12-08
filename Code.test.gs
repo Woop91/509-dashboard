@@ -1165,10 +1165,11 @@ function testArrayValidation() {
 }
 
 /**
- * Run all validation tests
+ * Run all input validation tests (testing validate* helper functions)
+ * Note: runValidationTests() in TestFramework.gs tests data validation setup
  */
-function runValidationTests() {
-  Logger.log('=== Running Validation Tests ===');
+function runInputValidationTests() {
+  Logger.log('=== Running Input Validation Tests ===');
 
   testValidateRequired();
   testValidateString();
@@ -1185,21 +1186,23 @@ function runValidationTests() {
   testDateValidationEdgeCases();
   testArrayValidation();
 
-  Logger.log('=== All Validation Tests Passed ===');
+  Logger.log('=== All Input Validation Tests Passed ===');
 }
 
 /**
- * Run all tests
+ * Run column and validation tests only (subset of all tests)
+ * Note: The main runAllTests() function is defined in TestFramework.gs
+ * This function is kept for running a quick subset of tests
  */
-function runAllTests() {
+function runQuickTests() {
   Logger.log('========================================');
-  Logger.log('  RUNNING ALL TESTS');
+  Logger.log('  RUNNING QUICK TESTS (Column + Input Validation)');
   Logger.log('========================================');
 
   runColumnConstantTests();
-  runValidationTests();
+  runInputValidationTests();
 
   Logger.log('========================================');
-  Logger.log('  ALL TESTS COMPLETE');
+  Logger.log('  QUICK TESTS COMPLETE');
   Logger.log('========================================');
 }

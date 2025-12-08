@@ -69,8 +69,9 @@ const ROLES = {
  * Gets the role for a user
  * @param {string} userEmail - User's email address (defaults to current user)
  * @returns {string} Role name (defaults to 'VIEWER')
+ * Note: Canonical getUserRole() is in SecurityUtils.gs. This version looks up the User Roles sheet.
  */
-function getUserRole(userEmail) {
+function getUserRoleFromSheet(userEmail) {
   if (!userEmail) {
     userEmail = Session.getActiveUser().getEmail();
   }

@@ -14,7 +14,7 @@
  * Build Info:
  * - Version: 2.1.0 (Security Enhanced + Code Review Improvements)
  * - Build ID: 20251202-improvements
- * - Build Date: 2025-12-08T00:54:20.385Z
+ * - Build Date: 2025-12-08T01:41:06.349Z
  * - Build Type: DEVELOPMENT
  * - Modules: 79 files
  * - Tests Included: Yes
@@ -8443,11 +8443,12 @@ Sent by: ${coordinatorEmail}
 }
 
 /**
- * Gets the email address for a steward by name
+ * Gets the email address for a steward by name (Admin messages version)
+ * Note: Canonical getStewardEmail() is in CoordinatorNotification.gs (with more error handling)
  * @param {string} stewardName - The steward's name
  * @returns {string|null} The steward's email or null if not found
  */
-function getStewardEmail(stewardName) {
+function getStewardEmailForAdmin(stewardName) {
   if (!stewardName) return null;
 
   const ss = SpreadsheetApp.getActiveSpreadsheet();
@@ -9989,9 +9990,10 @@ function saveChartToSheet(dataSource, chartType) {
 /* ===================== AUDIT LOGGING ===================== */
 
 /**
- * Creates the Audit_Log sheet if it doesn't exist
+ * Creates the Audit_Log sheet if it doesn't exist (RBAC version)
+ * Note: Canonical createAuditLogSheet() is in SecurityService.gs
  */
-function createAuditLogSheet() {
+function createAuditLogSheetRBAC() {
   const ss = SpreadsheetApp.getActive();
   let auditLog = ss.getSheetByName("Audit_Log");
 
@@ -10230,10 +10232,11 @@ function checkUserPermission(requiredRole) {
 }
 
 /**
- * Get user's current role
+ * Get user's current role using RBAC permission checks
+ * Note: Canonical getUserRole() is in SecurityUtils.gs. This version uses checkUserPermission().
  * @returns {string} "ADMIN", "STEWARD", "VIEWER", or "NONE"
  */
-function getUserRole() {
+function getUserRoleRBAC() {
   if (checkUserPermission("ADMIN")) return "ADMIN";
   if (checkUserPermission("STEWARD")) return "STEWARD";
   if (checkUserPermission("VIEWER")) return "VIEWER";
@@ -12333,9 +12336,10 @@ function createEnhancedHelpHTML() {
 }
 
 /**
- * Shows context help based on current sheet
+ * Shows context help based on current sheet (plain text version)
+ * Note: Canonical showContextHelp() is in ContextSensitiveHelp.gs
  */
-function showContextHelp() {
+function showContextHelpPlainText() {
   const ss = SpreadsheetApp.getActiveSpreadsheet();
   const activeSheet = ss.getActiveSheet();
   const sheetName = activeSheet.getName();
@@ -12763,11 +12767,12 @@ To adjust notification settings, contact your system administrator.
 }
 
 /**
- * Validates email address format
+ * Validates email address format (automated notifications version)
+ * Note: Canonical isValidEmail() is in SecurityUtils.gs
  * @param {string} email - Email address to validate
  * @returns {boolean} True if valid email
  */
-function isValidEmail(email) {
+function isValidEmailForNotifications(email) {
   if (!email) return false;
   const emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
   return emailRegex.test(email.toString().trim());
@@ -15941,9 +15946,10 @@ function getStewardEmail(stewardName) {
 }
 
 /**
- * Validates email address format
+ * Validates email address format (coordinator notifications version)
+ * Note: Canonical isValidEmail() is in SecurityUtils.gs
  */
-function isValidEmail(email) {
+function isValidEmailForCoordinator(email) {
   if (!email || typeof email !== 'string') {
     return false;
   }
@@ -22310,21 +22316,23 @@ function validateRequiredFields(data, requiredFields) {
 }
 
 /**
- * Validates email format
+ * Validates email format (returns boolean)
+ * Note: Canonical validateEmail() is in Constants.gs (throws on invalid)
  * @param {string} email - Email to validate
  * @returns {boolean}
  */
-function validateEmail(email) {
+function isValidEmailFormat(email) {
   const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
   return emailRegex.test(email);
 }
 
 /**
- * Validates date format
+ * Validates date format (returns boolean)
+ * Note: Canonical validateDate() is in Constants.gs (throws on invalid)
  * @param {*} date - Date to validate
  * @returns {boolean}
  */
-function validateDate(date) {
+function isValidDateFormat(date) {
   if (date instanceof Date) {
     return !isNaN(date.getTime());
   }
@@ -24873,11 +24881,12 @@ function logCommunication(grievanceId, type, details) {
 }
 
 /**
- * Creates Communications Log sheet
+ * Creates Communications Log sheet (Gmail format)
+ * Note: Canonical createCommunicationsLogSheet(ss) is in AdminGrievanceMessages.gs
  * Structure follows GMAIL_COMM_LOG_COLS (simplified 5-column format)
  * @returns {Sheet} Communications Log sheet
  */
-function createCommunicationsLogSheet() {
+function createGmailCommunicationsLogSheet() {
   const ss = SpreadsheetApp.getActiveSpreadsheet();
 
   // Check if sheet already exists
@@ -28814,11 +28823,12 @@ function createBackupFolder() {
 }
 
 /**
- * Clean up backups older than 30 days
+ * Clean up backups older than 30 days in specified folder
+ * Note: Canonical cleanupOldBackups() is in PerformanceAndBackup.gs (no param, uses script props)
  * @param {Folder} folder - Google Drive folder containing backups
  * @returns {number} Number of backups deleted
  */
-function cleanupOldBackups(folder) {
+function cleanupOldBackupsInFolder(folder) {
   const thirtyDaysAgo = new Date(Date.now() - (30 * 24 * 60 * 60 * 1000));
   let deletedCount = 0;
 
@@ -32061,9 +32071,10 @@ function showKeyboardShortcutsConfig() {
 }
 
 /**
- * Shows context-sensitive help based on current sheet
+ * Shows context-sensitive help based on current sheet (keyboard shortcut version)
+ * Note: Canonical showContextHelp() is in ContextSensitiveHelp.gs
  */
-function showContextHelp() {
+function showContextHelpKeyboard() {
   const ss = SpreadsheetApp.getActiveSpreadsheet();
   const activeSheet = ss.getActiveSheet();
   const sheetName = activeSheet.getName();
@@ -37714,12 +37725,13 @@ function createPerformanceMonitoringSheet() {
 }
 
 /**
- * Wrapper to track performance of any function
+ * Wrapper to track performance of any function (decorator pattern)
+ * Note: Canonical trackPerformance() is in PerformanceAndBackup.gs (executes callback directly)
  * @param {string} funcName - Name for tracking
  * @param {Function} func - Function to track
  * @returns {Function} Wrapped function with performance tracking
  */
-function trackPerformance(funcName, func) {
+function trackPerformanceDecorator(funcName, func) {
   return function(...args) {
     const startTime = Date.now();
 
@@ -42626,9 +42638,10 @@ function createRCADashboardHTML(analysis) {
 // ===========================
 
 /**
- * Creates the Audit_Log sheet for tracking all data modifications
+ * Creates the Audit_Log sheet for tracking all data modifications (recreates if exists!)
+ * Note: Canonical createAuditLogSheet() is in SecurityService.gs (preserves existing data)
  */
-function createAuditLogSheet() {
+function recreateAuditLogSheet() {
   const ss = SpreadsheetApp.getActiveSpreadsheet();
   let auditLog = ss.getSheetByName('Audit_Log');
 
@@ -42693,7 +42706,7 @@ function createAuditLogSheet() {
  * @param {string} oldValue - Previous value
  * @param {string} newValue - New value
  */
-function logDataModification(actionType, sheetName, recordId, fieldChanged, oldValue, newValue) {
+function logDataModificationAdmin(actionType, sheetName, recordId, fieldChanged, oldValue, newValue) {
   try {
     const ss = SpreadsheetApp.getActiveSpreadsheet();
     let auditLog = ss.getSheetByName('Audit_Log');
@@ -42749,11 +42762,12 @@ function logDataModification(actionType, sheetName, recordId, fieldChanged, oldV
 // ===========================
 
 /**
- * Check if current user has required permission level
+ * Check if current user has required permission level (comma-separated format)
+ * Note: Canonical checkUserPermission() is in AuditLoggingRBAC.gs (uses JSON format)
  * @param {string} requiredRole - Required role: 'ADMIN', 'STEWARD', or 'VIEWER'
  * @return {boolean} True if user has permission
  */
-function checkUserPermission(requiredRole) {
+function checkUserPermissionCSV(requiredRole) {
   try {
     const userEmail = Session.getActiveUser().getEmail();
 
@@ -43448,8 +43462,9 @@ const ROLES = {
  * Gets the role for a user
  * @param {string} userEmail - User's email address (defaults to current user)
  * @returns {string} Role name (defaults to 'VIEWER')
+ * Note: Canonical getUserRole() is in SecurityUtils.gs. This version looks up the User Roles sheet.
  */
-function getUserRole(userEmail) {
+function getUserRoleFromSheet(userEmail) {
   if (!userEmail) {
     userEmail = Session.getActiveUser().getEmail();
   }
@@ -47539,7 +47554,11 @@ function exportData(options) {
   return result;
 }
 
-function exportToCSV(data, exportType) {
+/**
+ * Export raw data array to CSV (simple version)
+ * Note: Canonical exportToCSV() is in AdvancedExport.gs (takes sheet, applies permission filtering)
+ */
+function exportDataArrayToCSV(data, exportType) {
   const csv = data.map(row => row.map(cell => `"${cell}"`).join(',')).join('\n');
   const fileName = `${exportType}_export_${new Date().getTime()}.csv`;
 
@@ -47558,12 +47577,20 @@ function exportToNewSheet(data, exportType) {
   return `New sheet created: ${newSheet.getName()}`;
 }
 
-function exportToPDF(sheet, exportType) {
+/**
+ * Export to PDF stub (placeholder)
+ * Note: Canonical exportToPDF() is in AdvancedExport.gs
+ */
+function exportToPDFStub(sheet, exportType) {
   // Note: Direct PDF export from Apps Script is limited
   return `PDF export requested for ${exportType}. Use File > Download > PDF from the menu for full control over PDF export options.`;
 }
 
-function exportToExcel(data, exportType) {
+/**
+ * Export to Excel stub (placeholder)
+ * Note: Canonical exportToExcel() is in AdvancedExport.gs
+ */
+function exportToExcelStub(data, exportType) {
   return `Excel export for ${exportType} requested. Note: Use Google Sheets' built-in "Download as Excel" feature for best results.`;
 }
 
@@ -49733,12 +49760,13 @@ function logToDiagnostics(context, errorMessage, stackTrace, timestamp) {
 }
 
 /**
- * Wraps a function with try-catch error handling
+ * Wraps a function with simple try-catch error handling
+ * Note: Canonical withErrorHandling() is in EnhancedErrorHandling.gs (with full logging and UI)
  * @param {Function} fn - Function to wrap
  * @param {string} context - Context name for error messages
  * @returns {Function} Wrapped function
  */
-function withErrorHandling(fn, context) {
+function withSimpleErrorHandling(fn, context) {
   return function(...args) {
     try {
       return fn.apply(this, args);
@@ -49875,8 +49903,9 @@ function safeArrayGet(array, index, defaultValue = null) {
  * @param {Array<string>} requiredFields - Array of required field names
  * @param {string} context - Context for error messages
  * @throws {Error} If any required field is missing
+ * Note: Canonical validateRequiredFields() is in EnhancedErrorHandling.gs (returns object instead of throwing)
  */
-function validateRequiredFields(data, requiredFields, context = 'validation') {
+function validateRequiredFieldsOrThrow(data, requiredFields, context = 'validation') {
   const missing = requiredFields.filter(function(field) {
     return data[field] === null || data[field] === undefined || data[field] === '';
   });
@@ -51014,6 +51043,92 @@ const CODE_COVERAGE = {
 };
 
 /**
+ * Test function registry - maps test names to their functions
+ * This is necessary because Apps Script doesn't allow dynamic function lookup via this[name]
+ * Functions are resolved at runtime when the registry is accessed
+ */
+function getTestFunctionRegistry() {
+  return {
+    // Code.test.gs - Formula calculation tests
+    'testFilingDeadlineCalculation': testFilingDeadlineCalculation,
+    'testStepIDeadlineCalculation': testStepIDeadlineCalculation,
+    'testStepIIAppealDeadlineCalculation': testStepIIAppealDeadlineCalculation,
+    'testDaysOpenCalculation': testDaysOpenCalculation,
+    'testDaysOpenForClosedGrievance': testDaysOpenForClosedGrievance,
+    'testNextActionDueLogic': testNextActionDueLogic,
+    'testMemberDirectoryFormulas': testMemberDirectoryFormulas,
+
+    // Code.test.gs - Data validation tests
+    'testDataValidationSetup': testDataValidationSetup,
+    'testConfigDropdownValues': testConfigDropdownValues,
+    'testMemberValidationRules': testMemberValidationRules,
+    'testGrievanceValidationRules': testGrievanceValidationRules,
+
+    // Code.test.gs - Seeding validation tests
+    'testMemberSeedingValidation': testMemberSeedingValidation,
+    'testGrievanceSeedingValidation': testGrievanceSeedingValidation,
+    'testMemberEmailFormat': testMemberEmailFormat,
+    'testMemberIDUniqueness': testMemberIDUniqueness,
+    'testGrievanceMemberLinking': testGrievanceMemberLinking,
+    'testOpenRateRange': testOpenRateRange,
+
+    // Code.test.gs - Edge case tests
+    'testEmptySheetsHandling': testEmptySheetsHandling,
+    'testFutureDateHandling': testFutureDateHandling,
+    'testPastDeadlineHandling': testPastDeadlineHandling,
+
+    // Code.test.gs - Column constant tests
+    'testMemberColsConstants': testMemberColsConstants,
+    'testGrievanceColsConstants': testGrievanceColsConstants,
+    'testConfigColsConstants': testConfigColsConstants,
+    'testInternalSchemaConstants': testInternalSchemaConstants,
+    'testSheetsConstants': testSheetsConstants,
+    'testColumnLetterConversion': testColumnLetterConversion,
+    'testColumnIndexing': testColumnIndexing,
+
+    // Code.test.gs - Input validation tests
+    'testValidateRequired': testValidateRequired,
+    'testValidateString': testValidateString,
+    'testValidatePositiveInt': testValidatePositiveInt,
+    'testValidateGrievanceId': testValidateGrievanceId,
+    'testValidateMemberId': testValidateMemberId,
+    'testValidateEmail': testValidateEmail,
+    'testValidateEnum': testValidateEnum,
+    'testSafeExecute': testSafeExecute,
+    'testGrievanceStatusValidation': testGrievanceStatusValidation,
+    'testGrievanceStepValidation': testGrievanceStepValidation,
+    'testIssueCategoryValidation': testIssueCategoryValidation,
+    'testErrorMessageContext': testErrorMessageContext,
+    'testDateValidationEdgeCases': testDateValidationEdgeCases,
+    'testArrayValidation': testArrayValidation,
+
+    // Integration.test.gs - Workflow tests
+    'testCompleteGrievanceWorkflow': testCompleteGrievanceWorkflow,
+    'testDashboardMetricsUpdate': testDashboardMetricsUpdate,
+    'testMemberGrievanceSnapshot': testMemberGrievanceSnapshot,
+    'testConfigChangesPropagateToDropdowns': testConfigChangesPropagateToDropdowns,
+    'testMultipleGrievancesSameMember': testMultipleGrievancesSameMember,
+    'testDashboardHandlesEmptyData': testDashboardHandlesEmptyData,
+    'testDashboardRefreshPerformance': testDashboardRefreshPerformance,
+    'testFormulaPerformanceWithData': testFormulaPerformanceWithData,
+    'testGrievanceUpdatesTriggersRecalculation': testGrievanceUpdatesTriggersRecalculation,
+
+    // System tests
+    'testErrorLogging': typeof testErrorLogging === 'function' ? testErrorLogging : null,
+    'testDeadlineNotifications': typeof testDeadlineNotifications === 'function' ? testDeadlineNotifications : null
+  };
+}
+
+// Lazy-initialized registry (built on first access)
+var TEST_FUNCTION_REGISTRY = null;
+function ensureTestRegistry() {
+  if (TEST_FUNCTION_REGISTRY === null) {
+    TEST_FUNCTION_REGISTRY = getTestFunctionRegistry();
+  }
+  return TEST_FUNCTION_REGISTRY;
+}
+
+/**
  * Tracks function execution for code coverage
  * @param {string} functionName - Name of function being executed
  */
@@ -51335,10 +51450,14 @@ function runAllTests() {
     'testGrievanceUpdatesTriggersRecalculation'
   ];
 
-  // Run each test
+  // Ensure test registry is initialized
+  ensureTestRegistry();
+
+  // Run each test using the test registry
   testFunctions.forEach(function(testName) {
     try {
-      const testFn = this[testName];
+      // Look up function in the test registry
+      const testFn = TEST_FUNCTION_REGISTRY[testName];
       if (typeof testFn === 'function') {
         testFn();
         TEST_RESULTS.passed.push({
@@ -51348,7 +51467,7 @@ function runAllTests() {
       } else {
         TEST_RESULTS.skipped.push({
           name: testName,
-          reason: 'Function not found'
+          reason: 'Function not found in TEST_FUNCTION_REGISTRY'
         });
       }
     } catch (error) {
@@ -51728,11 +51847,15 @@ function runTestCategory(categoryName, testNames) {
 
   const startTime = new Date();
 
+  // Ensure test registry is initialized
+  ensureTestRegistry();
+
   testNames.forEach(function(testName) {
     try {
-      const testFn = this[testName];
+      // Look up function in the test registry
+      const testFn = TEST_FUNCTION_REGISTRY[testName];
       if (typeof testFn !== 'function') {
-        TEST_RESULTS.skipped.push({ name: testName, reason: 'Function not found' });
+        TEST_RESULTS.skipped.push({ name: testName, reason: 'Function not found in TEST_FUNCTION_REGISTRY' });
         skipped++;
         return;
       }
@@ -52939,10 +53062,11 @@ function testArrayValidation() {
 }
 
 /**
- * Run all validation tests
+ * Run all input validation tests (testing validate* helper functions)
+ * Note: runValidationTests() in TestFramework.gs tests data validation setup
  */
-function runValidationTests() {
-  Logger.log('=== Running Validation Tests ===');
+function runInputValidationTests() {
+  Logger.log('=== Running Input Validation Tests ===');
 
   testValidateRequired();
   testValidateString();
@@ -52959,22 +53083,24 @@ function runValidationTests() {
   testDateValidationEdgeCases();
   testArrayValidation();
 
-  Logger.log('=== All Validation Tests Passed ===');
+  Logger.log('=== All Input Validation Tests Passed ===');
 }
 
 /**
- * Run all tests
+ * Run column and validation tests only (subset of all tests)
+ * Note: The main runAllTests() function is defined in TestFramework.gs
+ * This function is kept for running a quick subset of tests
  */
-function runAllTests() {
+function runQuickTests() {
   Logger.log('========================================');
-  Logger.log('  RUNNING ALL TESTS');
+  Logger.log('  RUNNING QUICK TESTS (Column + Input Validation)');
   Logger.log('========================================');
 
   runColumnConstantTests();
-  runValidationTests();
+  runInputValidationTests();
 
   Logger.log('========================================');
-  Logger.log('  ALL TESTS COMPLETE');
+  Logger.log('  QUICK TESTS COMPLETE');
   Logger.log('========================================');
 }
 

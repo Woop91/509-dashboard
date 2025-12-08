@@ -8,9 +8,10 @@
 // ===========================
 
 /**
- * Creates the Audit_Log sheet for tracking all data modifications
+ * Creates the Audit_Log sheet for tracking all data modifications (recreates if exists!)
+ * Note: Canonical createAuditLogSheet() is in SecurityService.gs (preserves existing data)
  */
-function createAuditLogSheet() {
+function recreateAuditLogSheet() {
   const ss = SpreadsheetApp.getActiveSpreadsheet();
   let auditLog = ss.getSheetByName('Audit_Log');
 
@@ -75,7 +76,7 @@ function createAuditLogSheet() {
  * @param {string} oldValue - Previous value
  * @param {string} newValue - New value
  */
-function logDataModification(actionType, sheetName, recordId, fieldChanged, oldValue, newValue) {
+function logDataModificationAdmin(actionType, sheetName, recordId, fieldChanged, oldValue, newValue) {
   try {
     const ss = SpreadsheetApp.getActiveSpreadsheet();
     let auditLog = ss.getSheetByName('Audit_Log');
@@ -131,11 +132,12 @@ function logDataModification(actionType, sheetName, recordId, fieldChanged, oldV
 // ===========================
 
 /**
- * Check if current user has required permission level
+ * Check if current user has required permission level (comma-separated format)
+ * Note: Canonical checkUserPermission() is in AuditLoggingRBAC.gs (uses JSON format)
  * @param {string} requiredRole - Required role: 'ADMIN', 'STEWARD', or 'VIEWER'
  * @return {boolean} True if user has permission
  */
-function checkUserPermission(requiredRole) {
+function checkUserPermissionCSV(requiredRole) {
   try {
     const userEmail = Session.getActiveUser().getEmail();
 

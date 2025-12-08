@@ -112,11 +112,12 @@ function createBackupFolder() {
 }
 
 /**
- * Clean up backups older than 30 days
+ * Clean up backups older than 30 days in specified folder
+ * Note: Canonical cleanupOldBackups() is in PerformanceAndBackup.gs (no param, uses script props)
  * @param {Folder} folder - Google Drive folder containing backups
  * @returns {number} Number of backups deleted
  */
-function cleanupOldBackups(folder) {
+function cleanupOldBackupsInFolder(folder) {
   const thirtyDaysAgo = new Date(Date.now() - (30 * 24 * 60 * 60 * 1000));
   let deletedCount = 0;
 

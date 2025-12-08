@@ -567,9 +567,10 @@ function showKeyboardShortcutsConfig() {
 }
 
 /**
- * Shows context-sensitive help based on current sheet
+ * Shows context-sensitive help based on current sheet (keyboard shortcut version)
+ * Note: Canonical showContextHelp() is in ContextSensitiveHelp.gs
  */
-function showContextHelp() {
+function showContextHelpKeyboard() {
   const ss = SpreadsheetApp.getActiveSpreadsheet();
   const activeSheet = ss.getActiveSheet();
   const sheetName = activeSheet.getName();

@@ -551,21 +551,23 @@ function validateRequiredFields(data, requiredFields) {
 }
 
 /**
- * Validates email format
+ * Validates email format (returns boolean)
+ * Note: Canonical validateEmail() is in Constants.gs (throws on invalid)
  * @param {string} email - Email to validate
  * @returns {boolean}
  */
-function validateEmail(email) {
+function isValidEmailFormat(email) {
   const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
   return emailRegex.test(email);
 }
 
 /**
- * Validates date format
+ * Validates date format (returns boolean)
+ * Note: Canonical validateDate() is in Constants.gs (throws on invalid)
  * @param {*} date - Date to validate
  * @returns {boolean}
  */
-function validateDate(date) {
+function isValidDateFormat(date) {
   if (date instanceof Date) {
     return !isNaN(date.getTime());
   }

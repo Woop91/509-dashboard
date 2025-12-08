@@ -936,7 +936,11 @@ function exportData(options) {
   return result;
 }
 
-function exportToCSV(data, exportType) {
+/**
+ * Export raw data array to CSV (simple version)
+ * Note: Canonical exportToCSV() is in AdvancedExport.gs (takes sheet, applies permission filtering)
+ */
+function exportDataArrayToCSV(data, exportType) {
   const csv = data.map(row => row.map(cell => `"${cell}"`).join(',')).join('\n');
   const fileName = `${exportType}_export_${new Date().getTime()}.csv`;
 
@@ -955,12 +959,20 @@ function exportToNewSheet(data, exportType) {
   return `New sheet created: ${newSheet.getName()}`;
 }
 
-function exportToPDF(sheet, exportType) {
+/**
+ * Export to PDF stub (placeholder)
+ * Note: Canonical exportToPDF() is in AdvancedExport.gs
+ */
+function exportToPDFStub(sheet, exportType) {
   // Note: Direct PDF export from Apps Script is limited
   return `PDF export requested for ${exportType}. Use File > Download > PDF from the menu for full control over PDF export options.`;
 }
 
-function exportToExcel(data, exportType) {
+/**
+ * Export to Excel stub (placeholder)
+ * Note: Canonical exportToExcel() is in AdvancedExport.gs
+ */
+function exportToExcelStub(data, exportType) {
   return `Excel export for ${exportType} requested. Note: Use Google Sheets' built-in "Download as Excel" feature for best results.`;
 }
 

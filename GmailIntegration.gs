@@ -504,11 +504,12 @@ function logCommunication(grievanceId, type, details) {
 }
 
 /**
- * Creates Communications Log sheet
+ * Creates Communications Log sheet (Gmail format)
+ * Note: Canonical createCommunicationsLogSheet(ss) is in AdminGrievanceMessages.gs
  * Structure follows GMAIL_COMM_LOG_COLS (simplified 5-column format)
  * @returns {Sheet} Communications Log sheet
  */
-function createCommunicationsLogSheet() {
+function createGmailCommunicationsLogSheet() {
   const ss = SpreadsheetApp.getActiveSpreadsheet();
 
   // Check if sheet already exists
