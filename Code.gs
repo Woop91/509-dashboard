@@ -1928,6 +1928,60 @@ function extendValidationsForLargeDataset() {
   );
 }
 
+/**
+ * Refreshes all data validation rules with v3.13+ settings
+ * This allows blank values for user-populated fields (Job Title, Location, Unit, etc.)
+ * Run this after updating to v3.13+ if tests fail with validation errors
+ *
+ * Menu: 509 Tools > ⚙️ Utilities > 🔄 Refresh Data Validations
+ */
+function refreshAllValidations() {
+  const ui = SpreadsheetApp.getUi();
+
+  const response = ui.alert(
+    '🔄 Refresh Data Validations?',
+    'This will re-apply all data validation rules with v3.13+ settings.\n\n' +
+    'This fixes validation errors when user-populated fields (Job Title, Location, Unit, ' +
+    'Supervisor, Manager, Steward) are left blank.\n\n' +
+    'Continue?',
+    ui.ButtonSet.YES_NO
+  );
+
+  if (response !== ui.Button.YES) {
+    return;
+  }
+
+  const startTime = new Date();
+
+  try {
+    // Re-apply data validations with new settings
+    setupDataValidations();
+
+    // Also re-apply member directory dropdowns
+    setupMemberDirectoryValidations();
+
+    const duration = (new Date() - startTime) / 1000;
+
+    ui.alert(
+      '✅ Validations Refreshed',
+      `Successfully refreshed all data validation rules.\n\n` +
+      `User-populated fields now allow blank values.\n\n` +
+      `Time: ${duration.toFixed(1)} seconds`,
+      ui.ButtonSet.OK
+    );
+
+    Logger.log('Data validations refreshed with v3.13+ settings');
+
+  } catch (error) {
+    ui.alert(
+      '❌ Error',
+      `Failed to refresh validations: ${error.message}`,
+      ui.ButtonSet.OK
+    );
+    Logger.log('Error refreshing validations: ' + error.message);
+  }
+}
+
 /* --------------------- FORMULAS --------------------- */
 function setupFormulasAndCalculations() {
   const ss = SpreadsheetApp.getActive();

@@ -70,8 +70,14 @@
 - Tests failed because they couldn't insert empty dropdown values
 - Now users can enter blank values until they populate Config
 
+**New Helper Function:**
+- `refreshAllValidations()` - Re-applies all data validation rules with v3.13+ settings
+  - Menu: `🔧 Setup > 📋 Dropdown Configuration > 🔄 Refresh Data Validations (v3.13+)`
+  - **Run this on existing spreadsheets to fix validation errors**
+
 **Files Modified:**
-- `Code.gs` - Data validation rules updated to allow invalid for user-populated fields
+- `Code.gs` - Data validation rules updated; added `refreshAllValidations()`
+- `ReorganizedMenu.gs` - Added menu item for Refresh Data Validations
 - `TestFramework.gs` - createTestMember() uses empty strings
 - `Code.test.gs` - Removed hardcoded assertions for specific Config values
 - `Integration.test.gs` - Removed hardcoded dropdown values from test data
