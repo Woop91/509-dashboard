@@ -14,7 +14,7 @@
  * Build Info:
  * - Version: 2.1.0 (Security Enhanced + Code Review Improvements)
  * - Build ID: 20251202-improvements
- * - Build Date: 2025-12-08T00:54:20.385Z
+ * - Build Date: 2025-12-08T01:06:22.689Z
  * - Build Type: DEVELOPMENT
  * - Modules: 79 files
  * - Tests Included: Yes
@@ -51014,6 +51014,92 @@ const CODE_COVERAGE = {
 };
 
 /**
+ * Test function registry - maps test names to their functions
+ * This is necessary because Apps Script doesn't allow dynamic function lookup via this[name]
+ * Functions are resolved at runtime when the registry is accessed
+ */
+function getTestFunctionRegistry() {
+  return {
+    // Code.test.gs - Formula calculation tests
+    'testFilingDeadlineCalculation': testFilingDeadlineCalculation,
+    'testStepIDeadlineCalculation': testStepIDeadlineCalculation,
+    'testStepIIAppealDeadlineCalculation': testStepIIAppealDeadlineCalculation,
+    'testDaysOpenCalculation': testDaysOpenCalculation,
+    'testDaysOpenForClosedGrievance': testDaysOpenForClosedGrievance,
+    'testNextActionDueLogic': testNextActionDueLogic,
+    'testMemberDirectoryFormulas': testMemberDirectoryFormulas,
+
+    // Code.test.gs - Data validation tests
+    'testDataValidationSetup': testDataValidationSetup,
+    'testConfigDropdownValues': testConfigDropdownValues,
+    'testMemberValidationRules': testMemberValidationRules,
+    'testGrievanceValidationRules': testGrievanceValidationRules,
+
+    // Code.test.gs - Seeding validation tests
+    'testMemberSeedingValidation': testMemberSeedingValidation,
+    'testGrievanceSeedingValidation': testGrievanceSeedingValidation,
+    'testMemberEmailFormat': testMemberEmailFormat,
+    'testMemberIDUniqueness': testMemberIDUniqueness,
+    'testGrievanceMemberLinking': testGrievanceMemberLinking,
+    'testOpenRateRange': testOpenRateRange,
+
+    // Code.test.gs - Edge case tests
+    'testEmptySheetsHandling': testEmptySheetsHandling,
+    'testFutureDateHandling': testFutureDateHandling,
+    'testPastDeadlineHandling': testPastDeadlineHandling,
+
+    // Code.test.gs - Column constant tests
+    'testMemberColsConstants': testMemberColsConstants,
+    'testGrievanceColsConstants': testGrievanceColsConstants,
+    'testConfigColsConstants': testConfigColsConstants,
+    'testInternalSchemaConstants': testInternalSchemaConstants,
+    'testSheetsConstants': testSheetsConstants,
+    'testColumnLetterConversion': testColumnLetterConversion,
+    'testColumnIndexing': testColumnIndexing,
+
+    // Code.test.gs - Input validation tests
+    'testValidateRequired': testValidateRequired,
+    'testValidateString': testValidateString,
+    'testValidatePositiveInt': testValidatePositiveInt,
+    'testValidateGrievanceId': testValidateGrievanceId,
+    'testValidateMemberId': testValidateMemberId,
+    'testValidateEmail': testValidateEmail,
+    'testValidateEnum': testValidateEnum,
+    'testSafeExecute': testSafeExecute,
+    'testGrievanceStatusValidation': testGrievanceStatusValidation,
+    'testGrievanceStepValidation': testGrievanceStepValidation,
+    'testIssueCategoryValidation': testIssueCategoryValidation,
+    'testErrorMessageContext': testErrorMessageContext,
+    'testDateValidationEdgeCases': testDateValidationEdgeCases,
+    'testArrayValidation': testArrayValidation,
+
+    // Integration.test.gs - Workflow tests
+    'testCompleteGrievanceWorkflow': testCompleteGrievanceWorkflow,
+    'testDashboardMetricsUpdate': testDashboardMetricsUpdate,
+    'testMemberGrievanceSnapshot': testMemberGrievanceSnapshot,
+    'testConfigChangesPropagateToDropdowns': testConfigChangesPropagateToDropdowns,
+    'testMultipleGrievancesSameMember': testMultipleGrievancesSameMember,
+    'testDashboardHandlesEmptyData': testDashboardHandlesEmptyData,
+    'testDashboardRefreshPerformance': testDashboardRefreshPerformance,
+    'testFormulaPerformanceWithData': testFormulaPerformanceWithData,
+    'testGrievanceUpdatesTriggersRecalculation': testGrievanceUpdatesTriggersRecalculation,
+
+    // System tests
+    'testErrorLogging': typeof testErrorLogging === 'function' ? testErrorLogging : null,
+    'testDeadlineNotifications': typeof testDeadlineNotifications === 'function' ? testDeadlineNotifications : null
+  };
+}
+
+// Lazy-initialized registry (built on first access)
+var TEST_FUNCTION_REGISTRY = null;
+function ensureTestRegistry() {
+  if (TEST_FUNCTION_REGISTRY === null) {
+    TEST_FUNCTION_REGISTRY = getTestFunctionRegistry();
+  }
+  return TEST_FUNCTION_REGISTRY;
+}
+
+/**
  * Tracks function execution for code coverage
  * @param {string} functionName - Name of function being executed
  */
@@ -51335,10 +51421,14 @@ function runAllTests() {
     'testGrievanceUpdatesTriggersRecalculation'
   ];
 
-  // Run each test
+  // Ensure test registry is initialized
+  ensureTestRegistry();
+
+  // Run each test using the test registry
   testFunctions.forEach(function(testName) {
     try {
-      const testFn = this[testName];
+      // Look up function in the test registry
+      const testFn = TEST_FUNCTION_REGISTRY[testName];
       if (typeof testFn === 'function') {
         testFn();
         TEST_RESULTS.passed.push({
@@ -51348,7 +51438,7 @@ function runAllTests() {
       } else {
         TEST_RESULTS.skipped.push({
           name: testName,
-          reason: 'Function not found'
+          reason: 'Function not found in TEST_FUNCTION_REGISTRY'
         });
       }
     } catch (error) {
@@ -51728,11 +51818,15 @@ function runTestCategory(categoryName, testNames) {
 
   const startTime = new Date();
 
+  // Ensure test registry is initialized
+  ensureTestRegistry();
+
   testNames.forEach(function(testName) {
     try {
-      const testFn = this[testName];
+      // Look up function in the test registry
+      const testFn = TEST_FUNCTION_REGISTRY[testName];
       if (typeof testFn !== 'function') {
-        TEST_RESULTS.skipped.push({ name: testName, reason: 'Function not found' });
+        TEST_RESULTS.skipped.push({ name: testName, reason: 'Function not found in TEST_FUNCTION_REGISTRY' });
         skipped++;
         return;
       }
@@ -52939,10 +53033,11 @@ function testArrayValidation() {
 }
 
 /**
- * Run all validation tests
+ * Run all input validation tests (testing validate* helper functions)
+ * Note: runValidationTests() in TestFramework.gs tests data validation setup
  */
-function runValidationTests() {
-  Logger.log('=== Running Validation Tests ===');
+function runInputValidationTests() {
+  Logger.log('=== Running Input Validation Tests ===');
 
   testValidateRequired();
   testValidateString();
@@ -52959,22 +53054,24 @@ function runValidationTests() {
   testDateValidationEdgeCases();
   testArrayValidation();
 
-  Logger.log('=== All Validation Tests Passed ===');
+  Logger.log('=== All Input Validation Tests Passed ===');
 }
 
 /**
- * Run all tests
+ * Run column and validation tests only (subset of all tests)
+ * Note: The main runAllTests() function is defined in TestFramework.gs
+ * This function is kept for running a quick subset of tests
  */
-function runAllTests() {
+function runQuickTests() {
   Logger.log('========================================');
-  Logger.log('  RUNNING ALL TESTS');
+  Logger.log('  RUNNING QUICK TESTS (Column + Input Validation)');
   Logger.log('========================================');
 
   runColumnConstantTests();
-  runValidationTests();
+  runInputValidationTests();
 
   Logger.log('========================================');
-  Logger.log('  ALL TESTS COMPLETE');
+  Logger.log('  QUICK TESTS COMPLETE');
   Logger.log('========================================');
 }
 
