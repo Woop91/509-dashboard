@@ -1231,6 +1231,38 @@ function setupRequiredSheets() {
     results.errors.push('Config: ' + e.message);
   }
 
+  // Setup Dashboard sheet
+  try {
+    let dashboardSheet = ss.getSheetByName(SHEETS.DASHBOARD);
+    if (!dashboardSheet) {
+      dashboardSheet = ss.insertSheet(SHEETS.DASHBOARD);
+      dashboardSheet.getRange(1, 1).setValue('Dashboard').setFontWeight('bold').setFontSize(14);
+      results.created.push(SHEETS.DASHBOARD);
+    } else {
+      results.existing.push(SHEETS.DASHBOARD);
+    }
+  } catch (e) {
+    results.errors.push('Dashboard: ' + e.message);
+  }
+
+  // Setup Analytics Data sheet (hidden)
+  try {
+    let analyticsSheet = ss.getSheetByName(SHEETS.ANALYTICS);
+    if (!analyticsSheet) {
+      analyticsSheet = ss.insertSheet(SHEETS.ANALYTICS);
+      analyticsSheet.getRange(1, 1, 1, 5)
+        .setValues([['Metric', 'Value', 'Date', 'Category', 'Notes']])
+        .setFontWeight('bold')
+        .setBackground('#E8F0FE');
+      analyticsSheet.setFrozenRows(1);
+      results.created.push(SHEETS.ANALYTICS);
+    } else {
+      results.existing.push(SHEETS.ANALYTICS);
+    }
+  } catch (e) {
+    results.errors.push('Analytics Data: ' + e.message);
+  }
+
   return results;
 }
 
