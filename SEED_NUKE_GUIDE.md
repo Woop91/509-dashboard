@@ -14,7 +14,7 @@ When you execute the **Nuke Seed Data** function, the system will:
 1. **Remove ALL Members**: Delete all test members from Member Directory
 2. **Remove ALL Grievances**: Delete all test grievances from Grievance Log
 3. **Clear Steward Workload**: Remove all test steward assignments
-4. **Clear Config Demo Data**: Remove demo entries from Config tab:
+4. **Clear Config Demo Data**: Remove demo entries from Config tab (if any exist):
    - Job Titles (Column A)
    - Office Locations (Column B)
    - Units (Column C)
@@ -24,6 +24,8 @@ When you execute the **Nuke Seed Data** function, the system will:
    - Grievance Coordinators (Column O)
    - Home Towns (Column AF)
    - Office Addresses (Column AN)
+
+   > **NOTE (v3.11+):** These fields are now LEFT EMPTY during CREATE_509_DASHBOARD. Users populate them with their own data. If no user data was added, there's nothing to clear.
 
 ### Code Removal (Zero Trace Guarantee)
 5. **Delete ALL Seed Functions**: Uses Apps Script API to permanently remove:
@@ -402,5 +404,5 @@ Your dashboard is **production-ready**! 🚀
 
 ---
 
-**Last Updated**: 2025-12-07
-**Version**: 2.1.0 (Complete Self-Deletion - Nuke Also Deletes Itself)
+**Last Updated**: 2025-12-08
+**Version**: 2.2.0 (Updated for v3.11 - Config fields no longer pre-populated)

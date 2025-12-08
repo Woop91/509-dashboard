@@ -277,19 +277,21 @@ Features include:
 - Prevents typos and inconsistent data entry
 
 **Columns**:
-- Job Titles (Coordinator, Analyst, Case Manager, etc.)
-- Office Locations (Boston HQ, Worcester Office, etc.)
-- Units (Unit A-E with descriptive names)
+- Job Titles (empty - populate with your organization's job titles)
+- Office Locations (empty - populate with your office locations)
+- Units (empty - populate with your organizational units)
 - Office Days (Monday-Sunday)
 - Yes/No (Standard boolean values)
-- Supervisors (Master list of supervisor names)
-- Managers (Master list of manager names)
-- Stewards (Master list of steward/organizer names)
+- Supervisors (empty - populate with supervisor names)
+- Managers (empty - populate with manager names)
+- Stewards (empty - populate with steward/organizer names)
 - Grievance Status (Open, Pending Info, Settled, Withdrawn, Closed, Appealed)
 - Grievance Step (Informal, Step I, Step II, Step III, Mediation, Arbitration)
 - Issue Category (Discipline, Workload, Scheduling, Pay, Discrimination, Safety, Benefits, etc.)
 - Articles Violated (Contract articles: Art. 1-30)
 - Communication Methods (Email, Phone, Text, In Person)
+- Grievance Coordinators (empty - populate with your coordinators)
+- Home Towns (empty - populate with your member locations)
 
 **Best Practices**:
 - Keep lists continuous (no blank rows in middle)
