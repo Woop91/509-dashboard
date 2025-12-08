@@ -3,12 +3,11 @@
  * REORGANIZED MENU SYSTEM
  * ------------------------------------------------------------------------====
  *
- * Comprehensive menu system with 43+ features organized into five categories:
+ * Comprehensive menu system with 43+ features organized into four categories:
  * 1. 👤 Dashboard - Daily operations, search, grievance tools, communications
  * 2. 📊 Sheet Manager - Data, performance, integrity, automations, analytics
- * 3. 🔧 Setup - Dropdown configuration, dashboard setup
- * 4. 🎭 Demo - Seed demo data, data management (nuke/clear)
- * 5. ⚙️ Administrator - System health, workflow, column toggles, RBAC
+ * 3. 🎭 Demo - Seed demo data, data management (nuke/clear)
+ * 4. ⚙️ Administrator - System health, workflow, column toggles, RBAC
  *
  * This file defines createReorganizedMenus(ui) which is called from Code.gs onOpen()
  * The 🧪 Tests menu is defined separately in Code.gs
@@ -218,28 +217,6 @@ function createReorganizedMenus(ui) {
       .addItem("📝 Create FAQ Database", "createFAQSheet"))
     .addToUi();
 
-  // ------------ SETUP MENU ------------
-  ui.createMenu("🔧 Setup")
-    .addSubMenu(ui.createMenu("📋 Dropdown Configuration")
-      .addItem("📋 Setup All Dropdowns", "setupAllDropdowns")
-      .addItem("📋 Setup Member Directory Dropdowns", "setupMemberDirectoryDropdowns")
-      .addItem("📋 Setup Grievance Log Dropdowns", "setupGrievanceLogDropdowns")
-      .addItem("🔄 Refresh Steward Dropdowns", "refreshStewardDropdowns")
-      .addSeparator()
-      .addItem("🔄 Refresh Data Validations (v3.13+)", "refreshAllValidations")
-      .addItem("📈 Extend Validations (10k rows)", "extendValidationsForLargeDataset"))
-    .addSeparator()
-    .addSubMenu(ui.createMenu("🎨 Dashboard Setup")
-      .addItem("🎨 Setup Dashboard Enhancements", "SETUP_DASHBOARD_ENHANCEMENTS")
-      .addItem("📊 Populate Analytics Sheets", "populateAllAnalyticsSheets"))
-    .addSeparator()
-    .addSubMenu(ui.createMenu("🏗️ Sheet Initialization")
-      .addItem("🏗️ Initialize Required Sheets", "showSetupRequiredSheets")
-      .addItem("📋 Schema Health Check", "showSchemaHealthCheck"))
-    .addSeparator()
-    .addItem("📝 Open Member Google Form", "openMemberGoogleForm")
-    .addToUi();
-
   // ------------ DEMO MENU ------------
   ui.createMenu("🎭 Demo")
     .addSubMenu(ui.createMenu("🌱 Seed Demo Data")
@@ -338,8 +315,6 @@ function createReorganizedMenus(ui) {
     .addSubMenu(ui.createMenu("⚙️ User Settings")
       .addItem("⚙️ Preferences Editor", "showPreferencesEditor")
       .addItem("🌐 Language Selector", "showLanguageSelector"))
-    .addSeparator()
-    .addItem("👁️ Toggle Setup Menu Visibility", "toggleSetupMenuVisibility")
     .addToUi();
 }
 
