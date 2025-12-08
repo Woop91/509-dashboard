@@ -358,9 +358,10 @@ function createEnhancedHelpHTML() {
 }
 
 /**
- * Shows context help based on current sheet
+ * Shows context help based on current sheet (plain text version)
+ * Note: Canonical showContextHelp() is in ContextSensitiveHelp.gs
  */
-function showContextHelp() {
+function showContextHelpPlainText() {
   const ss = SpreadsheetApp.getActiveSpreadsheet();
   const activeSheet = ss.getActiveSheet();
   const sheetName = activeSheet.getName();

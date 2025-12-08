@@ -286,11 +286,12 @@ To adjust notification settings, contact your system administrator.
 }
 
 /**
- * Validates email address format
+ * Validates email address format (automated notifications version)
+ * Note: Canonical isValidEmail() is in SecurityUtils.gs
  * @param {string} email - Email address to validate
  * @returns {boolean} True if valid email
  */
-function isValidEmail(email) {
+function isValidEmailForNotifications(email) {
   if (!email) return false;
   const emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
   return emailRegex.test(email.toString().trim());

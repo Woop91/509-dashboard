@@ -3134,22 +3134,25 @@ Commit f1b28a9 completed the dynamic column conversion. ALL formulas now use dyn
 
 ### Recent Code Review (Version 3.14)
 
-**⚠️ KNOWN ISSUE: Duplicate Function Definitions**
+**✅ FIXED: Duplicate Function Definitions (17 duplicates resolved)**
 
-The following functions are defined in multiple files with different implementations. In Google Apps Script, only ONE version will be used at runtime (typically the last one loaded). This can cause unpredictable behavior.
+All duplicate function definitions have been resolved. Each function now has a single canonical version, with alternates renamed uniquely:
 
-| Function | Files | Impact |
-|----------|-------|--------|
-| `getUserRole` | AuditLoggingRBAC.gs, SecurityService.gs, SecurityUtils.gs | 3 different implementations - different return values! |
-| `checkUserPermission` | AuditLoggingRBAC.gs, SecurityAndAdmin.gs | Different implementations |
-| `validateEmail` | Constants.gs, EnhancedErrorHandling.gs | Constants.gs throws errors, EnhancedErrorHandling.gs returns boolean |
-| `showContextHelp` | ContextSensitiveHelp.gs, EnhancedHelp.gs, KeyboardShortcuts.gs | 3 identical copies (redundant) |
-| `cleanupOldBackups` | IncrementalBackupSystem.gs, PerformanceAndBackup.gs | Different implementations |
-| `exportToCSV` | AdvancedExport.gs, UIFeatures.gs | Different implementations |
-| `trackPerformance` | PerformanceAndBackup.gs, PerformanceMonitoring.gs | Different implementations |
-| `withErrorHandling` | EnhancedErrorHandling.gs, UtilityService.gs | Different implementations |
-
-**Recommended Fix:** Rename duplicates to be unique (e.g., `validateEmail` → `validateEmailFormat` vs `validateEmailRequired`), or consolidate into a single canonical version.
+| Original Duplicate | Canonical Location | Renamed Versions |
+|-------------------|-------------------|------------------|
+| `getUserRole` | SecurityUtils.gs | `getUserRoleFromSheet` (SecurityService.gs), `getUserRoleRBAC` (AuditLoggingRBAC.gs) |
+| `checkUserPermission` | AuditLoggingRBAC.gs | `checkUserPermissionCSV` (SecurityAndAdmin.gs) |
+| `validateEmail` | Constants.gs (throws) | `isValidEmailFormat` (EnhancedErrorHandling.gs) |
+| `showContextHelp` | ContextSensitiveHelp.gs | `showContextHelpKeyboard` (KeyboardShortcuts.gs), `showContextHelpPlainText` (EnhancedHelp.gs) |
+| `cleanupOldBackups` | PerformanceAndBackup.gs | `cleanupOldBackupsInFolder` (IncrementalBackupSystem.gs) |
+| `exportToCSV` | AdvancedExport.gs | `exportDataArrayToCSV` (UIFeatures.gs) |
+| `trackPerformance` | PerformanceAndBackup.gs | `trackPerformanceDecorator` (PerformanceMonitoring.gs) |
+| `withErrorHandling` | EnhancedErrorHandling.gs | `withSimpleErrorHandling` (UtilityService.gs) |
+| `isValidEmail` | SecurityUtils.gs | `isValidEmailForCoordinator` (CoordinatorNotification.gs), `isValidEmailForNotifications` (AutomatedNotifications.gs) |
+| `createAuditLogSheet` | SecurityService.gs | `recreateAuditLogSheet` (SecurityAndAdmin.gs), `createAuditLogSheetRBAC` (AuditLoggingRBAC.gs) |
+| `getStewardEmail` | CoordinatorNotification.gs | `getStewardEmailForAdmin` (AdminGrievanceMessages.gs) |
+| `validateRequiredFields` | EnhancedErrorHandling.gs | `validateRequiredFieldsOrThrow` (UtilityService.gs) |
+| `validateDate` | Constants.gs (throws) | `isValidDateFormat` (EnhancedErrorHandling.gs) |
 
 ---
 

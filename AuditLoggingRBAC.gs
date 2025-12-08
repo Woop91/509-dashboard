@@ -15,9 +15,10 @@
 /* ===================== AUDIT LOGGING ===================== */
 
 /**
- * Creates the Audit_Log sheet if it doesn't exist
+ * Creates the Audit_Log sheet if it doesn't exist (RBAC version)
+ * Note: Canonical createAuditLogSheet() is in SecurityService.gs
  */
-function createAuditLogSheet() {
+function createAuditLogSheetRBAC() {
   const ss = SpreadsheetApp.getActive();
   let auditLog = ss.getSheetByName("Audit_Log");
 
@@ -256,10 +257,11 @@ function checkUserPermission(requiredRole) {
 }
 
 /**
- * Get user's current role
+ * Get user's current role using RBAC permission checks
+ * Note: Canonical getUserRole() is in SecurityUtils.gs. This version uses checkUserPermission().
  * @returns {string} "ADMIN", "STEWARD", "VIEWER", or "NONE"
  */
-function getUserRole() {
+function getUserRoleRBAC() {
   if (checkUserPermission("ADMIN")) return "ADMIN";
   if (checkUserPermission("STEWARD")) return "STEWARD";
   if (checkUserPermission("VIEWER")) return "VIEWER";

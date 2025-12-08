@@ -81,12 +81,13 @@ function logToDiagnostics(context, errorMessage, stackTrace, timestamp) {
 }
 
 /**
- * Wraps a function with try-catch error handling
+ * Wraps a function with simple try-catch error handling
+ * Note: Canonical withErrorHandling() is in EnhancedErrorHandling.gs (with full logging and UI)
  * @param {Function} fn - Function to wrap
  * @param {string} context - Context name for error messages
  * @returns {Function} Wrapped function
  */
-function withErrorHandling(fn, context) {
+function withSimpleErrorHandling(fn, context) {
   return function(...args) {
     try {
       return fn.apply(this, args);
@@ -223,8 +224,9 @@ function safeArrayGet(array, index, defaultValue = null) {
  * @param {Array<string>} requiredFields - Array of required field names
  * @param {string} context - Context for error messages
  * @throws {Error} If any required field is missing
+ * Note: Canonical validateRequiredFields() is in EnhancedErrorHandling.gs (returns object instead of throwing)
  */
-function validateRequiredFields(data, requiredFields, context = 'validation') {
+function validateRequiredFieldsOrThrow(data, requiredFields, context = 'validation') {
   const missing = requiredFields.filter(function(field) {
     return data[field] === null || data[field] === undefined || data[field] === '';
   });

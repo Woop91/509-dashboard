@@ -936,7 +936,11 @@ function exportData(options) {
   return result;
 }
 
-function exportToCSV(data, exportType) {
+/**
+ * Export raw data array to CSV (simple version)
+ * Note: Canonical exportToCSV() is in AdvancedExport.gs (takes sheet, applies permission filtering)
+ */
+function exportDataArrayToCSV(data, exportType) {
   const csv = data.map(row => row.map(cell => `"${cell}"`).join(',')).join('\n');
   const fileName = `${exportType}_export_${new Date().getTime()}.csv`;
 

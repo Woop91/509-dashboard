@@ -271,11 +271,12 @@ Sent by: ${coordinatorEmail}
 }
 
 /**
- * Gets the email address for a steward by name
+ * Gets the email address for a steward by name (Admin messages version)
+ * Note: Canonical getStewardEmail() is in CoordinatorNotification.gs (with more error handling)
  * @param {string} stewardName - The steward's name
  * @returns {string|null} The steward's email or null if not found
  */
-function getStewardEmail(stewardName) {
+function getStewardEmailForAdmin(stewardName) {
   if (!stewardName) return null;
 
   const ss = SpreadsheetApp.getActiveSpreadsheet();

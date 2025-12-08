@@ -182,12 +182,13 @@ function createPerformanceMonitoringSheet() {
 }
 
 /**
- * Wrapper to track performance of any function
+ * Wrapper to track performance of any function (decorator pattern)
+ * Note: Canonical trackPerformance() is in PerformanceAndBackup.gs (executes callback directly)
  * @param {string} funcName - Name for tracking
  * @param {Function} func - Function to track
  * @returns {Function} Wrapped function with performance tracking
  */
-function trackPerformance(funcName, func) {
+function trackPerformanceDecorator(funcName, func) {
   return function(...args) {
     const startTime = Date.now();
 

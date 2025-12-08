@@ -368,9 +368,10 @@ function getStewardEmail(stewardName) {
 }
 
 /**
- * Validates email address format
+ * Validates email address format (coordinator notifications version)
+ * Note: Canonical isValidEmail() is in SecurityUtils.gs
  */
-function isValidEmail(email) {
+function isValidEmailForCoordinator(email) {
   if (!email || typeof email !== 'string') {
     return false;
   }
