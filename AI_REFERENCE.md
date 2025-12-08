@@ -1,6 +1,6 @@
 # 509 Dashboard - Complete Feature Reference
 
-**Version:** 3.15
+**Version:** 3.16
 **Last Updated:** 2025-12-08
 **Purpose:** Union grievance tracking and member engagement system for SEIU Local 509
 
@@ -46,7 +46,70 @@
 
 ---
 
-## 🆕 Changelog - Version 3.15 (2025-12-08)
+## 🆕 Changelog - Version 3.16 (2025-12-08)
+
+**CODE QUALITY ENHANCEMENTS - ROW MAPPERS & SCHEMA VALIDATION:**
+
+Based on external code review recommendations, this release adds architectural improvements for better maintainability and error prevention.
+
+✅ **Row Mapper Functions** (`Constants.gs`)
+- Added `mapMemberRow(row)` - Maps Member Directory row array to structured object
+  - Returns object with named properties: `memberId`, `firstName`, `lastName`, `fullName`, `email`, `workLocation`, etc.
+  - Eliminates scattered `row[MEMBER_COLS.X - 1]` calls throughout codebase
+  - Example: `const members = data.slice(1).map(mapMemberRow);`
+
+- Added `mapGrievanceRow(row)` - Maps Grievance Log row array to structured object
+  - Returns object with named properties: `grievanceId`, `memberId`, `memberName`, `status`, `dateFiled`, etc.
+  - Includes computed `memberName` field (combines first + last name)
+  - Example: `const openCases = grievances.filter(g => g.status === 'Open');`
+
+**Benefits:**
+- Reduces off-by-one index errors
+- Makes code more readable and self-documenting
+- Easier to refactor if column layout changes
+- Single point of update for column mapping
+
+✅ **Schema Validation Functions** (`Constants.gs`)
+- Added `MEMBER_EXPECTED_HEADERS` - Expected header texts for Member Directory columns
+- Added `GRIEVANCE_EXPECTED_HEADERS` - Expected header texts for Grievance Log columns
+- Added `validateSheetHeaders(sheet, expectedHeaders)` - Generic header validation
+- Added `validateMemberDirectorySchema()` - Validates Member Directory headers
+- Added `validateGrievanceLogSchema()` - Validates Grievance Log headers
+- Added `runSchemaHealthCheck()` - Comprehensive health report for all sheets
+- Added `showSchemaHealthCheck()` - UI dialog showing validation results
+
+**Benefits:**
+- Detects header drift from manual edits
+- Prevents silent data corruption
+- Aids diagnostics and troubleshooting
+- Menu accessible: `Administrator > System Health > Schema Health Check`
+
+✅ **Menu Update** (`ReorganizedMenu.gs`)
+- Added "📋 Schema Health Check" to Administrator > System Health submenu
+
+**Files Modified:**
+- `Constants.gs` - Added row mappers, schema validation, expected headers
+- `ReorganizedMenu.gs` - Added Schema Health Check menu item
+- `ConsolidatedDashboard.gs` - Rebuilt with all enhancements
+
+**Usage Examples:**
+```javascript
+// Row mappers - cleaner data access
+const data = memberSheet.getDataRange().getValues();
+const members = data.slice(1).map(mapMemberRow);
+const stewards = members.filter(m => m.isSteward === 'Yes');
+stewards.forEach(s => Logger.log(`${s.fullName}: ${s.email}`));
+
+// Schema validation - detect configuration drift
+const health = runSchemaHealthCheck();
+if (!health.allValid) {
+  health.issues.forEach(issue => Logger.log(issue));
+}
+```
+
+---
+
+## Changelog - Version 3.15 (2025-12-08)
 
 **CRITICAL BUG FIXES - UNDEFINED COLUMN CONSTANTS:**
 

@@ -265,6 +265,7 @@ function createReorganizedMenus(ui) {
     .addSubMenu(ui.createMenu("⚠️ System Health")
       .addItem("⚠️ Error Dashboard", "showErrorDashboard")
       .addItem("🏥 Run Health Check", "performSystemHealthCheck")
+      .addItem("📋 Schema Health Check", "showSchemaHealthCheck")
       .addSeparator()
       .addItem("📊 View Error Trends", "createErrorTrendReport")
       .addItem("🧪 Test Error Logging", "testErrorLogging"))

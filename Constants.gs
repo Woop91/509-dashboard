@@ -893,6 +893,146 @@ function getMemberFullName(row) {
   return [firstName, lastName].filter(Boolean).join(' ');
 }
 
+/* --------------------= ROW MAPPER FUNCTIONS --------------------= */
+
+/**
+ * Maps a Member Directory row array to a structured object
+ * Use this to avoid scattered row[MEMBER_COLS.X - 1] calls throughout the codebase
+ *
+ * @param {Array} row - A row array from Member Directory (0-indexed from getValues())
+ * @returns {Object} Structured member object with named properties
+ *
+ * @example
+ * const data = memberSheet.getDataRange().getValues();
+ * const members = data.slice(1).map(mapMemberRow); // Skip header
+ * members.forEach(m => Logger.log(`${m.fullName} - ${m.email}`));
+ */
+function mapMemberRow(row) {
+  return {
+    // Identity
+    memberId: row[MEMBER_COLS.MEMBER_ID - 1] || '',
+    firstName: row[MEMBER_COLS.FIRST_NAME - 1] || '',
+    lastName: row[MEMBER_COLS.LAST_NAME - 1] || '',
+    fullName: getMemberFullName(row),
+    jobTitle: row[MEMBER_COLS.JOB_TITLE - 1] || '',
+
+    // Location & Work
+    workLocation: row[MEMBER_COLS.WORK_LOCATION - 1] || '',
+    unit: row[MEMBER_COLS.UNIT - 1] || '',
+    officeDays: row[MEMBER_COLS.OFFICE_DAYS - 1] || '',
+
+    // Contact
+    email: row[MEMBER_COLS.EMAIL - 1] || '',
+    phone: row[MEMBER_COLS.PHONE - 1] || '',
+    preferredComm: row[MEMBER_COLS.PREFERRED_COMM - 1] || '',
+    bestTime: row[MEMBER_COLS.BEST_TIME - 1] || '',
+
+    // Organization
+    supervisor: row[MEMBER_COLS.SUPERVISOR - 1] || '',
+    manager: row[MEMBER_COLS.MANAGER - 1] || '',
+    isSteward: row[MEMBER_COLS.IS_STEWARD - 1] || '',
+    committees: row[MEMBER_COLS.COMMITTEES - 1] || '',
+    assignedSteward: row[MEMBER_COLS.ASSIGNED_STEWARD - 1] || '',
+
+    // Engagement Metrics
+    lastVirtualMtg: row[MEMBER_COLS.LAST_VIRTUAL_MTG - 1] || '',
+    lastInPersonMtg: row[MEMBER_COLS.LAST_INPERSON_MTG - 1] || '',
+    openRate: row[MEMBER_COLS.OPEN_RATE - 1] || 0,
+    volunteerHours: row[MEMBER_COLS.VOLUNTEER_HOURS - 1] || 0,
+
+    // Interests
+    interestLocal: row[MEMBER_COLS.INTEREST_LOCAL - 1] || '',
+    interestChapter: row[MEMBER_COLS.INTEREST_CHAPTER - 1] || '',
+    interestAllied: row[MEMBER_COLS.INTEREST_ALLIED - 1] || '',
+    homeTown: row[MEMBER_COLS.HOME_TOWN - 1] || '',
+
+    // Steward Contact Tracking
+    recentContactDate: row[MEMBER_COLS.RECENT_CONTACT_DATE - 1] || '',
+    contactSteward: row[MEMBER_COLS.CONTACT_STEWARD - 1] || '',
+    contactNotes: row[MEMBER_COLS.CONTACT_NOTES - 1] || '',
+
+    // Grievance Status
+    hasOpenGrievance: row[MEMBER_COLS.HAS_OPEN_GRIEVANCE - 1] || '',
+    grievanceStatus: row[MEMBER_COLS.GRIEVANCE_STATUS - 1] || '',
+    nextDeadline: row[MEMBER_COLS.NEXT_DEADLINE - 1] || ''
+  };
+}
+
+/**
+ * Maps a Grievance Log row array to a structured object
+ * Use this to avoid scattered row[GRIEVANCE_COLS.X - 1] calls throughout the codebase
+ *
+ * @param {Array} row - A row array from Grievance Log (0-indexed from getValues())
+ * @returns {Object} Structured grievance object with named properties
+ *
+ * @example
+ * const data = grievanceSheet.getDataRange().getValues();
+ * const grievances = data.slice(1).map(mapGrievanceRow); // Skip header
+ * const openCases = grievances.filter(g => g.status === 'Open');
+ */
+function mapGrievanceRow(row) {
+  return {
+    // Identity
+    grievanceId: row[GRIEVANCE_COLS.GRIEVANCE_ID - 1] || '',
+    memberId: row[GRIEVANCE_COLS.MEMBER_ID - 1] || '',
+    firstName: row[GRIEVANCE_COLS.FIRST_NAME - 1] || '',
+    lastName: row[GRIEVANCE_COLS.LAST_NAME - 1] || '',
+    memberName: getGrievanceMemberName(row),
+
+    // Status & Assignment
+    status: row[GRIEVANCE_COLS.STATUS - 1] || '',
+    currentStep: row[GRIEVANCE_COLS.CURRENT_STEP - 1] || '',
+
+    // Timeline - Filing
+    incidentDate: row[GRIEVANCE_COLS.INCIDENT_DATE - 1] || '',
+    filingDeadline: row[GRIEVANCE_COLS.FILING_DEADLINE - 1] || '',
+    dateFiled: row[GRIEVANCE_COLS.DATE_FILED - 1] || '',
+
+    // Timeline - Step I
+    step1Due: row[GRIEVANCE_COLS.STEP1_DUE - 1] || '',
+    step1Rcvd: row[GRIEVANCE_COLS.STEP1_RCVD - 1] || '',
+
+    // Timeline - Step II
+    step2AppealDue: row[GRIEVANCE_COLS.STEP2_APPEAL_DUE - 1] || '',
+    step2AppealFiled: row[GRIEVANCE_COLS.STEP2_APPEAL_FILED - 1] || '',
+    step2Due: row[GRIEVANCE_COLS.STEP2_DUE - 1] || '',
+    step2Rcvd: row[GRIEVANCE_COLS.STEP2_RCVD - 1] || '',
+
+    // Timeline - Step III
+    step3AppealDue: row[GRIEVANCE_COLS.STEP3_APPEAL_DUE - 1] || '',
+    step3AppealFiled: row[GRIEVANCE_COLS.STEP3_APPEAL_FILED - 1] || '',
+    dateClosed: row[GRIEVANCE_COLS.DATE_CLOSED - 1] || '',
+
+    // Calculated Metrics
+    daysOpen: row[GRIEVANCE_COLS.DAYS_OPEN - 1] || 0,
+    nextActionDue: row[GRIEVANCE_COLS.NEXT_ACTION_DUE - 1] || '',
+    daysToDeadline: row[GRIEVANCE_COLS.DAYS_TO_DEADLINE - 1] || '',
+
+    // Case Details
+    articles: row[GRIEVANCE_COLS.ARTICLES - 1] || '',
+    issueCategory: row[GRIEVANCE_COLS.ISSUE_CATEGORY - 1] || '',
+
+    // Contact & Location
+    memberEmail: row[GRIEVANCE_COLS.MEMBER_EMAIL - 1] || '',
+    unit: row[GRIEVANCE_COLS.UNIT - 1] || '',
+    location: row[GRIEVANCE_COLS.LOCATION - 1] || '',
+    steward: row[GRIEVANCE_COLS.STEWARD - 1] || '',
+
+    // Resolution
+    resolution: row[GRIEVANCE_COLS.RESOLUTION - 1] || '',
+
+    // Coordinator Notifications
+    messageAlert: row[GRIEVANCE_COLS.MESSAGE_ALERT - 1] || false,
+    coordinatorMessage: row[GRIEVANCE_COLS.COORDINATOR_MESSAGE - 1] || '',
+    acknowledgedBy: row[GRIEVANCE_COLS.ACKNOWLEDGED_BY - 1] || '',
+    acknowledgedDate: row[GRIEVANCE_COLS.ACKNOWLEDGED_DATE - 1] || '',
+
+    // Drive Integration
+    driveFolderId: row[GRIEVANCE_COLS.DRIVE_FOLDER_ID - 1] || '',
+    driveFolderUrl: row[GRIEVANCE_COLS.DRIVE_FOLDER_URL - 1] || ''
+  };
+}
+
 /**
  * Validates that all required sheets exist
  * @returns {Object} {valid: boolean, missing: Array<string>}
@@ -932,6 +1072,212 @@ function getOrCreateSheet(sheetName, ss) {
     sheet = ss.insertSheet(sheetName);
   }
   return sheet;
+}
+
+/* --------------------= SCHEMA VALIDATION FUNCTIONS --------------------= */
+
+/**
+ * Expected headers for Member Directory (first row)
+ * Used by validateMemberDirectorySchema() to detect header drift
+ * @const {Object}
+ */
+const MEMBER_EXPECTED_HEADERS = {
+  1: 'Member ID',
+  2: 'First Name',
+  3: 'Last Name',
+  4: 'Job Title',
+  5: 'Work Location (Site)',
+  6: 'Unit',
+  8: 'Email Address',
+  14: 'Is Steward',
+  16: 'Assigned Steward',
+  28: 'Has Open Grievance?',
+  31: 'Start Grievance'
+};
+
+/**
+ * Expected headers for Grievance Log (first row)
+ * Used by validateGrievanceLogSchema() to detect header drift
+ * @const {Object}
+ */
+const GRIEVANCE_EXPECTED_HEADERS = {
+  1: 'Grievance ID',
+  2: 'Member ID',
+  3: 'First Name',
+  4: 'Last Name',
+  5: 'Status',
+  6: 'Current Step',
+  7: 'Incident Date',
+  9: 'Date Filed (Step I)',
+  19: 'Days Open',
+  20: 'Next Action Due',
+  23: 'Issue Category',
+  27: 'Assigned Steward (Name)',
+  28: 'Resolution Summary',
+  29: 'Message Alert'
+};
+
+/**
+ * Validates that a sheet's headers match expected values
+ * Call this from diagnostics to detect schema drift from manual edits
+ *
+ * @param {SpreadsheetApp.Sheet} sheet - The sheet to validate
+ * @param {Object} expectedHeaders - Object mapping column index (1-based) to expected header text
+ * @returns {Object} {valid: boolean, mismatches: Array<{column, expected, actual}>}
+ *
+ * @example
+ * const result = validateSheetHeaders(memberSheet, MEMBER_EXPECTED_HEADERS);
+ * if (!result.valid) {
+ *   result.mismatches.forEach(m => Logger.log(`Column ${m.column}: expected "${m.expected}", got "${m.actual}"`));
+ * }
+ */
+function validateSheetHeaders(sheet, expectedHeaders) {
+  const headers = sheet.getRange(1, 1, 1, sheet.getLastColumn()).getValues()[0];
+  const mismatches = [];
+
+  Object.keys(expectedHeaders).forEach(function(colIndex) {
+    const expected = expectedHeaders[colIndex];
+    const actual = String(headers[parseInt(colIndex) - 1] || '').trim();
+
+    if (actual !== expected) {
+      mismatches.push({
+        column: parseInt(colIndex),
+        columnLetter: getColumnLetter(parseInt(colIndex)),
+        expected: expected,
+        actual: actual
+      });
+    }
+  });
+
+  return {
+    valid: mismatches.length === 0,
+    mismatches: mismatches
+  };
+}
+
+/**
+ * Validates Member Directory schema
+ * @returns {Object} {valid: boolean, mismatches: Array}
+ */
+function validateMemberDirectorySchema() {
+  const ss = SpreadsheetApp.getActiveSpreadsheet();
+  const sheet = ss.getSheetByName(SHEETS.MEMBER_DIR);
+
+  if (!sheet) {
+    return { valid: false, mismatches: [], error: 'Member Directory sheet not found' };
+  }
+
+  return validateSheetHeaders(sheet, MEMBER_EXPECTED_HEADERS);
+}
+
+/**
+ * Validates Grievance Log schema
+ * @returns {Object} {valid: boolean, mismatches: Array}
+ */
+function validateGrievanceLogSchema() {
+  const ss = SpreadsheetApp.getActiveSpreadsheet();
+  const sheet = ss.getSheetByName(SHEETS.GRIEVANCE_LOG);
+
+  if (!sheet) {
+    return { valid: false, mismatches: [], error: 'Grievance Log sheet not found' };
+  }
+
+  return validateSheetHeaders(sheet, GRIEVANCE_EXPECTED_HEADERS);
+}
+
+/**
+ * Runs all schema validations and returns a comprehensive health report
+ * @returns {Object} Health report with status for each critical sheet
+ *
+ * @example
+ * const health = runSchemaHealthCheck();
+ * if (!health.allValid) {
+ *   Logger.log('Schema issues found:');
+ *   health.issues.forEach(i => Logger.log(i));
+ * }
+ */
+function runSchemaHealthCheck() {
+  const results = {
+    timestamp: new Date(),
+    allValid: true,
+    sheets: {},
+    issues: []
+  };
+
+  // Check required sheets exist
+  const sheetsCheck = validateRequiredSheets();
+  results.sheets.requiredSheets = {
+    valid: sheetsCheck.valid,
+    missing: sheetsCheck.missing
+  };
+  if (!sheetsCheck.valid) {
+    results.allValid = false;
+    sheetsCheck.missing.forEach(function(name) {
+      results.issues.push('MISSING SHEET: ' + name);
+    });
+  }
+
+  // Validate Member Directory schema
+  const memberSchema = validateMemberDirectorySchema();
+  results.sheets.memberDirectory = {
+    valid: memberSchema.valid,
+    mismatches: memberSchema.mismatches || [],
+    error: memberSchema.error
+  };
+  if (!memberSchema.valid) {
+    results.allValid = false;
+    if (memberSchema.error) {
+      results.issues.push('MEMBER DIRECTORY: ' + memberSchema.error);
+    }
+    (memberSchema.mismatches || []).forEach(function(m) {
+      results.issues.push('MEMBER DIRECTORY column ' + m.columnLetter + ': expected "' + m.expected + '", got "' + m.actual + '"');
+    });
+  }
+
+  // Validate Grievance Log schema
+  const grievanceSchema = validateGrievanceLogSchema();
+  results.sheets.grievanceLog = {
+    valid: grievanceSchema.valid,
+    mismatches: grievanceSchema.mismatches || [],
+    error: grievanceSchema.error
+  };
+  if (!grievanceSchema.valid) {
+    results.allValid = false;
+    if (grievanceSchema.error) {
+      results.issues.push('GRIEVANCE LOG: ' + grievanceSchema.error);
+    }
+    (grievanceSchema.mismatches || []).forEach(function(m) {
+      results.issues.push('GRIEVANCE LOG column ' + m.columnLetter + ': expected "' + m.expected + '", got "' + m.actual + '"');
+    });
+  }
+
+  return results;
+}
+
+/**
+ * Shows schema health check results in a dialog
+ * Can be called from menu: Administrator > Run Schema Health Check
+ */
+function showSchemaHealthCheck() {
+  const health = runSchemaHealthCheck();
+
+  let message;
+  if (health.allValid) {
+    message = '✅ All schema checks passed!\n\n' +
+      '• Required sheets: OK\n' +
+      '• Member Directory headers: OK\n' +
+      '• Grievance Log headers: OK\n\n' +
+      'Last checked: ' + health.timestamp.toLocaleString();
+  } else {
+    message = '⚠️ Schema issues detected:\n\n';
+    health.issues.forEach(function(issue) {
+      message += '• ' + issue + '\n';
+    });
+    message += '\nThese issues may cause runtime errors.\n';
+    message += 'Consider running "Self-Heal" or manually fixing headers.';
+  }
+
+  SpreadsheetApp.getUi().alert('Schema Health Check', message, SpreadsheetApp.getUi().ButtonSet.OK);
 }
 
 /* --------------------= INPUT VALIDATION HELPERS --------------------= */
