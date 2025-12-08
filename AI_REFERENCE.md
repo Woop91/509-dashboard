@@ -1,6 +1,6 @@
 # 509 Dashboard - Complete Feature Reference
 
-**Version:** 3.13
+**Version:** 3.14
 **Last Updated:** 2025-12-08
 **Purpose:** Union grievance tracking and member engagement system for SEIU Local 509
 
@@ -46,7 +46,33 @@
 
 ---
 
-## 🆕 Changelog - Version 3.13 (2025-12-08)
+## 🆕 Changelog - Version 3.14 (2025-12-08)
+
+**TEST FRAMEWORK FIX FOR APPS SCRIPT COMPATIBILITY:**
+
+✅ **Fixed Test Runner Function Lookup** (`TestFramework.gs`)
+- Added `TEST_FUNCTION_REGISTRY` to map test names to their functions
+- Apps Script doesn't support `this[functionName]` in `forEach` callbacks
+- Fixed `runAllTests()` and `runTestCategory()` to use registry lookup
+- All 49 test functions now properly registered and callable
+
+✅ **Resolved Duplicate Function Conflicts** (`Code.test.gs`)
+- Renamed duplicate `runAllTests()` → `runQuickTests()` (runs column + input validation tests only)
+- Renamed duplicate `runValidationTests()` → `runInputValidationTests()` (tests validate* helper functions)
+- Main `runAllTests()` in `TestFramework.gs` is now the canonical version
+
+**Why This Was Needed:**
+- Tests weren't running because `this[testName]` returns `undefined` in Apps Script
+- Duplicate function definitions caused only one version to execute
+- Menu items for tests appeared but clicking them did nothing
+
+**Files Modified:**
+- `TestFramework.gs` - Added `getTestFunctionRegistry()`, `ensureTestRegistry()`, `TEST_FUNCTION_REGISTRY`
+- `Code.test.gs` - Renamed conflicting functions
+
+---
+
+## Changelog - Version 3.13 (2025-12-08)
 
 **DATA VALIDATION FIX FOR USER-POPULATED FIELDS:**
 
@@ -3105,6 +3131,27 @@ Commit f1b28a9 completed the dynamic column conversion. ALL formulas now use dyn
 ---
 
 ## Code Quality & Known Issues
+
+### Recent Code Review (Version 3.14)
+
+**⚠️ KNOWN ISSUE: Duplicate Function Definitions**
+
+The following functions are defined in multiple files with different implementations. In Google Apps Script, only ONE version will be used at runtime (typically the last one loaded). This can cause unpredictable behavior.
+
+| Function | Files | Impact |
+|----------|-------|--------|
+| `getUserRole` | AuditLoggingRBAC.gs, SecurityService.gs, SecurityUtils.gs | 3 different implementations - different return values! |
+| `checkUserPermission` | AuditLoggingRBAC.gs, SecurityAndAdmin.gs | Different implementations |
+| `validateEmail` | Constants.gs, EnhancedErrorHandling.gs | Constants.gs throws errors, EnhancedErrorHandling.gs returns boolean |
+| `showContextHelp` | ContextSensitiveHelp.gs, EnhancedHelp.gs, KeyboardShortcuts.gs | 3 identical copies (redundant) |
+| `cleanupOldBackups` | IncrementalBackupSystem.gs, PerformanceAndBackup.gs | Different implementations |
+| `exportToCSV` | AdvancedExport.gs, UIFeatures.gs | Different implementations |
+| `trackPerformance` | PerformanceAndBackup.gs, PerformanceMonitoring.gs | Different implementations |
+| `withErrorHandling` | EnhancedErrorHandling.gs, UtilityService.gs | Different implementations |
+
+**Recommended Fix:** Rename duplicates to be unique (e.g., `validateEmail` → `validateEmailFormat` vs `validateEmailRequired`), or consolidate into a single canonical version.
+
+---
 
 ### Recent Code Review (Version 2.2)
 
