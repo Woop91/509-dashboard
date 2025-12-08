@@ -932,8 +932,8 @@ function recalculateSingleGrievanceRow(sheet, row) {
  * This is a simplified version that can be expanded
  */
 function handleCoordinatorCheckbox(sheet, row, col) {
-  // Check if the Coordinator Notified column was edited
-  if (col !== GRIEVANCE_COLS.COORDINATOR_NOTIFIED) return;
+  // Check if the Message Alert column was edited
+  if (col !== GRIEVANCE_COLS.MESSAGE_ALERT) return;
 
   const checkboxValue = sheet.getRange(row, col).getValue();
 
