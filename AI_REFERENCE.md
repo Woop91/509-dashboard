@@ -3134,7 +3134,7 @@ Commit f1b28a9 completed the dynamic column conversion. ALL formulas now use dyn
 
 ### Recent Code Review (Version 3.14)
 
-**✅ FIXED: Duplicate Function Definitions (17 duplicates resolved)**
+**✅ FIXED: Duplicate Function Definitions (21 duplicates resolved)**
 
 All duplicate function definitions have been resolved. Each function now has a single canonical version, with alternates renamed uniquely:
 
@@ -3153,6 +3153,10 @@ All duplicate function definitions have been resolved. Each function now has a s
 | `getStewardEmail` | CoordinatorNotification.gs | `getStewardEmailForAdmin` (AdminGrievanceMessages.gs) |
 | `validateRequiredFields` | EnhancedErrorHandling.gs | `validateRequiredFieldsOrThrow` (UtilityService.gs) |
 | `validateDate` | Constants.gs (throws) | `isValidDateFormat` (EnhancedErrorHandling.gs) |
+| `createCommunicationsLogSheet` | Code.gs | `createGmailCommunicationsLogSheet` (GmailIntegration.gs) |
+| `exportToPDF` | AdvancedExport.gs | `exportToPDFStub` (UIFeatures.gs) |
+| `exportToExcel` | AdvancedExport.gs | `exportToExcelStub` (UIFeatures.gs) |
+| `logDataModification` | AuditLoggingRBAC.gs | `logDataModificationAdmin` (SecurityAndAdmin.gs) |
 
 ---
 
