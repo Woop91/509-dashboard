@@ -14,7 +14,7 @@
  * Build Info:
  * - Version: 2.1.0 (Security Enhanced + Code Review Improvements)
  * - Build ID: 20251202-improvements
- * - Build Date: 2025-12-08T04:44:48.260Z
+ * - Build Date: 2025-12-08T05:14:30.921Z
  * - Build Type: DEVELOPMENT
  * - Modules: 79 files
  * - Tests Included: Yes
@@ -37653,30 +37653,30 @@ function writeDashboardData(metrics, chartData) {
     }
   }
 
-  // Prepare all data to write
+  // Prepare all data to write (all rows must have 4 columns)
   const updates = [
     // KPI section
-    ['MEMBER METRICS', ''],
-    ['Total Members', metrics.totalMembers],
-    ['Active Stewards', metrics.activeStewards],
-    ['Avg Open Rate', `${metrics.avgOpenRate.toFixed(1)}%`],
-    ['YTD Volunteer Hours', metrics.ytdVolunteerHours.toLocaleString('en-US', {minimumFractionDigits: 1, maximumFractionDigits: 1})],
-    ['', ''],
+    ['MEMBER METRICS', '', '', ''],
+    ['Total Members', metrics.totalMembers, '', ''],
+    ['Active Stewards', metrics.activeStewards, '', ''],
+    ['Avg Open Rate', `${metrics.avgOpenRate.toFixed(1)}%`, '', ''],
+    ['YTD Volunteer Hours', metrics.ytdVolunteerHours.toLocaleString('en-US', {minimumFractionDigits: 1, maximumFractionDigits: 1}), '', ''],
+    ['', '', '', ''],
 
-    ['GRIEVANCE METRICS', ''],
-    ['Total Grievances', metrics.totalGrievances],
-    ['Open Grievances', metrics.openGrievances],
-    ['Pending Info', metrics.pendingInfo],
-    ['Settled This Month', metrics.settledThisMonth],
-    ['Avg Days Open', Math.round(metrics.avgDaysOpen)],
-    ['', ''],
+    ['GRIEVANCE METRICS', '', '', ''],
+    ['Total Grievances', metrics.totalGrievances, '', ''],
+    ['Open Grievances', metrics.openGrievances, '', ''],
+    ['Pending Info', metrics.pendingInfo, '', ''],
+    ['Settled This Month', metrics.settledThisMonth, '', ''],
+    ['Avg Days Open', Math.round(metrics.avgDaysOpen), '', ''],
+    ['', '', '', ''],
 
-    ['ENGAGEMENT (Last 30 Days)', ''],
-    ['Local Action Interest', metrics.localActionInterest],
-    ['Chapter Action Interest', metrics.chapterActionInterest],
-    ['', ''],
+    ['ENGAGEMENT (Last 30 Days)', '', '', ''],
+    ['Local Action Interest', metrics.localActionInterest, '', ''],
+    ['Chapter Action Interest', metrics.chapterActionInterest, '', ''],
+    ['', '', '', ''],
 
-    ['UPCOMING DEADLINES', ''],
+    ['UPCOMING DEADLINES', '', '', ''],
     ['Grievance ID', 'Member', 'Deadline', 'Days Until']
   ];
 
