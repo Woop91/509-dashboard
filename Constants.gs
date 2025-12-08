@@ -1074,6 +1074,205 @@ function getOrCreateSheet(sheetName, ss) {
   return sheet;
 }
 
+/* --------------------= SHEET SETUP FUNCTIONS --------------------= */
+
+/**
+ * Full header row for Member Directory (31 columns A-AE)
+ * Used by setupRequiredSheets() to create sheet with proper headers
+ * @const {Array<string>}
+ */
+const MEMBER_DIRECTORY_HEADERS = [
+  'Member ID',           // A - MEMBER_ID
+  'First Name',          // B - FIRST_NAME
+  'Last Name',           // C - LAST_NAME
+  'Job Title',           // D - JOB_TITLE
+  'Work Location (Site)',// E - WORK_LOCATION
+  'Unit',                // F - UNIT
+  'Office Days',         // G - OFFICE_DAYS
+  'Email Address',       // H - EMAIL
+  'Phone',               // I - PHONE
+  'Preferred Communication', // J - PREFERRED_COMM
+  'Best Time to Reach',  // K - BEST_TIME
+  'Supervisor',          // L - SUPERVISOR
+  'Manager',             // M - MANAGER
+  'Is Steward',          // N - IS_STEWARD
+  'Committees',          // O - COMMITTEES
+  'Assigned Steward',    // P - ASSIGNED_STEWARD
+  'Last Virtual Meeting',// Q - LAST_VIRTUAL_MTG
+  'Last In-Person Meeting', // R - LAST_INPERSON_MTG
+  'Email Open Rate',     // S - OPEN_RATE
+  'Volunteer Hours',     // T - VOLUNTEER_HOURS
+  'Interest: Local Issues', // U - INTEREST_LOCAL
+  'Interest: Chapter Activities', // V - INTEREST_CHAPTER
+  'Interest: Allied Orgs', // W - INTEREST_ALLIED
+  'Home Town',           // X - HOME_TOWN
+  'Recent Contact Date', // Y - RECENT_CONTACT_DATE
+  'Contact Steward',     // Z - CONTACT_STEWARD
+  'Contact Notes',       // AA - CONTACT_NOTES
+  'Has Open Grievance?', // AB - HAS_OPEN_GRIEVANCE
+  'Grievance Status',    // AC - GRIEVANCE_STATUS
+  'Next Deadline',       // AD - NEXT_DEADLINE
+  'Start Grievance'      // AE - START_GRIEVANCE
+];
+
+/**
+ * Full header row for Grievance Log (34 columns A-AH)
+ * Used by setupRequiredSheets() to create sheet with proper headers
+ * @const {Array<string>}
+ */
+const GRIEVANCE_LOG_HEADERS = [
+  'Grievance ID',        // A - GRIEVANCE_ID
+  'Member ID',           // B - MEMBER_ID
+  'First Name',          // C - FIRST_NAME
+  'Last Name',           // D - LAST_NAME
+  'Status',              // E - STATUS
+  'Current Step',        // F - CURRENT_STEP
+  'Incident Date',       // G - INCIDENT_DATE
+  'Filing Deadline',     // H - FILING_DEADLINE
+  'Date Filed (Step I)', // I - DATE_FILED
+  'Step I Decision Due', // J - STEP1_DUE
+  'Step I Decision Rcvd',// K - STEP1_RCVD
+  'Step II Appeal Due',  // L - STEP2_APPEAL_DUE
+  'Step II Appeal Filed',// M - STEP2_APPEAL_FILED
+  'Step II Decision Due',// N - STEP2_DUE
+  'Step II Decision Rcvd', // O - STEP2_RCVD
+  'Step III Appeal Due', // P - STEP3_APPEAL_DUE
+  'Step III Appeal Filed', // Q - STEP3_APPEAL_FILED
+  'Date Closed',         // R - DATE_CLOSED
+  'Days Open',           // S - DAYS_OPEN
+  'Next Action Due',     // T - NEXT_ACTION_DUE
+  'Days to Deadline',    // U - DAYS_TO_DEADLINE
+  'Articles Violated',   // V - ARTICLES
+  'Issue Category',      // W - ISSUE_CATEGORY
+  'Member Email',        // X - MEMBER_EMAIL
+  'Unit',                // Y - UNIT
+  'Work Location (Site)',// Z - LOCATION
+  'Assigned Steward (Name)', // AA - STEWARD
+  'Resolution Summary',  // AB - RESOLUTION
+  'Message Alert',       // AC - MESSAGE_ALERT
+  'Coordinator Message', // AD - COORDINATOR_MESSAGE
+  'Acknowledged By',     // AE - ACKNOWLEDGED_BY
+  'Acknowledged Date',   // AF - ACKNOWLEDGED_DATE
+  'Drive Folder ID',     // AG - DRIVE_FOLDER_ID
+  'Drive Folder URL'     // AH - DRIVE_FOLDER_URL
+];
+
+/**
+ * Sets up all required sheets with proper headers if they don't exist
+ * Call this from Administrator menu or first-run setup
+ * @returns {Object} Result with created sheets and status
+ *
+ * @example
+ * // From menu
+ * const result = setupRequiredSheets();
+ * if (result.created.length > 0) {
+ *   SpreadsheetApp.getUi().alert('Created: ' + result.created.join(', '));
+ * }
+ */
+function setupRequiredSheets() {
+  const ss = SpreadsheetApp.getActiveSpreadsheet();
+  const results = {
+    created: [],
+    existing: [],
+    errors: []
+  };
+
+  // Setup Member Directory
+  try {
+    let memberSheet = ss.getSheetByName(SHEETS.MEMBER_DIR);
+    if (!memberSheet) {
+      memberSheet = ss.insertSheet(SHEETS.MEMBER_DIR);
+      memberSheet.getRange(1, 1, 1, MEMBER_DIRECTORY_HEADERS.length)
+        .setValues([MEMBER_DIRECTORY_HEADERS])
+        .setFontWeight('bold')
+        .setBackground('#E8F0FE');
+      memberSheet.setFrozenRows(1);
+      results.created.push(SHEETS.MEMBER_DIR);
+    } else {
+      results.existing.push(SHEETS.MEMBER_DIR);
+    }
+  } catch (e) {
+    results.errors.push('Member Directory: ' + e.message);
+  }
+
+  // Setup Grievance Log
+  try {
+    let grievanceSheet = ss.getSheetByName(SHEETS.GRIEVANCE_LOG);
+    if (!grievanceSheet) {
+      grievanceSheet = ss.insertSheet(SHEETS.GRIEVANCE_LOG);
+      grievanceSheet.getRange(1, 1, 1, GRIEVANCE_LOG_HEADERS.length)
+        .setValues([GRIEVANCE_LOG_HEADERS])
+        .setFontWeight('bold')
+        .setBackground('#E8F0FE');
+      grievanceSheet.setFrozenRows(1);
+      results.created.push(SHEETS.GRIEVANCE_LOG);
+    } else {
+      results.existing.push(SHEETS.GRIEVANCE_LOG);
+    }
+  } catch (e) {
+    results.errors.push('Grievance Log: ' + e.message);
+  }
+
+  // Setup Config sheet
+  try {
+    let configSheet = ss.getSheetByName(SHEETS.CONFIG);
+    if (!configSheet) {
+      configSheet = ss.insertSheet(SHEETS.CONFIG);
+      configSheet.getRange(1, 1, 1, 2)
+        .setValues([['Setting', 'Value']])
+        .setFontWeight('bold')
+        .setBackground('#E8F0FE');
+      configSheet.setFrozenRows(1);
+      results.created.push(SHEETS.CONFIG);
+    } else {
+      results.existing.push(SHEETS.CONFIG);
+    }
+  } catch (e) {
+    results.errors.push('Config: ' + e.message);
+  }
+
+  return results;
+}
+
+/**
+ * Shows setup results in a dialog
+ * Call from Administrator > Setup > Initialize Required Sheets
+ */
+function showSetupRequiredSheets() {
+  const results = setupRequiredSheets();
+
+  let message = '';
+
+  if (results.created.length > 0) {
+    message += '✅ Created sheets:\n';
+    results.created.forEach(function(name) {
+      message += '  • ' + name + '\n';
+    });
+    message += '\n';
+  }
+
+  if (results.existing.length > 0) {
+    message += '📋 Already existing:\n';
+    results.existing.forEach(function(name) {
+      message += '  • ' + name + '\n';
+    });
+    message += '\n';
+  }
+
+  if (results.errors.length > 0) {
+    message += '❌ Errors:\n';
+    results.errors.forEach(function(err) {
+      message += '  • ' + err + '\n';
+    });
+  }
+
+  if (results.created.length === 0 && results.errors.length === 0) {
+    message = '✅ All required sheets already exist!\n\nNo action needed.';
+  }
+
+  SpreadsheetApp.getUi().alert('Setup Required Sheets', message, SpreadsheetApp.getUi().ButtonSet.OK);
+}
+
 /* --------------------= SCHEMA VALIDATION FUNCTIONS --------------------= */
 
 /**
