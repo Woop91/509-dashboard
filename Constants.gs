@@ -1263,6 +1263,28 @@ function setupRequiredSheets() {
     results.errors.push('Analytics Data: ' + e.message);
   }
 
+  // Setup Operations Analytics sheet (merged analytics dashboard)
+  try {
+    let opsAnalyticsSheet = ss.getSheetByName(SHEETS.OPERATIONS_ANALYTICS);
+    if (!opsAnalyticsSheet) {
+      // Call the full creation function from OperationsAnalytics.gs
+      if (typeof createOperationsAnalyticsSheet === 'function') {
+        createOperationsAnalyticsSheet();
+        results.created.push(SHEETS.OPERATIONS_ANALYTICS);
+      } else {
+        // Fallback: create basic sheet if function not available
+        opsAnalyticsSheet = ss.insertSheet(SHEETS.OPERATIONS_ANALYTICS);
+        opsAnalyticsSheet.getRange(1, 1).setValue('📊 Operations Analytics')
+          .setFontWeight('bold').setFontSize(14);
+        results.created.push(SHEETS.OPERATIONS_ANALYTICS + ' (basic)');
+      }
+    } else {
+      results.existing.push(SHEETS.OPERATIONS_ANALYTICS);
+    }
+  } catch (e) {
+    results.errors.push('Operations Analytics: ' + e.message);
+  }
+
   return results;
 }
 
