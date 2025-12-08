@@ -54,9 +54,9 @@ function testCompleteGrievanceWorkflow() {
       'Art. 23 - Grievance Procedure',
       'Discipline',
       'test.member@union.org',
-      'Unit A - Administrative',
-      'Boston HQ',
-      'Jane Smith',
+      '',  // Unit - empty (user populates Config)
+      '',  // Location - empty (user populates Config)
+      '',  // Steward - empty (user populates Config)
       ''
     ];
 
@@ -218,9 +218,9 @@ function testMemberGrievanceSnapshot() {
       'Art. 24 - Discipline',
       'Workload',
       'test@union.org',
-      'Unit A - Administrative',
-      'Boston HQ',
-      'Jane Smith',
+      '',  // Unit - empty (user populates Config)
+      '',  // Location - empty (user populates Config)
+      '',  // Steward - empty (user populates Config)
       ''
     ];
 
@@ -353,9 +353,9 @@ function testMultipleGrievancesSameMember() {
         'Art. 23 - Grievance Procedure',
         'Discipline',
         'test@union.org',
-        'Unit A - Administrative',
-        'Boston HQ',
-        'Jane Smith',
+        '',  // Unit - empty (user populates Config)
+        '',  // Location - empty (user populates Config)
+        '',  // Steward - empty (user populates Config)
         i === 1 ? '' : 'Resolved'
       ];
 
@@ -512,9 +512,9 @@ function testFormulaPerformanceWithData() {
         'Art. 23 - Grievance Procedure',
         'Discipline',
         'test@union.org',
-        'Unit A - Administrative',
-        'Boston HQ',
-        'Jane Smith',
+        '',  // Unit - empty (user populates Config)
+        '',  // Location - empty (user populates Config)
+        '',  // Steward - empty (user populates Config)
         ''
       ];
 
@@ -578,9 +578,9 @@ function testGrievanceUpdatesTriggersRecalculation() {
       'Art. 23 - Grievance Procedure',
       'Discipline',
       'test@union.org',
-      'Unit A - Administrative',
-      'Boston HQ',
-      'Jane Smith',
+      '',  // Unit - empty (user populates Config)
+      '',  // Location - empty (user populates Config)
+      '',  // Steward - empty (user populates Config)
       ''
     ];
 

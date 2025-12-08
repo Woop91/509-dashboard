@@ -561,25 +561,29 @@ function runSingleTest(testName) {
 
 /**
  * Test helper: Create a test member in Member Directory
+ * NOTE: Dropdown fields (Job Title, Location, Unit, Supervisor, Manager, Steward) are left empty
+ * because Config tab no longer has sample data (v3.11+). Tests should populate Config first
+ * or use empty values to avoid data validation errors.
  */
 function createTestMember(memberId) {
   const ss = SpreadsheetApp.getActive();
   const memberDir = ss.getSheetByName(SHEETS.MEMBER_DIR);
 
+  // Dropdown fields are left empty to avoid validation errors (Config has no sample data)
   const testMemberData = [
     memberId || 'TEST-M001',
     'Test',
     'Member',
-    'Coordinator',
-    'Boston HQ',
-    'Unit A - Administrative',
+    '',  // Job Title - empty (user populates Config)
+    '',  // Work Location - empty (user populates Config)
+    '',  // Unit - empty (user populates Config)
     'Monday',
     'test.member@union.org',
     '(555) 123-4567',
     'No',
-    'Sarah Johnson',
-    'Michael Chen',
-    'Jane Smith',
+    '',  // Supervisor - empty (user populates Config)
+    '',  // Manager - empty (user populates Config)
+    '',  // Steward - empty (user populates Config)
     new Date(),
     new Date(),
     new Date(),
