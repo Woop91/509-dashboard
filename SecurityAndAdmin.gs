@@ -76,7 +76,7 @@ function recreateAuditLogSheet() {
  * @param {string} oldValue - Previous value
  * @param {string} newValue - New value
  */
-function logDataModification(actionType, sheetName, recordId, fieldChanged, oldValue, newValue) {
+function logDataModificationAdmin(actionType, sheetName, recordId, fieldChanged, oldValue, newValue) {
   try {
     const ss = SpreadsheetApp.getActiveSpreadsheet();
     let auditLog = ss.getSheetByName('Audit_Log');

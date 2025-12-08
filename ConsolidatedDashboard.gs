@@ -14,7 +14,7 @@
  * Build Info:
  * - Version: 2.1.0 (Security Enhanced + Code Review Improvements)
  * - Build ID: 20251202-improvements
- * - Build Date: 2025-12-08T01:24:25.344Z
+ * - Build Date: 2025-12-08T01:29:53.725Z
  * - Build Type: DEVELOPMENT
  * - Modules: 79 files
  * - Tests Included: Yes
@@ -24881,11 +24881,12 @@ function logCommunication(grievanceId, type, details) {
 }
 
 /**
- * Creates Communications Log sheet
+ * Creates Communications Log sheet (Gmail format)
+ * Note: Canonical createCommunicationsLogSheet(ss) is in AdminGrievanceMessages.gs
  * Structure follows GMAIL_COMM_LOG_COLS (simplified 5-column format)
  * @returns {Sheet} Communications Log sheet
  */
-function createCommunicationsLogSheet() {
+function createGmailCommunicationsLogSheet() {
   const ss = SpreadsheetApp.getActiveSpreadsheet();
 
   // Check if sheet already exists
@@ -42705,7 +42706,7 @@ function recreateAuditLogSheet() {
  * @param {string} oldValue - Previous value
  * @param {string} newValue - New value
  */
-function logDataModification(actionType, sheetName, recordId, fieldChanged, oldValue, newValue) {
+function logDataModificationAdmin(actionType, sheetName, recordId, fieldChanged, oldValue, newValue) {
   try {
     const ss = SpreadsheetApp.getActiveSpreadsheet();
     let auditLog = ss.getSheetByName('Audit_Log');
@@ -47576,12 +47577,20 @@ function exportToNewSheet(data, exportType) {
   return `New sheet created: ${newSheet.getName()}`;
 }
 
-function exportToPDF(sheet, exportType) {
+/**
+ * Export to PDF stub (placeholder)
+ * Note: Canonical exportToPDF() is in AdvancedExport.gs
+ */
+function exportToPDFStub(sheet, exportType) {
   // Note: Direct PDF export from Apps Script is limited
   return `PDF export requested for ${exportType}. Use File > Download > PDF from the menu for full control over PDF export options.`;
 }
 
-function exportToExcel(data, exportType) {
+/**
+ * Export to Excel stub (placeholder)
+ * Note: Canonical exportToExcel() is in AdvancedExport.gs
+ */
+function exportToExcelStub(data, exportType) {
   return `Excel export for ${exportType} requested. Note: Use Google Sheets' built-in "Download as Excel" feature for best results.`;
 }
 
