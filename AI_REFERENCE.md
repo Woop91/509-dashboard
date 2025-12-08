@@ -1,6 +1,6 @@
 # 509 Dashboard - Complete Feature Reference
 
-**Version:** 3.14
+**Version:** 3.15
 **Last Updated:** 2025-12-08
 **Purpose:** Union grievance tracking and member engagement system for SEIU Local 509
 
@@ -46,7 +46,73 @@
 
 ---
 
-## 🆕 Changelog - Version 3.14 (2025-12-08)
+## 🆕 Changelog - Version 3.15 (2025-12-08)
+
+**CRITICAL BUG FIXES - UNDEFINED COLUMN CONSTANTS:**
+
+This release fixes 14 undefined property references that were causing runtime errors throughout the codebase. These issues were identified via external code review.
+
+✅ **Added GRIEVANCE_COLS Aliases** (`Constants.gs`)
+- Added 11 backward-compatibility aliases for legacy property names:
+  - `FILED_DATE` → `DATE_FILED` (column 9)
+  - `STEP1_DECISION_RCVD` → `STEP1_RCVD` (column 11)
+  - `STEP2_DECISION_RCVD` → `STEP2_RCVD` (column 15)
+  - `DEADLINE` → `NEXT_ACTION_DUE` (column 20)
+  - `ISSUE_TYPE` → `ISSUE_CATEGORY` (column 23)
+  - `ASSIGNED_STEWARD` → `STEWARD` (column 27)
+  - `NOTES` → `RESOLUTION` (column 28)
+  - `DESCRIPTION` → `RESOLUTION` (column 28)
+  - `ADMIN_FLAG` → `MESSAGE_ALERT` (column 29)
+  - `ADMIN_MESSAGE` → `COORDINATOR_MESSAGE` (column 30)
+  - `MESSAGE_ACKNOWLEDGED` → `ACKNOWLEDGED_BY` (column 31)
+
+✅ **Added MEMBER_COLS.LOCATION Alias** (`Constants.gs`)
+- Added `LOCATION` as alias for `WORK_LOCATION` (column 5)
+- Fixes 4 references in Code.gs and OperationsAnalytics.gs
+
+✅ **Added CACHE_CONFIG.ENABLE_LOGGING** (`Constants.gs`)
+- Added `ENABLE_LOGGING: true` to CACHE_CONFIG
+- Fixes 6 references in DataCachingLayer.gs that were checking undefined property
+- Cache hit/miss logging now works as intended
+
+✅ **Added Helper Functions for Member Names** (`Constants.gs`)
+- `getGrievanceMemberName(row)` - Combines FIRST_NAME + LAST_NAME from grievance row
+- `getMemberFullName(row)` - Combines FIRST_NAME + LAST_NAME from member row
+- Use these instead of `GRIEVANCE_COLS.MEMBER_NAME` (which doesn't exist as a column)
+
+✅ **Updated MobileOptimization.gs**
+- Replaced 3 instances of `row[GRIEVANCE_COLS.MEMBER_NAME - 1]` with `getGrievanceMemberName(row)`
+- Mobile grievance browser and detail views now correctly display member names
+
+**Why This Was Needed:**
+- External code review identified 14 undefined property references
+- These caused runtime errors or silent failures when:
+  - AdminGrievanceMessages module tried to read/write admin flags
+  - BatchGrievanceRecalc tried to calculate step decision timelines
+  - MobileOptimization tried to display grievance details
+  - DataCachingLayer tried to log cache operations
+  - OperationsAnalytics tried to build location-based reports
+
+**Files Modified:**
+- `Constants.gs` - Added 12 aliases + 1 config property + 2 helper functions
+- `MobileOptimization.gs` - Updated 3 call sites to use helper function
+- `ConsolidatedDashboard.gs` - Rebuilt with all fixes
+
+**Verification Commands:**
+```bash
+# Verify no more undefined GRIEVANCE_COLS references
+grep -r "GRIEVANCE_COLS\." --include="*.gs" | grep -v ConsolidatedDashboard
+
+# Verify MEMBER_COLS.LOCATION is now defined
+grep -r "MEMBER_COLS\.LOCATION" --include="*.gs"
+
+# Verify CACHE_CONFIG.ENABLE_LOGGING is now defined
+grep -r "CACHE_CONFIG\.ENABLE_LOGGING" --include="*.gs"
+```
+
+---
+
+## Changelog - Version 3.14 (2025-12-08)
 
 **TEST FRAMEWORK FIX FOR APPS SCRIPT COMPATIBILITY:**
 
