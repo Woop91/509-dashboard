@@ -14,7 +14,7 @@
  * Build Info:
  * - Version: 2.1.0 (Security Enhanced + Code Review Improvements)
  * - Build ID: 20251202-improvements
- * - Build Date: 2025-12-08T00:35:14.787Z
+ * - Build Date: 2025-12-08T00:42:26.789Z
  * - Build Type: DEVELOPMENT
  * - Modules: 79 files
  * - Tests Included: Yes
@@ -2799,6 +2799,9 @@ function setupTestEnvironment() {
 
 /**
  * Seeds smaller dataset for testing
+ * NOTE: As of v3.11, dropdown fields (Job Title, Location, Unit, Supervisor, Manager, Steward)
+ * are left empty because Config tab no longer has sample data. Tests requiring these values
+ * should first populate the Config tab or use empty values to avoid validation errors.
  */
 function seedTestData() {
   const testSpreadsheet = getTestSpreadsheet();
@@ -2812,22 +2815,23 @@ function seedTestData() {
   Logger.log(`Seeding ${TEST_CONFIG.TEST_MEMBERS_COUNT} test members...`);
 
   // Generate test members (simplified version of SEED_20K_MEMBERS)
+  // NOTE: Dropdown fields left empty to avoid validation errors (Config has no sample data v3.11+)
   const memberData = [];
   for (let i = 1; i <= TEST_CONFIG.TEST_MEMBERS_COUNT; i++) {
     memberData.push([
       `M${String(i).padStart(6, '0')}`,  // Member ID
       `TestFirst${i}`,                    // First Name
       `TestLast${i}`,                     // Last Name
-      'Test Coordinator',                 // Job Title
-      'Boston HQ',                        // Location
-      'Unit A - Administrative',          // Unit
+      '',                                 // Job Title - empty (user populates Config)
+      '',                                 // Location - empty (user populates Config)
+      '',                                 // Unit - empty (user populates Config)
       'Monday',                           // Office Days
       `test${i}@seiu509.org`,            // Email
       `(555) ${String(i).padStart(3, '0')}-${String(i).padStart(4, '0')}`, // Phone
       i % 10 === 0 ? 'Yes' : 'No',       // Is Steward
-      'Test Supervisor',                  // Supervisor
-      'Test Manager',                     // Manager
-      'Test Steward',                     // Assigned Steward
+      '',                                 // Supervisor - empty (user populates Config)
+      '',                                 // Manager - empty (user populates Config)
+      '',                                 // Assigned Steward - empty (user populates Config)
       new Date(),                         // Last Virtual Mtg
       new Date(),                         // Last In-Person Mtg
       new Date(),                         // Last Survey
@@ -2855,6 +2859,7 @@ function seedTestData() {
   Logger.log(`Seeding ${TEST_CONFIG.TEST_GRIEVANCES_COUNT} test grievances...`);
 
   // Generate test grievances
+  // NOTE: Dropdown fields left empty to avoid validation errors (Config has no sample data v3.11+)
   const grievanceData = [];
   for (let i = 1; i <= TEST_CONFIG.TEST_GRIEVANCES_COUNT; i++) {
     const memberId = `M${String(i).padStart(6, '0')}`;
@@ -2886,9 +2891,9 @@ function seedTestData() {
       'Art. 1 - Recognition',             // Articles Violated
       'Discipline',                        // Issue Category
       `test${i}@seiu509.org`,             // Member Email
-      'Unit A - Administrative',           // Unit
-      'Boston HQ',                         // Location
-      'Test Steward',                      // Steward
+      '',                                  // Unit - empty (user populates Config)
+      '',                                  // Location - empty (user populates Config)
+      '',                                  // Steward - empty (user populates Config)
       ''                                   // Resolution
     ]);
   }
@@ -51447,25 +51452,29 @@ function runSingleTest(testName) {
 
 /**
  * Test helper: Create a test member in Member Directory
+ * NOTE: Dropdown fields (Job Title, Location, Unit, Supervisor, Manager, Steward) are left empty
+ * because Config tab no longer has sample data (v3.11+). Tests should populate Config first
+ * or use empty values to avoid data validation errors.
  */
 function createTestMember(memberId) {
   const ss = SpreadsheetApp.getActive();
   const memberDir = ss.getSheetByName(SHEETS.MEMBER_DIR);
 
+  // Dropdown fields are left empty to avoid validation errors (Config has no sample data)
   const testMemberData = [
     memberId || 'TEST-M001',
     'Test',
     'Member',
-    'Coordinator',
-    'Boston HQ',
-    'Unit A - Administrative',
+    '',  // Job Title - empty (user populates Config)
+    '',  // Work Location - empty (user populates Config)
+    '',  // Unit - empty (user populates Config)
     'Monday',
     'test.member@union.org',
     '(555) 123-4567',
     'No',
-    'Sarah Johnson',
-    'Michael Chen',
-    'Jane Smith',
+    '',  // Supervisor - empty (user populates Config)
+    '',  // Manager - empty (user populates Config)
+    '',  // Steward - empty (user populates Config)
     new Date(),
     new Date(),
     new Date(),
@@ -51866,6 +51875,8 @@ function testMemberDirectoryFormulas() {
     const grievanceLog = ss.getSheetByName(SHEETS.GRIEVANCE_LOG);
 
     // Create a test grievance for this member
+    // NOTE: Unit, Location, and Steward are left empty to avoid data validation errors
+    // (Config tab no longer has sample data as of v3.11+)
     const testGrievanceData = [
       'TEST-G-001',
       testMemberId,
@@ -51891,9 +51902,9 @@ function testMemberDirectoryFormulas() {
       'Art. 23 - Grievance Procedure',
       'Discipline',
       'test.member@union.org',
-      'Unit A - Administrative',
-      'Boston HQ',
-      'Jane Smith',
+      '',  // Unit - empty (user populates Config)
+      '',  // Location - empty (user populates Config)
+      '',  // Steward - empty (user populates Config)
       ''
     ];
 
@@ -51959,38 +51970,34 @@ function testDataValidationSetup() {
 
 /**
  * Test: Config dropdown values are properly defined
+ * NOTE: As of v3.11, Job Titles, Office Locations, Units, Supervisors, Managers, Stewards,
+ * Grievance Coordinators, and Home Towns are NO LONGER pre-populated. Users populate these.
+ * Only system-required values (Grievance Status, Step, Issue Categories, etc.) are pre-populated.
  */
 function testConfigDropdownValues() {
   const ss = SpreadsheetApp.getActive();
   const config = ss.getSheetByName(SHEETS.CONFIG);
 
-  // Test Job Titles using CONFIG_COLS constant (data starts at row 3)
+  // Test Job Titles column exists and is readable (but may be empty - user populates)
   const jobTitlesCol = getColumnLetter(CONFIG_COLS.JOB_TITLES);
-  const jobTitles = config.getRange(jobTitlesCol + '3:' + jobTitlesCol + '14').getValues().flat().filter(String);
-  Assert.assertTrue(
-    jobTitles.length > 0,
-    'Config should have job titles defined'
+  const jobTitlesRange = config.getRange(jobTitlesCol + '3:' + jobTitlesCol + '14');
+  Assert.assertNotNull(
+    jobTitlesRange,
+    'Job Titles column should be readable'
   );
-  Assert.assertContains(
-    jobTitles,
-    'Coordinator',
-    'Config should contain Coordinator job title'
-  );
+  // Note: Job Titles are user-populated (v3.11+), so we don't assert specific values
 
-  // Test Office Locations using CONFIG_COLS constant
+  // Test Office Locations column exists and is readable (but may be empty - user populates)
   const locationsCol = getColumnLetter(CONFIG_COLS.OFFICE_LOCATIONS);
-  const locations = config.getRange(locationsCol + '3:' + locationsCol + '14').getValues().flat().filter(String);
-  Assert.assertTrue(
-    locations.length > 0,
-    'Config should have office locations defined'
+  const locationsRange = config.getRange(locationsCol + '3:' + locationsCol + '14');
+  Assert.assertNotNull(
+    locationsRange,
+    'Office Locations column should be readable'
   );
-  Assert.assertContains(
-    locations,
-    'Boston HQ',
-    'Config should contain Boston HQ location'
-  );
+  // Note: Office Locations are user-populated (v3.11+), so we don't assert specific values
 
   // Test Grievance Status using CONFIG_COLS constant (col J = 10)
+  // This IS pre-populated by the system and should contain values
   const statusCol = getColumnLetter(CONFIG_COLS.GRIEVANCE_STATUS);
   const statuses = config.getRange(statusCol + '3:' + statusCol + '10').getValues().flat().filter(String);
   Assert.assertTrue(
@@ -52201,6 +52208,8 @@ function testGrievanceMemberLinking() {
     const grievanceLog = ss.getSheetByName(SHEETS.GRIEVANCE_LOG);
 
     // Create test grievance
+    // NOTE: Unit, Location, and Steward are left empty to avoid data validation errors
+    // (Config tab no longer has sample data as of v3.11+)
     const testGrievanceData = [
       'TEST-G-LINK-001',
       testMemberId, // Valid member ID
@@ -52226,9 +52235,9 @@ function testGrievanceMemberLinking() {
       'Art. 23 - Grievance Procedure',
       'Discipline',
       'test.member@union.org',
-      'Unit A - Administrative',
-      'Boston HQ',
-      'Jane Smith',
+      '',  // Unit - empty (user populates Config)
+      '',  // Location - empty (user populates Config)
+      '',  // Steward - empty (user populates Config)
       ''
     ];
 
@@ -52943,9 +52952,9 @@ function testCompleteGrievanceWorkflow() {
       'Art. 23 - Grievance Procedure',
       'Discipline',
       'test.member@union.org',
-      'Unit A - Administrative',
-      'Boston HQ',
-      'Jane Smith',
+      '',  // Unit - empty (user populates Config)
+      '',  // Location - empty (user populates Config)
+      '',  // Steward - empty (user populates Config)
       ''
     ];
 
@@ -53107,9 +53116,9 @@ function testMemberGrievanceSnapshot() {
       'Art. 24 - Discipline',
       'Workload',
       'test@union.org',
-      'Unit A - Administrative',
-      'Boston HQ',
-      'Jane Smith',
+      '',  // Unit - empty (user populates Config)
+      '',  // Location - empty (user populates Config)
+      '',  // Steward - empty (user populates Config)
       ''
     ];
 
@@ -53242,9 +53251,9 @@ function testMultipleGrievancesSameMember() {
         'Art. 23 - Grievance Procedure',
         'Discipline',
         'test@union.org',
-        'Unit A - Administrative',
-        'Boston HQ',
-        'Jane Smith',
+        '',  // Unit - empty (user populates Config)
+        '',  // Location - empty (user populates Config)
+        '',  // Steward - empty (user populates Config)
         i === 1 ? '' : 'Resolved'
       ];
 
@@ -53401,9 +53410,9 @@ function testFormulaPerformanceWithData() {
         'Art. 23 - Grievance Procedure',
         'Discipline',
         'test@union.org',
-        'Unit A - Administrative',
-        'Boston HQ',
-        'Jane Smith',
+        '',  // Unit - empty (user populates Config)
+        '',  // Location - empty (user populates Config)
+        '',  // Steward - empty (user populates Config)
         ''
       ];
 
@@ -53467,9 +53476,9 @@ function testGrievanceUpdatesTriggersRecalculation() {
       'Art. 23 - Grievance Procedure',
       'Discipline',
       'test@union.org',
-      'Unit A - Administrative',
-      'Boston HQ',
-      'Jane Smith',
+      '',  // Unit - empty (user populates Config)
+      '',  // Location - empty (user populates Config)
+      '',  // Steward - empty (user populates Config)
       ''
     ];
 

@@ -101,6 +101,9 @@ function setupTestEnvironment() {
 
 /**
  * Seeds smaller dataset for testing
+ * NOTE: As of v3.11, dropdown fields (Job Title, Location, Unit, Supervisor, Manager, Steward)
+ * are left empty because Config tab no longer has sample data. Tests requiring these values
+ * should first populate the Config tab or use empty values to avoid validation errors.
  */
 function seedTestData() {
   const testSpreadsheet = getTestSpreadsheet();
@@ -114,22 +117,23 @@ function seedTestData() {
   Logger.log(`Seeding ${TEST_CONFIG.TEST_MEMBERS_COUNT} test members...`);
 
   // Generate test members (simplified version of SEED_20K_MEMBERS)
+  // NOTE: Dropdown fields left empty to avoid validation errors (Config has no sample data v3.11+)
   const memberData = [];
   for (let i = 1; i <= TEST_CONFIG.TEST_MEMBERS_COUNT; i++) {
     memberData.push([
       `M${String(i).padStart(6, '0')}`,  // Member ID
       `TestFirst${i}`,                    // First Name
       `TestLast${i}`,                     // Last Name
-      'Test Coordinator',                 // Job Title
-      'Boston HQ',                        // Location
-      'Unit A - Administrative',          // Unit
+      '',                                 // Job Title - empty (user populates Config)
+      '',                                 // Location - empty (user populates Config)
+      '',                                 // Unit - empty (user populates Config)
       'Monday',                           // Office Days
       `test${i}@seiu509.org`,            // Email
       `(555) ${String(i).padStart(3, '0')}-${String(i).padStart(4, '0')}`, // Phone
       i % 10 === 0 ? 'Yes' : 'No',       // Is Steward
-      'Test Supervisor',                  // Supervisor
-      'Test Manager',                     // Manager
-      'Test Steward',                     // Assigned Steward
+      '',                                 // Supervisor - empty (user populates Config)
+      '',                                 // Manager - empty (user populates Config)
+      '',                                 // Assigned Steward - empty (user populates Config)
       new Date(),                         // Last Virtual Mtg
       new Date(),                         // Last In-Person Mtg
       new Date(),                         // Last Survey
@@ -157,6 +161,7 @@ function seedTestData() {
   Logger.log(`Seeding ${TEST_CONFIG.TEST_GRIEVANCES_COUNT} test grievances...`);
 
   // Generate test grievances
+  // NOTE: Dropdown fields left empty to avoid validation errors (Config has no sample data v3.11+)
   const grievanceData = [];
   for (let i = 1; i <= TEST_CONFIG.TEST_GRIEVANCES_COUNT; i++) {
     const memberId = `M${String(i).padStart(6, '0')}`;
@@ -188,9 +193,9 @@ function seedTestData() {
       'Art. 1 - Recognition',             // Articles Violated
       'Discipline',                        // Issue Category
       `test${i}@seiu509.org`,             // Member Email
-      'Unit A - Administrative',           // Unit
-      'Boston HQ',                         // Location
-      'Test Steward',                      // Steward
+      '',                                  // Unit - empty (user populates Config)
+      '',                                  // Location - empty (user populates Config)
+      '',                                  // Steward - empty (user populates Config)
       ''                                   // Resolution
     ]);
   }

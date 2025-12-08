@@ -190,6 +190,8 @@ function testMemberDirectoryFormulas() {
     const grievanceLog = ss.getSheetByName(SHEETS.GRIEVANCE_LOG);
 
     // Create a test grievance for this member
+    // NOTE: Unit, Location, and Steward are left empty to avoid data validation errors
+    // (Config tab no longer has sample data as of v3.11+)
     const testGrievanceData = [
       'TEST-G-001',
       testMemberId,
@@ -215,9 +217,9 @@ function testMemberDirectoryFormulas() {
       'Art. 23 - Grievance Procedure',
       'Discipline',
       'test.member@union.org',
-      'Unit A - Administrative',
-      'Boston HQ',
-      'Jane Smith',
+      '',  // Unit - empty (user populates Config)
+      '',  // Location - empty (user populates Config)
+      '',  // Steward - empty (user populates Config)
       ''
     ];
 
@@ -283,38 +285,34 @@ function testDataValidationSetup() {
 
 /**
  * Test: Config dropdown values are properly defined
+ * NOTE: As of v3.11, Job Titles, Office Locations, Units, Supervisors, Managers, Stewards,
+ * Grievance Coordinators, and Home Towns are NO LONGER pre-populated. Users populate these.
+ * Only system-required values (Grievance Status, Step, Issue Categories, etc.) are pre-populated.
  */
 function testConfigDropdownValues() {
   const ss = SpreadsheetApp.getActive();
   const config = ss.getSheetByName(SHEETS.CONFIG);
 
-  // Test Job Titles using CONFIG_COLS constant (data starts at row 3)
+  // Test Job Titles column exists and is readable (but may be empty - user populates)
   const jobTitlesCol = getColumnLetter(CONFIG_COLS.JOB_TITLES);
-  const jobTitles = config.getRange(jobTitlesCol + '3:' + jobTitlesCol + '14').getValues().flat().filter(String);
-  Assert.assertTrue(
-    jobTitles.length > 0,
-    'Config should have job titles defined'
+  const jobTitlesRange = config.getRange(jobTitlesCol + '3:' + jobTitlesCol + '14');
+  Assert.assertNotNull(
+    jobTitlesRange,
+    'Job Titles column should be readable'
   );
-  Assert.assertContains(
-    jobTitles,
-    'Coordinator',
-    'Config should contain Coordinator job title'
-  );
+  // Note: Job Titles are user-populated (v3.11+), so we don't assert specific values
 
-  // Test Office Locations using CONFIG_COLS constant
+  // Test Office Locations column exists and is readable (but may be empty - user populates)
   const locationsCol = getColumnLetter(CONFIG_COLS.OFFICE_LOCATIONS);
-  const locations = config.getRange(locationsCol + '3:' + locationsCol + '14').getValues().flat().filter(String);
-  Assert.assertTrue(
-    locations.length > 0,
-    'Config should have office locations defined'
+  const locationsRange = config.getRange(locationsCol + '3:' + locationsCol + '14');
+  Assert.assertNotNull(
+    locationsRange,
+    'Office Locations column should be readable'
   );
-  Assert.assertContains(
-    locations,
-    'Boston HQ',
-    'Config should contain Boston HQ location'
-  );
+  // Note: Office Locations are user-populated (v3.11+), so we don't assert specific values
 
   // Test Grievance Status using CONFIG_COLS constant (col J = 10)
+  // This IS pre-populated by the system and should contain values
   const statusCol = getColumnLetter(CONFIG_COLS.GRIEVANCE_STATUS);
   const statuses = config.getRange(statusCol + '3:' + statusCol + '10').getValues().flat().filter(String);
   Assert.assertTrue(
@@ -525,6 +523,8 @@ function testGrievanceMemberLinking() {
     const grievanceLog = ss.getSheetByName(SHEETS.GRIEVANCE_LOG);
 
     // Create test grievance
+    // NOTE: Unit, Location, and Steward are left empty to avoid data validation errors
+    // (Config tab no longer has sample data as of v3.11+)
     const testGrievanceData = [
       'TEST-G-LINK-001',
       testMemberId, // Valid member ID
@@ -550,9 +550,9 @@ function testGrievanceMemberLinking() {
       'Art. 23 - Grievance Procedure',
       'Discipline',
       'test.member@union.org',
-      'Unit A - Administrative',
-      'Boston HQ',
-      'Jane Smith',
+      '',  // Unit - empty (user populates Config)
+      '',  // Location - empty (user populates Config)
+      '',  // Steward - empty (user populates Config)
       ''
     ];
 
