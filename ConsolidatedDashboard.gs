@@ -14,7 +14,7 @@
  * Build Info:
  * - Version: 2.1.0 (Security Enhanced + Code Review Improvements)
  * - Build ID: 20251202-improvements
- * - Build Date: 2025-12-08T02:14:26.531Z
+ * - Build Date: 2025-12-08T02:19:06.291Z
  * - Build Type: DEVELOPMENT
  * - Modules: 79 files
  * - Tests Included: Yes
@@ -6104,11 +6104,17 @@ function refreshCalculations() {
 function recalcAllMembers() {
   const startTime = new Date();
   const ss = SpreadsheetApp.getActiveSpreadsheet();
-  const memberSheet = ss.getSheetByName(SHEETS.MEMBER_DIR);
+  let memberSheet = ss.getSheetByName(SHEETS.MEMBER_DIR);
   const grievanceSheet = ss.getSheetByName(SHEETS.GRIEVANCE_LOG);
 
+  // Auto-create missing sheets instead of throwing error
   if (!memberSheet) {
-    throw new Error('Member Directory sheet not found');
+    Logger.log('Member Directory sheet not found - auto-creating via setupRequiredSheets()');
+    const setupResult = setupRequiredSheets();
+    memberSheet = ss.getSheetByName(SHEETS.MEMBER_DIR);
+    if (!memberSheet) {
+      throw new Error('Failed to create Member Directory sheet: ' + JSON.stringify(setupResult.errors));
+    }
   }
 
   const lastRow = memberSheet.getLastRow();
