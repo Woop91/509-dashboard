@@ -226,6 +226,7 @@ function createReorganizedMenus(ui) {
       .addItem("📋 Setup Grievance Log Dropdowns", "setupGrievanceLogDropdowns")
       .addItem("🔄 Refresh Steward Dropdowns", "refreshStewardDropdowns")
       .addSeparator()
+      .addItem("🔄 Refresh Data Validations (v3.13+)", "refreshAllValidations")
       .addItem("📈 Extend Validations (10k rows)", "extendValidationsForLargeDataset"))
     .addSeparator()
     .addSubMenu(ui.createMenu("🎨 Dashboard Setup")
