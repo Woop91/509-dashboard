@@ -153,7 +153,10 @@ const MEMBER_COLS = {
   HAS_OPEN_GRIEVANCE: 28,          // AB
   GRIEVANCE_STATUS: 29,            // AC
   NEXT_DEADLINE: 30,               // AD
-  START_GRIEVANCE: 31              // AE - Checkbox to start grievance with prepopulated member info
+  START_GRIEVANCE: 31,             // AE - Checkbox to start grievance with prepopulated member info
+
+  // ALIAS - For backward compatibility
+  LOCATION: 5                      // Alias for WORK_LOCATION
 };
 
 /* --------------------= GRIEVANCE LOG COLUMNS --------------------= */
@@ -210,7 +213,29 @@ const GRIEVANCE_COLS = {
   ACKNOWLEDGED_DATE: 32,     // AF - When steward acknowledged
   // Section 12: Drive Integration (AG-AH)
   DRIVE_FOLDER_ID: 33,    // AG - Google Drive folder ID
-  DRIVE_FOLDER_URL: 34    // AH - Google Drive folder URL
+  DRIVE_FOLDER_URL: 34,   // AH - Google Drive folder URL
+
+  // ============================================================
+  // ALIASES - For backward compatibility with legacy code
+  // These map old property names to their correct column indices
+  // ============================================================
+
+  // Timeline aliases
+  FILED_DATE: 9,              // Alias for DATE_FILED
+  STEP1_DECISION_RCVD: 11,    // Alias for STEP1_RCVD
+  STEP2_DECISION_RCVD: 15,    // Alias for STEP2_RCVD
+  DEADLINE: 20,               // Alias for NEXT_ACTION_DUE
+
+  // Case details aliases
+  ISSUE_TYPE: 23,             // Alias for ISSUE_CATEGORY
+  ASSIGNED_STEWARD: 27,       // Alias for STEWARD
+  NOTES: 28,                  // Alias for RESOLUTION (used for notes/description)
+  DESCRIPTION: 28,            // Alias for RESOLUTION (used for case description)
+
+  // Admin message aliases (Feature 95 legacy names)
+  ADMIN_FLAG: 29,             // Alias for MESSAGE_ALERT
+  ADMIN_MESSAGE: 30,          // Alias for COORDINATOR_MESSAGE
+  MESSAGE_ACKNOWLEDGED: 31    // Alias for ACKNOWLEDGED_BY
 };
 
 /* --------------------= INTERNAL SYSTEM COLUMN MAPPINGS --------------------= */
@@ -482,7 +507,8 @@ const CACHE_CONFIG = {
   PROPERTIES_TTL: 3600,         // 1 hour (in seconds)
   DOCUMENT_TTL: 21600,          // 6 hours (in seconds)
   MAX_CACHE_SIZE_BYTES: 100000, // 100KB max per cache entry
-  ENABLED: true                 // Global cache enable/disable
+  ENABLED: true,                // Global cache enable/disable
+  ENABLE_LOGGING: true          // Log cache hits/misses for debugging
 };
 
 /**
@@ -835,6 +861,36 @@ function getGrievanceColumn(columnName) {
     throw new Error(`Unknown grievance column: ${columnName}`);
   }
   return getColumnLetter(GRIEVANCE_COLS[columnName]);
+}
+
+/**
+ * Gets member name from a grievance row by combining FIRST_NAME and LAST_NAME
+ * Use this instead of GRIEVANCE_COLS.MEMBER_NAME (which doesn't exist as a column)
+ * @param {Array} row - A row array from Grievance Log (0-indexed)
+ * @returns {string} Combined "First Last" name, or empty string if both are empty
+ *
+ * @example
+ * const data = sheet.getDataRange().getValues();
+ * data.forEach(row => {
+ *   const memberName = getGrievanceMemberName(row);
+ *   Logger.log(memberName); // "John Smith"
+ * });
+ */
+function getGrievanceMemberName(row) {
+  const firstName = row[GRIEVANCE_COLS.FIRST_NAME - 1] || '';
+  const lastName = row[GRIEVANCE_COLS.LAST_NAME - 1] || '';
+  return [firstName, lastName].filter(Boolean).join(' ');
+}
+
+/**
+ * Gets member name from a member directory row by combining FIRST_NAME and LAST_NAME
+ * @param {Array} row - A row array from Member Directory (0-indexed)
+ * @returns {string} Combined "First Last" name, or empty string if both are empty
+ */
+function getMemberFullName(row) {
+  const firstName = row[MEMBER_COLS.FIRST_NAME - 1] || '';
+  const lastName = row[MEMBER_COLS.LAST_NAME - 1] || '';
+  return [firstName, lastName].filter(Boolean).join(' ');
 }
 
 /**

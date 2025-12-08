@@ -669,7 +669,7 @@ function getRecentGrievancesForMobile(limit = 5) {
       const filedDate = row[GRIEVANCE_COLS.FILED_DATE - 1];
       return {
         id: row[GRIEVANCE_COLS.GRIEVANCE_ID - 1],
-        memberName: row[GRIEVANCE_COLS.MEMBER_NAME - 1],
+        memberName: getGrievanceMemberName(row),
         issueType: row[GRIEVANCE_COLS.ISSUE_TYPE - 1],
         status: row[GRIEVANCE_COLS.STATUS - 1],
         filedDate: filedDate instanceof Date ? Utilities.formatDate(filedDate, Session.getScriptTimeZone(), 'MMM d, yyyy') : filedDate,
@@ -891,7 +891,7 @@ function showGrievanceDetail(grievanceId) {
   const message = `
 Grievance #${grievanceId}
 
-Member: ${grievanceRow[GRIEVANCE_COLS.MEMBER_NAME - 1]}
+Member: ${getGrievanceMemberName(grievanceRow)}
 Issue: ${grievanceRow[GRIEVANCE_COLS.ISSUE_TYPE - 1]}
 Status: ${grievanceRow[GRIEVANCE_COLS.STATUS - 1]}
 Filed: ${grievanceRow[GRIEVANCE_COLS.FILED_DATE - 1]}
@@ -932,7 +932,7 @@ function showMyAssignedGrievances() {
   let message = `You have ${myGrievances.length} assigned grievance(s):\n\n`;
 
   myGrievances.slice(0, 10).forEach(function(row) {
-    message += `#${row[GRIEVANCE_COLS.GRIEVANCE_ID - 1]} - ${row[GRIEVANCE_COLS.MEMBER_NAME - 1]} (${row[GRIEVANCE_COLS.STATUS - 1]})\n`;
+    message += `#${row[GRIEVANCE_COLS.GRIEVANCE_ID - 1]} - ${getGrievanceMemberName(row)} (${row[GRIEVANCE_COLS.STATUS - 1]})\n`;
   });
 
   if (myGrievances.length > 10) {
