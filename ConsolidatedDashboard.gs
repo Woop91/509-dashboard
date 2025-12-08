@@ -33661,19 +33661,40 @@ function setDropdownByCol(sheet, colNum, lastRow, values, name, strictValidation
           configSheet.getRange(2, targetCol, Math.max(existingLastRow - 1, 1), 1).clearContent();
         }
 
-        // Write the values
-        const valuesToWrite = values.map(function(v) { return [v]; });
-        configSheet.getRange(2, targetCol, values.length, 1).setValues(valuesToWrite);
+        // Limit values for large lists to prevent API errors
+        // Google Sheets has limits on data validation and cell writes
+        const MAX_DROPDOWN_VALUES = 2000;
+        let valuesToUse = values;
+        if (values.length > MAX_DROPDOWN_VALUES) {
+          Logger.log(`${name} has ${values.length} items - limiting to ${MAX_DROPDOWN_VALUES} for dropdown`);
+          valuesToUse = values.slice(0, MAX_DROPDOWN_VALUES);
+          valuesToUse.push('(More options available)');
+        }
+
+        // Write values in batches to avoid "Argument too large" error
+        const BATCH_SIZE = 500;
+        const valuesToWrite = valuesToUse.map(function(v) { return [v]; });
+
+        for (let i = 0; i < valuesToWrite.length; i += BATCH_SIZE) {
+          const batchEnd = Math.min(i + BATCH_SIZE, valuesToWrite.length);
+          const batch = valuesToWrite.slice(i, batchEnd);
+          configSheet.getRange(2 + i, targetCol, batch.length, 1).setValues(batch);
+
+          // Flush periodically for large writes
+          if (valuesToWrite.length > 1000 && i > 0 && i % 1000 === 0) {
+            SpreadsheetApp.flush();
+          }
+        }
 
         // Create validation using range reference
-        const configRange = configSheet.getRange(2, targetCol, values.length, 1);
+        const configRange = configSheet.getRange(2, targetCol, valuesToUse.length, 1);
         const rule = SpreadsheetApp.newDataValidation()
           .requireValueInRange(configRange, true)
           .setAllowInvalid(!strictValidation)
           .build();
 
         range.setDataValidation(rule);
-        Logger.log(`Set dropdown for ${name} (column ${colLetter}): ${values.length} options via range reference, strict=${strictValidation}`);
+        Logger.log(`Set dropdown for ${name} (column ${colLetter}): ${valuesToUse.length} options via range reference, strict=${strictValidation}`);
       } else {
         // Fallback: use text validation with help text
         const rule = SpreadsheetApp.newDataValidation()
