@@ -4830,58 +4830,36 @@ function createStewardWorkloadSheet() {
   }
 }
 
+/**
+ * @deprecated Use createOperationsAnalyticsSheet() instead
+ * Trends & Timeline is now part of the merged Operations Analytics dashboard
+ */
 function createTrendsSheet() {
-  const ss = SpreadsheetApp.getActive();
-  let sheet = ss.getSheetByName(SHEETS.TRENDS);
-  if (!sheet) sheet = ss.insertSheet(SHEETS.TRENDS);
-  sheet.clear();
-  sheet.getRange("A1:L1").merge().setValue("📈 TRENDS & TIMELINE ANALYSIS").setFontSize(16).setFontWeight("bold").setHorizontalAlignment("center").setBackground(COLORS.UNION_GREEN).setFontColor("white");
-  const headers = ["Month", "New Grievances", "Resolved", "Win Rate %", "Avg Resolution Days", "Active at Month End", "Overdue", "New Members", "Active Members", "Stewards Active", "Satisfaction Score", "Trend"];
-  sheet.getRange(3, 1, 1, headers.length).setValues([headers]).setFontWeight("bold").setBackground(COLORS.LIGHT_GRAY);
-  sheet.setFrozenRows(3);
-  sheet.setTabColor(COLORS.UNION_GREEN);
-
-  // Delete unused columns beyond the defined headers (12 columns)
-  const totalCols = sheet.getMaxColumns();
-  if (totalCols > headers.length) {
-    sheet.deleteColumns(headers.length + 1, totalCols - headers.length);
+  Logger.log('createTrendsSheet() is deprecated - redirecting to Operations Analytics');
+  if (typeof createOperationsAnalyticsSheet === 'function') {
+    createOperationsAnalyticsSheet();
   }
 }
 
-
+/**
+ * @deprecated Use createOperationsAnalyticsSheet() instead
+ * Location Analytics is now part of the merged Operations Analytics dashboard
+ */
 function createLocationSheet() {
-  const ss = SpreadsheetApp.getActive();
-  let sheet = ss.getSheetByName(SHEETS.LOCATION);
-  if (!sheet) sheet = ss.insertSheet(SHEETS.LOCATION);
-  sheet.clear();
-  sheet.getRange("A1:K1").merge().setValue("🗺️ LOCATION ANALYTICS").setFontSize(16).setFontWeight("bold").setHorizontalAlignment("center").setBackground(COLORS.ACCENT_TEAL).setFontColor("white");
-  const headers = ["Location", "Total Members", "Active Members", "Total Grievances", "Active Grievances", "Win Rate %", "Avg Resolution Days", "Member Satisfaction", "Stewards Assigned", "Risk Score", "Priority"];
-  sheet.getRange(3, 1, 1, headers.length).setValues([headers]).setFontWeight("bold").setBackground(COLORS.LIGHT_GRAY);
-  sheet.setFrozenRows(3);
-  sheet.setTabColor(COLORS.ACCENT_TEAL);
-
-  // Delete unused columns beyond the defined headers (11 columns)
-  const totalCols = sheet.getMaxColumns();
-  if (totalCols > headers.length) {
-    sheet.deleteColumns(headers.length + 1, totalCols - headers.length);
+  Logger.log('createLocationSheet() is deprecated - redirecting to Operations Analytics');
+  if (typeof createOperationsAnalyticsSheet === 'function') {
+    createOperationsAnalyticsSheet();
   }
 }
 
+/**
+ * @deprecated Use createOperationsAnalyticsSheet() instead
+ * Type Analysis is now part of the merged Operations Analytics dashboard
+ */
 function createTypeAnalysisSheet() {
-  const ss = SpreadsheetApp.getActive();
-  let sheet = ss.getSheetByName(SHEETS.TYPE_ANALYSIS);
-  if (!sheet) sheet = ss.insertSheet(SHEETS.TYPE_ANALYSIS);
-  sheet.clear();
-  sheet.getRange("A1:K1").merge().setValue("📊 GRIEVANCE TYPE ANALYSIS").setFontSize(16).setFontWeight("bold").setHorizontalAlignment("center").setBackground(COLORS.PRIMARY_BLUE).setFontColor("white");
-  const headers = ["Issue Type", "Total Cases", "Active", "Resolved", "Win Rate %", "Avg Days to Resolve", "Most Common Location", "Top Article Violated", "Trend", "Priority Level", "Notes"];
-  sheet.getRange(3, 1, 1, headers.length).setValues([headers]).setFontWeight("bold").setBackground(COLORS.LIGHT_GRAY);
-  sheet.setFrozenRows(3);
-  sheet.setTabColor(COLORS.PRIMARY_BLUE);
-
-  // Delete unused columns beyond the defined headers (11 columns)
-  const totalCols = sheet.getMaxColumns();
-  if (totalCols > headers.length) {
-    sheet.deleteColumns(headers.length + 1, totalCols - headers.length);
+  Logger.log('createTypeAnalysisSheet() is deprecated - redirecting to Operations Analytics');
+  if (typeof createOperationsAnalyticsSheet === 'function') {
+    createOperationsAnalyticsSheet();
   }
 }
 
@@ -5260,39 +5238,25 @@ function showMemberSatisfactionTab() {
   }
 }
 
+/**
+ * @deprecated Use createOperationsAnalyticsSheet() instead
+ * Member Engagement is now part of the merged Operations Analytics dashboard
+ */
 function createMemberEngagementSheet() {
-  const ss = SpreadsheetApp.getActive();
-  let sheet = ss.getSheetByName(SHEETS.MEMBER_ENGAGEMENT);
-  if (!sheet) sheet = ss.insertSheet(SHEETS.MEMBER_ENGAGEMENT);
-  sheet.clear();
-  sheet.getRange("A1:L1").merge().setValue("👥 MEMBER ENGAGEMENT").setFontSize(16).setFontWeight("bold").setHorizontalAlignment("center").setBackground(COLORS.ACCENT_PURPLE).setFontColor("white");
-  const headers = ["Member ID", "Name", "Engagement Score", "Last Contact", "Meetings Attended", "Surveys Completed", "Volunteer Hours", "Committee Participation", "Event Attendance", "Email Open Rate", "Status", "Notes"];
-  sheet.getRange(3, 1, 1, headers.length).setValues([headers]).setFontWeight("bold").setBackground(COLORS.LIGHT_GRAY);
-  sheet.setFrozenRows(3);
-  sheet.setTabColor(COLORS.ACCENT_PURPLE);
-
-  // Delete unused columns beyond the defined headers (12 columns)
-  const totalCols = sheet.getMaxColumns();
-  if (totalCols > headers.length) {
-    sheet.deleteColumns(headers.length + 1, totalCols - headers.length);
+  Logger.log('createMemberEngagementSheet() is deprecated - redirecting to Operations Analytics');
+  if (typeof createOperationsAnalyticsSheet === 'function') {
+    createOperationsAnalyticsSheet();
   }
 }
 
+/**
+ * @deprecated Use createOperationsAnalyticsSheet() instead
+ * Cost Impact is now part of the merged Operations Analytics dashboard
+ */
 function createCostImpactSheet() {
-  const ss = SpreadsheetApp.getActive();
-  let sheet = ss.getSheetByName(SHEETS.COST_IMPACT);
-  if (!sheet) sheet = ss.insertSheet(SHEETS.COST_IMPACT);
-  sheet.clear();
-  sheet.getRange("A1:J1").merge().setValue("💰 COST IMPACT ANALYSIS").setFontSize(16).setFontWeight("bold").setHorizontalAlignment("center").setBackground(COLORS.SOLIDARITY_RED).setFontColor("white");
-  const headers = ["Category", "Estimated Cost", "Actual Cost", "Variance", "ROI", "Cases Affected", "Members Benefited", "Status", "Quarter", "Notes"];
-  sheet.getRange(3, 1, 1, headers.length).setValues([headers]).setFontWeight("bold").setBackground(COLORS.LIGHT_GRAY);
-  sheet.setFrozenRows(3);
-  sheet.setTabColor(COLORS.SOLIDARITY_RED);
-
-  // Delete unused columns beyond the defined headers (10 columns)
-  const totalCols = sheet.getMaxColumns();
-  if (totalCols > headers.length) {
-    sheet.deleteColumns(headers.length + 1, totalCols - headers.length);
+  Logger.log('createCostImpactSheet() is deprecated - redirecting to Operations Analytics');
+  if (typeof createOperationsAnalyticsSheet === 'function') {
+    createOperationsAnalyticsSheet();
   }
 }
 

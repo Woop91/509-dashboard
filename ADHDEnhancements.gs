@@ -66,25 +66,22 @@ function reorderSheetsLogically() {
   // 8. Admin sheets (Config, Archive, etc.)
 
   // FIXED: Use only valid sheet names from SHEETS constant
+  // NOTE: 5 analytics tabs merged into Operations Analytics (Trends, Location, Type Analysis, Member Engagement, Cost Impact)
   const sheetOrder = [
     SHEETS.INTERACTIVE_DASHBOARD,  // 1. YOUR Custom View (most important for daily use)
     SHEETS.DASHBOARD,              // 2. Main Overview
     SHEETS.MEMBER_DIR,             // 3. Members
     SHEETS.GRIEVANCE_LOG,          // 4. Grievances
     SHEETS.STEWARD_WORKLOAD,       // 5. Workload
-    SHEETS.TRENDS,                 // 6. Trends & Timeline
-    SHEETS.LOCATION,               // 7. Location Analytics
-    SHEETS.TYPE_ANALYSIS,          // 8. Type Analysis
-    SHEETS.EXECUTIVE_DASHBOARD,    // 9. Executive Dashboard
-    SHEETS.KPI_PERFORMANCE,        // 10. KPI Performance
-    SHEETS.MEMBER_ENGAGEMENT,      // 11. Member Engagement
-    SHEETS.COST_IMPACT,            // 12. Cost Impact
-    SHEETS.MEMBER_SATISFACTION,    // 13. Member Satisfaction
-    SHEETS.FEEDBACK,               // 14. Feedback & Development
-    SHEETS.ANALYTICS,              // 15. Analytics Data
-    SHEETS.CONFIG,                 // 16. Config
-    SHEETS.ARCHIVE,                // 17. Archive
-    SHEETS.DIAGNOSTICS             // 18. Diagnostics
+    SHEETS.OPERATIONS_ANALYTICS,   // 6. Operations Analytics (merged: Trends, Location, Type, Engagement, Cost)
+    SHEETS.EXECUTIVE_DASHBOARD,    // 7. Executive Dashboard
+    SHEETS.KPI_PERFORMANCE,        // 8. KPI Performance
+    SHEETS.MEMBER_SATISFACTION,    // 9. Member Satisfaction
+    SHEETS.FEEDBACK,               // 10. Feedback & Development
+    SHEETS.ANALYTICS,              // 11. Analytics Data
+    SHEETS.CONFIG,                 // 12. Config
+    SHEETS.ARCHIVE,                // 13. Archive
+    SHEETS.DIAGNOSTICS             // 14. Diagnostics
   ];
 
   // Move sheets to correct positions
