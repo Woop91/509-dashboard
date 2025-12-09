@@ -121,8 +121,30 @@ grep -c "SHEETS\." *.gs | awk -F: '{sum+=$2} END {print sum}'
 grep -n "getSheetByName\s*(['\"]" *.gs | grep -v "SHEETS\." | grep -v "ConsolidatedDashboard.gs"
 ```
 
+✅ **Fixed Hardcoded insertSheet() Calls** (12 files)
+
+Additional review found insertSheet() calls using hardcoded names instead of SHEETS.* constants:
+
+| File | Fix |
+|------|-----|
+| Code.gs | `insertSheet(SHEETS.EXECUTIVE_DASHBOARD)`, `insertSheet(SHEETS.KPI_PERFORMANCE)` |
+| DataBackupRecovery.gs | `insertSheet(SHEETS.BACKUP_LOG)` |
+| DataIntegrityEnhancements.gs | `insertSheet(SHEETS.CHANGE_LOG)` |
+| EnhancedErrorHandling.gs | `insertSheet(SHEETS.ERROR_TRENDS)` |
+| FAQKnowledgeBase.gs | `insertSheet(SHEETS.FAQ_DATABASE)` |
+| GmailIntegration.gs | `insertSheet(SHEETS.COMMUNICATIONS_LOG)` |
+| PerformanceAndBackup.gs | `insertSheet(SHEETS.PERFORMANCE_LOG)` |
+| PerformanceMonitoring.gs | `insertSheet(SHEETS.PERFORMANCE_MONITOR)` |
+| SecurityAndAdmin.gs | `insertSheet(SHEETS.ARCHIVE)` |
+| SecurityService.gs | `insertSheet(SHEETS.USER_ROLES)` |
+| TestFramework.gs | `insertSheet(SHEETS.TEST_RESULTS)` |
+| WorkflowStateMachine.gs | `insertSheet(SHEETS.STATE_CHANGE_LOG)` |
+
+**Note:** Remaining hardcoded insertSheet() calls are intentionally for temporary/export sheets (Visualizations, Benchmark_Report, Members_Export, etc.)
+
 **Commits:**
 - 5f4e101: Fix SHEETS constant mismatches and convert hardcoded sheet names
+- a17e071: Fix hardcoded insertSheet calls to use SHEETS.* constants
 
 ---
 
