@@ -2070,9 +2070,11 @@ function setupFormulasAndCalculations() {
 
 /**
  * Sets up visual progress bar formatting for Grievance Log timeline columns (G-R)
- * - Completed steps: Green background
- * - Current step: Yellow/amber highlight
- * - Future steps: Light gray (faded)
+ * Timeline spans from Incident Date (G) through Date Closed (R)
+ * - Completed/past steps and deadlines: Green background
+ * - Current step: Orange highlight
+ * - Next step: Red highlight
+ * - Future steps beyond next: Light gray (faded)
  * - Closed/Settled/Withdrawn: Full green bar
  */
 function setupGrievanceProgressBar() {
@@ -2096,10 +2098,23 @@ function setupGrievanceProgressBar() {
   const stepCol = getColumnLetter(GRIEVANCE_COLS.CURRENT_STEP);
 
   // Colors
-  const COMPLETED_GREEN = '#D1FAE5';  // Light green for completed steps
-  const CURRENT_AMBER = '#FEF3C7';    // Amber for current step
-  const FUTURE_GRAY = '#F3F4F6';      // Light gray for future steps
+  const COMPLETED_GREEN = '#D1FAE5';  // Light green for completed/past steps
+  const CURRENT_ORANGE = '#FED7AA';   // Orange for current step
+  const NEXT_RED = '#FECACA';         // Light red for next step
+  const FUTURE_GRAY = '#F3F4F6';      // Light gray for future steps beyond next
   const CLOSED_GREEN = '#A7F3D0';     // Darker green for closed cases
+
+  // Timeline ranges calculated from GRIEVANCE_COLS for dynamic positioning
+  const TIMELINE_START = GRIEVANCE_COLS.INCIDENT_DATE;  // Column G (7)
+  const FILING_DEADLINE = GRIEVANCE_COLS.FILING_DEADLINE; // Column H (8)
+  const DATE_FILED = GRIEVANCE_COLS.DATE_FILED;         // Column I (9)
+  const STEP1_DUE = GRIEVANCE_COLS.STEP1_DUE;           // Column J (10)
+  const STEP1_END = GRIEVANCE_COLS.STEP1_RCVD;          // Column K (11)
+  const STEP2_START = GRIEVANCE_COLS.STEP2_APPEAL_DUE;  // Column L (12)
+  const STEP2_END = GRIEVANCE_COLS.STEP2_RCVD;          // Column O (15)
+  const STEP3_START = GRIEVANCE_COLS.STEP3_APPEAL_DUE;  // Column P (16)
+  const STEP3_END = GRIEVANCE_COLS.STEP3_APPEAL_FILED;  // Column Q (17)
+  const CLOSE_COL = GRIEVANCE_COLS.DATE_CLOSED;         // Column R (18)
 
   // ----- CLOSED/SETTLED/WITHDRAWN - Full green bar -----
   const closedRule = SpreadsheetApp.newConditionalFormatRule()
@@ -2112,56 +2127,60 @@ function setupGrievanceProgressBar() {
   // Helper: Active statuses formula part (Open, Pending Info, Appealed, In Arbitration)
   const activeStatusCondition = `OR($${statusCol}2="Open",$${statusCol}2="Pending Info",$${statusCol}2="Appealed",$${statusCol}2="In Arbitration")`;
 
-  // ----- INFORMAL STEP (Pre-filing): Highlight G-H -----
+  // ----- INFORMAL STEP (Pre-filing): Current=G-H (orange), Next=I-K (red), Future=L-R (gray) -----
   const informalCurrentRule = SpreadsheetApp.newConditionalFormatRule()
     .whenFormulaSatisfied(`=AND($${stepCol}2="Informal",${activeStatusCondition})`)
-    .setBackground(CURRENT_AMBER)
-    .setRanges([grievanceLog.getRange(2, 7, 1000, 2)]) // G-H
+    .setBackground(CURRENT_ORANGE)
+    .setRanges([grievanceLog.getRange(2, TIMELINE_START, 1000, 2)]) // G-H current
     .build();
   newRules.push(informalCurrentRule);
 
-  // Gray out future columns when at Informal
+  const informalNextRule = SpreadsheetApp.newConditionalFormatRule()
+    .whenFormulaSatisfied(`=AND($${stepCol}2="Informal",${activeStatusCondition})`)
+    .setBackground(NEXT_RED)
+    .setRanges([grievanceLog.getRange(2, DATE_FILED, 1000, 3)]) // I-K next (Step I)
+    .build();
+  newRules.push(informalNextRule);
+
   const informalFutureRule = SpreadsheetApp.newConditionalFormatRule()
     .whenFormulaSatisfied(`=AND($${stepCol}2="Informal",${activeStatusCondition})`)
     .setBackground(FUTURE_GRAY)
     .setFontColor('#9CA3AF')
-    .setRanges([grievanceLog.getRange(2, 9, 1000, 10)]) // I-R (future)
+    .setRanges([grievanceLog.getRange(2, STEP2_START, 1000, CLOSE_COL - STEP2_START + 1)]) // L-R future
     .build();
   newRules.push(informalFutureRule);
 
-  // ----- STEP I: Highlight I-K, green G-H, gray L-R -----
+  // ----- STEP I: Completed=G-H (green), Current=I-K (orange), Next=L-O (red), Future=P-R (gray) -----
   const step1CompletedRule = SpreadsheetApp.newConditionalFormatRule()
     .whenFormulaSatisfied(`=AND($${stepCol}2="Step I",${activeStatusCondition})`)
     .setBackground(COMPLETED_GREEN)
-    .setRanges([grievanceLog.getRange(2, 7, 1000, 2)]) // G-H completed
+    .setRanges([grievanceLog.getRange(2, TIMELINE_START, 1000, 2)]) // G-H completed
     .build();
   newRules.push(step1CompletedRule);
 
   const step1CurrentRule = SpreadsheetApp.newConditionalFormatRule()
     .whenFormulaSatisfied(`=AND($${stepCol}2="Step I",${activeStatusCondition})`)
-    .setBackground(CURRENT_AMBER)
-    .setRanges([grievanceLog.getRange(2, 9, 1000, 3)]) // I-K current
+    .setBackground(CURRENT_ORANGE)
+    .setRanges([grievanceLog.getRange(2, DATE_FILED, 1000, 3)]) // I-K current
     .build();
   newRules.push(step1CurrentRule);
 
-  // Timeline ranges calculated from GRIEVANCE_COLS for dynamic positioning
-  const TIMELINE_START = GRIEVANCE_COLS.INCIDENT_DATE;  // Column G
-  const STEP1_END = GRIEVANCE_COLS.STEP1_RCVD;          // Column K
-  const STEP2_START = GRIEVANCE_COLS.STEP2_APPEAL_DUE;  // Column L
-  const STEP2_END = GRIEVANCE_COLS.STEP2_RCVD;          // Column O
-  const STEP3_START = GRIEVANCE_COLS.STEP3_APPEAL_DUE;  // Column P
-  const STEP3_END = GRIEVANCE_COLS.STEP3_APPEAL_FILED;  // Column Q (was incorrectly STEP3_FILED)
-  const CLOSE_COL = GRIEVANCE_COLS.DATE_CLOSED;         // Column R
+  const step1NextRule = SpreadsheetApp.newConditionalFormatRule()
+    .whenFormulaSatisfied(`=AND($${stepCol}2="Step I",${activeStatusCondition})`)
+    .setBackground(NEXT_RED)
+    .setRanges([grievanceLog.getRange(2, STEP2_START, 1000, STEP2_END - STEP2_START + 1)]) // L-O next (Step II)
+    .build();
+  newRules.push(step1NextRule);
 
   const step1FutureRule = SpreadsheetApp.newConditionalFormatRule()
     .whenFormulaSatisfied(`=AND($${stepCol}2="Step I",${activeStatusCondition})`)
     .setBackground(FUTURE_GRAY)
     .setFontColor('#9CA3AF')
-    .setRanges([grievanceLog.getRange(2, STEP2_START, 1000, CLOSE_COL - STEP2_START + 1)]) // L-R future
+    .setRanges([grievanceLog.getRange(2, STEP3_START, 1000, CLOSE_COL - STEP3_START + 1)]) // P-R future
     .build();
   newRules.push(step1FutureRule);
 
-  // ----- STEP II: Highlight L-O, green G-K, gray P-R -----
+  // ----- STEP II: Completed=G-K (green), Current=L-O (orange), Next=P-Q (red), Future=R (gray) -----
   const step2CompletedRule = SpreadsheetApp.newConditionalFormatRule()
     .whenFormulaSatisfied(`=AND($${stepCol}2="Step II",${activeStatusCondition})`)
     .setBackground(COMPLETED_GREEN)
@@ -2171,20 +2190,27 @@ function setupGrievanceProgressBar() {
 
   const step2CurrentRule = SpreadsheetApp.newConditionalFormatRule()
     .whenFormulaSatisfied(`=AND($${stepCol}2="Step II",${activeStatusCondition})`)
-    .setBackground(CURRENT_AMBER)
+    .setBackground(CURRENT_ORANGE)
     .setRanges([grievanceLog.getRange(2, STEP2_START, 1000, STEP2_END - STEP2_START + 1)]) // L-O current
     .build();
   newRules.push(step2CurrentRule);
+
+  const step2NextRule = SpreadsheetApp.newConditionalFormatRule()
+    .whenFormulaSatisfied(`=AND($${stepCol}2="Step II",${activeStatusCondition})`)
+    .setBackground(NEXT_RED)
+    .setRanges([grievanceLog.getRange(2, STEP3_START, 1000, STEP3_END - STEP3_START + 1)]) // P-Q next (Step III)
+    .build();
+  newRules.push(step2NextRule);
 
   const step2FutureRule = SpreadsheetApp.newConditionalFormatRule()
     .whenFormulaSatisfied(`=AND($${stepCol}2="Step II",${activeStatusCondition})`)
     .setBackground(FUTURE_GRAY)
     .setFontColor('#9CA3AF')
-    .setRanges([grievanceLog.getRange(2, STEP3_START, 1000, CLOSE_COL - STEP3_START + 1)]) // P-R future
+    .setRanges([grievanceLog.getRange(2, CLOSE_COL, 1000, 1)]) // R future
     .build();
   newRules.push(step2FutureRule);
 
-  // ----- STEP III: Highlight P-Q, green G-O, gray R -----
+  // ----- STEP III: Completed=G-O (green), Current=P-Q (orange), Next=R (red) -----
   const step3CompletedRule = SpreadsheetApp.newConditionalFormatRule()
     .whenFormulaSatisfied(`=AND($${stepCol}2="Step III",${activeStatusCondition})`)
     .setBackground(COMPLETED_GREEN)
@@ -2194,20 +2220,19 @@ function setupGrievanceProgressBar() {
 
   const step3CurrentRule = SpreadsheetApp.newConditionalFormatRule()
     .whenFormulaSatisfied(`=AND($${stepCol}2="Step III",${activeStatusCondition})`)
-    .setBackground(CURRENT_AMBER)
+    .setBackground(CURRENT_ORANGE)
     .setRanges([grievanceLog.getRange(2, STEP3_START, 1000, STEP3_END - STEP3_START + 1)]) // P-Q current
     .build();
   newRules.push(step3CurrentRule);
 
-  const step3FutureRule = SpreadsheetApp.newConditionalFormatRule()
+  const step3NextRule = SpreadsheetApp.newConditionalFormatRule()
     .whenFormulaSatisfied(`=AND($${stepCol}2="Step III",${activeStatusCondition})`)
-    .setBackground(FUTURE_GRAY)
-    .setFontColor('#9CA3AF')
-    .setRanges([grievanceLog.getRange(2, CLOSE_COL, 1000, 1)]) // R future
+    .setBackground(NEXT_RED)
+    .setRanges([grievanceLog.getRange(2, CLOSE_COL, 1000, 1)]) // R next (close)
     .build();
-  newRules.push(step3FutureRule);
+  newRules.push(step3NextRule);
 
-  // ----- ARBITRATION/MEDIATION: Green G-Q, amber R -----
+  // ----- ARBITRATION/MEDIATION: Completed=G-Q (green), Current=R (orange) -----
   const arbMedCompletedRule = SpreadsheetApp.newConditionalFormatRule()
     .whenFormulaSatisfied(`=AND(OR($${stepCol}2="Arbitration",$${stepCol}2="Mediation"),${activeStatusCondition})`)
     .setBackground(COMPLETED_GREEN)
@@ -2217,7 +2242,7 @@ function setupGrievanceProgressBar() {
 
   const arbMedCurrentRule = SpreadsheetApp.newConditionalFormatRule()
     .whenFormulaSatisfied(`=AND(OR($${stepCol}2="Arbitration",$${stepCol}2="Mediation"),${activeStatusCondition})`)
-    .setBackground(CURRENT_AMBER)
+    .setBackground(CURRENT_ORANGE)
     .setRanges([grievanceLog.getRange(2, CLOSE_COL, 1000, 1)]) // R current (awaiting close)
     .build();
   newRules.push(arbMedCurrentRule);
