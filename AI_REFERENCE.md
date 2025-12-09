@@ -1,6 +1,6 @@
 # 509 Dashboard - Complete Feature Reference
 
-**Version:** 3.27
+**Version:** 3.28
 **Last Updated:** 2025-12-09
 **Purpose:** Union grievance tracking and member engagement system for SEIU Local 509
 
@@ -46,7 +46,35 @@
 
 ---
 
-## 🆕 Changelog - Version 3.27 (2025-12-09)
+## 🆕 Changelog - Version 3.28 (2025-12-09)
+
+**FIX: Undefined STEP3_FILED Constant**
+
+Fixed runtime error "The number of columns in the range must be at least 1" in `setupGrievanceProgressBar()`.
+
+**Issue:** Line 2169 in Code.gs used `GRIEVANCE_COLS.STEP3_FILED` which doesn't exist.
+**Fix:** Changed to `GRIEVANCE_COLS.STEP3_APPEAL_FILED` (the correct constant name).
+
+**Root Cause:** The undefined constant caused `STEP3_END` to be `undefined`, and when used in range calculations like `CLOSE_COL - STEP3_END + 1`, it produced `NaN`, resulting in an invalid range.
+
+**Files Modified:**
+- `Code.gs` - `setupGrievanceProgressBar()` function
+
+**Codebase Audit Completed:**
+
+A comprehensive search of all `.gs` files was performed to identify similar undefined constant errors:
+
+- **GRIEVANCE_COLS references:** All 34 column constants and 8 aliases verified as valid
+- **MEMBER_COLS references:** All 31 column constants and 1 alias verified as valid
+- **CONFIG_COLS references:** All 43 column constants and 1 alias verified as valid
+
+**No additional undefined constants were found.** The only issue was `GRIEVANCE_COLS.STEP3_FILED` which has been fixed.
+
+Note: A comment in `SeedNuke.gs` line 382 references `CONFIG_COLS.TOLL_FREE` in documentation, but this is not used in actual code (it's in a JSDoc comment describing preserved columns).
+
+---
+
+## Changelog - Version 3.27 (2025-12-09)
 
 **FIX: Member Directory Formulas - SUMPRODUCT/ARRAYFORMULA Issue**
 
