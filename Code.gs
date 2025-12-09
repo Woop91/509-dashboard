@@ -42,120 +42,84 @@ function CREATE_509_DASHBOARD() {
     SpreadsheetApp.getActive().toast("✅ Interactive Dashboard created", "60%", 2);
 
     // Create Getting Started and FAQ sheets
-    Logger.log("Starting createGettingStartedSheet...");
     createGettingStartedSheet(ss);
-    Logger.log("Completed createGettingStartedSheet");
 
-    Logger.log("Starting createFAQSheet...");
     createFAQSheet(ss);
-    Logger.log("Completed createFAQSheet");
     SpreadsheetApp.getActive().toast("✅ Help sheets created", "70%", 2);
 
     // Create User Settings sheet
-    Logger.log("Starting createUserSettingsSheet...");
     createUserSettingsSheet();
-    Logger.log("Completed createUserSettingsSheet");
     SpreadsheetApp.getActive().toast("✅ Settings sheet created", "70%", 2);
 
     // Create all analytics and test sheets
-    Logger.log("Starting createStewardWorkloadSheet...");
     createStewardWorkloadSheet();
-    Logger.log("Completed createStewardWorkloadSheet");
 
     // Create Operations Analytics sheet (merged: Trends & Timeline, Location Analytics, Type Analysis, Member Engagement, Cost Impact)
-    Logger.log("Starting createOperationsAnalyticsSheet...");
     if (typeof createOperationsAnalyticsSheet === 'function') {
       createOperationsAnalyticsSheet();
     }
-    Logger.log("Completed createOperationsAnalyticsSheet");
     SpreadsheetApp.getActive().toast("✅ Operations Analytics created", "75%", 2);
 
     // Create comprehensive Executive Dashboard (includes Quick Stats, KPI Performance)
-    Logger.log("Starting createExecutiveDashboard...");
     createExecutiveDashboard();
-    Logger.log("Completed createExecutiveDashboard");
     SpreadsheetApp.getActive().toast("✅ Executive Dashboard created (merged analytics)", "80%", 2);
 
     // Delete standalone tabs that are now merged into Executive Dashboard
     Logger.log("Deleting standalone tabs merged into Executive Dashboard...");
     deleteStandaloneMergedTabs();
-    Logger.log("Completed deletion of merged tabs");
 
     // Hide Member Satisfaction tab (to be wired later by user)
     Logger.log("Hiding Member Satisfaction tab...");
     hideMemberSatisfactionTab();
-    Logger.log("Completed hiding Member Satisfaction");
 
     // Create utility sheets
-    Logger.log("Starting createArchiveSheet...");
     createArchiveSheet();
-    Logger.log("Completed createArchiveSheet");
 
-    Logger.log("Starting createDiagnosticsSheet...");
     createDiagnosticsSheet();
-    Logger.log("Completed createDiagnosticsSheet");
     SpreadsheetApp.getActive().toast("✅ Utility sheets created", "85%", 2);
 
     // Create Audit Log sheet
     createAuditLogSheet();
     SpreadsheetApp.getActive().toast("✅ Audit Log created", "90%", 2);
 
-    Logger.log("Starting setupDataValidations...");
     setupDataValidations();
-    Logger.log("Completed setupDataValidations");
 
-    Logger.log("Starting setupFormulasAndCalculations...");
     setupFormulasAndCalculations();
-    Logger.log("Completed setupFormulasAndCalculations");
 
-    Logger.log("Starting setupInteractiveDashboardControls...");
     setupInteractiveDashboardControls();
-    Logger.log("Completed setupInteractiveDashboardControls");
     SpreadsheetApp.getActive().toast("✅ Validations & formulas ready", "90%", 2);
 
     // CRITICAL: Setup all dropdowns for Member Directory and Grievance Log
-    Logger.log("Starting setupAllDropdowns...");
     setupAllDropdowns();
-    Logger.log("Completed setupAllDropdowns");
     SpreadsheetApp.getActive().toast("✅ Dropdowns configured", "95%", 2);
 
     // Populate all analytics sheets with formulas
-    Logger.log("Starting populateAllAnalyticsSheetsOnCreate...");
     populateAllAnalyticsSheetsOnCreate();
-    Logger.log("Completed populateAllAnalyticsSheetsOnCreate");
     SpreadsheetApp.getActive().toast("✅ Analytics populated", "97%", 2);
 
     // Fix Interactive Dashboard dropdown styling
-    Logger.log("Starting fixInteractiveDropdownHighlighting...");
     if (typeof fixInteractiveDropdownHighlighting === 'function') {
       fixInteractiveDropdownHighlighting();
     }
-    Logger.log("Completed fixInteractiveDropdownHighlighting");
 
     // Move admin tabs to end and hide them by default
-    Logger.log("Starting moveAdminTabsToEnd...");
     if (typeof moveAdminTabsToEnd === 'function') {
       moveAdminTabsToEnd();
     }
     if (typeof hideAdminTabs === 'function') {
       hideAdminTabs(true); // Silent mode - no UI alerts during creation
     }
-    Logger.log("Completed admin tab organization");
     SpreadsheetApp.getActive().toast("✅ Tabs organized", "98%", 2);
 
     // Install essential triggers (auto-recalculation on edit)
-    Logger.log("Starting installEssentialTriggers...");
     if (typeof installEssentialTriggers === 'function') {
       installEssentialTriggers();
     }
-    Logger.log("Completed installEssentialTriggers");
 
     // Install Config sync trigger (auto-add new values to Config)
-    Logger.log("Starting installConfigSyncTrigger...");
     if (typeof installConfigSyncTrigger === 'function') {
       installConfigSyncTrigger();
     }
-    Logger.log("Completed installConfigSyncTrigger");
 
     // Install onOpen trigger for reliable menus on page refresh
     if (typeof installOnOpenTrigger === 'function') {
@@ -174,6 +138,7 @@ function CREATE_509_DASHBOARD() {
     if (typeof setupQuarterlyReports === 'function') {
       setupQuarterlyReports();
     }
+
     SpreadsheetApp.getActive().toast("✅ Triggers installed", "99%", 2);
 
     onOpen();
