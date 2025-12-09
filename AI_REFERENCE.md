@@ -1,6 +1,6 @@
 # 509 Dashboard - Complete Feature Reference
 
-**Version:** 3.26
+**Version:** 3.27
 **Last Updated:** 2025-12-09
 **Purpose:** Union grievance tracking and member engagement system for SEIU Local 509
 
@@ -46,7 +46,34 @@
 
 ---
 
-## 🆕 Changelog - Version 3.26 (2025-12-09)
+## 🆕 Changelog - Version 3.27 (2025-12-09)
+
+**FIX: Member Directory Formulas - SUMPRODUCT/ARRAYFORMULA Issue**
+
+The "Has Open Grievance", "Grievance Status Snapshot", and "Next Grievance Deadline" formulas in the Member Directory were not working because SUMPRODUCT inside ARRAYFORMULA doesn't produce row-by-row results in Google Sheets.
+
+**Solution:** Replaced ARRAYFORMULA with MAP/LAMBDA for all three formulas:
+
+1. **Has Open Grievance (Column AB):**
+   - Old: `=ARRAYFORMULA(IF(...,IF(SUMPRODUCT(...)>0,"Yes","No"),...))`
+   - New: `=MAP(A2:A21000,LAMBDA(m,IF(m="","",IF(SUM(COUNTIFS(...,m,...,{statuses}))>0,"Yes","No"))))`
+
+2. **Grievance Status Snapshot (Column AC):**
+   - Old: `=ARRAYFORMULA(IF(...,IFERROR(INDEX(...,MATCH(A2:A21000,...,0)))...))`
+   - New: `=MAP(A2:A21000,LAMBDA(m,IF(m="","",IFERROR(INDEX(...,MATCH(m,...,0)),""))))`
+
+3. **Next Grievance Deadline (Column AD):**
+   - Same pattern change from ARRAYFORMULA to MAP/LAMBDA
+
+**Files Modified:**
+- `Code.gs` - `setupFormulasAndCalculations()` function
+
+**Also Fixed:**
+- Added `SpreadsheetApp.flush()` calls in validation tests to ensure Config values are written before dropdown setup reads them
+
+---
+
+## Changelog - Version 3.26 (2025-12-09)
 
 **FIX: Test Framework and Integration Tests**
 

@@ -307,9 +307,14 @@ function testConfigChangesPropagateToDropdowns() {
   const config = ss.getSheetByName(SHEETS.CONFIG);
   const memberDir = ss.getSheetByName(SHEETS.MEMBER_DIR);
 
-  // First, populate Config with test values and set up initial dropdowns
+  // First, populate Config with test values
   populateConfigForTesting();
+  SpreadsheetApp.flush();
+  Utilities.sleep(500);
+
+  // Set up initial dropdowns
   setupMemberDirectoryDropdowns();
+  SpreadsheetApp.flush();
 
   // Add a new location to Config
   const testLocation = 'TEST-LOCATION-INTEGRATION';
