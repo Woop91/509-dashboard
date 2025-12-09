@@ -14,7 +14,7 @@
  * Build Info:
  * - Version: 2.1.0 (Security Enhanced + Code Review Improvements)
  * - Build ID: 20251202-improvements
- * - Build Date: 2025-12-09T01:18:00.152Z
+ * - Build Date: 2025-12-09T01:21:46.567Z
  * - Build Type: PRODUCTION
  * - Modules: 76 files
  * - Tests Included: No
@@ -90,6 +90,52 @@ const SHEETS = {
   STATE_CHANGE_LOG: "🔄 State Change Log",
   CONFIGURATION: "⚙️ Configuration",
   ASSIGNMENT_LOG: "📋 Assignment Log"
+};
+
+/* --------------------= SHEET COLUMN COUNTS --------------------= */
+
+/**
+ * Expected column counts for each sheet - single source of truth
+ * Used by deleteColumns cleanup code to remove unused columns
+ * Update these values when adding/removing columns from any sheet
+ * @const {Object}
+ */
+const SHEET_COLUMN_COUNTS = {
+  // Core data sheets (from *_COLS constants)
+  CONFIG: 43,                    // A-AQ (see CONFIG_COLS)
+  MEMBER_DIR: 31,                // A-AE (see MEMBER_COLS)
+  GRIEVANCE_LOG: 34,             // A-AH (see GRIEVANCE_COLS)
+
+  // Dashboards
+  DASHBOARD: 15,                 // Main dashboard
+  INTERACTIVE_DASHBOARD: 20,     // A-T
+  EXECUTIVE_DASHBOARD: 14,       // Executive metrics
+  KPI_PERFORMANCE: 12,           // KPI tracking
+  OPERATIONS_ANALYTICS: 12,      // Merged analytics
+
+  // Utility sheets
+  GETTING_STARTED: 4,            // A-D
+  FAQ: 3,                        // A-C
+  STEWARD_WORKLOAD: 11,          // Workload tracking
+  FEEDBACK: 14,                  // Feedback & Development
+  ARCHIVE: 6,                    // Archived items
+
+  // Log sheets
+  AUDIT_LOG: 6,                  // Security audit
+  ERROR_LOG: 8,                  // Error tracking
+  BACKUP_LOG: 6,                 // Backup history
+  COMMUNICATIONS_LOG: 5,         // Communications (Timestamp, Grievance ID, Type, User, Details)
+  STATE_CHANGE_LOG: 5,           // Workflow states
+  CHANGE_LOG: 8,                 // Data changes
+  ASSIGNMENT_LOG: 7,             // Auto-assignment
+  PERFORMANCE_MONITOR: 7,        // Performance metrics
+
+  // Other sheets
+  USER_SETTINGS: 6,              // User preferences
+  USER_ROLES: 4,                 // RBAC roles
+  FAQ_DATABASE: 11,              // Knowledge base
+  DIAGNOSTICS: 10,               // System diagnostics
+  MEMBER_SATISFACTION: 10        // Survey data
 };
 
 /* --------------------= COLOR SCHEME --------------------= */
@@ -4177,11 +4223,11 @@ function createConfigTab() {
   config.setFrozenRows(2); // Freeze both category and header rows
   config.setTabColor("#2563EB");
 
-  // Delete unused columns beyond the defined layout (43 columns used)
+  // Delete unused columns beyond expected count (from SHEET_COLUMN_COUNTS)
+  const expectedCols = SHEET_COLUMN_COUNTS.CONFIG;
   const totalCols = config.getMaxColumns();
-  const usedCols = 43;  // Config uses 43 columns (A-AQ) - see CONFIG_COLS in Constants.gs
-  if (totalCols > usedCols) {
-    config.deleteColumns(usedCols + 1, totalCols - usedCols);
+  if (totalCols > expectedCols) {
+    config.deleteColumns(expectedCols + 1, totalCols - expectedCols);
   }
 }
 
@@ -19402,10 +19448,11 @@ function createBackupLogSheet() {
 
   sheet.setFrozenRows(1);
 
-  // Delete unused columns beyond the defined headers (6 columns)
+  // Delete unused columns beyond expected count (from SHEET_COLUMN_COUNTS)
+  const expectedCols = SHEET_COLUMN_COUNTS.BACKUP_LOG;
   const totalCols = sheet.getMaxColumns();
-  if (totalCols > 6) {
-    sheet.deleteColumns(7, totalCols - 6);
+  if (totalCols > expectedCols) {
+    sheet.deleteColumns(expectedCols + 1, totalCols - expectedCols);
   }
 
   return sheet;
@@ -24815,10 +24862,11 @@ function createGettingStartedSheet(ss) {
   // Freeze header row
   sheet.setFrozenRows(1);
 
-  // Delete unused columns beyond column D (4 columns)
+  // Delete unused columns beyond expected count (from SHEET_COLUMN_COUNTS)
+  const expectedCols = SHEET_COLUMN_COUNTS.GETTING_STARTED;
   const totalCols = sheet.getMaxColumns();
-  if (totalCols > 4) {
-    sheet.deleteColumns(5, totalCols - 4);
+  if (totalCols > expectedCols) {
+    sheet.deleteColumns(expectedCols + 1, totalCols - expectedCols);
   }
 
   return sheet;
@@ -25005,10 +25053,11 @@ function createFAQSheet(ss) {
   // Freeze header row
   sheet.setFrozenRows(1);
 
-  // Delete unused columns beyond column C (3 columns)
+  // Delete unused columns beyond expected count (from SHEET_COLUMN_COUNTS)
+  const expectedColsFAQ = SHEET_COLUMN_COUNTS.FAQ;
   const totalColsFAQ = sheet.getMaxColumns();
-  if (totalColsFAQ > 3) {
-    sheet.deleteColumns(4, totalColsFAQ - 3);
+  if (totalColsFAQ > expectedColsFAQ) {
+    sheet.deleteColumns(expectedColsFAQ + 1, totalColsFAQ - expectedColsFAQ);
   }
 
   return sheet;
@@ -25624,10 +25673,10 @@ function createGmailCommunicationsLogSheet() {
   // Freeze header
   sheet.setFrozenRows(1);
 
-  // Delete unused columns beyond the defined headers (5 columns)
+  // Delete unused columns beyond the defined headers
   const totalCols = sheet.getMaxColumns();
-  if (totalCols > 5) {
-    sheet.deleteColumns(6, totalCols - 5);
+  if (totalCols > headers.length) {
+    sheet.deleteColumns(headers.length + 1, totalCols - headers.length);
   }
 
   return sheet;
@@ -30310,11 +30359,11 @@ function setDashboardDimensions(sheet) {
   // Freeze header rows
   sheet.setFrozenRows(2);
 
-  // Delete unused columns beyond the defined layout (20 columns used A-T)
+  // Delete unused columns beyond expected count (from SHEET_COLUMN_COUNTS)
+  const expectedCols = SHEET_COLUMN_COUNTS.INTERACTIVE_DASHBOARD;
   const totalCols = sheet.getMaxColumns();
-  const usedCols = 20;  // Interactive Dashboard uses columns A-T
-  if (totalCols > usedCols) {
-    sheet.deleteColumns(usedCols + 1, totalCols - usedCols);
+  if (totalCols > expectedCols) {
+    sheet.deleteColumns(expectedCols + 1, totalCols - expectedCols);
   }
 
   sheet.setTabColor(COLORS.PRIMARY_BLUE);
@@ -52079,10 +52128,11 @@ function createStateChangeLogSheet() {
   // Freeze header
   sheet.setFrozenRows(1);
 
-  // Delete unused columns beyond the defined headers (5 columns)
+  // Delete unused columns beyond expected count (from SHEET_COLUMN_COUNTS)
+  const expectedCols = SHEET_COLUMN_COUNTS.STATE_CHANGE_LOG;
   const totalCols = sheet.getMaxColumns();
-  if (totalCols > 5) {
-    sheet.deleteColumns(6, totalCols - 5);
+  if (totalCols > expectedCols) {
+    sheet.deleteColumns(expectedCols + 1, totalCols - expectedCols);
   }
 
   return sheet;
