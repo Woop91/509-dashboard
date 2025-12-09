@@ -87,10 +87,11 @@ function createOperationsAnalyticsSheet() {
   sheet.setFrozenRows(2);
   sheet.setTabColor(COLORS.PRIMARY_PURPLE);
 
-  // Delete unused columns beyond L (12 columns)
+  // Delete unused columns - detect last used column dynamically
+  const lastCol = sheet.getLastColumn();
   const totalCols = sheet.getMaxColumns();
-  if (totalCols > 12) {
-    sheet.deleteColumns(13, totalCols - 12);
+  if (lastCol > 0 && totalCols > lastCol) {
+    sheet.deleteColumns(lastCol + 1, totalCols - lastCol);
   }
 
   Logger.log("Operations Analytics sheet created with dynamic columns");

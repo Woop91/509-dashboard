@@ -899,11 +899,11 @@ function createMainDashboard() {
 
   dashboard.setTabColor("#7C3AED");
 
-  // Delete unused columns beyond the defined layout (12 columns used A-L)
+  // Delete unused columns - detect last used column dynamically
+  const lastCol = dashboard.getLastColumn();
   const totalCols = dashboard.getMaxColumns();
-  const usedCols = 12;  // Main Dashboard uses columns A-L
-  if (totalCols > usedCols) {
-    dashboard.deleteColumns(usedCols + 1, totalCols - usedCols);
+  if (lastCol > 0 && totalCols > lastCol) {
+    dashboard.deleteColumns(lastCol + 1, totalCols - lastCol);
   }
 }
 
@@ -1070,11 +1070,11 @@ function createAnalyticsDataSheet() {
   analytics.getRange("J5").setFormula(`=UNIQUE(FILTER('Grievance Log'!${stewardCol}:${stewardCol}, 'Grievance Log'!${stewardCol}:${stewardCol}<>"", 'Grievance Log'!${stewardCol}:${stewardCol}<>"Assigned Steward (Name)"))`);
   analytics.getRange("K5").setFormula(`=ARRAYFORMULA(IF(J5:J<>"", COUNTIFS('Grievance Log'!${stewardCol}:${stewardCol}, J5:J, 'Grievance Log'!${statusCol}:${statusCol}, "Open"), ""))`);
 
-  // Delete unused columns beyond the defined layout (11 columns used A-K)
+  // Delete unused columns - detect last used column dynamically
+  const lastCol = analytics.getLastColumn();
   const totalCols = analytics.getMaxColumns();
-  const usedCols = 11;  // Analytics Data uses columns A-K
-  if (totalCols > usedCols) {
-    analytics.deleteColumns(usedCols + 1, totalCols - usedCols);
+  if (lastCol > 0 && totalCols > lastCol) {
+    analytics.deleteColumns(lastCol + 1, totalCols - lastCol);
   }
 
   analytics.hideSheet();

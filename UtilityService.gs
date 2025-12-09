@@ -636,42 +636,8 @@ function clearOrgConfigCache() {
 /* --------------------= SHEET CLEANUP UTILITIES --------------------= */
 
 /**
- * Sheet column configurations - defines how many columns each sheet should have
- * @const {Object}
- */
-const SHEET_COLUMN_CONFIG = {
-  // Getting Started & FAQ
-  "📚 Getting Started": 4,
-  "❓ FAQ": 3,
-
-  // Error & Audit Logs
-  "Error_Log": 8,
-  "Audit_Log": 6,
-  "Audit Log": 6,
-
-  // Communications & State Logs
-  "📞 Communications Log": 9,
-  "🔄 State Change Log": 5,
-  "📝 Change Log": 8,
-
-  // Performance & Backup Logs
-  "Performance_Log": 8,
-  "⚡ Performance Monitor": 7,
-  "💾 Backup Log": 6,
-
-  // Assignment & Roles
-  "🤖 Auto-Assignment Log": 7,
-  "User Roles": 4,
-
-  // FAQ & Knowledge Base
-  "📚 FAQ Database": 11,
-
-  // Settings
-  "⚙️ User Settings": 6
-};
-
-/**
- * Removes unused columns from all sheets based on SHEET_COLUMN_CONFIG
+ * Removes unused columns from all sheets dynamically
+ * Uses sheet.getLastColumn() to detect actual content and removes empty columns beyond that
  * Call this function to clean up existing sheets that have extra columns
  */
 function cleanAllSheetColumns() {
@@ -682,21 +648,20 @@ function cleanAllSheetColumns() {
 
   sheets.forEach(function(sheet) {
     const sheetName = sheet.getName();
-    const expectedCols = SHEET_COLUMN_CONFIG[sheetName];
+    const lastCol = sheet.getLastColumn();
+    const totalCols = sheet.getMaxColumns();
 
-    if (expectedCols) {
-      const totalCols = sheet.getMaxColumns();
-      if (totalCols > expectedCols) {
-        try {
-          sheet.deleteColumns(expectedCols + 1, totalCols - expectedCols);
-          Logger.log('Cleaned ' + sheetName + ': removed ' + (totalCols - expectedCols) + ' columns');
-          cleaned++;
-        } catch (e) {
-          Logger.log('Error cleaning ' + sheetName + ': ' + e.message);
-        }
-      } else {
-        skipped++;
+    // Only clean if there's content and extra columns exist
+    if (lastCol > 0 && totalCols > lastCol) {
+      try {
+        sheet.deleteColumns(lastCol + 1, totalCols - lastCol);
+        Logger.log('Cleaned ' + sheetName + ': removed ' + (totalCols - lastCol) + ' columns');
+        cleaned++;
+      } catch (e) {
+        Logger.log('Error cleaning ' + sheetName + ': ' + e.message);
       }
+    } else {
+      skipped++;
     }
   });
 
@@ -711,22 +676,25 @@ function cleanAllSheetColumns() {
 
 /**
  * Cleans unused columns from a specific sheet
+ * Uses dynamic detection via getLastColumn() - no hardcoded column counts
  * @param {string} sheetName - Name of the sheet to clean
- * @param {number} expectedColumns - Number of columns the sheet should have
+ * @param {GoogleAppsScript.Spreadsheet.Sheet} [sheetObj] - Optional sheet object (avoids extra lookup)
  */
-function cleanSheetColumns(sheetName, expectedColumns) {
+function cleanSheetColumns(sheetName, sheetObj) {
   const ss = SpreadsheetApp.getActiveSpreadsheet();
-  const sheet = ss.getSheetByName(sheetName);
+  const sheet = sheetObj || ss.getSheetByName(sheetName);
 
   if (!sheet) {
     Logger.log('Sheet not found: ' + sheetName);
     return false;
   }
 
+  const lastCol = sheet.getLastColumn();
   const totalCols = sheet.getMaxColumns();
-  if (totalCols > expectedColumns) {
-    sheet.deleteColumns(expectedColumns + 1, totalCols - expectedColumns);
-    Logger.log('Cleaned ' + sheetName + ': removed ' + (totalCols - expectedColumns) + ' columns');
+
+  if (lastCol > 0 && totalCols > lastCol) {
+    sheet.deleteColumns(lastCol + 1, totalCols - lastCol);
+    Logger.log('Cleaned ' + sheetName + ': removed ' + (totalCols - lastCol) + ' columns');
     return true;
   }
 
