@@ -908,8 +908,9 @@ function createMainDashboard() {
 }
 
 /**
- * Cleans up Member Directory structure - removes extra columns beyond AE (31)
- * Run this if columns AF, AG, etc. appear with mixed data
+ * Cleans up Member Directory structure - removes extra columns beyond the expected count
+ * Uses MEMBER_COLS.START_GRIEVANCE (last column) for dynamic detection
+ * Run this if extra columns appear with mixed data
  */
 function cleanupMemberDirectoryColumns() {
   const ss = SpreadsheetApp.getActive();
@@ -922,15 +923,17 @@ function cleanupMemberDirectoryColumns() {
 
   const ui = SpreadsheetApp.getUi();
   const lastCol = memberDir.getLastColumn();
+  // Use MEMBER_COLS.START_GRIEVANCE as the expected max column (dynamically determined)
+  const expectedMaxCol = MEMBER_COLS.START_GRIEVANCE;
 
-  if (lastCol <= 31) {
-    ui.alert('Column Structure OK', 'Member Directory has ' + lastCol + ' columns (expected: 31 max). No cleanup needed.', ui.ButtonSet.OK);
+  if (lastCol <= expectedMaxCol) {
+    ui.alert('Column Structure OK', 'Member Directory has ' + lastCol + ' columns (expected: ' + expectedMaxCol + ' max). No cleanup needed.', ui.ButtonSet.OK);
     return;
   }
 
   const response = ui.alert(
     'Remove Extra Columns?',
-    'Member Directory has ' + lastCol + ' columns but should only have 31 (A-AE).\n\n' +
+    'Member Directory has ' + lastCol + ' columns but should only have ' + expectedMaxCol + '.\n\n' +
     'Extra columns will be deleted. This cannot be undone.\n\n' +
     'Continue?',
     ui.ButtonSet.YES_NO
@@ -938,13 +941,13 @@ function cleanupMemberDirectoryColumns() {
 
   if (response !== ui.Button.YES) return;
 
-  // Delete columns from right to left (starting after column 31)
-  const columnsToDelete = lastCol - 31;
+  // Delete columns from right to left (starting after expected max)
+  const columnsToDelete = lastCol - expectedMaxCol;
   for (let i = 0; i < columnsToDelete; i++) {
-    memberDir.deleteColumn(32); // Always delete column 32 (shifts remaining left)
+    memberDir.deleteColumn(expectedMaxCol + 1); // Always delete first extra column (shifts remaining left)
   }
 
-  // Re-apply checkboxes to column AE (31) - Start Grievance
+  // Re-apply checkboxes to last column - Start Grievance
   const lastRow = Math.max(memberDir.getLastRow(), 100);
   memberDir.getRange(2, MEMBER_COLS.START_GRIEVANCE, lastRow - 1, 1).insertCheckboxes();
 
@@ -1419,10 +1422,11 @@ function createExecutiveDashboard() {
   sheet.getRange("B26:K38").setHorizontalAlignment("center");
   sheet.getRange("B42:K54").setHorizontalAlignment("center");
 
-  // Delete unused columns beyond L (12 columns)
+  // Delete unused columns dynamically based on content
+  const lastCol = sheet.getLastColumn();
   const totalCols = sheet.getMaxColumns();
-  if (totalCols > 12) {
-    sheet.deleteColumns(13, totalCols - 12);
+  if (lastCol > 0 && totalCols > lastCol) {
+    sheet.deleteColumns(lastCol + 1, totalCols - lastCol);
   }
 }
 
@@ -2259,26 +2263,25 @@ function cleanupGrievanceLog() {
     return;
   }
 
-  const EXPECTED_COLS = 28; // A through AB
-  const lastCol = grievanceLog.getLastColumn();
-
-  // Delete extra columns beyond AB (28)
-  if (lastCol > EXPECTED_COLS) {
-    const extraCols = lastCol - EXPECTED_COLS;
-    grievanceLog.deleteColumns(EXPECTED_COLS + 1, extraCols);
-    SpreadsheetApp.getActive().toast(`Removed ${extraCols} extra column(s)`, 'Cleanup', 2);
-  }
-
-  // Reapply headers to ensure correct column names
+  // Reapply headers to ensure correct column names (34 columns per AI_REFERENCE.md)
   const headers = [
     "Grievance ID", "Member ID", "First Name", "Last Name", "Status", "Current Step",
     "Incident Date", "Filing Deadline (21d)", "Date Filed (Step I)", "Step I Decision Due (30d)",
     "Step I Decision Rcvd", "Step II Appeal Due (10d)", "Step II Appeal Filed", "Step II Decision Due (30d)",
     "Step II Decision Rcvd", "Step III Appeal Due (30d)", "Step III Appeal Filed", "Date Closed",
     "Days Open", "Next Action Due", "Days to Deadline", "Articles Violated", "Issue Category",
-    "Member Email", "Unit", "Work Location (Site)", "Assigned Steward (Name)", "Resolution Summary"
+    "Member Email", "Unit", "Work Location (Site)", "Assigned Steward (Name)", "Resolution Summary",
+    "Message/Alert", "Coordinator Message", "Acknowledged By", "Acknowledgment Date",
+    "Created At", "Drive Folder URL"
   ];
   grievanceLog.getRange(1, 1, 1, headers.length).setValues([headers]);
+
+  // Delete extra columns dynamically based on headers length
+  const totalCols = grievanceLog.getMaxColumns();
+  if (totalCols > headers.length) {
+    grievanceLog.deleteColumns(headers.length + 1, totalCols - headers.length);
+    SpreadsheetApp.getActive().toast(`Removed ${totalCols - headers.length} extra column(s)`, 'Cleanup', 2);
+  }
 
   // Clear any existing formulas in calculated columns before reapplying
   const calculatedCols = [
@@ -2816,16 +2819,18 @@ function DIAGNOSE_SETUP() {
   if (config) {
     const configLastRow = config.getLastRow();
     const configLastCol = config.getLastColumn();
+    // Use CONFIG_COLS.MAIN_CONTACT_EMAIL (43) as expected column count
+    const expectedConfigCols = CONFIG_COLS.MAIN_CONTACT_EMAIL;
     report += `  Total: ${configLastRow} rows, ${configLastCol} columns\n`;
-    report += `  Expected: 29 columns (new structure)\n`;
+    report += `  Expected: ${expectedConfigCols} columns (A-AQ)\n`;
 
-    if (configLastCol === 29) {
-      report += `  ✅ Column count matches new structure\n`;
-    } else if (configLastCol === 31) {
-      report += `  ⚠️ Column count matches OLD structure (31 cols)\n`;
+    if (configLastCol === expectedConfigCols) {
+      report += `  ✅ Column count matches expected structure\n`;
+    } else if (configLastCol < expectedConfigCols) {
+      report += `  ⚠️ Missing columns (has ${configLastCol}, expected ${expectedConfigCols})\n`;
       report += `  → Run CREATE_509_DASHBOARD to update\n`;
     } else {
-      report += `  ⚠️ Unexpected column count: ${configLastCol}\n`;
+      report += `  ⚠️ Extra columns detected: ${configLastCol}\n`;
     }
 
     // Check data in key columns

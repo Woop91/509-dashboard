@@ -20,9 +20,9 @@
 
 /**
  * Column for email opt-out in Member Directory
- * Added after existing columns - Column AF (32)
+ * Added after existing columns - dynamically positioned after START_GRIEVANCE
  */
-const EMAIL_OPTOUT_COL = 32;  // AF column
+const EMAIL_OPTOUT_COL = MEMBER_COLS.START_GRIEVANCE + 1;  // AF column (32)
 
 /**
  * Colors for opt-out highlighting
