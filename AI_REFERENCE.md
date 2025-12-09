@@ -1,7 +1,7 @@
 # 509 Dashboard - Complete Feature Reference
 
-**Version:** 3.17
-**Last Updated:** 2025-12-08
+**Version:** 3.18
+**Last Updated:** 2025-12-09
 **Purpose:** Union grievance tracking and member engagement system for SEIU Local 509
 
 ---
@@ -46,7 +46,106 @@
 
 ---
 
-## 🆕 Changelog - Version 3.16 (2025-12-08)
+## 🆕 Changelog - Version 3.18 (2025-12-09)
+
+**CRITICAL: SHEETS CONSTANT MISMATCHES & DYNAMIC COLUMN FIXES**
+
+This release fixes critical mismatches between SHEETS constants and actual code usage that would have caused runtime bugs (sheets not found).
+
+✅ **Fixed SHEETS Constant Mismatches** (`Constants.gs`)
+
+| Constant | Was (BROKEN) | Now (FIXED) |
+|----------|--------------|-------------|
+| `SHEETS.AUDIT_LOG` | "Audit Log" | "Audit_Log" |
+| `SHEETS.ASSIGNMENT_LOG` | "📋 Assignment Log" | "🤖 Auto-Assignment Log" |
+| **NEW** `SHEETS.PERFORMANCE_LOG` | (missing) | "Performance_Log" |
+
+**Why This Was Critical:**
+- Code using `getSheetByName('Audit_Log')` wouldn't find sheet created with `SHEETS.AUDIT_LOG` = "Audit Log"
+- GrievanceFloatToggle.gs was creating "User Settings" (no emoji) but SHEETS.USER_SETTINGS was "⚙️ User Settings"
+- SmartAutoAssignment.gs created "🤖 Auto-Assignment Log" but SHEETS.ASSIGNMENT_LOG was "📋 Assignment Log"
+
+✅ **Converted 23 Files to Use SHEETS.* Constants**
+
+Files converted from hardcoded sheet names to SHEETS.* constants:
+
+| File | Conversion |
+|------|------------|
+| ADHDEnhancements.gs | "⚙️ User Settings" → `SHEETS.USER_SETTINGS` |
+| AuditLoggingRBAC.gs | "Audit_Log" → `SHEETS.AUDIT_LOG` |
+| AutomatedReports.gs | "⚙️ Configuration" → `SHEETS.CONFIGURATION` |
+| CoordinatorNotification.gs | 'Grievance Log' → `SHEETS.GRIEVANCE_LOG` |
+| DataBackupRecovery.gs | '💾 Backup Log' → `SHEETS.BACKUP_LOG` |
+| DataIntegrityEnhancements.gs | '📝 Change Log' → `SHEETS.CHANGE_LOG` |
+| EnhancedErrorHandling.gs | 'Error_Trends' → `SHEETS.ERROR_TRENDS` |
+| FAQKnowledgeBase.gs | '📚 FAQ Database' → `SHEETS.FAQ_DATABASE` |
+| GettingStartedAndFAQ.gs | "📚 Getting Started" → `SHEETS.GETTING_STARTED` |
+| GettingStartedAndFAQ.gs | "❓ FAQ" → `SHEETS.FAQ` |
+| GmailIntegration.gs | '📞 Communications Log' → `SHEETS.COMMUNICATIONS_LOG` |
+| GrievanceFloatToggle.gs | 'User Settings' → `SHEETS.USER_SETTINGS` |
+| PerformanceAndBackup.gs | 'Performance_Log' → `SHEETS.PERFORMANCE_LOG` |
+| PerformanceMonitoring.gs | '⚡ Performance Monitor' → `SHEETS.PERFORMANCE_MONITOR` |
+| SecurityAndAdmin.gs | 'Audit_Log', 'Archive' → `SHEETS.AUDIT_LOG`, `SHEETS.ARCHIVE` |
+| SecurityService.gs | 'User Roles', 'Audit Log' → `SHEETS.USER_ROLES`, `SHEETS.AUDIT_LOG` |
+| SmartAutoAssignment.gs | '🤖 Auto-Assignment Log' → `SHEETS.ASSIGNMENT_LOG` |
+| TestFramework.gs | 'Test Results' → `SHEETS.TEST_RESULTS` |
+| UIFeatures.gs | 'Performance_Log' → `SHEETS.PERFORMANCE_LOG` |
+| WorkflowStateMachine.gs | '🔄 State Change Log' → `SHEETS.STATE_CHANGE_LOG` |
+
+✅ **Fixed Hardcoded Column Counts in Test Files**
+
+- `Code.test.gs`: Changed `getRange(..., 31)` → `getRange(..., memberDir.getLastColumn())`
+- `Integration.test.gs`: Changed `getRange(..., 28)` and `getRange(..., 31)` → `getLastColumn()`
+
+**Files Modified:**
+- `Constants.gs` - Fixed 3 SHEETS constants, added PERFORMANCE_LOG
+- `ADHDEnhancements.gs`, `AuditLoggingRBAC.gs`, `AutomatedReports.gs` - SHEETS.* conversions
+- `Code.test.gs`, `Integration.test.gs` - Dynamic column counts
+- `CoordinatorNotification.gs` - SHEETS.GRIEVANCE_LOG (critical fix)
+- `DataBackupRecovery.gs`, `DataIntegrityEnhancements.gs`, `EnhancedErrorHandling.gs`
+- `FAQKnowledgeBase.gs`, `GettingStartedAndFAQ.gs`, `GmailIntegration.gs`
+- `GrievanceFloatToggle.gs`, `PerformanceAndBackup.gs`, `PerformanceMonitoring.gs`
+- `SecurityAndAdmin.gs`, `SecurityService.gs`, `SmartAutoAssignment.gs`
+- `TestFramework.gs`, `UIFeatures.gs`, `WorkflowStateMachine.gs`
+
+**Verification Commands:**
+```bash
+# Verify no hardcoded sheet column references (should be 0)
+grep "'Member Directory'![A-Z]:[A-Z]" *.gs | wc -l
+grep "'Grievance Log'![A-Z]:[A-Z]" *.gs | wc -l
+
+# Count SHEETS.* references (should be ~960+)
+grep -c "SHEETS\." *.gs | awk -F: '{sum+=$2} END {print sum}'
+
+# Check remaining hardcoded getSheetByName (should only be temp export sheets)
+grep -n "getSheetByName\s*(['\"]" *.gs | grep -v "SHEETS\." | grep -v "ConsolidatedDashboard.gs"
+```
+
+**Commits:**
+- 5f4e101: Fix SHEETS constant mismatches and convert hardcoded sheet names
+
+---
+
+## Changelog - Version 3.17 (2025-12-08)
+
+**COMPLETE DYNAMIC COLUMN MIGRATION**
+
+Converted ALL hardcoded column references to use dynamic constants (MEMBER_COLS, GRIEVANCE_COLS, CONFIG_COLS).
+
+**Files Modified:**
+- Multiple files converted to use dynamic column constants
+- Test files updated to use `getLastColumn()` instead of hardcoded counts
+
+**Commits:**
+- 982ee0b: Fix hardcoded sheet names to use SHEETS constants
+- e91aab4: Complete dynamic column conversion
+- 1220670: Convert all remaining hardcoded columns
+- 98787f5: Fix all remaining hardcoded column counts
+- dc11a0b: Replace all remaining hardcoded column references
+
+---
+
+## Changelog - Version 3.16 (2025-12-08)
 
 **CODE QUALITY ENHANCEMENTS - ROW MAPPERS & SCHEMA VALIDATION:**
 
