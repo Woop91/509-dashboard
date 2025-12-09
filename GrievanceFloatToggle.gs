@@ -389,7 +389,7 @@ function onEditGrievanceAutoSort(e) {
     const newValue = String(e.value || '').toLowerCase();
 
     // Check if status changed to one that should sink to bottom
-    const closedStatuses = ['closed', 'settled', 'withdrawn'];
+    const closedStatuses = ['closed', 'settled', 'withdrawn', 'denied'];
     const shouldSort = closedStatuses.some(status => newValue.includes(status));
 
     if (shouldSort) {

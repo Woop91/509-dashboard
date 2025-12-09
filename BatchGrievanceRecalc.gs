@@ -154,20 +154,20 @@ function calculateGrievanceDeadlines(row) {
   const currentStepLevel = stepProgression[currentStep] ?? 0;
 
   // H: Filing Deadline - always show if incident date exists
-  const filingDeadline = incidentDate ? addDays(incidentDate, 21) : '';
+  const filingDeadline = incidentDate ? addDays(incidentDate, GRIEVANCE_TIMELINES.FILING_DEADLINE_DAYS) : '';
 
   // J: Step I Decision Due - show only if Date Filed exists AND at Step I or beyond
-  const step1Due = (dateFiled && currentStepLevel >= 1) ? addDays(dateFiled, 30) : '';
+  const step1Due = (dateFiled && currentStepLevel >= 1) ? addDays(dateFiled, GRIEVANCE_TIMELINES.STEP1_DECISION_DAYS) : '';
 
   // L: Step II Appeal Due - show only if Step I Decision was received
   // This means we're past Step I and need to track Step II appeal deadline
-  const step2AppealDeadline = step1DecisionRcvd ? addDays(step1DecisionRcvd, 10) : '';
+  const step2AppealDeadline = step1DecisionRcvd ? addDays(step1DecisionRcvd, GRIEVANCE_TIMELINES.STEP2_APPEAL_DAYS) : '';
 
   // N: Step II Decision Due - show only if Step II Appeal was filed
-  const step2Due = step2AppealFiled ? addDays(step2AppealFiled, 30) : '';
+  const step2Due = step2AppealFiled ? addDays(step2AppealFiled, GRIEVANCE_TIMELINES.STEP2_DECISION_DAYS) : '';
 
   // P: Step III Appeal Due - show only if Step II Decision was received
-  const step3AppealDeadline = step2DecisionRcvd ? addDays(step2DecisionRcvd, 30) : '';
+  const step3AppealDeadline = step2DecisionRcvd ? addDays(step2DecisionRcvd, GRIEVANCE_TIMELINES.STEP3_APPEAL_DAYS) : '';
 
   return {
     filingDeadline: filingDeadline,
