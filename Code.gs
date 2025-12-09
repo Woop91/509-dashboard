@@ -2300,28 +2300,12 @@ function setupGrievanceProgressBar() {
 
 /**
  * Sorts Grievance Log to move completed grievances to bottom
+ * Uses the applyGrievanceFloat() function for proper priority sorting
  * Call this manually or set up a trigger to run periodically
  */
 function sortGrievancesByStatus() {
-  const ss = SpreadsheetApp.getActive();
-  const grievanceLog = ss.getSheetByName(SHEETS.GRIEVANCE_LOG);
-  if (!grievanceLog) return;
-
-  const lastRow = grievanceLog.getLastRow();
-  if (lastRow <= 1) return;
-
-  const lastCol = grievanceLog.getLastColumn();
-  const dataRange = grievanceLog.getRange(2, 1, lastRow - 1, lastCol);
-
-  // Sort by Status - Open/Pending first, then Closed/Settled/Withdrawn/Denied
-  // Custom sort: Open=1, Pending Info=2, Appealed=3, In Arbitration=4, others=5
-  const statusCol = GRIEVANCE_COLS.STATUS;
-
-  dataRange.sort([
-    { column: statusCol, ascending: true }
-  ]);
-
-  SpreadsheetApp.getActive().toast('✅ Grievances sorted - active cases at top, completed at bottom', 'Sorted', 3);
+  // Use the comprehensive sorting from GrievanceFloatToggle.gs
+  applyGrievanceFloat();
 }
 
 /**

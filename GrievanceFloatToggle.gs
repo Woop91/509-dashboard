@@ -361,3 +361,85 @@ function showGrievanceFloatPanel() {
 
   ui.showModalDialog(html, '🔄 Grievance Float Toggle');
 }
+
+/**
+ * Auto-sorts grievances when status changes to Closed/Settled/Withdrawn
+ * This function should be called from an onEdit trigger
+ * @param {Object} e - The edit event object
+ */
+function onEditGrievanceAutoSort(e) {
+  try {
+    if (!e || !e.range) return;
+
+    const sheet = e.range.getSheet();
+    const sheetName = sheet.getName();
+
+    // Only process edits to Grievance Log
+    if (sheetName !== SHEETS.GRIEVANCE_LOG) return;
+
+    const editedCol = e.range.getColumn();
+    const editedRow = e.range.getRow();
+
+    // Only process status column edits (column E = 5)
+    if (editedCol !== GRIEVANCE_COLS.STATUS) return;
+
+    // Skip header row
+    if (editedRow < 2) return;
+
+    const newValue = String(e.value || '').toLowerCase();
+
+    // Check if status changed to one that should sink to bottom
+    const closedStatuses = ['closed', 'settled', 'withdrawn'];
+    const shouldSort = closedStatuses.some(status => newValue.includes(status));
+
+    if (shouldSort) {
+      // Small delay to let other onEdit handlers complete
+      Utilities.sleep(500);
+      applyGrievanceFloat();
+    }
+  } catch (error) {
+    Logger.log('Error in onEditGrievanceAutoSort: ' + error);
+  }
+}
+
+/**
+ * Installs the auto-sort trigger for grievance status changes
+ */
+function installGrievanceAutoSortTrigger() {
+  // Remove existing triggers for this function
+  const triggers = ScriptApp.getProjectTriggers();
+  triggers.forEach(trigger => {
+    if (trigger.getHandlerFunction() === 'onEditGrievanceAutoSort') {
+      ScriptApp.deleteTrigger(trigger);
+    }
+  });
+
+  // Create new onEdit trigger
+  ScriptApp.newTrigger('onEditGrievanceAutoSort')
+    .forSpreadsheet(SpreadsheetApp.getActive())
+    .onEdit()
+    .create();
+
+  SpreadsheetApp.getActive().toast('✅ Grievance auto-sort trigger installed', 'Success', 3);
+}
+
+/**
+ * Removes the auto-sort trigger
+ */
+function removeGrievanceAutoSortTrigger() {
+  const triggers = ScriptApp.getProjectTriggers();
+  let removed = 0;
+
+  triggers.forEach(trigger => {
+    if (trigger.getHandlerFunction() === 'onEditGrievanceAutoSort') {
+      ScriptApp.deleteTrigger(trigger);
+      removed++;
+    }
+  });
+
+  if (removed > 0) {
+    SpreadsheetApp.getActive().toast(`✅ Removed ${removed} auto-sort trigger(s)`, 'Success', 3);
+  } else {
+    SpreadsheetApp.getActive().toast('No auto-sort triggers found', 'Info', 3);
+  }
+}
