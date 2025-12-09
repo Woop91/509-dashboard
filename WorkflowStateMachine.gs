@@ -520,11 +520,10 @@ function createStateChangeLogSheet() {
   // Freeze header
   sheet.setFrozenRows(1);
 
-  // Delete unused columns beyond expected count (from SHEET_COLUMN_COUNTS)
-  const expectedCols = SHEET_COLUMN_COUNTS.STATE_CHANGE_LOG;
+  // Delete unused columns beyond the headers array length
   const totalCols = sheet.getMaxColumns();
-  if (totalCols > expectedCols) {
-    sheet.deleteColumns(expectedCols + 1, totalCols - expectedCols);
+  if (totalCols > headers.length) {
+    sheet.deleteColumns(headers.length + 1, totalCols - headers.length);
   }
 
   return sheet;

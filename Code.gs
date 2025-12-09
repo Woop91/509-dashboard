@@ -498,11 +498,11 @@ function createConfigTab() {
   config.setFrozenRows(2); // Freeze both category and header rows
   config.setTabColor("#2563EB");
 
-  // Delete unused columns beyond expected count (from SHEET_COLUMN_COUNTS)
-  const expectedCols = SHEET_COLUMN_COUNTS.CONFIG;
+  // Delete unused columns beyond the configData headers length
+  const headerColCount = configData[0].length;
   const totalCols = config.getMaxColumns();
-  if (totalCols > expectedCols) {
-    config.deleteColumns(expectedCols + 1, totalCols - expectedCols);
+  if (totalCols > headerColCount) {
+    config.deleteColumns(headerColCount + 1, totalCols - headerColCount);
   }
 }
 

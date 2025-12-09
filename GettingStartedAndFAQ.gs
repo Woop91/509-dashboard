@@ -291,11 +291,11 @@ function createGettingStartedSheet(ss) {
   // Freeze header row
   sheet.setFrozenRows(1);
 
-  // Delete unused columns beyond expected count (from SHEET_COLUMN_COUNTS)
-  const expectedCols = SHEET_COLUMN_COUNTS.GETTING_STARTED;
+  // Delete unused columns - detect last used column dynamically
+  const lastCol = sheet.getLastColumn();
   const totalCols = sheet.getMaxColumns();
-  if (totalCols > expectedCols) {
-    sheet.deleteColumns(expectedCols + 1, totalCols - expectedCols);
+  if (lastCol > 0 && totalCols > lastCol) {
+    sheet.deleteColumns(lastCol + 1, totalCols - lastCol);
   }
 
   return sheet;
@@ -482,11 +482,11 @@ function createFAQSheet(ss) {
   // Freeze header row
   sheet.setFrozenRows(1);
 
-  // Delete unused columns beyond expected count (from SHEET_COLUMN_COUNTS)
-  const expectedColsFAQ = SHEET_COLUMN_COUNTS.FAQ;
+  // Delete unused columns - detect last used column dynamically
+  const lastColFAQ = sheet.getLastColumn();
   const totalColsFAQ = sheet.getMaxColumns();
-  if (totalColsFAQ > expectedColsFAQ) {
-    sheet.deleteColumns(expectedColsFAQ + 1, totalColsFAQ - expectedColsFAQ);
+  if (lastColFAQ > 0 && totalColsFAQ > lastColFAQ) {
+    sheet.deleteColumns(lastColFAQ + 1, totalColsFAQ - lastColFAQ);
   }
 
   return sheet;
