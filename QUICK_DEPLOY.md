@@ -72,7 +72,7 @@ Download `ConsolidatedDashboard.gs` from this repository's main branch.
 1. Close the Apps Script editor tab
 2. Go back to your Google Sheet
 3. **Refresh the page** (F5 or Ctrl+R / Cmd+R)
-4. You should see menus including: **👤 Dashboard**, **📊 Sheet Manager**, **🔧 Setup**, **🎭 Demo**, **⚙️ Administrator**, and **🧪 Tests**
+4. You should see **6 menus**: **👤 Dashboard**, **📊 Sheet Manager**, **🔧 Setup**, **🎭 Demo**, **⚙️ Administrator**, and **🧪 Tests**
 
 > ✅ **All set!** `CREATE_509_DASHBOARD` already configured all sheets, dropdowns, and validations.
 
@@ -225,20 +225,20 @@ You now have a fully functional union management system with:
 
 ---
 
-**Version:** 2.4
-**Last Updated:** 2025-12-06
+**Version:** 3.27
+**Last Updated:** 2025-12-09
 **GitHub:** https://github.com/Woop91/509-dashboard
 
-## 🆕 What's New in v2.4
+## 🆕 What's New in v3.27
+- **100% Dynamic Columns** - All column references use MEMBER_COLS and GRIEVANCE_COLS constants
+- **31-Column Member Directory** - Complete member tracking with engagement metrics
+- **34-Column Grievance Log** - Full grievance lifecycle with deadline tracking
+- **Row mapper functions** - mapMemberRow() and mapGrievanceRow() for cleaner code
+- **MAP/LAMBDA formulas** - Fixed Member Directory formulas for proper calculations
+- **6-Menu System** - Dashboard, Sheet Manager, Setup, Demo, Administrator, Tests
 - **Audit logging system** - Full audit trail for all data modifications
 - **Role-based access control (RBAC)** - Admin, Steward, Viewer roles
 - **DIAGNOSE_SETUP()** - Comprehensive system health check
-- **Build system** - Auto-generate ConsolidatedDashboard.gs with 59 modules
-- Three-tier menu system for better organization
 - Toggle-based data seeding to prevent timeouts
 - Enhanced accessibility features (ADHD controls, dark mode, focus mode)
 - Advanced analytics and predictive insights
-- Performance optimizations and caching
-- Security enhancements
-- Mobile optimization
-- Backup and recovery system
