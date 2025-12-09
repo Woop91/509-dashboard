@@ -838,9 +838,9 @@ const COLORS = {
 
 ### Version 3.30 (2025-12-09) - LATEST
 
-**FEATURE: Grievance Timeline Colors & Auto-Sort**
+**FEATURE: Grievance Timeline Colors, Resolution Colors & Auto-Sort**
 
-Updated grievance log timeline visual progress bar and added automatic sorting.
+Updated grievance log timeline visual progress bar, added resolution column color coding, and automatic sorting.
 
 **Timeline Color Changes (Code.gs - setupGrievanceProgressBar):**
 - Past/completed steps: Green (#D1FAE5)
@@ -850,6 +850,14 @@ Updated grievance log timeline visual progress bar and added automatic sorting.
 - Future steps: Gray (#F3F4F6)
 - Closed/Settled/Withdrawn/Denied: Light Brown (#D7CCC8) - full bar
 
+**Resolution Column Colors (Code.gs - setupResolutionColumnColors):**
+- Won: Light Purple (#E9D5FF)
+- Lost: Light Brown (#D7CCC8)
+- Settled: Light Blue (#BFDBFE)
+- Withdrawn: Light Yellow (#FEF9C3)
+- Denied: Light Red (#FECACA)
+- Pending: Light Orange (#FED7AA)
+
 **Auto-Sort Feature (GrievanceFloatToggle.gs):**
 - Grievances with status Closed/Settled/Withdrawn automatically move to bottom of list
 - Added `onEditGrievanceAutoSort()` - onEdit trigger handler
@@ -858,7 +866,7 @@ Updated grievance log timeline visual progress bar and added automatic sorting.
 - Trigger auto-installed during CREATE_509_DASHBOARD()
 
 **Files Changed:**
-- Code.gs: Updated setupGrievanceProgressBar(), added trigger installation to CREATE_509_DASHBOARD()
+- Code.gs: Updated setupGrievanceProgressBar(), added setupResolutionColumnColors(), added trigger installation to CREATE_509_DASHBOARD()
 - GrievanceFloatToggle.gs: Added auto-sort onEdit handler and trigger management functions
 
 ---

@@ -2071,6 +2071,9 @@ function setupFormulasAndCalculations() {
 
   // Apply progress bar formatting
   setupGrievanceProgressBar();
+
+  // Apply resolution column color coding
+  setupResolutionColumnColors();
 }
 
 /**
@@ -2299,6 +2302,94 @@ function setupGrievanceProgressBar() {
     .setRanges([grievanceLog.getRange(2, CLOSE_COL, 1000, 1)]) // R current (awaiting close, pending)
     .build();
   newRules.push(arbMedCurrentPendingRule);
+
+  grievanceLog.setConditionalFormatRules(newRules);
+}
+
+/**
+ * Sets up color coding for the Resolution column (AB) in Grievance Log
+ * Colors based on resolution outcome:
+ * - Won: Light Purple (#E9D5FF)
+ * - Lost: Light Brown (#D7CCC8)
+ * - Settled: Light Blue (#BFDBFE)
+ * - Withdrawn: Light Yellow (#FEF9C3)
+ * - Denied: Light Red (#FECACA)
+ * - Pending: Light Orange (#FED7AA)
+ */
+function setupResolutionColumnColors() {
+  const ss = SpreadsheetApp.getActive();
+  const grievanceLog = ss.getSheetByName(SHEETS.GRIEVANCE_LOG);
+  if (!grievanceLog) return;
+
+  // Get existing rules and filter out any existing Resolution column rules
+  const existingRules = grievanceLog.getConditionalFormatRules();
+  const resolutionCol = GRIEVANCE_COLS.RESOLUTION; // Column AB (28)
+
+  const newRules = existingRules.filter(rule => {
+    const ranges = rule.getRanges();
+    // Keep rules that don't affect the Resolution column
+    return !ranges.some(r => r.getColumn() === resolutionCol && r.getNumColumns() === 1);
+  });
+
+  // Resolution column range: AB2:AB1001
+  const resolutionRange = grievanceLog.getRange(2, resolutionCol, 1000, 1);
+  const resolutionColLetter = getColumnLetter(resolutionCol);
+
+  // Colors
+  const WON_PURPLE = '#E9D5FF';       // Light purple for Won
+  const LOST_BROWN = '#D7CCC8';       // Light brown for Lost
+  const SETTLED_BLUE = '#BFDBFE';     // Light blue for Settled
+  const WITHDRAWN_YELLOW = '#FEF9C3'; // Light yellow for Withdrawn
+  const DENIED_RED = '#FECACA';       // Light red for Denied
+  const PENDING_ORANGE = '#FED7AA';   // Light orange for Pending
+
+  // ----- WON - Light Purple -----
+  const wonRule = SpreadsheetApp.newConditionalFormatRule()
+    .whenTextContains('Won')
+    .setBackground(WON_PURPLE)
+    .setRanges([resolutionRange])
+    .build();
+  newRules.push(wonRule);
+
+  // ----- LOST - Light Brown -----
+  const lostRule = SpreadsheetApp.newConditionalFormatRule()
+    .whenTextContains('Lost')
+    .setBackground(LOST_BROWN)
+    .setRanges([resolutionRange])
+    .build();
+  newRules.push(lostRule);
+
+  // ----- SETTLED - Light Blue -----
+  const settledRule = SpreadsheetApp.newConditionalFormatRule()
+    .whenTextContains('Settled')
+    .setBackground(SETTLED_BLUE)
+    .setRanges([resolutionRange])
+    .build();
+  newRules.push(settledRule);
+
+  // ----- WITHDRAWN - Light Yellow -----
+  const withdrawnRule = SpreadsheetApp.newConditionalFormatRule()
+    .whenTextContains('Withdrawn')
+    .setBackground(WITHDRAWN_YELLOW)
+    .setRanges([resolutionRange])
+    .build();
+  newRules.push(withdrawnRule);
+
+  // ----- DENIED - Light Red -----
+  const deniedRule = SpreadsheetApp.newConditionalFormatRule()
+    .whenTextContains('Denied')
+    .setBackground(DENIED_RED)
+    .setRanges([resolutionRange])
+    .build();
+  newRules.push(deniedRule);
+
+  // ----- PENDING - Light Orange -----
+  const pendingRule = SpreadsheetApp.newConditionalFormatRule()
+    .whenTextContains('Pending')
+    .setBackground(PENDING_ORANGE)
+    .setRanges([resolutionRange])
+    .build();
+  newRules.push(pendingRule);
 
   grievanceLog.setConditionalFormatRules(newRules);
 }
