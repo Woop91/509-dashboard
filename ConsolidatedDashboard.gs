@@ -14,7 +14,7 @@
  * Build Info:
  * - Version: 2.1.0 (Security Enhanced + Code Review Improvements)
  * - Build ID: 20251202-improvements
- * - Build Date: 2025-12-09T04:09:50.553Z
+ * - Build Date: 2025-12-09T04:13:52.203Z
  * - Build Type: DEVELOPMENT
  * - Modules: 79 files
  * - Tests Included: Yes
@@ -4584,10 +4584,10 @@ function createMainDashboard() {
   dashboard.setTabColor("#7C3AED");
 
   // Delete unused columns - detect last used column dynamically
-  const lastCol = dashboard.getLastColumn();
+  const usedLastCol = dashboard.getLastColumn();
   const totalCols = dashboard.getMaxColumns();
-  if (lastCol > 0 && totalCols > lastCol) {
-    dashboard.deleteColumns(lastCol + 1, totalCols - lastCol);
+  if (usedLastCol > 0 && totalCols > usedLastCol) {
+    dashboard.deleteColumns(usedLastCol + 1, totalCols - usedLastCol);
   }
 }
 

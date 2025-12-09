@@ -904,10 +904,10 @@ function createMainDashboard() {
   dashboard.setTabColor("#7C3AED");
 
   // Delete unused columns - detect last used column dynamically
-  const lastCol = dashboard.getLastColumn();
+  const usedLastCol = dashboard.getLastColumn();
   const totalCols = dashboard.getMaxColumns();
-  if (lastCol > 0 && totalCols > lastCol) {
-    dashboard.deleteColumns(lastCol + 1, totalCols - lastCol);
+  if (usedLastCol > 0 && totalCols > usedLastCol) {
+    dashboard.deleteColumns(usedLastCol + 1, totalCols - usedLastCol);
   }
 }
 
