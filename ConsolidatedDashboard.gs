@@ -14,7 +14,7 @@
  * Build Info:
  * - Version: 2.1.0 (Security Enhanced + Code Review Improvements)
  * - Build ID: 20251202-improvements
- * - Build Date: 2025-12-09T04:56:06.678Z
+ * - Build Date: 2025-12-09T12:53:19.707Z
  * - Build Type: DEVELOPMENT
  * - Modules: 79 files
  * - Tests Included: Yes
@@ -5846,7 +5846,7 @@ function setupGrievanceProgressBar() {
   const STEP2_START = GRIEVANCE_COLS.STEP2_APPEAL_DUE;  // Column L
   const STEP2_END = GRIEVANCE_COLS.STEP2_RCVD;          // Column O
   const STEP3_START = GRIEVANCE_COLS.STEP3_APPEAL_DUE;  // Column P
-  const STEP3_END = GRIEVANCE_COLS.STEP3_FILED;         // Column Q
+  const STEP3_END = GRIEVANCE_COLS.STEP3_APPEAL_FILED;  // Column Q (was incorrectly STEP3_FILED)
   const CLOSE_COL = GRIEVANCE_COLS.DATE_CLOSED;         // Column R
 
   const step1FutureRule = SpreadsheetApp.newConditionalFormatRule()
