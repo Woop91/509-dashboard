@@ -51,7 +51,8 @@ function setupMemberDirectoryDropdowns() {
   SpreadsheetApp.getActiveSpreadsheet().toast('Setting up dropdowns...', 'Please wait', -1);
 
   try {
-    const lastRow = Math.max(memberSheet.getLastRow(), 1000);
+    // Cap at 21000 to match ARRAYFORMULA limit (prevents validation beyond data range)
+    const lastRow = Math.min(Math.max(memberSheet.getLastRow(), 1000), 21000);
 
     // ==================== SINGLE-SELECT DROPDOWNS ====================
 
@@ -179,7 +180,8 @@ function setupGrievanceLogDropdowns() {
   SpreadsheetApp.getActiveSpreadsheet().toast('Setting up Grievance Log dropdowns...', 'Please wait', -1);
 
   try {
-    const lastRow = Math.max(grievanceSheet.getLastRow(), 500);
+    // Cap at 6000 to match grievance capacity (5k grievances + buffer)
+    const lastRow = Math.min(Math.max(grievanceSheet.getLastRow(), 500), 6000);
 
     // Status (Column E / GRIEVANCE_COLS.STATUS = 5) - SINGLE-SELECT
     const statuses = getConfigValuesFromSheet(configSheet, CONFIG_COLS.GRIEVANCE_STATUS);
@@ -434,7 +436,8 @@ function refreshStewardDropdowns() {
 
   // Update Member Directory steward dropdowns
   if (memberSheet) {
-    const lastRow = Math.max(memberSheet.getLastRow(), 1000);
+    // Cap at 21000 to match ARRAYFORMULA limit
+    const lastRow = Math.min(Math.max(memberSheet.getLastRow(), 1000), 21000);
 
     // Assigned Steward
     setDropdownByCol(memberSheet, MEMBER_COLS.ASSIGNED_STEWARD, lastRow, stewards, 'Assigned Steward', true);
@@ -447,7 +450,8 @@ function refreshStewardDropdowns() {
 
   // Update Grievance Log steward dropdown
   if (grievanceSheet) {
-    const lastRow = Math.max(grievanceSheet.getLastRow(), 500);
+    // Cap at 6000 to match grievance capacity
+    const lastRow = Math.min(Math.max(grievanceSheet.getLastRow(), 500), 6000);
     setDropdownByCol(grievanceSheet, GRIEVANCE_COLS.STEWARD, lastRow, stewards, 'Grievance Steward', true);
     updated++;
   }
@@ -488,7 +492,8 @@ function setupMemberDirectoryDropdownsSilent() {
   }
 
   try {
-    const lastRow = Math.max(memberSheet.getLastRow(), 1000);
+    // Cap at 21000 to match ARRAYFORMULA limit
+    const lastRow = Math.min(Math.max(memberSheet.getLastRow(), 1000), 21000);
 
     // Job Title
     const jobTitles = getConfigValuesFromSheet(configSheet, CONFIG_COLS.JOB_TITLES);
@@ -552,7 +557,8 @@ function setupGrievanceLogDropdownsSilent() {
   }
 
   try {
-    const lastRow = Math.max(grievanceSheet.getLastRow(), 500);
+    // Cap at 6000 to match grievance capacity
+    const lastRow = Math.min(Math.max(grievanceSheet.getLastRow(), 500), 6000);
 
     // Status
     const statuses = getConfigValuesFromSheet(configSheet, CONFIG_COLS.GRIEVANCE_STATUS);

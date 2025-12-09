@@ -1,6 +1,6 @@
 # 509 Dashboard - Complete Feature Reference
 
-**Version:** 3.18
+**Version:** 3.19
 **Last Updated:** 2025-12-09
 **Purpose:** Union grievance tracking and member engagement system for SEIU Local 509
 
@@ -46,7 +46,40 @@
 
 ---
 
-## 🆕 Changelog - Version 3.18 (2025-12-09)
+## 🆕 Changelog - Version 3.19 (2025-12-09)
+
+**FIX: Data Validation Row Cap - Prevents Validation Beyond ARRAYFORMULA Limit**
+
+Fixed critical bug where data validation was being applied beyond row 21000, causing error:
+`Exception: The data you entered in cell M25004 violates the data validation rules set on this cell.`
+
+**Root Cause:**
+- `MemberDirectoryDropdowns.gs` used `Math.max(memberSheet.getLastRow(), 1000)` to determine validation range
+- When sheet had previous ARRAYFORMULA data extending to row 25000, `getLastRow()` returned 25000+
+- Validation was then applied to all 25000+ rows, but only rows 2-21000 have valid dropdown options
+
+**Fix Applied:**
+All 6 instances in `MemberDirectoryDropdowns.gs` now cap the row limit:
+
+| Function | Before | After |
+|----------|--------|-------|
+| `setupMemberDirectoryDropdowns()` | `Math.max(..., 1000)` | `Math.min(Math.max(..., 1000), 21000)` |
+| `setupGrievanceLogDropdowns()` | `Math.max(..., 500)` | `Math.min(Math.max(..., 500), 6000)` |
+| `refreshStewardDropdowns()` (member) | `Math.max(..., 1000)` | `Math.min(Math.max(..., 1000), 21000)` |
+| `refreshStewardDropdowns()` (grievance) | `Math.max(..., 500)` | `Math.min(Math.max(..., 500), 6000)` |
+| `setupMemberDirectoryDropdownsSilent()` | `Math.max(..., 1000)` | `Math.min(Math.max(..., 1000), 21000)` |
+| `setupGrievanceLogDropdownsSilent()` | `Math.max(..., 500)` | `Math.min(Math.max(..., 500), 6000)` |
+
+**Row Limits:**
+- Member Directory: 21000 (20k members + 1k buffer, matches ARRAYFORMULA)
+- Grievance Log: 6000 (5k grievances + 1k buffer)
+
+**Files Modified:**
+- `MemberDirectoryDropdowns.gs` - All 6 lastRow calculations now capped
+
+---
+
+## Changelog - Version 3.18 (2025-12-09)
 
 **CRITICAL: SHEETS CONSTANT MISMATCHES & DYNAMIC COLUMN FIXES**
 
