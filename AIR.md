@@ -1,6 +1,6 @@
 # 509 Dashboard - Complete Feature Reference
 
-**Version:** 3.30
+**Version:** 3.31
 **Last Updated:** 2025-12-09
 **Purpose:** Union grievance tracking and member engagement system for SEIU Local 509
 
@@ -836,7 +836,30 @@ const COLORS = {
 
 ## Appendix: Changelog
 
-### Version 3.30 (2025-12-09) - LATEST
+### Version 3.31 (2025-12-09) - LATEST
+
+**CRITICAL FIX: Grievance Timeline Calculation Bug**
+
+Fixed critical bug in BatchGrievanceRecalc.gs where calculated columns were overwriting manual entry columns.
+
+**Bug Fixed:**
+- `recalcAllGrievancesBatched()` was writing 8 values to consecutive columns starting at H
+- This overwrote manual entry columns I (Date Filed), K (Step I Rcvd), M (Step II Appeal Filed), O (Step II Rcvd)
+- Fixed to write each calculated column individually: H, J, L, N, P, S, T, U
+
+**Timeline Logic Improvements:**
+- Closed/Settled/Withdrawn/Denied grievances now correctly show empty Next Action Due (T) and Days to Deadline (U)
+- Days Open (S) still shows for closed grievances (how long it was open)
+- Deadlines only populate when prerequisite dates exist (no future step deadlines)
+- Step I Decision Due (J) only shows if at Step I or beyond
+- Informal step now correctly shows Filing Deadline as next action
+
+**Files Changed:**
+- BatchGrievanceRecalc.gs: Fixed column writing, improved deadline logic
+
+---
+
+### Version 3.30 (2025-12-09)
 
 **FEATURE: Grievance Timeline Colors, Resolution Colors & Auto-Sort**
 
@@ -1090,7 +1113,7 @@ See git history for complete changelog. Key milestones:
 
 ---
 
-**Document Version:** 3.30
+**Document Version:** 3.31
 **Last Updated:** 2025-12-09
 **Maintained By:** Claude (AI Assistant)
 

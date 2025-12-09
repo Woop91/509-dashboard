@@ -10,7 +10,11 @@
 
 /**
  * Recalculates all grievances using batch processing
- * Reads all data once, processes in memory, writes once
+ * Reads all data once, processes in memory, writes to specific columns
+ *
+ * IMPORTANT: Only writes to calculated columns (H, J, L, N, P, S, T, U)
+ * Never overwrites manual entry columns (I, K, M, O, Q, R)
+ *
  * @returns {Object} Statistics about the recalculation
  */
 function recalcAllGrievancesBatched() {
@@ -33,8 +37,17 @@ function recalcAllGrievancesBatched() {
   }
 
   const data = sheet.getRange(2, 1, lastRow - 1, sheet.getLastColumn()).getValues();
-  const updates = [];
   const today = new Date();
+
+  // Create separate arrays for each calculated column
+  const filingDeadlines = [];      // Column H (8)
+  const step1Dues = [];            // Column J (10)
+  const step2AppealDues = [];      // Column L (12)
+  const step2Dues = [];            // Column N (14)
+  const step3AppealDues = [];      // Column P (16)
+  const daysOpenArr = [];          // Column S (19)
+  const nextActionDues = [];       // Column T (20)
+  const daysToDeadlines = [];      // Column U (21)
 
   let processed = 0;
   let errors = 0;
@@ -46,17 +59,15 @@ function recalcAllGrievancesBatched() {
       const deadlines = calculateGrievanceDeadlines(row);
       const timeline = calculateGrievanceTimeline(row, today);
 
-      // Build update row with all calculated fields
-      updates.push([
-        deadlines.filingDeadline,      // H: Filing Deadline (21d)
-        deadlines.step1Due,             // J: Step I Decision Due (30d)
-        deadlines.step2AppealDeadline,  // L: Step II Appeal Due (10d)
-        deadlines.step2Due,             // N: Step II Decision Due (30d)
-        deadlines.step3AppealDeadline,  // P: Step III Appeal Due (30d)
-        timeline.daysOpen,              // S: Days Open
-        timeline.nextActionDue,         // T: Next Action Due
-        timeline.daysToDeadline         // U: Days to Deadline
-      ]);
+      // Add to each column's array
+      filingDeadlines.push([deadlines.filingDeadline]);
+      step1Dues.push([deadlines.step1Due]);
+      step2AppealDues.push([deadlines.step2AppealDeadline]);
+      step2Dues.push([deadlines.step2Due]);
+      step3AppealDues.push([deadlines.step3AppealDeadline]);
+      daysOpenArr.push([timeline.daysOpen]);
+      nextActionDues.push([timeline.nextActionDue]);
+      daysToDeadlines.push([timeline.daysToDeadline]);
 
       processed++;
     } catch (error) {
@@ -64,15 +75,29 @@ function recalcAllGrievancesBatched() {
       Logger.log(`Error processing grievance row ${i + 2}: ${error.message}`);
       errors++;
 
-      // Add empty row to maintain alignment
-      updates.push(['', '', '', '', '', '', '', '']);
+      // Add empty values to maintain alignment
+      filingDeadlines.push(['']);
+      step1Dues.push(['']);
+      step2AppealDues.push(['']);
+      step2Dues.push(['']);
+      step3AppealDues.push(['']);
+      daysOpenArr.push(['']);
+      nextActionDues.push(['']);
+      daysToDeadlines.push(['']);
     }
   }
 
-  // Write all updates once (1 API call)
-  if (updates.length > 0) {
-    // Columns H, J, L, N, P, S, T, U (8 columns starting at column 8)
-    sheet.getRange(2, GRIEVANCE_COLS.FILING_DEADLINE, updates.length, 8).setValues(updates);
+  // Write each calculated column separately (preserves manual entry columns)
+  const numRows = filingDeadlines.length;
+  if (numRows > 0) {
+    sheet.getRange(2, GRIEVANCE_COLS.FILING_DEADLINE, numRows, 1).setValues(filingDeadlines);      // H
+    sheet.getRange(2, GRIEVANCE_COLS.STEP1_DUE, numRows, 1).setValues(step1Dues);                  // J
+    sheet.getRange(2, GRIEVANCE_COLS.STEP2_APPEAL_DUE, numRows, 1).setValues(step2AppealDues);     // L
+    sheet.getRange(2, GRIEVANCE_COLS.STEP2_DUE, numRows, 1).setValues(step2Dues);                  // N
+    sheet.getRange(2, GRIEVANCE_COLS.STEP3_APPEAL_DUE, numRows, 1).setValues(step3AppealDues);     // P
+    sheet.getRange(2, GRIEVANCE_COLS.DAYS_OPEN, numRows, 1).setValues(daysOpenArr);                // S
+    sheet.getRange(2, GRIEVANCE_COLS.NEXT_ACTION_DUE, numRows, 1).setValues(nextActionDues);       // T
+    sheet.getRange(2, GRIEVANCE_COLS.DAYS_TO_DEADLINE, numRows, 1).setValues(daysToDeadlines);     // U
   }
 
   const duration = new Date() - startTime;
@@ -90,22 +115,66 @@ function recalcAllGrievancesBatched() {
 
 /**
  * Calculate all deadline dates for a grievance
+ * Only calculates deadlines for current and prior steps, not future steps.
+ *
+ * Timeline logic:
+ * - H: Filing Deadline = Incident Date + 21 days (show if incident date exists)
+ * - J: Step I Decision Due = Date Filed + 30 days (show if at Step I or later)
+ * - L: Step II Appeal Due = Step I Decision Rcvd + 10 days (show if Step I decision received)
+ * - N: Step II Decision Due = Step II Appeal Filed + 30 days (show if Step II appeal filed)
+ * - P: Step III Appeal Due = Step II Decision Rcvd + 30 days (show if Step II decision received)
+ *
  * @param {Array} row - Grievance data row
  * @returns {Object} Object containing all calculated deadlines
  */
 function calculateGrievanceDeadlines(row) {
+  const currentStep = String(row[GRIEVANCE_COLS.CURRENT_STEP - 1] || '');
+  const status = String(row[GRIEVANCE_COLS.STATUS - 1] || '');
+
+  // Check if closed - don't calculate future deadlines for closed cases
+  const closedStatuses = ['Closed', 'Settled', 'Withdrawn', 'Denied'];
+  const isClosed = closedStatuses.includes(status);
+
+  // Get all date fields
   const incidentDate = row[GRIEVANCE_COLS.INCIDENT_DATE - 1];
   const dateFiled = row[GRIEVANCE_COLS.DATE_FILED - 1];
-  const step1DecisionRcvd = row[GRIEVANCE_COLS.STEP1_DECISION_RCVD - 1];
+  const step1DecisionRcvd = row[GRIEVANCE_COLS.STEP1_RCVD - 1];
   const step2AppealFiled = row[GRIEVANCE_COLS.STEP2_APPEAL_FILED - 1];
-  const step2DecisionRcvd = row[GRIEVANCE_COLS.STEP2_DECISION_RCVD - 1];
+  const step2DecisionRcvd = row[GRIEVANCE_COLS.STEP2_RCVD - 1];
+
+  // Step progression map (which steps have been reached)
+  const stepProgression = {
+    'Informal': 0,
+    'Step I': 1,
+    'Step II': 2,
+    'Step III': 3,
+    'Mediation': 4,
+    'Arbitration': 4
+  };
+  const currentStepLevel = stepProgression[currentStep] ?? 0;
+
+  // H: Filing Deadline - always show if incident date exists
+  const filingDeadline = incidentDate ? addDays(incidentDate, 21) : '';
+
+  // J: Step I Decision Due - show only if Date Filed exists AND at Step I or beyond
+  const step1Due = (dateFiled && currentStepLevel >= 1) ? addDays(dateFiled, 30) : '';
+
+  // L: Step II Appeal Due - show only if Step I Decision was received
+  // This means we're past Step I and need to track Step II appeal deadline
+  const step2AppealDeadline = step1DecisionRcvd ? addDays(step1DecisionRcvd, 10) : '';
+
+  // N: Step II Decision Due - show only if Step II Appeal was filed
+  const step2Due = step2AppealFiled ? addDays(step2AppealFiled, 30) : '';
+
+  // P: Step III Appeal Due - show only if Step II Decision was received
+  const step3AppealDeadline = step2DecisionRcvd ? addDays(step2DecisionRcvd, 30) : '';
 
   return {
-    filingDeadline: incidentDate ? addDays(incidentDate, 21) : '',
-    step1Due: dateFiled ? addDays(dateFiled, 30) : '',
-    step2AppealDeadline: step1DecisionRcvd ? addDays(step1DecisionRcvd, 10) : '',
-    step2Due: step2AppealFiled ? addDays(step2AppealFiled, 30) : '',
-    step3AppealDeadline: step2DecisionRcvd ? addDays(step2DecisionRcvd, 30) : ''
+    filingDeadline: filingDeadline,
+    step1Due: step1Due,
+    step2AppealDeadline: step2AppealDeadline,
+    step2Due: step2Due,
+    step3AppealDeadline: step3AppealDeadline
   };
 }
 
@@ -118,8 +187,12 @@ function calculateGrievanceDeadlines(row) {
 function calculateGrievanceTimeline(row, today) {
   const dateFiled = row[GRIEVANCE_COLS.DATE_FILED - 1];
   const dateClosed = row[GRIEVANCE_COLS.DATE_CLOSED - 1];
-  const status = row[GRIEVANCE_COLS.STATUS - 1];
-  const currentStep = row[GRIEVANCE_COLS.CURRENT_STEP - 1];
+  const status = String(row[GRIEVANCE_COLS.STATUS - 1] || '');
+  const currentStep = String(row[GRIEVANCE_COLS.CURRENT_STEP - 1] || '');
+
+  // Closed statuses - no next action due or days to deadline
+  const closedStatuses = ['Closed', 'Settled', 'Withdrawn', 'Denied'];
+  const isClosed = closedStatuses.includes(status);
 
   // Calculate days open
   let daysOpen = '';
@@ -131,28 +204,38 @@ function calculateGrievanceTimeline(row, today) {
     daysOpen = daysDiff < 0 ? 0 : daysDiff;
   }
 
+  // If closed, no next action due or days to deadline
+  if (isClosed) {
+    return {
+      daysOpen: daysOpen,
+      nextActionDue: '',
+      daysToDeadline: ''
+    };
+  }
+
   // Determine next action due based on current step
   const deadlines = calculateGrievanceDeadlines(row);
   let nextActionDue = '';
 
-  if (status !== 'Closed' && status !== 'Settled' && status !== 'Withdrawn') {
-    switch(currentStep) {
-      case 'Informal':
-      case 'Step I':
-        nextActionDue = deadlines.step1Due;
-        break;
-      case 'Step II':
-        nextActionDue = deadlines.step2Due;
-        break;
-      case 'Step III':
-        nextActionDue = deadlines.step3AppealDeadline;
-        break;
-      case 'Mediation':
-      case 'Arbitration':
-        // For these, use Step III deadline as placeholder
-        nextActionDue = deadlines.step3AppealDeadline;
-        break;
-    }
+  switch(currentStep) {
+    case 'Informal':
+      // At informal stage, next deadline is filing deadline
+      nextActionDue = deadlines.filingDeadline;
+      break;
+    case 'Step I':
+      nextActionDue = deadlines.step1Due;
+      break;
+    case 'Step II':
+      nextActionDue = deadlines.step2Due;
+      break;
+    case 'Step III':
+      nextActionDue = deadlines.step3AppealDeadline;
+      break;
+    case 'Mediation':
+    case 'Arbitration':
+      // For these stages, no automatic deadline - leave blank
+      nextActionDue = '';
+      break;
   }
 
   // Calculate days to deadline and validate next action due
@@ -163,12 +246,9 @@ function calculateGrievanceTimeline(row, today) {
     const deadline = new Date(nextActionDue);
     const daysDiff = Math.floor((deadline - today) / (1000 * 60 * 60 * 24));
 
-    // G2: Next Action Due shows only future dates or blank
-    // G3: Days to Deadline shows only positive numbers or blank
     if (daysDiff < 0) {
-      // Overdue - clear both fields (show blank)
-      validNextActionDue = '';
-      daysToDeadline = '';
+      // Overdue - still show the deadline but negative days
+      daysToDeadline = daysDiff; // Show negative to indicate overdue
     } else if (daysDiff === 0) {
       // Due today - show 0 days
       daysToDeadline = 0;
