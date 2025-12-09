@@ -158,11 +158,22 @@ function CREATE_509_DASHBOARD() {
     Logger.log("Completed installConfigSyncTrigger");
 
     // Install onOpen trigger for reliable menus on page refresh
-    Logger.log("Starting installOnOpenTrigger...");
     if (typeof installOnOpenTrigger === 'function') {
       installOnOpenTrigger();
     }
-    Logger.log("Completed installOnOpenTrigger");
+
+    // Enable daily deadline notifications by default
+    if (typeof setupDailyDeadlineNotifications === 'function') {
+      setupDailyDeadlineNotifications();
+    }
+
+    // Enable automated reports by default
+    if (typeof setupMonthlyReports === 'function') {
+      setupMonthlyReports();
+    }
+    if (typeof setupQuarterlyReports === 'function') {
+      setupQuarterlyReports();
+    }
     SpreadsheetApp.getActive().toast("✅ Triggers installed", "99%", 2);
 
     onOpen();
@@ -1575,8 +1586,7 @@ function deleteStandaloneMergedTabs() {
 }
 
 /**
- * Hide the Member Satisfaction tab (to be wired later by user)
- * TODO: User will wire this to Grievance Log and Member Directory later
+ * Hide the Member Satisfaction tab
  */
 function hideMemberSatisfactionTab() {
   const ss = SpreadsheetApp.getActive();
