@@ -1,6 +1,6 @@
 # 509 Dashboard - Complete Feature Reference
 
-**Version:** 3.24
+**Version:** 3.25
 **Last Updated:** 2025-12-09
 **Purpose:** Union grievance tracking and member engagement system for SEIU Local 509
 
@@ -46,7 +46,24 @@
 
 ---
 
-## 🆕 Changelog - Version 3.24 (2025-12-09)
+## 🆕 Changelog - Version 3.25 (2025-12-09)
+
+**FIX: Duplicate Variable Declaration in createMainDashboard()**
+
+Fixed syntax error: `Identifier 'lastCol' has already been declared` in `createMainDashboard()` function.
+
+**Issue:** Two `const lastCol` declarations in the same function scope:
+- Line 888: `const lastCol = getColumnLetter(GRIEVANCE_COLS.RESOLUTION)` - for QUERY formula range
+- Line 907: `const lastCol = dashboard.getLastColumn()` - for deleting unused columns
+
+**Fix:** Renamed second declaration to `usedLastCol` to avoid redeclaration error.
+
+**Files Modified:**
+- `Code.gs` - Renamed variable in `createMainDashboard()`
+
+---
+
+## Changelog - Version 3.24 (2025-12-09)
 
 **FIX: Multi-Select Dropdown Behavior Now Works**
 
