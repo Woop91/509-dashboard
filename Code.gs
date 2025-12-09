@@ -3356,6 +3356,190 @@ function addSampleFeedbackEntries() {
 }
 
 /**
+ * Populate Feedback & Development sheet with all pending TODOs from the codebase
+ * This includes future features, enhancements, and known issues documented in AIR.md
+ */
+function populatePendingTodos() {
+  const ss = SpreadsheetApp.getActiveSpreadsheet();
+  const feedback = ss.getSheetByName(SHEETS.FEEDBACK);
+
+  if (!feedback) {
+    SpreadsheetApp.getUi().alert('❌ Feedback & Development sheet not found!');
+    return;
+  }
+
+  const today = Utilities.formatDate(new Date(), Session.getScriptTimeZone(), 'MM/dd/yyyy');
+
+  // All pending TODOs from the codebase (AIR.md and code comments)
+  const pendingTodos = [
+    // Future Features (from AIR.md)
+    [
+      'Future Feature',
+      today,
+      'System',
+      'Medium',
+      'Extend formula rows to 1000+',
+      'Currently formulas only cover rows 2-100 or 2-1000 in some cases. Need to extend all formula coverage to support larger datasets without manual intervention.',
+      'Planned',
+      0,
+      'Moderate',
+      '',
+      'Development Team',
+      'None',
+      'Documented in AIR.md - Remaining Planned Features',
+      today
+    ],
+    [
+      'Future Feature',
+      today,
+      'System',
+      'High',
+      'Member portal (view own grievances)',
+      'Allow members to view their own grievance status and history via a separate view or web app. Would improve transparency and reduce steward workload for status inquiries.',
+      'Planned',
+      0,
+      'Complex',
+      '',
+      'Development Team',
+      'Requires authentication strategy',
+      'Documented in AIR.md - Remaining Planned Features',
+      today
+    ],
+    [
+      'Future Feature',
+      today,
+      'System',
+      'Medium',
+      'Survey builder and distribution',
+      'Create and distribute surveys to members for feedback collection. Include satisfaction surveys, issue identification, and engagement tracking.',
+      'Planned',
+      0,
+      'Complex',
+      '',
+      'Development Team',
+      'Need Google Forms integration',
+      'Documented in AIR.md - Remaining Planned Features',
+      today
+    ],
+
+    // Enhancements (from code comments)
+    [
+      'Future Feature',
+      today,
+      'System',
+      'Low',
+      'Email validation for Member Directory',
+      'Add data validation to Column H (Email Address) in Member Directory to ensure proper email format (contains @, valid domain, etc.).',
+      'Planned',
+      0,
+      'Simple',
+      '',
+      'Development Team',
+      'None',
+      'ENHANCEMENT comment in Code.gs line 1664',
+      today
+    ],
+    [
+      'Future Feature',
+      today,
+      'System',
+      'Low',
+      'Phone number validation for Member Directory',
+      'Add data validation to Column I (Phone Number) in Member Directory to ensure proper phone format (XXX) XXX-XXXX.',
+      'Planned',
+      0,
+      'Simple',
+      '',
+      'Development Team',
+      'None',
+      'ENHANCEMENT comment in Code.gs line 1673',
+      today
+    ],
+    [
+      'Future Feature',
+      today,
+      'System',
+      'Low',
+      'Email validation for Grievance Log',
+      'Add data validation to Column X (Member Email) in Grievance Log to ensure proper email format.',
+      'Planned',
+      0,
+      'Simple',
+      '',
+      'Development Team',
+      'None',
+      'ENHANCEMENT comment in Code.gs line 1681',
+      today
+    ],
+
+    // Known Issues (from AIR.md)
+    [
+      'Bug Report',
+      today,
+      'System',
+      'Medium',
+      'Toggle Grievance Columns - DISABLED',
+      'The toggle grievance columns feature is currently disabled and shows an alert instead of functioning. Need to fix the column group toggle logic.',
+      'New',
+      0,
+      'Moderate',
+      '',
+      'Development Team',
+      'None',
+      'Documented in AIR.md - Known Issues & Limitations',
+      today
+    ],
+    [
+      'Bug Report',
+      today,
+      'System',
+      'Low',
+      'Member Directory Column Groups issue',
+      'createMemberDirectory() recreates the entire sheet instead of preserving column groups. This resets any column group settings when the function is called.',
+      'New',
+      0,
+      'Moderate',
+      '',
+      'Development Team',
+      'None',
+      'Documented in AIR.md - Known Issues & Limitations',
+      today
+    ],
+    [
+      'Bug Report',
+      today,
+      'System',
+      'Low',
+      'Win Rate Formula Dependency',
+      'Win rate formulas depend on Resolution column containing exact text "Won", "Lost", or "Settled". Other variations may not be counted correctly.',
+      'New',
+      0,
+      'Simple',
+      '',
+      'Development Team',
+      'None',
+      'Documented in AIR.md - Known Issues & Limitations',
+      today
+    ]
+  ];
+
+  // Find the last row with data (after header rows)
+  const lastRow = Math.max(feedback.getLastRow(), 3);
+
+  // Write all pending todos
+  feedback.getRange(lastRow + 1, 1, pendingTodos.length, pendingTodos[0].length).setValues(pendingTodos);
+
+  SpreadsheetApp.getUi().alert(
+    '✅ Pending TODOs Added',
+    `Added ${pendingTodos.length} pending items to Feedback & Development:\n\n` +
+    '• 3 Future Features (from AIR.md)\n' +
+    '• 3 Enhancements (email/phone validation)\n' +
+    '• 3 Known Issues (bugs to fix)',
+    SpreadsheetApp.getUi().ButtonSet.OK
+  );
+}
+
+/**
  * Populate Steward Workload sheet with live data from Grievance Log
  */
 function populateStewardWorkload() {
