@@ -312,18 +312,18 @@ function showDataQualityDashboard() {
   const memberLastRow = memberSheet.getLastRow() - 1;
   const grievanceLastRow = grievanceSheet.getLastRow() - 1;
 
-  // Check email completeness (Column H in Member Directory)
-  const emailData = memberSheet.getRange(2, 8, memberLastRow, 1).getValues().flat();
+  // Check email completeness (uses MEMBER_COLS.EMAIL for dynamic column reference)
+  const emailData = memberSheet.getRange(2, MEMBER_COLS.EMAIL, memberLastRow, 1).getValues().flat();
   const emailsComplete = emailData.filter(function(email) { return email && email.toString().trim() !== ''; }).length;
   const emailCompleteness = memberLastRow > 0 ? ((emailsComplete / memberLastRow) * 100).toFixed(1) : 0;
 
-  // Check phone completeness (Column I in Member Directory)
-  const phoneData = memberSheet.getRange(2, 9, memberLastRow, 1).getValues().flat();
+  // Check phone completeness (uses MEMBER_COLS.PHONE for dynamic column reference)
+  const phoneData = memberSheet.getRange(2, MEMBER_COLS.PHONE, memberLastRow, 1).getValues().flat();
   const phonesComplete = phoneData.filter(function(phone) { return phone && phone.toString().trim() !== ''; }).length;
   const phoneCompleteness = memberLastRow > 0 ? ((phonesComplete / memberLastRow) * 100).toFixed(1) : 0;
 
-  // Check steward assignment in grievances (Column AA)
-  const stewardData = grievanceSheet.getRange(2, 27, grievanceLastRow, 1).getValues().flat();
+  // Check steward assignment in grievances (uses GRIEVANCE_COLS.STEWARD for dynamic column reference)
+  const stewardData = grievanceSheet.getRange(2, GRIEVANCE_COLS.STEWARD, grievanceLastRow, 1).getValues().flat();
   const stewardsAssigned = stewardData.filter(function(s) { return s && s.toString().trim() !== ''; }).length;
   const stewardCompleteness = grievanceLastRow > 0 ? ((stewardsAssigned / grievanceLastRow) * 100).toFixed(1) : 0;
 

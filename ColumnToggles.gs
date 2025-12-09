@@ -107,12 +107,12 @@ function toggleLevel2Columns() {
     return;
   }
 
-  // Level 2 columns start after the basic columns
-  // These will be added at the end of the existing columns
-  // Starting at column AH (34) based on current structure
-  const firstLevel2Col = 34;
+  // Level 2 columns start after the standard Member Directory columns
+  // Uses MEMBER_COLS.START_GRIEVANCE (31) + 3 for dynamic positioning
+  // This gives 2 buffer columns (AF, AG) before Level 2 starts
+  const firstLevel2Col = MEMBER_COLS.START_GRIEVANCE + 3;
 
-  // Count: 14 Level 2 columns (AH through AU)
+  // Count: 14 Level 2 columns (extended engagement tracking)
   const numCols = 14;
 
   // Check if the Level 2 columns exist
