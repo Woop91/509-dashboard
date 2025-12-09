@@ -96,8 +96,8 @@ function onGrievanceEdit(e) {
  */
 function handleCoordinatorNotification(sheet, row) {
   try {
-    // Get grievance data (now 32 columns with Acknowledged By and Date)
-    const data = sheet.getRange(row, 1, 1, 32).getValues()[0];
+    // Get grievance data dynamically based on actual column count
+    const data = sheet.getRange(row, 1, 1, sheet.getLastColumn()).getValues()[0];
 
     const grievanceId = data[GRIEVANCE_COLS.GRIEVANCE_ID - 1];
     const memberId = data[GRIEVANCE_COLS.MEMBER_ID - 1];
