@@ -47,7 +47,7 @@ const TUTORIAL_STEPS = [
     id: 'member_directory',
     title: 'Member Directory',
     content: 'The Member Directory contains all your union members. You can search, filter, and manage member information here.\n\n✅ 31 columns of member data\n✅ Automatic grievance status tracking\n✅ Steward contact history',
-    sheet: 'Member Directory',
+    sheet: SHEETS.MEMBER_DIR,
     position: 'sheet',
     icon: '👥',
     videoUrl: 'https://example.com/tutorials/member-directory'
@@ -56,7 +56,7 @@ const TUTORIAL_STEPS = [
     id: 'grievance_log',
     title: 'Grievance Log',
     content: 'Track all grievances from filing to resolution. The system automatically calculates deadlines and tracks the workflow.\n\n✅ Automatic deadline calculations\n✅ Step-by-step workflow tracking\n✅ Integration with Google Drive & Calendar',
-    sheet: 'Grievance Log',
+    sheet: SHEETS.GRIEVANCE_LOG,
     position: 'sheet',
     icon: '📋',
     videoUrl: 'https://example.com/tutorials/grievance-log'
@@ -65,7 +65,7 @@ const TUTORIAL_STEPS = [
     id: 'dashboard',
     title: 'Main Dashboard',
     content: 'Get a real-time overview of all union metrics. See open grievances, member counts, and upcoming deadlines at a glance.',
-    sheet: 'Dashboard',
+    sheet: SHEETS.DASHBOARD,
     position: 'sheet',
     icon: '📊',
     videoUrl: 'https://example.com/tutorials/dashboard'
@@ -82,7 +82,7 @@ const TUTORIAL_STEPS = [
     id: 'start_grievance',
     title: 'Starting a Grievance',
     content: 'To start a new grievance:\n\n1. Go to Member Directory\n2. Find the member\n3. Check the "Start Grievance" checkbox (column AE)\n4. Fill out the grievance form\n\nOr use: Dashboard menu → Grievance Tools → Start New Grievance',
-    sheet: 'Member Directory',
+    sheet: SHEETS.MEMBER_DIR,
     position: 'sheet',
     icon: '➕'
   },

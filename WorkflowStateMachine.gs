@@ -490,7 +490,7 @@ function logStateChange(grievanceId, fromState, toState) {
  */
 function createStateChangeLogSheet() {
   const ss = SpreadsheetApp.getActiveSpreadsheet();
-  const sheet = ss.insertSheet('🔄 State Change Log');
+  const sheet = ss.insertSheet(SHEETS.STATE_CHANGE_LOG);
 
   // Set headers
   const headers = [

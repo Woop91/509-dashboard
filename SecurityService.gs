@@ -206,7 +206,7 @@ function assignRole(userEmail, role) {
  */
 function createUserRolesSheet() {
   const ss = SpreadsheetApp.getActiveSpreadsheet();
-  const sheet = ss.insertSheet('User Roles');
+  const sheet = ss.insertSheet(SHEETS.USER_ROLES);
 
   const headers = ['Email', 'Role', 'Assigned Date', 'Assigned By'];
   sheet.getRange(1, 1, 1, headers.length).setValues([headers]);

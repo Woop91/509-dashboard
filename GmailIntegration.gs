@@ -518,7 +518,7 @@ function createGmailCommunicationsLogSheet() {
     return sheet; // Return existing sheet
   }
 
-  sheet = ss.insertSheet('📞 Communications Log');
+  sheet = ss.insertSheet(SHEETS.COMMUNICATIONS_LOG);
 
   // Set headers - Structure matches GMAIL_COMM_LOG_COLS
   const headers = [

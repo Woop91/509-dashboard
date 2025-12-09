@@ -119,7 +119,7 @@ function createBackupLogSheet() {
     return sheet; // Return existing sheet
   }
 
-  sheet = ss.insertSheet('💾 Backup Log');
+  sheet = ss.insertSheet(SHEETS.BACKUP_LOG);
 
   const headers = [
     'Timestamp',

@@ -568,7 +568,7 @@ function archiveRecords(itemType, records, headers) {
 
   if (!archive) {
     // Create archive sheet if it doesn't exist
-    archive = ss.insertSheet('📦 Archive');
+    archive = ss.insertSheet(SHEETS.ARCHIVE);
     archive.getRange(1, 1, 1, 6).setValues([['Item Type', 'Item ID', 'Archive Date', 'Archived By', 'Reason', 'Original Data']]);
     archive.getRange(1, 1, 1, 6).setFontWeight('bold').setBackground('#6B7280').setFontColor('#FFFFFF');
   }

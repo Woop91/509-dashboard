@@ -590,10 +590,10 @@ function showPreferencesEditor() {
     <div class="form-group">
       <label>Default View</label>
       <select id="defaultView">
-        <option value="Dashboard" ${prefs.defaultView === 'Dashboard' ? 'selected' : ''}>Dashboard</option>
-        <option value="Grievance Log" ${prefs.defaultView === 'Grievance Log' ? 'selected' : ''}>Grievance Log</option>
-        <option value="Member Directory" ${prefs.defaultView === 'Member Directory' ? 'selected' : ''}>Member Directory</option>
-        <option value="Interactive Dashboard" ${prefs.defaultView === 'Interactive Dashboard' ? 'selected' : ''}>Interactive Dashboard</option>
+        <option value="${SHEETS.DASHBOARD}" ${prefs.defaultView === SHEETS.DASHBOARD ? 'selected' : ''}>Dashboard</option>
+        <option value="${SHEETS.GRIEVANCE_LOG}" ${prefs.defaultView === SHEETS.GRIEVANCE_LOG ? 'selected' : ''}>Grievance Log</option>
+        <option value="${SHEETS.MEMBER_DIR}" ${prefs.defaultView === SHEETS.MEMBER_DIR ? 'selected' : ''}>Member Directory</option>
+        <option value="${SHEETS.INTERACTIVE_DASHBOARD}" ${prefs.defaultView === SHEETS.INTERACTIVE_DASHBOARD ? 'selected' : ''}>Interactive Dashboard</option>
       </select>
     </div>
 

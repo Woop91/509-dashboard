@@ -121,8 +121,51 @@ grep -c "SHEETS\." *.gs | awk -F: '{sum+=$2} END {print sum}'
 grep -n "getSheetByName\s*(['\"]" *.gs | grep -v "SHEETS\." | grep -v "ConsolidatedDashboard.gs"
 ```
 
+✅ **Fixed Hardcoded insertSheet() Calls** (12 files)
+
+Additional review found insertSheet() calls using hardcoded names instead of SHEETS.* constants:
+
+| File | Fix |
+|------|-----|
+| Code.gs | `insertSheet(SHEETS.EXECUTIVE_DASHBOARD)`, `insertSheet(SHEETS.KPI_PERFORMANCE)` |
+| DataBackupRecovery.gs | `insertSheet(SHEETS.BACKUP_LOG)` |
+| DataIntegrityEnhancements.gs | `insertSheet(SHEETS.CHANGE_LOG)` |
+| EnhancedErrorHandling.gs | `insertSheet(SHEETS.ERROR_TRENDS)` |
+| FAQKnowledgeBase.gs | `insertSheet(SHEETS.FAQ_DATABASE)` |
+| GmailIntegration.gs | `insertSheet(SHEETS.COMMUNICATIONS_LOG)` |
+| PerformanceAndBackup.gs | `insertSheet(SHEETS.PERFORMANCE_LOG)` |
+| PerformanceMonitoring.gs | `insertSheet(SHEETS.PERFORMANCE_MONITOR)` |
+| SecurityAndAdmin.gs | `insertSheet(SHEETS.ARCHIVE)` |
+| SecurityService.gs | `insertSheet(SHEETS.USER_ROLES)` |
+| TestFramework.gs | `insertSheet(SHEETS.TEST_RESULTS)` |
+| WorkflowStateMachine.gs | `insertSheet(SHEETS.STATE_CHANGE_LOG)` |
+
+**Note:** Remaining hardcoded insertSheet() calls are intentionally for temporary/export sheets (Visualizations, Benchmark_Report, Members_Export, etc.)
+
+✅ **Fixed Hardcoded Sheet Names in Comparisons & Object Keys** (4 files)
+
+Additional review found sheet names used in comparisons, object keys, and HTML:
+
+| File | Fix |
+|------|-----|
+| ADHDEnhancements.gs | `sheetName.includes('Config')` → `sheetName !== SHEETS.CONFIG` |
+| ContextSensitiveHelp.gs | `'Member Directory': {...}` → `[SHEETS.MEMBER_DIR]: {...}` |
+| InteractiveTutorial.gs | `sheet: 'Member Directory'` → `sheet: SHEETS.MEMBER_DIR` |
+| SessionManagement.gs | `value="Grievance Log"` → `value="${SHEETS.GRIEVANCE_LOG}"` |
+
+**Note:** Sheet names in Google Sheets FORMULAS (like `=COUNTIF('Grievance Log'!...)`) are intentionally kept as literals - formulas require actual sheet names, not JavaScript constants.
+
+✅ **Fixed ARRAYFORMULA Row Ranges** (`Code.gs`)
+
+Changed ARRAYFORMULA ranges from 25000 to 21000 rows (20k members + 1k buffer):
+- `maxMemberRows`: 25000 → 21000
+- `A2:A25000` → `A2:A21000` in all Member Directory formulas
+
 **Commits:**
 - 5f4e101: Fix SHEETS constant mismatches and convert hardcoded sheet names
+- a17e071: Fix hardcoded insertSheet calls to use SHEETS.* constants
+- c283a17: Fix hardcoded sheet names in comparisons, object keys, and HTML
+- eaa9658: Change ARRAYFORMULA ranges from 25000 to 21000 rows
 
 ---
 

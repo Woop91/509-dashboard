@@ -515,7 +515,7 @@ function generateTestReport(duration) {
   // Create or clear Test Results sheet
   let reportSheet = ss.getSheetByName(SHEETS.TEST_RESULTS);
   if (!reportSheet) {
-    reportSheet = ss.insertSheet('Test Results');
+    reportSheet = ss.insertSheet(SHEETS.TEST_RESULTS);
   }
   reportSheet.clear();
 

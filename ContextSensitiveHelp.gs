@@ -21,7 +21,7 @@
  * Sheet-specific help content
  */
 const SHEET_HELP = {
-  'Member Directory': {
+  [SHEETS.MEMBER_DIR]: {
     icon: '👥',
     title: 'Member Directory',
     purpose: 'Store and manage all union member information including contact details, work information, and engagement data.',
@@ -44,7 +44,7 @@ const SHEET_HELP = {
       'Use the Quick Actions menu (Dashboard → Grievance Tools) for common operations.'
     ]
   },
-  'Grievance Log': {
+  [SHEETS.GRIEVANCE_LOG]: {
     icon: '📋',
     title: 'Grievance Log',
     purpose: 'Track all grievances from filing to resolution with automatic deadline calculations.',

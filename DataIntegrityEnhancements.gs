@@ -164,7 +164,7 @@ function createChangeLogSheet() {
   let changeLog = ss.getSheetByName(SHEETS.CHANGE_LOG);
 
   if (!changeLog) {
-    changeLog = ss.insertSheet('📝 Change Log');
+    changeLog = ss.insertSheet(SHEETS.CHANGE_LOG);
   } else {
     return; // Already exists
   }
