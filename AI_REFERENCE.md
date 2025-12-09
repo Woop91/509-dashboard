@@ -1,6 +1,6 @@
 # 509 Dashboard - Complete Feature Reference
 
-**Version:** 3.19
+**Version:** 3.20
 **Last Updated:** 2025-12-09
 **Purpose:** Union grievance tracking and member engagement system for SEIU Local 509
 
@@ -46,7 +46,41 @@
 
 ---
 
-## 🆕 Changelog - Version 3.19 (2025-12-09)
+## 🆕 Changelog - Version 3.20 (2025-12-09)
+
+**FIX: Seeding Functions Now Protect Row 1 Headers**
+
+Fixed critical bug where seeding could overwrite row 1 headers with data if the sheet was empty.
+
+**Root Cause:**
+- `writeMemberBatch()` and `writeGrievanceBatch()` used `getLastRow() + 1` to determine write position
+- If sheet was empty (`getLastRow()` = 0), data was written to row 1, overwriting headers
+- This caused Member Directory to lose all column headings
+
+**Fix Applied:**
+Both batch write functions now use `Math.max(getLastRow() + 1, 2)` to ensure data always starts at row 2 minimum:
+
+```javascript
+// Before:
+memberDir.getRange(memberDir.getLastRow() + 1, 1, ...).setValues(data);
+
+// After:
+const startRow = Math.max(memberDir.getLastRow() + 1, 2);
+memberDir.getRange(startRow, 1, ...).setValues(data);
+```
+
+**Files Modified:**
+- `Code.gs` - `writeMemberBatch()` and `writeGrievanceBatch()` functions
+
+**To Restore Headers After This Bug:**
+1. Delete all content in Member Directory
+2. Run `509 Tools > Setup/Config > CREATE_509_DASHBOARD()` OR run `createMemberDirectory()` from script editor
+3. Headers will be restored in row 1
+4. Re-seed if needed
+
+---
+
+## Changelog - Version 3.19 (2025-12-09)
 
 **FIX: Data Validation Row Cap - Prevents Validation Beyond ARRAYFORMULA Limit**
 
