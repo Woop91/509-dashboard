@@ -1,6 +1,6 @@
 # 509 Dashboard - Complete Feature Reference
 
-**Version:** 3.30
+**Version:** 3.31
 **Last Updated:** 2025-12-09
 **Purpose:** Union grievance tracking and member engagement system for SEIU Local 509
 
@@ -739,20 +739,30 @@ Applied via `setupDataValidations()`:
 
 ### Grievance Log - Code-Calculated Values (No Sheet Formulas)
 
-**IMPORTANT (v2.3):** The Grievance Log has NO formulas in the sheet body. All calculated columns are computed by `recalcAllGrievancesBatched()` in BatchGrievanceRecalc.gs and written as static values.
+**IMPORTANT (v3.31):** The Grievance Log has NO formulas in the sheet body. All calculated columns are computed by `recalcAllGrievancesBatched()` in BatchGrievanceRecalc.gs and written as static values.
 
-**Calculated Columns:**
+**Calculated Columns (auto-calc):**
 
-| Column | Name | Calculation |
-|--------|------|-------------|
-| H (8)  | Filing Deadline | INCIDENT_DATE + 21 days |
-| J (10) | Step I Decision Due | DATE_FILED + 30 days |
-| L (12) | Step II Appeal Due | STEP1_DECISION_RCVD + 10 days |
-| N (14) | Step II Decision Due | STEP2_APPEAL_FILED + 30 days |
-| P (16) | Step III Appeal Due | STEP2_DECISION_RCVD + 30 days |
-| S (19) | Days Open | DATE_CLOSED - DATE_FILED (or TODAY - DATE_FILED) |
-| T (20) | Next Action Due | Based on Current Step |
-| U (21) | Days to Deadline | NEXT_ACTION_DUE - TODAY |
+| Column | Name | Calculation | Shows When |
+|--------|------|-------------|------------|
+| H (8)  | Filing Deadline | INCIDENT_DATE + 21 days | Incident Date exists |
+| J (10) | Step I Decision Due | DATE_FILED + 30 days | Date Filed exists AND at Step I+ |
+| L (12) | Step II Appeal Due | STEP1_RCVD + 10 days | Step I Decision Rcvd exists |
+| N (14) | Step II Decision Due | STEP2_APPEAL_FILED + 30 days | Step II Appeal Filed exists |
+| P (16) | Step III Appeal Due | STEP2_RCVD + 30 days | Step II Decision Rcvd exists |
+| S (19) | Days Open | DATE_CLOSED - DATE_FILED (or TODAY - DATE_FILED) | Date Filed exists |
+| T (20) | Next Action Due | Based on Current Step (see below) | Not closed/settled/withdrawn/denied |
+| U (21) | Days to Deadline | NEXT_ACTION_DUE - TODAY | Next Action Due exists |
+
+**Manual Entry Columns (never overwritten):** G, I, K, M, O, Q, R
+
+**Next Action Due Logic (Column T):**
+- Informal: Filing Deadline (H)
+- Step I: Step I Decision Due (J)
+- Step II: Step II Decision Due (N)
+- Step III: Step III Appeal Due (P)
+- Mediation/Arbitration: Blank (no automatic deadline)
+- Closed/Settled/Withdrawn/Denied: Blank
 
 **To Recalculate:**
 - Menu: Dashboard → Grievance Tools → Refresh Grievance Formulas
@@ -836,7 +846,30 @@ const COLORS = {
 
 ## Appendix: Changelog
 
-### Version 3.30 (2025-12-09) - LATEST
+### Version 3.31 (2025-12-09) - LATEST
+
+**CRITICAL FIX: Grievance Timeline Calculation Bug**
+
+Fixed critical bug in BatchGrievanceRecalc.gs where calculated columns were overwriting manual entry columns.
+
+**Bug Fixed:**
+- `recalcAllGrievancesBatched()` was writing 8 values to consecutive columns starting at H
+- This overwrote manual entry columns I (Date Filed), K (Step I Rcvd), M (Step II Appeal Filed), O (Step II Rcvd)
+- Fixed to write each calculated column individually: H, J, L, N, P, S, T, U
+
+**Timeline Logic Improvements:**
+- Closed/Settled/Withdrawn/Denied grievances now correctly show empty Next Action Due (T) and Days to Deadline (U)
+- Days Open (S) still shows for closed grievances (how long it was open)
+- Deadlines only populate when prerequisite dates exist (no future step deadlines)
+- Step I Decision Due (J) only shows if at Step I or beyond
+- Informal step now correctly shows Filing Deadline as next action
+
+**Files Changed:**
+- BatchGrievanceRecalc.gs: Fixed column writing, improved deadline logic
+
+---
+
+### Version 3.30 (2025-12-09)
 
 **FEATURE: Grievance Timeline Colors, Resolution Colors & Auto-Sort**
 
@@ -1090,7 +1123,7 @@ See git history for complete changelog. Key milestones:
 
 ---
 
-**Document Version:** 3.30
+**Document Version:** 3.31
 **Last Updated:** 2025-12-09
 **Maintained By:** Claude (AI Assistant)
 
