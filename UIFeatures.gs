@@ -1184,7 +1184,8 @@ function importData(options) {
 
     // Import data (skip header row)
     const importData = data.slice(1);
-    const startRow = destSheet.getLastRow() + 1;
+    // Ensure we never write to row 1 (preserve headers)
+    const startRow = Math.max(destSheet.getLastRow() + 1, 2);
 
     destSheet.getRange(startRow, 1, importData.length, importData[0].length).setValues(importData);
 

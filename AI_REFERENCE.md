@@ -1,6 +1,6 @@
 # 509 Dashboard - Complete Feature Reference
 
-**Version:** 3.20
+**Version:** 3.21
 **Last Updated:** 2025-12-09
 **Purpose:** Union grievance tracking and member engagement system for SEIU Local 509
 
@@ -46,37 +46,45 @@
 
 ---
 
-## 🆕 Changelog - Version 3.20 (2025-12-09)
+## 🆕 Changelog - Version 3.21 (2025-12-09)
 
-**FIX: Seeding Functions Now Protect Row 1 Headers**
+**FIX: Comprehensive Row 1 Header Protection Across All Files**
 
-Fixed critical bug where seeding could overwrite row 1 headers with data if the sheet was empty.
+Extended row 1 header protection to ALL functions that write data to sheets, not just seeding functions.
 
-**Root Cause:**
-- `writeMemberBatch()` and `writeGrievanceBatch()` used `getLastRow() + 1` to determine write position
-- If sheet was empty (`getLastRow()` = 0), data was written to row 1, overwriting headers
-- This caused Member Directory to lose all column headings
+**Pattern Applied:**
+All instances of `getLastRow() + 1` now use `Math.max(getLastRow() + 1, 2)` to ensure data never overwrites row 1 headers.
 
-**Fix Applied:**
-Both batch write functions now use `Math.max(getLastRow() + 1, 2)` to ensure data always starts at row 2 minimum:
+**Files Modified (10 instances fixed):**
 
-```javascript
-// Before:
-memberDir.getRange(memberDir.getLastRow() + 1, 1, ...).setValues(data);
+| File | Function/Location | Fix |
+|------|-------------------|-----|
+| `Code.gs` | `writeMemberBatch()` | `Math.max(getLastRow() + 1, 2)` |
+| `Code.gs` | `writeGrievanceBatch()` | `Math.max(getLastRow() + 1, 2)` |
+| `TestFramework.gs` | `createTestMember()` | `Math.max(getLastRow() + 1, 2)` |
+| `UIFeatures.gs` | Data import function | `Math.max(getLastRow() + 1, 2)` |
+| `Code.test.gs` | Test grievance creation (2 instances) | `Math.max(getLastRow() + 1, 2)` |
+| `Integration.test.gs` | Test grievance creation (5 instances) | `Math.max(getLastRow() + 1, 2)` |
 
-// After:
-const startRow = Math.max(memberDir.getLastRow() + 1, 2);
-memberDir.getRange(startRow, 1, ...).setValues(data);
+**Verification Command:**
+```bash
+# Check for unprotected getLastRow() + 1 patterns (should only show protected ones)
+grep -n "getLastRow() + 1" *.gs | grep -v "Math.max"
 ```
-
-**Files Modified:**
-- `Code.gs` - `writeMemberBatch()` and `writeGrievanceBatch()` functions
 
 **To Restore Headers After This Bug:**
 1. Delete all content in Member Directory
 2. Run `509 Tools > Setup/Config > CREATE_509_DASHBOARD()` OR run `createMemberDirectory()` from script editor
 3. Headers will be restored in row 1
 4. Re-seed if needed
+
+---
+
+## Changelog - Version 3.20 (2025-12-09)
+
+**FIX: Seeding Functions Now Protect Row 1 Headers**
+
+Initial fix for row 1 header protection in seeding functions.
 
 ---
 

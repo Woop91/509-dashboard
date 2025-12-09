@@ -60,7 +60,8 @@ function testCompleteGrievanceWorkflow() {
       ''
     ];
 
-    const initialGrievanceRow = grievanceLog.getLastRow() + 1;
+    // Ensure we never write to row 1 (preserve headers)
+    const initialGrievanceRow = Math.max(grievanceLog.getLastRow() + 1, 2);
     grievanceLog.getRange(initialGrievanceRow, 1, 1, grievanceData.length)
       .setValues([grievanceData]);
 
@@ -224,7 +225,9 @@ function testMemberGrievanceSnapshot() {
       ''
     ];
 
-    grievanceLog.getRange(grievanceLog.getLastRow() + 1, 1, 1, grievanceData.length)
+    // Ensure we never write to row 1 (preserve headers)
+    const grievanceStartRow = Math.max(grievanceLog.getLastRow() + 1, 2);
+    grievanceLog.getRange(grievanceStartRow, 1, 1, grievanceData.length)
       .setValues([grievanceData]);
 
     SpreadsheetApp.flush();
@@ -359,7 +362,9 @@ function testMultipleGrievancesSameMember() {
         i === 1 ? '' : 'Resolved'
       ];
 
-      grievanceLog.getRange(grievanceLog.getLastRow() + 1, 1, 1, grievanceData.length)
+      // Ensure we never write to row 1 (preserve headers)
+      const gRow = Math.max(grievanceLog.getLastRow() + 1, 2);
+      grievanceLog.getRange(gRow, 1, 1, grievanceData.length)
         .setValues([grievanceData]);
     }
 
@@ -518,7 +523,9 @@ function testFormulaPerformanceWithData() {
         ''
       ];
 
-      grievanceLog.getRange(grievanceLog.getLastRow() + 1, 1, 1, grievanceData.length)
+      // Ensure we never write to row 1 (preserve headers)
+      const gStartRow = Math.max(grievanceLog.getLastRow() + 1, 2);
+      grievanceLog.getRange(gStartRow, 1, 1, grievanceData.length)
         .setValues([grievanceData]);
     }
 
@@ -584,7 +591,8 @@ function testGrievanceUpdatesTriggersRecalculation() {
       ''
     ];
 
-    const grievanceRow = grievanceLog.getLastRow() + 1;
+    // Ensure we never write to row 1 (preserve headers)
+    const grievanceRow = Math.max(grievanceLog.getLastRow() + 1, 2);
     grievanceLog.getRange(grievanceRow, 1, 1, grievanceData.length)
       .setValues([grievanceData]);
 
