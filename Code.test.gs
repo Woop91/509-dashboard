@@ -223,7 +223,9 @@ function testMemberDirectoryFormulas() {
       ''
     ];
 
-    grievanceLog.getRange(grievanceLog.getLastRow() + 1, 1, 1, testGrievanceData.length)
+    // Ensure we never write to row 1 (preserve headers)
+    const startRow = Math.max(grievanceLog.getLastRow() + 1, 2);
+    grievanceLog.getRange(startRow, 1, 1, testGrievanceData.length)
       .setValues([testGrievanceData]);
 
     // Force recalculation
@@ -556,7 +558,9 @@ function testGrievanceMemberLinking() {
       ''
     ];
 
-    grievanceLog.getRange(grievanceLog.getLastRow() + 1, 1, 1, testGrievanceData.length)
+    // Ensure we never write to row 1 (preserve headers)
+    const grievanceStartRow = Math.max(grievanceLog.getLastRow() + 1, 2);
+    grievanceLog.getRange(grievanceStartRow, 1, 1, testGrievanceData.length)
       .setValues([testGrievanceData]);
 
     // Verify it was created

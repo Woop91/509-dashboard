@@ -694,7 +694,9 @@ function createTestMember(memberId) {
     ''
   ];
 
-  memberDir.getRange(memberDir.getLastRow() + 1, 1, 1, testMemberData.length).setValues([testMemberData]);
+  // Ensure we never write to row 1 (preserve headers)
+  const startRow = Math.max(memberDir.getLastRow() + 1, 2);
+  memberDir.getRange(startRow, 1, 1, testMemberData.length).setValues([testMemberData]);
   return memberId || 'TEST-M001';
 }
 
