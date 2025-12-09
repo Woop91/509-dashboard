@@ -156,6 +156,13 @@ function CREATE_509_DASHBOARD() {
       installConfigSyncTrigger();
     }
     Logger.log("Completed installConfigSyncTrigger");
+
+    // Install onOpen trigger for reliable menus on page refresh
+    Logger.log("Starting installOnOpenTrigger...");
+    if (typeof installOnOpenTrigger === 'function') {
+      installOnOpenTrigger();
+    }
+    Logger.log("Completed installOnOpenTrigger");
     SpreadsheetApp.getActive().toast("✅ Triggers installed", "99%", 2);
 
     onOpen();
