@@ -739,20 +739,30 @@ Applied via `setupDataValidations()`:
 
 ### Grievance Log - Code-Calculated Values (No Sheet Formulas)
 
-**IMPORTANT (v2.3):** The Grievance Log has NO formulas in the sheet body. All calculated columns are computed by `recalcAllGrievancesBatched()` in BatchGrievanceRecalc.gs and written as static values.
+**IMPORTANT (v3.31):** The Grievance Log has NO formulas in the sheet body. All calculated columns are computed by `recalcAllGrievancesBatched()` in BatchGrievanceRecalc.gs and written as static values.
 
-**Calculated Columns:**
+**Calculated Columns (auto-calc):**
 
-| Column | Name | Calculation |
-|--------|------|-------------|
-| H (8)  | Filing Deadline | INCIDENT_DATE + 21 days |
-| J (10) | Step I Decision Due | DATE_FILED + 30 days |
-| L (12) | Step II Appeal Due | STEP1_DECISION_RCVD + 10 days |
-| N (14) | Step II Decision Due | STEP2_APPEAL_FILED + 30 days |
-| P (16) | Step III Appeal Due | STEP2_DECISION_RCVD + 30 days |
-| S (19) | Days Open | DATE_CLOSED - DATE_FILED (or TODAY - DATE_FILED) |
-| T (20) | Next Action Due | Based on Current Step |
-| U (21) | Days to Deadline | NEXT_ACTION_DUE - TODAY |
+| Column | Name | Calculation | Shows When |
+|--------|------|-------------|------------|
+| H (8)  | Filing Deadline | INCIDENT_DATE + 21 days | Incident Date exists |
+| J (10) | Step I Decision Due | DATE_FILED + 30 days | Date Filed exists AND at Step I+ |
+| L (12) | Step II Appeal Due | STEP1_RCVD + 10 days | Step I Decision Rcvd exists |
+| N (14) | Step II Decision Due | STEP2_APPEAL_FILED + 30 days | Step II Appeal Filed exists |
+| P (16) | Step III Appeal Due | STEP2_RCVD + 30 days | Step II Decision Rcvd exists |
+| S (19) | Days Open | DATE_CLOSED - DATE_FILED (or TODAY - DATE_FILED) | Date Filed exists |
+| T (20) | Next Action Due | Based on Current Step (see below) | Not closed/settled/withdrawn/denied |
+| U (21) | Days to Deadline | NEXT_ACTION_DUE - TODAY | Next Action Due exists |
+
+**Manual Entry Columns (never overwritten):** G, I, K, M, O, Q, R
+
+**Next Action Due Logic (Column T):**
+- Informal: Filing Deadline (H)
+- Step I: Step I Decision Due (J)
+- Step II: Step II Decision Due (N)
+- Step III: Step III Appeal Due (P)
+- Mediation/Arbitration: Blank (no automatic deadline)
+- Closed/Settled/Withdrawn/Denied: Blank
 
 **To Recalculate:**
 - Menu: Dashboard → Grievance Tools → Refresh Grievance Formulas
