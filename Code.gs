@@ -156,6 +156,13 @@ function CREATE_509_DASHBOARD() {
       installConfigSyncTrigger();
     }
     Logger.log("Completed installConfigSyncTrigger");
+
+    // Install onOpen trigger for reliable menus on page refresh
+    Logger.log("Starting installOnOpenTrigger...");
+    if (typeof installOnOpenTrigger === 'function') {
+      installOnOpenTrigger();
+    }
+    Logger.log("Completed installOnOpenTrigger");
     SpreadsheetApp.getActive().toast("✅ Triggers installed", "99%", 2);
 
     onOpen();
@@ -2067,17 +2074,19 @@ function setupFormulasAndCalculations() {
   );
 
   // Grievance Status Snapshot - Column AC (29)
-  // Uses MAP/LAMBDA for reliable row-by-row lookup
+  // Uses MAP/LAMBDA with LET/FILTER to prioritize ACTIVE grievances over closed ones
+  // This ensures consistency with HAS_OPEN_GRIEVANCE column
   const statusSnapshotCol = getColumnLetter(MEMBER_COLS.GRIEVANCE_STATUS);
   memberDir.getRange(statusSnapshotCol + "2").setFormula(
-    `=MAP(A2:A21000,LAMBDA(m,IF(m="","",IFERROR(INDEX('Grievance Log'!${gStatusCol}:${gStatusCol},MATCH(m,'Grievance Log'!${gMemberIdCol}:${gMemberIdCol},0)),""))))`
+    `=MAP(A2:A21000,LAMBDA(m,IF(m="","",LET(activeStatus,FILTER('Grievance Log'!${gStatusCol}:${gStatusCol},('Grievance Log'!${gMemberIdCol}:${gMemberIdCol}=m)*REGEXMATCH('Grievance Log'!${gStatusCol}:${gStatusCol},"^(Open|Pending Info|Appealed|In Arbitration)$")),IFERROR(INDEX(activeStatus,1),IFERROR(INDEX('Grievance Log'!${gStatusCol}:${gStatusCol},MATCH(m,'Grievance Log'!${gMemberIdCol}:${gMemberIdCol},0)),""))))))`
   );
 
   // Next Grievance Deadline - Column AD (30)
-  // Uses MAP/LAMBDA for reliable row-by-row lookup
+  // Uses MAP/LAMBDA with LET/FILTER to prioritize deadlines from ACTIVE grievances
+  // This ensures the deadline shown corresponds to an active case, not a closed one
   const nextDeadlineCol = getColumnLetter(MEMBER_COLS.NEXT_DEADLINE);
   memberDir.getRange(nextDeadlineCol + "2").setFormula(
-    `=MAP(A2:A21000,LAMBDA(m,IF(m="","",IFERROR(INDEX('Grievance Log'!${gNextActionCol}:${gNextActionCol},MATCH(m,'Grievance Log'!${gMemberIdCol}:${gMemberIdCol},0)),""))))`
+    `=MAP(A2:A21000,LAMBDA(m,IF(m="","",LET(activeDeadline,FILTER('Grievance Log'!${gNextActionCol}:${gNextActionCol},('Grievance Log'!${gMemberIdCol}:${gMemberIdCol}=m)*REGEXMATCH('Grievance Log'!${gStatusCol}:${gStatusCol},"^(Open|Pending Info|Appealed|In Arbitration)$")),IFERROR(INDEX(activeDeadline,1),IFERROR(INDEX('Grievance Log'!${gNextActionCol}:${gNextActionCol},MATCH(m,'Grievance Log'!${gMemberIdCol}:${gMemberIdCol},0)),""))))))`
   );
 
   // Apply progress bar formatting
@@ -4073,31 +4082,43 @@ function generateSingleMemberRow(index, startingRow, config, stewardCount, maxSt
   const daysAgo = Math.floor(Math.random() * 90);
 
   const row = [
+    // Section 1: Identity & Core Info (A-D)
     memberID, firstName, lastName,
     config.jobTitles[Math.floor(Math.random() * config.jobTitles.length)],
+    // Section 2: Location & Work (E-G)
     config.locations[Math.floor(Math.random() * config.locations.length)],
     config.units[Math.floor(Math.random() * config.units.length)],
     selectedDays.join(", "),
+    // Section 3: Contact Information (H-K)
     `${firstName.toLowerCase()}.${lastName.toLowerCase()}${startingRow + index}@union.org`,
     `(555) ${String(Math.floor(Math.random() * 900) + 100)}-${String(Math.floor(Math.random() * 9000) + 1000)}`,
     config.commMethods[Math.floor(Math.random() * config.commMethods.length)],
     config.times[Math.floor(Math.random() * config.times.length)],
+    // Section 4: Organizational Structure (L-P)
     config.supervisors[Math.floor(Math.random() * config.supervisors.length)],
     config.managers[Math.floor(Math.random() * config.managers.length)],
     isSteward,
     isSteward === "Yes" && config.committeeOptions.length > 0 ? config.committeeOptions[Math.floor(Math.random() * config.committeeOptions.length)] : "",
     config.stewards[Math.floor(Math.random() * config.stewards.length)],
+    // Section 5: Engagement Metrics (Q-T)
     Math.random() > 0.7 ? new Date(Date.now() - daysAgo * 24 * 60 * 60 * 1000) : "",
     Math.random() > 0.8 ? new Date(Date.now() - daysAgo * 24 * 60 * 60 * 1000) : "",
     Math.floor(Math.random() * 40) + 60,
     Math.floor(Math.random() * 50),
+    // Section 6: Member Interests (U-X)
     Math.random() > 0.5 ? "Yes" : "No",
     Math.random() > 0.6 ? "Yes" : "No",
     Math.random() > 0.8 ? "Yes" : "No",
     config.homeTownOptions.length > 0 ? config.homeTownOptions[Math.floor(Math.random() * config.homeTownOptions.length)] : "",
+    // Section 7: Steward Contact Tracking (Y-AA)
     new Date(Date.now() - Math.random() * 365 * 24 * 60 * 60 * 1000),
     Math.random() > 0.6 ? config.stewards[Math.floor(Math.random() * config.stewards.length)] : "",
-    Math.random() > 0.6 ? config.contactNotes[Math.floor(Math.random() * config.contactNotes.length)] : ""
+    Math.random() > 0.6 ? config.contactNotes[Math.floor(Math.random() * config.contactNotes.length)] : "",
+    // Section 8: Grievance Management (AB-AE)
+    "", // HAS_OPEN_GRIEVANCE - formula-populated
+    "", // GRIEVANCE_STATUS - formula-populated
+    "", // NEXT_DEADLINE - formula-populated
+    false // START_GRIEVANCE - checkbox (unchecked by default)
   ];
 
   return { data: row, isSteward: isSteward === "Yes" };
@@ -4398,15 +4419,36 @@ function generateSingleGrievanceRow(index, startingRow, memberID, memberData, co
   const daysToDeadline = nextActionDue ? Math.floor((nextActionDue - Date.now()) / DAY_MS) : "";
 
   return [
-    grievanceID, memberID, memberData[1], memberData[2], status, step,
-    incidentDate, filingDeadline, dateFiled, step1DecisionDue, step1DecisionRcvd,
+    // Section 1: Identity (A-D)
+    grievanceID, memberID, memberData[1], memberData[2],
+    // Section 2: Status & Assignment (E-F)
+    status, step,
+    // Section 3: Timeline - Filing (G-I)
+    incidentDate, filingDeadline, dateFiled,
+    // Section 4: Timeline - Step I (J-K)
+    step1DecisionDue, step1DecisionRcvd,
+    // Section 5: Timeline - Step II (L-O)
     step2AppealDue, step2AppealFiled, step2DecisionDue, step2DecisionRcvd,
-    step3AppealDue, step3AppealFiled, dateClosed, daysOpen, nextActionDue, daysToDeadline,
+    // Section 6: Timeline - Step III (P-R)
+    step3AppealDue, step3AppealFiled, dateClosed,
+    // Section 7: Calculated Metrics (S-U)
+    daysOpen, nextActionDue, daysToDeadline,
+    // Section 8: Case Details (V-W)
     config.articles[Math.floor(Math.random() * config.articles.length)],
     config.categories[Math.floor(Math.random() * config.categories.length)],
+    // Section 9: Contact & Location (X-AA)
     memberData[7], memberData[5], memberData[4],
     config.stewards[Math.floor(Math.random() * config.stewards.length)],
-    resolution
+    // Section 10: Resolution (AB)
+    resolution,
+    // Section 11: Coordinator Notifications (AC-AF)
+    false, // MESSAGE_ALERT - checkbox (unchecked by default)
+    "",    // COORDINATOR_MESSAGE
+    "",    // ACKNOWLEDGED_BY
+    "",    // ACKNOWLEDGED_DATE
+    // Section 12: Drive Integration (AG-AH)
+    "",    // DRIVE_FOLDER_ID
+    ""     // DRIVE_FOLDER_URL
   ];
 }
 
@@ -4509,14 +4551,16 @@ function updateMemberDirectorySnapshots() {
     if (snapshot) {
       const contactDate = new Date(Date.now() - Math.floor(Math.random() * 14) * 24 * 60 * 60 * 1000);
       const contactNotes = ["Discussed case progress", "Member updated on next steps", "Reviewed timeline and deadlines", "Answered member questions", "Scheduled follow-up meeting"][Math.floor(Math.random() * 5)];
-      updateData.push([snapshot.status || "", snapshot.nextDeadline || "", contactDate, snapshot.stewardWhoContacted || "", contactNotes]);
+      // Only write contact-related columns (Y, Z, AA) - grievance status columns (AB-AD) are formula-calculated
+      updateData.push([contactDate, snapshot.stewardWhoContacted || "", contactNotes]);
     } else {
-      updateData.push(["", "", "", "", ""]);
+      updateData.push(["", "", ""]);
     }
   }
   if (updateData.length > 0) {
-    // Write to Member Directory columns for grievance snapshot data
-    // Columns: Status snapshot, Next deadline, Last contact date, Steward, Contact notes
-    memberDir.getRange(2, 10, updateData.length, 5).setValues(updateData);
+    // Write to Member Directory Steward Contact Tracking columns (Y-AA):
+    // RECENT_CONTACT_DATE (Y/25), CONTACT_STEWARD (Z/26), CONTACT_NOTES (AA/27)
+    // Note: HAS_OPEN_GRIEVANCE, GRIEVANCE_STATUS, NEXT_DEADLINE (AB-AD) are formula-populated
+    memberDir.getRange(2, MEMBER_COLS.RECENT_CONTACT_DATE, updateData.length, 3).setValues(updateData);
   }
 }

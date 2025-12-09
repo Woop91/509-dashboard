@@ -3836,6 +3836,13 @@ function CREATE_509_DASHBOARD() {
       installConfigSyncTrigger();
     }
     Logger.log("Completed installConfigSyncTrigger");
+
+    // Install onOpen trigger for reliable menus on page refresh
+    Logger.log("Starting installOnOpenTrigger...");
+    if (typeof installOnOpenTrigger === 'function') {
+      installOnOpenTrigger();
+    }
+    Logger.log("Completed installOnOpenTrigger");
     SpreadsheetApp.getActive().toast("✅ Triggers installed", "99%", 2);
 
     onOpen();
@@ -51556,10 +51563,12 @@ function populateConfigDefaults() {
     8: ['Alex Steward', 'Chris Union', 'Pat Representative', 'Jordan Advocate', 'Taylor Helper'],
     // I: Committees
     9: ['Grievance Committee', 'Safety Committee', 'Bargaining Committee', 'Social Committee', 'Education Committee'],
-    // J: Grievance Status
-    10: ['Open', 'In Progress', 'Pending Response', 'Appealed', 'Resolved - Won', 'Resolved - Lost', 'Resolved - Settled', 'Withdrawn', 'Closed'],
-    // K: Grievance Step
-    11: ['Pre-Filing', 'Step I - Filed', 'Step I - Awaiting Decision', 'Step II - Appeal Filed', 'Step II - Awaiting Decision', 'Step III - Arbitration', 'Resolved'],
+    // J: Grievance Status - MUST match formula expectations in setupFormulasAndCalculations()
+    // Active statuses: Open, Pending Info, Appealed, In Arbitration
+    // Closed statuses: Closed, Settled, Withdrawn (must match isClosed check in generateSingleGrievanceRow)
+    10: ['Open', 'Pending Info', 'Appealed', 'In Arbitration', 'Settled', 'Withdrawn', 'Closed'],
+    // K: Grievance Step - Standardized step names
+    11: ['Informal', 'Step I', 'Step II', 'Step III', 'Arbitration'],
     // L: Issue Category
     12: ['Discipline', 'Discharge', 'Contract Violation', 'Working Conditions', 'Harassment', 'Discrimination', 'Safety', 'Scheduling', 'Pay/Benefits', 'Other'],
     // M: Articles Violated
