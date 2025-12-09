@@ -482,7 +482,8 @@ Reach out to your fellow stewards or union leadership. We're all in this togethe
 
 ---
 
-**Last Updated**: November 2025
+**Last Updated**: December 2025
+**Version**: 3.27
 **Created with**: Deep appreciation for steward dedication
 **Purpose**: Celebrating and supporting the backbone of Local 509 💙
 

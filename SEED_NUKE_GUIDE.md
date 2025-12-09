@@ -404,5 +404,5 @@ Your dashboard is **production-ready**! 🚀
 
 ---
 
-**Last Updated**: 2025-12-08
-**Version**: 2.2.0 (Updated for v3.11 - Config fields no longer pre-populated)
+**Last Updated**: 2025-12-09
+**Version**: 3.27

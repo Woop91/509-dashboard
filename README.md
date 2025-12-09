@@ -1,10 +1,28 @@
-# 509 Dashboard - Google Apps Script v2.6
+# 509 Dashboard - Google Apps Script v3.27
 
 Complete union member database and grievance tracking system for Local 509.
 
-## 🆕 What's New in v2.6
+## 🆕 What's New in v3.27
 
-### Latest Updates (v2.6 - December 2025)
+### Latest Updates (v3.27 - December 2025)
+
+**Dynamic Column System & Code Quality:**
+- **100% Dynamic Columns** - All column references use MEMBER_COLS and GRIEVANCE_COLS constants
+- **31-Column Member Directory** - Complete member tracking with engagement metrics
+- **34-Column Grievance Log** - Full grievance lifecycle management
+- **Row mapper functions** - mapMemberRow() and mapGrievanceRow() for cleaner code
+- **Verification commands** - Built-in tools to verify code quality
+- **MAP/LAMBDA formulas** - Fixed Member Directory formulas for proper row-by-row calculations
+
+**Menu System (6 Menus):**
+- 👤 Dashboard - Daily operations, search, grievance tools
+- 📊 Sheet Manager - Data, performance, automations
+- 🔧 Setup - Dropdown configuration
+- 🎭 Demo - Seed data, nuke functions
+- ⚙️ Administrator - System health, RBAC, column toggles
+- 🧪 Tests - Unit, validation, integration tests
+
+### Previous Updates (v2.6)
 
 **User Experience & Onboarding:**
 - **Interactive Tutorial System** - 9-step guided tour with progress tracking
@@ -98,7 +116,7 @@ Config Tab (Master Lists)
     │   ↓
     │   └→ Grievance snapshot fields auto-populate from Grievance Log
     │
-    └→ Grievance Log (28 columns of grievance tracking)
+    └→ Grievance Log (34 columns of grievance tracking)
         ↓
         ├→ Auto-calculates deadlines based on contract rules
         ├→ Tracks days open and days to deadline
@@ -161,7 +179,7 @@ Dashboard (Real-time metrics and visualizations)
 4. Copy and paste the entire contents of `Code.gs`
 5. Save the project
 6. Refresh your Google Sheet
-7. Three new menus will appear: **"👤 Dashboard"**, **"📊 Sheet Manager"**, and **"⚙️ Administrator"**
+7. Six menus will appear: **"👤 Dashboard"**, **"📊 Sheet Manager"**, **"🔧 Setup"**, **"🎭 Demo"**, **"⚙️ Administrator"**, and **"🧪 Tests"**
 8. Click **Administrator > Seed Functions > Seed Members** to generate test data
 
 ## 🏗️ Architecture
@@ -348,7 +366,7 @@ Features include:
 
 **Purpose**: Track every grievance through its lifecycle with automatic deadline calculations
 
-**28 Columns Explained**:
+**34 Columns Explained** (see AIR.md for full details):
 
 | Column | Type | Purpose | Auto-Calculated? |
 |--------|------|---------|------------------|
@@ -517,7 +535,7 @@ Master lists for all dropdowns:
 - Communication preferences
 
 ### Grievance Log
-28 columns tracking:
+34 columns tracking:
 - Grievance identification
 - Member linkage
 - Status and step tracking
