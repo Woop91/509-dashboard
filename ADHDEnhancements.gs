@@ -23,9 +23,9 @@ function hideAllGridlines() {
     const sheetName = sheet.getName();
 
     // Hide gridlines on all sheets except Config (for editing)
-    if (!sheetName.includes('Config') &&
-        !sheetName.includes('Member Directory') &&
-        !sheetName.includes('Grievance Log')) {
+    if (sheetName !== SHEETS.CONFIG &&
+        sheetName !== SHEETS.MEMBER_DIR &&
+        sheetName !== SHEETS.GRIEVANCE_LOG) {
       sheet.setHiddenGridlines(true);
     }
   });
