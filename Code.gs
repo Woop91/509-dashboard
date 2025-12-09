@@ -1808,7 +1808,7 @@ function setupDataValidations() {
   const stewardRule = SpreadsheetApp.newConditionalFormatRule()
     .whenFormulaSatisfied('=$' + isStewardCol + '2="Yes"')
     .setBackground('#E8E3F3')  // Light purple (509 theme)
-    .setRanges([memberDir.getRange(2, 1, VALIDATION_ROWS, 31)])  // Apply to entire row
+    .setRanges([memberDir.getRange(2, 1, VALIDATION_ROWS, MEMBER_COLS.START_GRIEVANCE)])  // Apply to entire row
     .build();
 
   const existingRules = memberDir.getConditionalFormatRules();
@@ -4059,7 +4059,7 @@ function seedGrievancesWithCount(count, toggleName) {
     return;
   }
 
-  const allMemberData = memberDir.getRange(2, 1, memberLastRow - 1, 31).getValues();
+  const allMemberData = memberDir.getRange(2, 1, memberLastRow - 1, memberDir.getLastColumn()).getValues();
   const memberIDs = allMemberData.map(function(row) { return row[MEMBER_COLS.MEMBER_ID - 1]; }).filter(String);
 
   // Get seed configuration
@@ -4322,7 +4322,7 @@ function updateMemberDirectorySnapshots() {
   const grievanceLastRow = grievanceLog.getLastRow();
   if (memberLastRow < 2 || grievanceLastRow < 2) return;
   const memberIDs = memberDir.getRange(2, 1, memberLastRow - 1, 1).getValues().flat();
-  const grievanceData = grievanceLog.getRange(2, 1, grievanceLastRow - 1, 28).getValues();
+  const grievanceData = grievanceLog.getRange(2, 1, grievanceLastRow - 1, grievanceLog.getLastColumn()).getValues();
   const memberSnapshots = {};
   grievanceData.forEach(function(row) {
     const memberID = row[GRIEVANCE_COLS.MEMBER_ID - 1];

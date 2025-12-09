@@ -917,7 +917,7 @@ function showMyAssignedGrievances() {
     return;
   }
 
-  const data = grievanceSheet.getRange(2, 1, grievanceSheet.getLastRow() - 1, 28).getValues();
+  const data = grievanceSheet.getRange(2, 1, grievanceSheet.getLastRow() - 1, grievanceSheet.getLastColumn()).getValues();
 
   const myGrievances = data.filter(function(row) {
     const assignedSteward = row[GRIEVANCE_COLS.ASSIGNED_STEWARD - 1];
@@ -1393,7 +1393,7 @@ function getMobileSearchData() {
   // Get grievances
   const grievanceSheet = ss.getSheetByName(SHEETS.GRIEVANCE_LOG);
   if (grievanceSheet && grievanceSheet.getLastRow() > 1) {
-    const grievanceData = grievanceSheet.getRange(2, 1, grievanceSheet.getLastRow() - 1, 28).getValues();
+    const grievanceData = grievanceSheet.getRange(2, 1, grievanceSheet.getLastRow() - 1, grievanceSheet.getLastColumn()).getValues();
     result.grievances = grievanceData.map(function(row, index) {
       const filedDate = row[GRIEVANCE_COLS.DATE_FILED - 1];
       return {

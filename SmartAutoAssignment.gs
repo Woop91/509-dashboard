@@ -97,7 +97,7 @@ function getGrievanceDetails(grievanceId) {
 
   if (lastRow < 2) return null;
 
-  const data = grievanceSheet.getRange(2, 1, lastRow - 1, 28).getValues();
+  const data = grievanceSheet.getRange(2, 1, lastRow - 1, grievanceSheet.getLastColumn()).getValues();
 
   for (let i = 0; i < data.length; i++) {
     if (data[i][GRIEVANCE_COLS.GRIEVANCE_ID - 1] === grievanceId) {
@@ -127,7 +127,7 @@ function getAllStewards() {
 
   if (lastRow < 2) return [];
 
-  const data = memberSheet.getRange(2, 1, lastRow - 1, 28).getValues();
+  const data = memberSheet.getRange(2, 1, lastRow - 1, memberSheet.getLastColumn()).getValues();
 
   const stewards = [];
 
@@ -163,7 +163,7 @@ function getCurrentCaseload(memberId) {
 
   if (lastRow < 2) return 0;
 
-  const data = grievanceSheet.getRange(2, 1, lastRow - 1, 28).getValues();
+  const data = grievanceSheet.getRange(2, 1, lastRow - 1, grievanceSheet.getLastColumn()).getValues();
 
   let count = 0;
 
@@ -191,7 +191,7 @@ function getStewardExpertise(memberId) {
 
   if (lastRow < 2) return {};
 
-  const data = grievanceSheet.getRange(2, 1, lastRow - 1, 28).getValues();
+  const data = grievanceSheet.getRange(2, 1, lastRow - 1, grievanceSheet.getLastColumn()).getValues();
 
   const expertise = {};
 

@@ -187,7 +187,7 @@ function getCachedGrievances() {
 
       if (lastRow < 2) return [];
 
-      return sheet.getRange(2, 1, lastRow - 1, 28).getValues();
+      return sheet.getRange(2, 1, lastRow - 1, sheet.getLastColumn()).getValues();
     },
     300 // 5 minutes
   );
@@ -207,7 +207,7 @@ function getCachedMembers() {
 
       if (lastRow < 2) return [];
 
-      return sheet.getRange(2, 1, lastRow - 1, 28).getValues();
+      return sheet.getRange(2, 1, lastRow - 1, sheet.getLastColumn()).getValues();
     },
     600 // 10 minutes
   );

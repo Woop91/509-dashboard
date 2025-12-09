@@ -155,7 +155,7 @@ function seedTestData() {
     ]);
   }
 
-  memberSheet.getRange(2, 1, memberData.length, 31).setValues(memberData);
+  memberSheet.getRange(2, 1, memberData.length, memberData[0].length).setValues(memberData);
   SpreadsheetApp.flush();
 
   Logger.log(`Seeding ${TEST_CONFIG.TEST_GRIEVANCES_COUNT} test grievances...`);
@@ -200,7 +200,7 @@ function seedTestData() {
     ]);
   }
 
-  grievanceSheet.getRange(2, 1, grievanceData.length, 28).setValues(grievanceData);
+  grievanceSheet.getRange(2, 1, grievanceData.length, grievanceData[0].length).setValues(grievanceData);
   SpreadsheetApp.flush();
 
   Logger.log('Test data seeded successfully');
