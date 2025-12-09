@@ -1,6 +1,6 @@
 # 509 Dashboard - Complete Feature Reference
 
-**Version:** 3.28
+**Version:** 3.29
 **Last Updated:** 2025-12-09
 **Purpose:** Union grievance tracking and member engagement system for SEIU Local 509
 
@@ -176,37 +176,49 @@ The 509 Dashboard is a comprehensive Google Apps Script-based union management s
 
 ```javascript
 const MEMBER_COLS = {
+  // 31 columns total - Reorganized for logical grouping
+  // Section 1: Identity & Core Info (A-D)
   MEMBER_ID: 1,                    // A
   FIRST_NAME: 2,                   // B
   LAST_NAME: 3,                    // C
   JOB_TITLE: 4,                    // D
+  // Section 2: Location & Work (E-G)
   WORK_LOCATION: 5,                // E
   UNIT: 6,                         // F
   OFFICE_DAYS: 7,                  // G
+  // Section 3: Contact Information (H-K)
   EMAIL: 8,                        // H
   PHONE: 9,                        // I
-  IS_STEWARD: 10,                  // J
-  SUPERVISOR: 11,                  // K
-  MANAGER: 12,                     // L
-  ASSIGNED_STEWARD: 13,            // M
-  LAST_VIRTUAL_MTG: 14,            // N
-  LAST_INPERSON_MTG: 15,           // O
-  LAST_SURVEY: 16,                 // P
-  LAST_EMAIL_OPEN: 17,             // Q
-  OPEN_RATE: 18,                   // R
-  VOLUNTEER_HOURS: 19,             // S
-  INTEREST_LOCAL: 20,              // T
-  INTEREST_CHAPTER: 21,            // U
-  INTEREST_ALLIED: 22,             // V
-  TIMESTAMP: 23,                   // W
-  PREFERRED_COMM: 24,              // X
-  BEST_TIME: 25,                   // Y
-  HAS_OPEN_GRIEVANCE: 26,          // Z
-  GRIEVANCE_STATUS: 27,            // AA
-  NEXT_DEADLINE: 28,               // AB
-  RECENT_CONTACT_DATE: 29,         // AC
-  CONTACT_STEWARD: 30,             // AD
-  CONTACT_NOTES: 31                // AE
+  PREFERRED_COMM: 10,              // J - Multi-select: preferred communication methods
+  BEST_TIME: 11,                   // K - Multi-select: best times to reach member
+  // Section 4: Organizational Structure (L-P)
+  SUPERVISOR: 12,                  // L
+  MANAGER: 13,                     // M
+  IS_STEWARD: 14,                  // N
+  COMMITTEES: 15,                  // O - Multi-select: which committees steward is in
+  ASSIGNED_STEWARD: 16,            // P
+  // Section 5: Engagement Metrics (Q-T) - Hidden by default
+  LAST_VIRTUAL_MTG: 17,            // Q
+  LAST_INPERSON_MTG: 18,           // R
+  OPEN_RATE: 19,                   // S
+  VOLUNTEER_HOURS: 20,             // T
+  // Section 6: Member Interests (U-X) - Hidden by default
+  INTEREST_LOCAL: 21,              // U
+  INTEREST_CHAPTER: 22,            // V
+  INTEREST_ALLIED: 23,             // W
+  HOME_TOWN: 24,                   // X - Connection building
+  // Section 7: Steward Contact Tracking (Y-AA)
+  RECENT_CONTACT_DATE: 25,         // Y
+  CONTACT_STEWARD: 26,             // Z
+  CONTACT_NOTES: 27,               // AA
+  // Section 8: Grievance Management (AB-AE)
+  HAS_OPEN_GRIEVANCE: 28,          // AB - Formula-populated
+  GRIEVANCE_STATUS: 29,            // AC - Formula-populated
+  NEXT_DEADLINE: 30,               // AD - Formula-populated
+  START_GRIEVANCE: 31,             // AE - Checkbox to start grievance
+
+  // ALIAS - For backward compatibility
+  LOCATION: 5                      // Alias for WORK_LOCATION
 };
 ```
 
@@ -223,46 +235,53 @@ const MEMBER_COLS = {
 
 ```javascript
 const GRIEVANCE_COLS = {
+  // 34 columns total - A through AH
   // Section 1: Identity (A-D)
-  GRIEVANCE_ID: 1,        // A
-  MEMBER_ID: 2,           // B
-  FIRST_NAME: 3,          // C
-  LAST_NAME: 4,           // D
-  // Section 2: Case Details (E-H)
-  STATUS: 5,              // E
-  CURRENT_STEP: 6,        // F
-  INCIDENT_DATE: 7,       // G
-  FILING_DEADLINE: 8,     // H (auto-calc)
-  // Section 3: Timeline (I-W)
-  DATE_FILED: 9,          // I
-  STEP1_DUE: 10,          // J (auto-calc)
-  STEP1_RCVD: 11,         // K
-  STEP2_APPEAL_DUE: 12,   // L (auto-calc)
-  STEP2_APPEAL_FILED: 13, // M
-  STEP2_DUE: 14,          // N (auto-calc)
-  STEP2_RCVD: 15,         // O
-  STEP3_APPEAL_DUE: 16,   // P (auto-calc)
-  STEP3_APPEAL_FILED: 17, // Q
-  DATE_CLOSED: 18,        // R
-  DAYS_OPEN: 19,          // S (auto-calc)
-  NEXT_ACTION_DUE: 20,    // T (auto-calc)
-  DAYS_TO_DEADLINE: 21,   // U (auto-calc)
-  // Section 4: Case Classification (V-X)
-  ARTICLES: 22,           // V
-  ISSUE_CATEGORY: 23,     // W
-  DESCRIPTION: 24,        // X
-  // Section 5: Assignment & Location (Y-AB)
-  MEMBER_EMAIL: 25,       // Y
-  UNIT: 26,               // Z
-  LOCATION: 27,           // AA
-  STEWARD: 28,            // AB
-  // Section 6: Resolution (AC-AD)
-  RESOLUTION: 29,         // AC
-  MESSAGE_ALERT: 30,      // AD
-  COORDINATOR_MESSAGE: 31,// AE
-  ACKNOWLEDGED_BY: 32,    // AF
-  ACKNOWLEDGED_DATE: 33,  // AG
-  DRIVE_FOLDER_LINK: 34   // AH
+  GRIEVANCE_ID: 1,        // A - Grievance ID
+  MEMBER_ID: 2,           // B - Member ID
+  FIRST_NAME: 3,          // C - First Name
+  LAST_NAME: 4,           // D - Last Name
+  // Section 2: Status & Assignment (E-F)
+  STATUS: 5,              // E - Status
+  CURRENT_STEP: 6,        // F - Current Step
+  // Section 3: Timeline - Filing (G-I)
+  INCIDENT_DATE: 7,       // G - Incident Date
+  FILING_DEADLINE: 8,     // H - Filing Deadline (21d) (auto-calc)
+  DATE_FILED: 9,          // I - Date Filed (Step I)
+  // Section 4: Timeline - Step I (J-K)
+  STEP1_DUE: 10,          // J - Step I Decision Due (30d) (auto-calc)
+  STEP1_RCVD: 11,         // K - Step I Decision Rcvd
+  // Section 5: Timeline - Step II (L-O)
+  STEP2_APPEAL_DUE: 12,   // L - Step II Appeal Due (10d) (auto-calc)
+  STEP2_APPEAL_FILED: 13, // M - Step II Appeal Filed
+  STEP2_DUE: 14,          // N - Step II Decision Due (30d) (auto-calc)
+  STEP2_RCVD: 15,         // O - Step II Decision Rcvd
+  // Section 6: Timeline - Step III (P-R)
+  STEP3_APPEAL_DUE: 16,   // P - Step III Appeal Due (30d) (auto-calc)
+  STEP3_APPEAL_FILED: 17, // Q - Step III Appeal Filed
+  DATE_CLOSED: 18,        // R - Date Closed
+  // Section 7: Calculated Metrics (S-U)
+  DAYS_OPEN: 19,          // S - Days Open (auto-calc)
+  NEXT_ACTION_DUE: 20,    // T - Next Action Due (auto-calc)
+  DAYS_TO_DEADLINE: 21,   // U - Days to Deadline (auto-calc)
+  // Section 8: Case Details (V-W)
+  ARTICLES: 22,           // V - Articles Violated
+  ISSUE_CATEGORY: 23,     // W - Issue Category
+  // Section 9: Contact & Location (X-AA)
+  MEMBER_EMAIL: 24,       // X - Member Email
+  UNIT: 25,               // Y - Unit
+  LOCATION: 26,           // Z - Work Location (Site)
+  STEWARD: 27,            // AA - Assigned Steward (Name)
+  // Section 10: Resolution (AB)
+  RESOLUTION: 28,         // AB - Resolution Summary
+  // Section 11: Coordinator Notifications (AC-AF)
+  MESSAGE_ALERT: 29,      // AC - Message Alert checkbox
+  COORDINATOR_MESSAGE: 30,// AD - Coordinator's message text
+  ACKNOWLEDGED_BY: 31,    // AE - Steward who acknowledged
+  ACKNOWLEDGED_DATE: 32,  // AF - When steward acknowledged
+  // Section 12: Drive Integration (AG-AH)
+  DRIVE_FOLDER_ID: 33,    // AG - Google Drive folder ID
+  DRIVE_FOLDER_URL: 34    // AH - Google Drive folder URL
 };
 ```
 
@@ -772,7 +791,28 @@ grep "addEventListenerfunction" *.gs | wc -l
 
 ## Appendix: Changelog
 
-### Version 3.28 (2025-12-09) - LATEST
+### Version 3.29 (2025-12-09) - LATEST
+
+**CRITICAL FIX: Seed Data Column Mismatch**
+
+Fixed seed functions that were generating incomplete row data, causing data to populate in wrong columns.
+
+**Issues Fixed:**
+1. `generateSingleMemberRow()` generated 27 columns but Member Directory expects 31
+2. `generateSingleGrievanceRow()` generated 28 columns but Grievance Log expects 34
+3. AIR.md documentation had outdated column mappings that didn't match Constants.gs
+
+**Changes:**
+- Added missing columns 28-31 to member seed: HAS_OPEN_GRIEVANCE, GRIEVANCE_STATUS, NEXT_DEADLINE, START_GRIEVANCE
+- Added missing columns 29-34 to grievance seed: MESSAGE_ALERT, COORDINATOR_MESSAGE, ACKNOWLEDGED_BY, ACKNOWLEDGED_DATE, DRIVE_FOLDER_ID, DRIVE_FOLDER_URL
+- Updated MEMBER_COLS documentation in AIR.md to match actual Constants.gs structure
+- Updated GRIEVANCE_COLS documentation in AIR.md to match actual Constants.gs structure
+
+**Root Cause:** Documentation drift - AIR.md had stale column mappings that no longer matched the reorganized Constants.gs, causing AI assistants to receive incorrect information.
+
+---
+
+### Version 3.28 (2025-12-09)
 
 **FIX: Undefined STEP3_FILED Constant**
 
@@ -930,7 +970,7 @@ See git history for complete changelog. Key milestones:
 
 ---
 
-**Document Version:** 3.27
+**Document Version:** 3.29
 **Last Updated:** 2025-12-09
 **Maintained By:** Claude (AI Assistant)
 

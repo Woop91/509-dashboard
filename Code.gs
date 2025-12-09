@@ -4114,11 +4114,11 @@ function generateSingleMemberRow(index, startingRow, config, stewardCount, maxSt
     new Date(Date.now() - Math.random() * 365 * 24 * 60 * 60 * 1000),
     Math.random() > 0.6 ? config.stewards[Math.floor(Math.random() * config.stewards.length)] : "",
     Math.random() > 0.6 ? config.contactNotes[Math.floor(Math.random() * config.contactNotes.length)] : "",
-    // Section 8: Grievance Management (AB-AE)
-    "", // HAS_OPEN_GRIEVANCE - formula-populated
-    "", // GRIEVANCE_STATUS - formula-populated
-    "", // NEXT_DEADLINE - formula-populated
-    false // START_GRIEVANCE - checkbox (unchecked by default)
+    // Section 8: Grievance Management (AB-AE) - formula-populated + checkbox
+    "",     // 28: HAS_OPEN_GRIEVANCE
+    "",     // 29: GRIEVANCE_STATUS
+    "",     // 30: NEXT_DEADLINE
+    false   // 31: START_GRIEVANCE
   ];
 
   return { data: row, isSteward: isSteward === "Yes" };
@@ -4439,16 +4439,14 @@ function generateSingleGrievanceRow(index, startingRow, memberID, memberData, co
     // Section 9: Contact & Location (X-AA)
     memberData[7], memberData[5], memberData[4],
     config.stewards[Math.floor(Math.random() * config.stewards.length)],
-    // Section 10: Resolution (AB)
     resolution,
-    // Section 11: Coordinator Notifications (AC-AF)
-    false, // MESSAGE_ALERT - checkbox (unchecked by default)
-    "",    // COORDINATOR_MESSAGE
-    "",    // ACKNOWLEDGED_BY
-    "",    // ACKNOWLEDGED_DATE
-    // Section 12: Drive Integration (AG-AH)
-    "",    // DRIVE_FOLDER_ID
-    ""     // DRIVE_FOLDER_URL
+    // Columns 29-34: Coordinator Notifications & Drive Integration
+    false,  // 29: MESSAGE_ALERT
+    "",     // 30: COORDINATOR_MESSAGE
+    "",     // 31: ACKNOWLEDGED_BY
+    "",     // 32: ACKNOWLEDGED_DATE
+    "",     // 33: DRIVE_FOLDER_ID
+    ""      // 34: DRIVE_FOLDER_URL
   ];
 }
 

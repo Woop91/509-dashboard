@@ -14,7 +14,7 @@
  * Build Info:
  * - Version: 2.1.0 (Security Enhanced + Code Review Improvements)
  * - Build ID: 20251202-improvements
- * - Build Date: 2025-12-09T19:00:38.513Z
+ * - Build Date: 2025-12-09T20:42:30.622Z
  * - Build Type: DEVELOPMENT
  * - Modules: 79 files
  * - Tests Included: Yes
@@ -7784,7 +7784,12 @@ function generateSingleMemberRow(index, startingRow, config, stewardCount, maxSt
     config.homeTownOptions.length > 0 ? config.homeTownOptions[Math.floor(Math.random() * config.homeTownOptions.length)] : "",
     new Date(Date.now() - Math.random() * 365 * 24 * 60 * 60 * 1000),
     Math.random() > 0.6 ? config.stewards[Math.floor(Math.random() * config.stewards.length)] : "",
-    Math.random() > 0.6 ? config.contactNotes[Math.floor(Math.random() * config.contactNotes.length)] : ""
+    Math.random() > 0.6 ? config.contactNotes[Math.floor(Math.random() * config.contactNotes.length)] : "",
+    // Columns 28-31: Grievance Management (formula-populated + checkbox)
+    "",     // 28: HAS_OPEN_GRIEVANCE - populated by formula
+    "",     // 29: GRIEVANCE_STATUS - populated by formula
+    "",     // 30: NEXT_DEADLINE - populated by formula
+    false   // 31: START_GRIEVANCE - checkbox
   ];
 
   return { data: row, isSteward: isSteward === "Yes" };
@@ -8093,7 +8098,14 @@ function generateSingleGrievanceRow(index, startingRow, memberID, memberData, co
     config.categories[Math.floor(Math.random() * config.categories.length)],
     memberData[7], memberData[5], memberData[4],
     config.stewards[Math.floor(Math.random() * config.stewards.length)],
-    resolution
+    resolution,
+    // Columns 29-34: Coordinator Notifications & Drive Integration
+    false,  // 29: MESSAGE_ALERT - checkbox
+    "",     // 30: COORDINATOR_MESSAGE
+    "",     // 31: ACKNOWLEDGED_BY
+    "",     // 32: ACKNOWLEDGED_DATE
+    "",     // 33: DRIVE_FOLDER_ID
+    ""      // 34: DRIVE_FOLDER_URL
   ];
 }
 
@@ -31779,79 +31791,92 @@ const TUTORIAL_STEPS = [
 
 /**
  * Video tutorial library
+ *
+ * NOTE: Update URLs once videos are recorded. See VIDEO_SCRIPTS.md for
+ * detailed recording scripts for each tutorial.
+ *
+ * Recommended hosting: YouTube (unlisted), Vimeo, or Google Drive
  */
 const VIDEO_TUTORIALS = [
   {
     id: 'getting_started',
     title: 'Getting Started with 509 Dashboard',
-    description: 'Complete overview of the dashboard and its features',
-    duration: '10:00',
+    description: 'Navigate the dashboard, understand the 6 menus, explore Member Directory, Grievance Log, and Dashboard sheets',
+    duration: '8-10 min',
     category: 'Basics',
     url: 'https://example.com/tutorials/getting-started',
-    thumbnail: '🎬'
+    thumbnail: '🎬',
+    scriptRef: 'VIDEO_SCRIPTS.md#video-1-getting-started-with-509-dashboard'
   },
   {
     id: 'member_management',
     title: 'Managing Members',
-    description: 'How to add, edit, and search for members',
-    duration: '8:00',
+    description: 'Add new members (31 columns), search and filter, update contact info, track engagement metrics',
+    duration: '6-8 min',
     category: 'Members',
     url: 'https://example.com/tutorials/members',
-    thumbnail: '👥'
+    thumbnail: '👥',
+    scriptRef: 'VIDEO_SCRIPTS.md#video-2-managing-members'
   },
   {
     id: 'grievance_workflow',
     title: 'Grievance Workflow',
-    description: 'Filing and tracking grievances from start to finish',
-    duration: '15:00',
+    description: 'Complete grievance lifecycle: filing, automatic deadline calculations (Article 23), status updates, outcomes, Google Drive folders',
+    duration: '12-15 min',
     category: 'Grievances',
     url: 'https://example.com/tutorials/grievances',
-    thumbnail: '📋'
+    thumbnail: '📋',
+    scriptRef: 'VIDEO_SCRIPTS.md#video-3-grievance-workflow'
   },
   {
     id: 'email_communications',
     title: 'Email Communications',
-    description: 'Using email templates and tracking communications',
-    duration: '6:00',
+    description: 'Email templates, compose custom emails, bulk communications, automatic logging',
+    duration: '5-6 min',
     category: 'Communication',
     url: 'https://example.com/tutorials/email',
-    thumbnail: '📧'
+    thumbnail: '📧',
+    scriptRef: 'VIDEO_SCRIPTS.md#video-4-email-communications'
   },
   {
     id: 'reports_analytics',
     title: 'Reports & Analytics',
-    description: 'Generating reports and understanding analytics',
-    duration: '12:00',
+    description: 'Main Dashboard metrics, Unified Operations Monitor, Interactive Dashboard customization, Steward Workload analysis, report generation',
+    duration: '10-12 min',
     category: 'Reporting',
     url: 'https://example.com/tutorials/reports',
-    thumbnail: '📊'
+    thumbnail: '📊',
+    scriptRef: 'VIDEO_SCRIPTS.md#video-5-reports--analytics'
   },
   {
     id: 'calendar_integration',
     title: 'Calendar Integration',
-    description: 'Syncing deadlines with Google Calendar',
-    duration: '5:00',
+    description: 'Sync grievance deadlines with Google Calendar, set up reminders, never miss a deadline',
+    duration: '4-5 min',
     category: 'Integration',
     url: 'https://example.com/tutorials/calendar',
-    thumbnail: '📅'
+    thumbnail: '📅',
+    scriptRef: 'VIDEO_SCRIPTS.md#video-6-calendar-integration'
   },
   {
     id: 'batch_operations',
     title: 'Batch Operations',
-    description: 'Performing bulk updates and operations',
-    duration: '7:00',
+    description: 'Bulk updates, import/export CSV data, data cleanup and validation tools',
+    duration: '6-7 min',
     category: 'Advanced',
     url: 'https://example.com/tutorials/batch',
-    thumbnail: '⚡'
+    thumbnail: '⚡',
+    scriptRef: 'VIDEO_SCRIPTS.md#video-7-batch-operations'
   },
   {
     id: 'steward_guide',
     title: 'Steward Quick Guide',
-    description: 'Essential features for union stewards',
-    duration: '10:00',
+    description: 'Daily workflow for stewards: checking deadlines, helping members file, tracking your cases, updating progress',
+    duration: '8-10 min',
     category: 'Role-Specific',
     url: 'https://example.com/tutorials/steward',
-    thumbnail: '👨‍⚖️'
+    thumbnail: '👨‍⚖️',
+    scriptRef: 'VIDEO_SCRIPTS.md#video-8-steward-quick-guide'
   }
 ];
 
