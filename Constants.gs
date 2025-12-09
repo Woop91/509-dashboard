@@ -62,6 +62,52 @@ const SHEETS = {
   ASSIGNMENT_LOG: "📋 Assignment Log"
 };
 
+/* --------------------= SHEET COLUMN COUNTS --------------------= */
+
+/**
+ * Expected column counts for each sheet - single source of truth
+ * Used by deleteColumns cleanup code to remove unused columns
+ * Update these values when adding/removing columns from any sheet
+ * @const {Object}
+ */
+const SHEET_COLUMN_COUNTS = {
+  // Core data sheets (from *_COLS constants)
+  CONFIG: 43,                    // A-AQ (see CONFIG_COLS)
+  MEMBER_DIR: 31,                // A-AE (see MEMBER_COLS)
+  GRIEVANCE_LOG: 34,             // A-AH (see GRIEVANCE_COLS)
+
+  // Dashboards
+  DASHBOARD: 15,                 // Main dashboard
+  INTERACTIVE_DASHBOARD: 20,     // A-T
+  EXECUTIVE_DASHBOARD: 14,       // Executive metrics
+  KPI_PERFORMANCE: 12,           // KPI tracking
+  OPERATIONS_ANALYTICS: 12,      // Merged analytics
+
+  // Utility sheets
+  GETTING_STARTED: 4,            // A-D
+  FAQ: 3,                        // A-C
+  STEWARD_WORKLOAD: 11,          // Workload tracking
+  FEEDBACK: 14,                  // Feedback & Development
+  ARCHIVE: 6,                    // Archived items
+
+  // Log sheets
+  AUDIT_LOG: 6,                  // Security audit
+  ERROR_LOG: 8,                  // Error tracking
+  BACKUP_LOG: 6,                 // Backup history
+  COMMUNICATIONS_LOG: 5,         // Communications (Timestamp, Grievance ID, Type, User, Details)
+  STATE_CHANGE_LOG: 5,           // Workflow states
+  CHANGE_LOG: 8,                 // Data changes
+  ASSIGNMENT_LOG: 7,             // Auto-assignment
+  PERFORMANCE_MONITOR: 7,        // Performance metrics
+
+  // Other sheets
+  USER_SETTINGS: 6,              // User preferences
+  USER_ROLES: 4,                 // RBAC roles
+  FAQ_DATABASE: 11,              // Knowledge base
+  DIAGNOSTICS: 10,               // System diagnostics
+  MEMBER_SATISFACTION: 10        // Survey data
+};
+
 /* --------------------= COLOR SCHEME --------------------= */
 
 /**
