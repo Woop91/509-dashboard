@@ -4519,7 +4519,7 @@ function generateSingleGrievanceRow(index, startingRow, memberID, memberData, co
   const incidentDate = new Date(Date.now() - daysAgo * 24 * 60 * 60 * 1000);
   const dateFiled = new Date(incidentDate.getTime() + Math.random() * 14 * 24 * 60 * 60 * 1000);
 
-  const isClosed = status === "Closed" || status === "Settled" || status === "Withdrawn";
+  const isClosed = status === "Closed" || status === "Settled" || status === "Withdrawn" || status === "Denied";
   const dateClosed = isClosed ? new Date(dateFiled.getTime() + Math.random() * 90 * 24 * 60 * 60 * 1000) : "";
   const resolution = isClosed ? config.resolutions[Math.floor(Math.random() * config.resolutions.length)] : "";
 
@@ -4539,12 +4539,25 @@ function generateSingleGrievanceRow(index, startingRow, memberID, memberData, co
 
   let nextActionDue = "";
   if (!isClosed) {
-    if (step === "Informal" || step === "Step I") nextActionDue = step1DecisionDue;
+    if (step === "Informal") nextActionDue = filingDeadline;
+    else if (step === "Step I") nextActionDue = step1DecisionDue;
     else if (step === "Step II") nextActionDue = step2DecisionDue || step2AppealDue;
     else if (step === "Step III") nextActionDue = step3AppealDue;
     else if (step === "Arbitration") nextActionDue = new Date(Date.now() + Math.random() * 60 * DAY_MS);
   }
-  const daysToDeadline = nextActionDue ? Math.floor((nextActionDue - Date.now()) / DAY_MS) : "";
+
+  // Calculate days to deadline - blank if past due (appeals can't be filed after deadline)
+  let daysToDeadline = "";
+  if (nextActionDue) {
+    const daysDiff = Math.floor((nextActionDue - Date.now()) / DAY_MS);
+    if (daysDiff < 0) {
+      // Past due - clear both fields since window for action has closed
+      nextActionDue = "";
+      daysToDeadline = "";
+    } else {
+      daysToDeadline = daysDiff;
+    }
+  }
 
   return [
     // Section 1: Identity (A-D)
