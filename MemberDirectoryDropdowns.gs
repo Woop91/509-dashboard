@@ -6,7 +6,7 @@
  * Adds data validation dropdowns to Member Directory for consistent data entry.
  * All dropdown values are pulled from the Config sheet for easy customization.
  *
- * SINGLE-SELECT DROPDOWNS:
+ * SINGLE-SELECT DROPDOWNS (allow free-form text entry):
  * - Job Title (D)
  * - Work Location (E)
  * - Unit (F)
@@ -17,11 +17,14 @@
  * - Contact Steward (Z)
  * - Has Open Grievance? (AB)
  *
- * MULTI-SELECT DROPDOWNS (comma-separated values allowed):
+ * MULTI-SELECT DROPDOWNS (comma-separated values allowed, free-form text):
  * - Office Days (G)
  * - Preferred Communication (J)
  * - Best Time to Contact (K)
  * - Committees (O)
+ *
+ * NOTE: All dropdowns allow free-form text entry (setAllowInvalid = true)
+ * to support custom values not in the Config list.
  *
  * DATE FIELDS:
  * - Recent Contact Date (Y) - Date validation only
@@ -54,58 +57,58 @@ function setupMemberDirectoryDropdowns() {
     // Cap at 21000 to match ARRAYFORMULA limit (prevents validation beyond data range)
     const lastRow = Math.min(Math.max(memberSheet.getLastRow(), 1000), 21000);
 
-    // ==================== SINGLE-SELECT DROPDOWNS ====================
+    // ==================== SINGLE-SELECT DROPDOWNS (allow free-form text) ====================
 
     // Job Title (Column D / MEMBER_COLS.JOB_TITLE)
     const jobTitles = getConfigValuesFromSheet(configSheet, CONFIG_COLS.JOB_TITLES);
     if (jobTitles.length > 0) {
-      setDropdownByCol(memberSheet, MEMBER_COLS.JOB_TITLE, lastRow, jobTitles, 'Job Title', true);
+      setDropdownByCol(memberSheet, MEMBER_COLS.JOB_TITLE, lastRow, jobTitles, 'Job Title', false);
     }
 
     // Work Location (Column E / MEMBER_COLS.WORK_LOCATION)
     const locations = getConfigValuesFromSheet(configSheet, CONFIG_COLS.OFFICE_LOCATIONS);
     if (locations.length > 0) {
-      setDropdownByCol(memberSheet, MEMBER_COLS.WORK_LOCATION, lastRow, locations, 'Work Location', true);
+      setDropdownByCol(memberSheet, MEMBER_COLS.WORK_LOCATION, lastRow, locations, 'Work Location', false);
     }
 
     // Unit (Column F / MEMBER_COLS.UNIT)
     const units = getConfigValuesFromSheet(configSheet, CONFIG_COLS.UNITS);
     if (units.length > 0) {
-      setDropdownByCol(memberSheet, MEMBER_COLS.UNIT, lastRow, units, 'Unit', true);
+      setDropdownByCol(memberSheet, MEMBER_COLS.UNIT, lastRow, units, 'Unit', false);
     }
 
     // Is Steward (Column N / MEMBER_COLS.IS_STEWARD)
     const yesNo = getConfigValuesFromSheet(configSheet, CONFIG_COLS.YES_NO);
     if (yesNo.length > 0) {
-      setDropdownByCol(memberSheet, MEMBER_COLS.IS_STEWARD, lastRow, yesNo, 'Is Steward', true);
+      setDropdownByCol(memberSheet, MEMBER_COLS.IS_STEWARD, lastRow, yesNo, 'Is Steward', false);
     }
 
     // Supervisor Name (Column L / MEMBER_COLS.SUPERVISOR)
     const supervisors = getConfigValuesFromSheet(configSheet, CONFIG_COLS.SUPERVISORS);
     if (supervisors.length > 0) {
-      setDropdownByCol(memberSheet, MEMBER_COLS.SUPERVISOR, lastRow, supervisors, 'Supervisor', true);
+      setDropdownByCol(memberSheet, MEMBER_COLS.SUPERVISOR, lastRow, supervisors, 'Supervisor', false);
     }
 
     // Manager Name (Column M / MEMBER_COLS.MANAGER)
     const managers = getConfigValuesFromSheet(configSheet, CONFIG_COLS.MANAGERS);
     if (managers.length > 0) {
-      setDropdownByCol(memberSheet, MEMBER_COLS.MANAGER, lastRow, managers, 'Manager', true);
+      setDropdownByCol(memberSheet, MEMBER_COLS.MANAGER, lastRow, managers, 'Manager', false);
     }
 
     // Assigned Steward (Column P / MEMBER_COLS.ASSIGNED_STEWARD)
     const stewards = getStewardsList();
     if (stewards.length > 0) {
-      setDropdownByCol(memberSheet, MEMBER_COLS.ASSIGNED_STEWARD, lastRow, stewards, 'Assigned Steward', true);
+      setDropdownByCol(memberSheet, MEMBER_COLS.ASSIGNED_STEWARD, lastRow, stewards, 'Assigned Steward', false);
     }
 
     // Contact Steward (Column Z / MEMBER_COLS.CONTACT_STEWARD)
     if (stewards.length > 0) {
-      setDropdownByCol(memberSheet, MEMBER_COLS.CONTACT_STEWARD, lastRow, stewards, 'Contact Steward', true);
+      setDropdownByCol(memberSheet, MEMBER_COLS.CONTACT_STEWARD, lastRow, stewards, 'Contact Steward', false);
     }
 
     // Has Open Grievance? (Column AB / MEMBER_COLS.HAS_OPEN_GRIEVANCE)
     if (yesNo.length > 0) {
-      setDropdownByCol(memberSheet, MEMBER_COLS.HAS_OPEN_GRIEVANCE, lastRow, yesNo, 'Has Open Grievance?', true);
+      setDropdownByCol(memberSheet, MEMBER_COLS.HAS_OPEN_GRIEVANCE, lastRow, yesNo, 'Has Open Grievance?', false);
     }
 
     // ==================== MULTI-SELECT DROPDOWNS ====================
@@ -183,16 +186,16 @@ function setupGrievanceLogDropdowns() {
     // Cap at 6000 to match grievance capacity (5k grievances + buffer)
     const lastRow = Math.min(Math.max(grievanceSheet.getLastRow(), 500), 6000);
 
-    // Status (Column E / GRIEVANCE_COLS.STATUS = 5) - SINGLE-SELECT
+    // Status (Column E / GRIEVANCE_COLS.STATUS = 5) - SINGLE-SELECT (allow free-form)
     const statuses = getConfigValuesFromSheet(configSheet, CONFIG_COLS.GRIEVANCE_STATUS);
     if (statuses.length > 0) {
-      setDropdownByCol(grievanceSheet, GRIEVANCE_COLS.STATUS, lastRow, statuses, 'Status', true);
+      setDropdownByCol(grievanceSheet, GRIEVANCE_COLS.STATUS, lastRow, statuses, 'Status', false);
     }
 
-    // Current Step (Column F / GRIEVANCE_COLS.CURRENT_STEP = 6) - SINGLE-SELECT
+    // Current Step (Column F / GRIEVANCE_COLS.CURRENT_STEP = 6) - SINGLE-SELECT (allow free-form)
     const steps = getConfigValuesFromSheet(configSheet, CONFIG_COLS.GRIEVANCE_STEP);
     if (steps.length > 0) {
-      setDropdownByCol(grievanceSheet, GRIEVANCE_COLS.CURRENT_STEP, lastRow, steps, 'Current Step', true);
+      setDropdownByCol(grievanceSheet, GRIEVANCE_COLS.CURRENT_STEP, lastRow, steps, 'Current Step', false);
     }
 
     // Articles Violated (Column V / GRIEVANCE_COLS.ARTICLES = 22) - MULTI-SELECT
@@ -207,10 +210,10 @@ function setupGrievanceLogDropdowns() {
       setDropdownByCol(grievanceSheet, GRIEVANCE_COLS.ISSUE_CATEGORY, lastRow, issueCategories, 'Issue Category', false);
     }
 
-    // Steward (Column AA / GRIEVANCE_COLS.STEWARD = 27) - SINGLE-SELECT
+    // Steward (Column AA / GRIEVANCE_COLS.STEWARD = 27) - MULTI-SELECT (can have multiple stewards)
     const stewards = getStewardsList();
     if (stewards.length > 0) {
-      setDropdownByCol(grievanceSheet, GRIEVANCE_COLS.STEWARD, lastRow, stewards, 'Assigned Steward', true);
+      setDropdownByCol(grievanceSheet, GRIEVANCE_COLS.STEWARD, lastRow, stewards, 'Assigned Steward', false);
     }
 
     SpreadsheetApp.getActiveSpreadsheet().toast('Grievance Log dropdowns set up!', 'Complete', 3);
@@ -439,20 +442,20 @@ function refreshStewardDropdowns() {
     // Cap at 21000 to match ARRAYFORMULA limit
     const lastRow = Math.min(Math.max(memberSheet.getLastRow(), 1000), 21000);
 
-    // Assigned Steward
-    setDropdownByCol(memberSheet, MEMBER_COLS.ASSIGNED_STEWARD, lastRow, stewards, 'Assigned Steward', true);
+    // Assigned Steward (allow free-form)
+    setDropdownByCol(memberSheet, MEMBER_COLS.ASSIGNED_STEWARD, lastRow, stewards, 'Assigned Steward', false);
     updated++;
 
-    // Contact Steward
-    setDropdownByCol(memberSheet, MEMBER_COLS.CONTACT_STEWARD, lastRow, stewards, 'Contact Steward', true);
+    // Contact Steward (allow free-form)
+    setDropdownByCol(memberSheet, MEMBER_COLS.CONTACT_STEWARD, lastRow, stewards, 'Contact Steward', false);
     updated++;
   }
 
-  // Update Grievance Log steward dropdown
+  // Update Grievance Log steward dropdown (multi-select)
   if (grievanceSheet) {
     // Cap at 6000 to match grievance capacity
     const lastRow = Math.min(Math.max(grievanceSheet.getLastRow(), 500), 6000);
-    setDropdownByCol(grievanceSheet, GRIEVANCE_COLS.STEWARD, lastRow, stewards, 'Grievance Steward', true);
+    setDropdownByCol(grievanceSheet, GRIEVANCE_COLS.STEWARD, lastRow, stewards, 'Grievance Steward', false);
     updated++;
   }
 
@@ -495,40 +498,40 @@ function setupMemberDirectoryDropdownsSilent() {
     // Cap at 21000 to match ARRAYFORMULA limit
     const lastRow = Math.min(Math.max(memberSheet.getLastRow(), 1000), 21000);
 
-    // Job Title
+    // Job Title (allow free-form)
     const jobTitles = getConfigValuesFromSheet(configSheet, CONFIG_COLS.JOB_TITLES);
-    if (jobTitles.length > 0) setDropdownByCol(memberSheet, MEMBER_COLS.JOB_TITLE, lastRow, jobTitles, 'Job Title', true);
+    if (jobTitles.length > 0) setDropdownByCol(memberSheet, MEMBER_COLS.JOB_TITLE, lastRow, jobTitles, 'Job Title', false);
 
-    // Work Location
+    // Work Location (allow free-form)
     const locations = getConfigValuesFromSheet(configSheet, CONFIG_COLS.OFFICE_LOCATIONS);
-    if (locations.length > 0) setDropdownByCol(memberSheet, MEMBER_COLS.WORK_LOCATION, lastRow, locations, 'Work Location', true);
+    if (locations.length > 0) setDropdownByCol(memberSheet, MEMBER_COLS.WORK_LOCATION, lastRow, locations, 'Work Location', false);
 
-    // Unit
+    // Unit (allow free-form)
     const units = getConfigValuesFromSheet(configSheet, CONFIG_COLS.UNITS);
-    if (units.length > 0) setDropdownByCol(memberSheet, MEMBER_COLS.UNIT, lastRow, units, 'Unit', true);
+    if (units.length > 0) setDropdownByCol(memberSheet, MEMBER_COLS.UNIT, lastRow, units, 'Unit', false);
 
-    // Is Steward
+    // Is Steward (allow free-form)
     const yesNo = getConfigValuesFromSheet(configSheet, CONFIG_COLS.YES_NO);
-    if (yesNo.length > 0) setDropdownByCol(memberSheet, MEMBER_COLS.IS_STEWARD, lastRow, yesNo, 'Is Steward', true);
+    if (yesNo.length > 0) setDropdownByCol(memberSheet, MEMBER_COLS.IS_STEWARD, lastRow, yesNo, 'Is Steward', false);
 
-    // Supervisor
+    // Supervisor (allow free-form)
     const supervisors = getConfigValuesFromSheet(configSheet, CONFIG_COLS.SUPERVISORS);
-    if (supervisors.length > 0) setDropdownByCol(memberSheet, MEMBER_COLS.SUPERVISOR, lastRow, supervisors, 'Supervisor', true);
+    if (supervisors.length > 0) setDropdownByCol(memberSheet, MEMBER_COLS.SUPERVISOR, lastRow, supervisors, 'Supervisor', false);
 
-    // Manager
+    // Manager (allow free-form)
     const managers = getConfigValuesFromSheet(configSheet, CONFIG_COLS.MANAGERS);
-    if (managers.length > 0) setDropdownByCol(memberSheet, MEMBER_COLS.MANAGER, lastRow, managers, 'Manager', true);
+    if (managers.length > 0) setDropdownByCol(memberSheet, MEMBER_COLS.MANAGER, lastRow, managers, 'Manager', false);
 
-    // Assigned Steward
+    // Assigned Steward (allow free-form)
     const stewards = getStewardsList();
     if (stewards.length > 0) {
-      setDropdownByCol(memberSheet, MEMBER_COLS.ASSIGNED_STEWARD, lastRow, stewards, 'Assigned Steward', true);
-      setDropdownByCol(memberSheet, MEMBER_COLS.CONTACT_STEWARD, lastRow, stewards, 'Contact Steward', true);
+      setDropdownByCol(memberSheet, MEMBER_COLS.ASSIGNED_STEWARD, lastRow, stewards, 'Assigned Steward', false);
+      setDropdownByCol(memberSheet, MEMBER_COLS.CONTACT_STEWARD, lastRow, stewards, 'Contact Steward', false);
     }
 
-    // Has Open Grievance? (uses same Yes/No values)
+    // Has Open Grievance? (allow free-form)
     if (yesNo.length > 0) {
-      setDropdownByCol(memberSheet, MEMBER_COLS.HAS_OPEN_GRIEVANCE, lastRow, yesNo, 'Has Open Grievance?', true);
+      setDropdownByCol(memberSheet, MEMBER_COLS.HAS_OPEN_GRIEVANCE, lastRow, yesNo, 'Has Open Grievance?', false);
     }
 
     // Office Days (multi-select)
@@ -560,13 +563,13 @@ function setupGrievanceLogDropdownsSilent() {
     // Cap at 6000 to match grievance capacity
     const lastRow = Math.min(Math.max(grievanceSheet.getLastRow(), 500), 6000);
 
-    // Status
+    // Status (allow free-form)
     const statuses = getConfigValuesFromSheet(configSheet, CONFIG_COLS.GRIEVANCE_STATUS);
-    if (statuses.length > 0) setDropdownByCol(grievanceSheet, GRIEVANCE_COLS.STATUS, lastRow, statuses, 'Status', true);
+    if (statuses.length > 0) setDropdownByCol(grievanceSheet, GRIEVANCE_COLS.STATUS, lastRow, statuses, 'Status', false);
 
-    // Current Step
+    // Current Step (allow free-form)
     const steps = getConfigValuesFromSheet(configSheet, CONFIG_COLS.GRIEVANCE_STEP);
-    if (steps.length > 0) setDropdownByCol(grievanceSheet, GRIEVANCE_COLS.CURRENT_STEP, lastRow, steps, 'Current Step', true);
+    if (steps.length > 0) setDropdownByCol(grievanceSheet, GRIEVANCE_COLS.CURRENT_STEP, lastRow, steps, 'Current Step', false);
 
     // Articles Violated (multi-select)
     const articles = getConfigValuesFromSheet(configSheet, CONFIG_COLS.ARTICLES_VIOLATED);
@@ -576,17 +579,17 @@ function setupGrievanceLogDropdownsSilent() {
     const categories = getConfigValuesFromSheet(configSheet, CONFIG_COLS.ISSUE_CATEGORY);
     if (categories.length > 0) setDropdownByCol(grievanceSheet, GRIEVANCE_COLS.ISSUE_CATEGORY, lastRow, categories, 'Issue Category', false);
 
-    // Unit
+    // Unit (allow free-form)
     const units = getConfigValuesFromSheet(configSheet, CONFIG_COLS.UNITS);
-    if (units.length > 0) setDropdownByCol(grievanceSheet, GRIEVANCE_COLS.UNIT, lastRow, units, 'Unit', true);
+    if (units.length > 0) setDropdownByCol(grievanceSheet, GRIEVANCE_COLS.UNIT, lastRow, units, 'Unit', false);
 
-    // Work Location
+    // Work Location (allow free-form)
     const locations = getConfigValuesFromSheet(configSheet, CONFIG_COLS.OFFICE_LOCATIONS);
-    if (locations.length > 0) setDropdownByCol(grievanceSheet, GRIEVANCE_COLS.LOCATION, lastRow, locations, 'Work Location', true);
+    if (locations.length > 0) setDropdownByCol(grievanceSheet, GRIEVANCE_COLS.LOCATION, lastRow, locations, 'Work Location', false);
 
-    // Assigned Steward
+    // Assigned Steward (multi-select)
     const stewards = getStewardsList();
-    if (stewards.length > 0) setDropdownByCol(grievanceSheet, GRIEVANCE_COLS.STEWARD, lastRow, stewards, 'Assigned Steward', true);
+    if (stewards.length > 0) setDropdownByCol(grievanceSheet, GRIEVANCE_COLS.STEWARD, lastRow, stewards, 'Assigned Steward', false);
 
     Logger.log('Silent Grievance Log dropdown setup complete');
 

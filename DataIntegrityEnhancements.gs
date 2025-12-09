@@ -289,10 +289,90 @@ function onEdit(e) {
 
     changeLog.getRange(lastRow + 1, 1, 1, 8).setValues([logRow]);
 
+    // Auto-sort Grievance Log when Status column is edited
+    if (sheetName === SHEETS.GRIEVANCE_LOG && col === GRIEVANCE_COLS.STATUS && row > 1) {
+      sortGrievancesByStatusPriority();
+    }
+
   } catch (error) {
     Logger.log('Error in change tracking: ' + error.message);
     // Don't show error to user to avoid interrupting workflow
   }
+}
+
+/**
+ * Sorts Grievance Log by status priority
+ * Priority order: Open > Appealed > Pending Info > Settled > Withdrawn > Closed
+ * Active grievances appear at top, resolved at bottom
+ */
+function sortGrievancesByStatusPriority() {
+  const ss = SpreadsheetApp.getActiveSpreadsheet();
+  const grievanceLog = ss.getSheetByName(SHEETS.GRIEVANCE_LOG);
+
+  if (!grievanceLog) {
+    Logger.log('sortGrievancesByStatusPriority: Grievance Log not found');
+    return;
+  }
+
+  const lastRow = grievanceLog.getLastRow();
+  if (lastRow <= 1) return; // No data to sort
+
+  const lastCol = grievanceLog.getLastColumn();
+
+  // Get all data (excluding header row)
+  const dataRange = grievanceLog.getRange(2, 1, lastRow - 1, lastCol);
+  const data = dataRange.getValues();
+
+  // Status priority map (lower number = higher priority = shown at top)
+  const statusPriority = {
+    'Open': 1,
+    'Appealed': 2,
+    'Pending Info': 3,
+    'Settled': 4,
+    'Withdrawn': 5,
+    'Closed': 6
+  };
+
+  // Sort by status priority, then by Days to Deadline (most urgent first)
+  data.sort(function(a, b) {
+    const statusA = a[GRIEVANCE_COLS.STATUS - 1] || '';
+    const statusB = b[GRIEVANCE_COLS.STATUS - 1] || '';
+    const priorityA = statusPriority[statusA] || 99;
+    const priorityB = statusPriority[statusB] || 99;
+
+    // First sort by status priority
+    if (priorityA !== priorityB) {
+      return priorityA - priorityB;
+    }
+
+    // Within same status, sort by Days to Deadline (ascending - most urgent first)
+    const deadlineA = a[GRIEVANCE_COLS.DAYS_TO_DEADLINE - 1];
+    const deadlineB = b[GRIEVANCE_COLS.DAYS_TO_DEADLINE - 1];
+
+    // Handle empty/null values
+    if (deadlineA === '' || deadlineA === null) return 1;
+    if (deadlineB === '' || deadlineB === null) return -1;
+
+    return deadlineA - deadlineB;
+  });
+
+  // Write sorted data back
+  dataRange.setValues(data);
+
+  Logger.log('Grievance Log sorted by status priority');
+}
+
+/**
+ * Manual trigger to sort Grievance Log by status
+ * Can be called from menu or script
+ */
+function SORT_GRIEVANCES_BY_STATUS() {
+  sortGrievancesByStatusPriority();
+  SpreadsheetApp.getActiveSpreadsheet().toast(
+    'Grievances sorted: Open → Appealed → Pending Info → Resolved',
+    'Sort Complete',
+    3
+  );
 }
 
 /**
