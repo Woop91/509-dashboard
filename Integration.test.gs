@@ -76,7 +76,7 @@ function testCompleteGrievanceWorkflow() {
       .setValues([grievanceData]);
 
     SpreadsheetApp.flush();
-    Utilities.sleep(3000);
+    Utilities.sleep(500);
     SpreadsheetApp.flush();
 
     // Step 2: Verify auto-calculated deadlines
@@ -115,7 +115,7 @@ function testCompleteGrievanceWorkflow() {
     grievanceLog.getRange(initialGrievanceRow, GRIEVANCE_COLS.CURRENT_STEP).setValue('Step II'); // Update current step
 
     SpreadsheetApp.flush();
-    Utilities.sleep(2000);
+    Utilities.sleep(500);
 
     // Verify Step II deadline calculated
     const stepIIDeadline = grievanceLog.getRange(initialGrievanceRow, GRIEVANCE_COLS.STEP2_DUE).getValue();
@@ -131,7 +131,7 @@ function testCompleteGrievanceWorkflow() {
     grievanceLog.getRange(initialGrievanceRow, GRIEVANCE_COLS.RESOLUTION).setValue('Resolved favorably'); // Resolution
 
     SpreadsheetApp.flush();
-    Utilities.sleep(2000);
+    Utilities.sleep(500);
 
     // Verify Days Open is calculated correctly - using GRIEVANCE_COLS constant
     const daysOpen = grievanceLog.getRange(initialGrievanceRow, GRIEVANCE_COLS.DAYS_OPEN).getValue();
@@ -176,7 +176,7 @@ function testDashboardMetricsUpdate() {
 
   try {
     SpreadsheetApp.flush();
-    Utilities.sleep(2000);
+    Utilities.sleep(500);
 
     // Check that member count increased
     const updatedMemberCount = dashboard.getRange('B6').getValue();
@@ -251,7 +251,7 @@ function testMemberGrievanceSnapshot() {
       .setValues([grievanceData]);
 
     SpreadsheetApp.flush();
-    Utilities.sleep(3000);
+    Utilities.sleep(500);
     SpreadsheetApp.flush();
 
     // Find member row
@@ -277,7 +277,7 @@ function testMemberGrievanceSnapshot() {
     grievanceLog.getRange(grievanceRow, GRIEVANCE_COLS.STATUS).setValue('Open');
 
     SpreadsheetApp.flush();
-    Utilities.sleep(2000);
+    Utilities.sleep(500);
 
     // Check snapshot updated
     const updatedMemberData = memberDir.getRange(2, 1, memberDir.getLastRow() - 1, memberDir.getLastColumn()).getValues();
@@ -323,7 +323,7 @@ function testConfigChangesPropagateToDropdowns() {
 
   try {
     SpreadsheetApp.flush();
-    Utilities.sleep(1000);
+    Utilities.sleep(500);
 
     // Check that validation includes new location
     const locationCell = memberDir.getRange(2, MEMBER_COLS.WORK_LOCATION);
@@ -407,7 +407,7 @@ function testMultipleGrievancesSameMember() {
     }
 
     SpreadsheetApp.flush();
-    Utilities.sleep(3000);
+    Utilities.sleep(500);
     SpreadsheetApp.flush();
 
     // Verify all grievances created
@@ -472,7 +472,7 @@ function testDashboardHandlesEmptyData() {
     }
 
     SpreadsheetApp.flush();
-    Utilities.sleep(2000);
+    Utilities.sleep(500);
 
     // Check dashboard doesn't show errors
     // Member count should be 0
@@ -644,7 +644,7 @@ function testGrievanceUpdatesTriggersRecalculation() {
       .setValues([grievanceData]);
 
     SpreadsheetApp.flush();
-    Utilities.sleep(2000);
+    Utilities.sleep(500);
 
     // Check initial state - use MEMBER_COLS constant (column Z = 26, 0-indexed = 25)
     const statusIdx = MEMBER_COLS.GRIEVANCE_STATUS - 1;
@@ -658,7 +658,7 @@ function testGrievanceUpdatesTriggersRecalculation() {
     grievanceLog.getRange(grievanceRow, 5).setValue('Settled');
 
     SpreadsheetApp.flush();
-    Utilities.sleep(2000);
+    Utilities.sleep(500);
 
     // Check updated state
     const memberData2 = memberDir.getRange(2, 1, memberDir.getLastRow() - 1, memberDir.getLastColumn()).getValues();

@@ -14,7 +14,7 @@
  * Build Info:
  * - Version: 2.1.0 (Security Enhanced + Code Review Improvements)
  * - Build ID: 20251202-improvements
- * - Build Date: 2025-12-09T15:37:24.056Z
+ * - Build Date: 2025-12-09T18:45:20.298Z
  * - Build Type: DEVELOPMENT
  * - Modules: 79 files
  * - Tests Included: Yes
@@ -6036,6 +6036,7 @@ function onOpen() {
 
   // ============ 🧪 TESTING MENU ============
   ui.createMenu("🧪 Tests")
+    .addItem("⚡ Run Quick Tests", "runQuickTests")
     .addItem("🧪 Run All Tests", "runAllTests")
     .addItem("📊 View Test Results", "showTestResults")
     .addSeparator()
@@ -52909,15 +52910,22 @@ const Assert = {
 };
 
 /**
+ * Maximum execution time in milliseconds (5 minutes to leave buffer before 6-minute limit)
+ */
+const TEST_MAX_EXECUTION_MS = 5 * 60 * 1000;
+
+/**
  * Test runner - discovers and runs all test functions
+ * Includes timeout protection to avoid exceeding Apps Script limits
  */
 function runAllTests() {
   const ui = SpreadsheetApp.getUi();
 
   ui.alert(
     '🧪 Running All Tests',
-    'This will run the complete test suite. This may take 2-3 minutes.\n\n' +
-    'Results will be displayed in a new "Test Results" sheet.',
+    'This will run the complete test suite.\n\n' +
+    'Note: Tests will stop automatically before the 6-minute timeout.\n' +
+    'For faster results, use "Run Quick Tests" which skips slow integration tests.',
     ui.ButtonSet.OK
   );
 
@@ -52933,38 +52941,9 @@ function runAllTests() {
 
   const startTime = new Date();
 
-  // Discover and run all test functions
-  // Note: All tests are defined in Code.test.gs and Integration.test.gs
-  const testFunctions = [
-    // Code.test.gs - Formula calculation tests
-    'testFilingDeadlineCalculation',
-    'testStepIDeadlineCalculation',
-    'testStepIIAppealDeadlineCalculation',
-    'testDaysOpenCalculation',
-    'testDaysOpenForClosedGrievance',
-    'testNextActionDueLogic',
-    'testMemberDirectoryFormulas',
-
-    // Code.test.gs - Data validation tests
-    'testDataValidationSetup',
-    'testConfigDropdownValues',
-    'testMemberValidationRules',
-    'testGrievanceValidationRules',
-
-    // Code.test.gs - Seeding validation tests
-    'testMemberSeedingValidation',
-    'testGrievanceSeedingValidation',
-    'testMemberEmailFormat',
-    'testMemberIDUniqueness',
-    'testGrievanceMemberLinking',
-    'testOpenRateRange',
-
-    // Code.test.gs - Edge case tests
-    'testEmptySheetsHandling',
-    'testFutureDateHandling',
-    'testPastDeadlineHandling',
-
-    // Code.test.gs - Column constant tests
+  // Fast unit tests first (these should complete quickly)
+  const fastTests = [
+    // Code.test.gs - Column constant tests (very fast, no sheet access)
     'testMemberColsConstants',
     'testGrievanceColsConstants',
     'testConfigColsConstants',
@@ -52973,7 +52952,7 @@ function runAllTests() {
     'testColumnLetterConversion',
     'testColumnIndexing',
 
-    // Code.test.gs - Input validation tests
+    // Code.test.gs - Input validation tests (very fast, no sheet access)
     'testValidateRequired',
     'testValidateString',
     'testValidatePositiveInt',
@@ -52989,23 +52968,73 @@ function runAllTests() {
     'testDateValidationEdgeCases',
     'testArrayValidation',
 
-    // Integration.test.gs - Workflow tests
+    // Code.test.gs - Edge case tests
+    'testEmptySheetsHandling',
+    'testFutureDateHandling',
+    'testPastDeadlineHandling',
+    'testOpenRateRange'
+  ];
+
+  // Medium tests (access sheets but don't create much data)
+  const mediumTests = [
+    // Code.test.gs - Formula calculation tests
+    'testFilingDeadlineCalculation',
+    'testStepIDeadlineCalculation',
+    'testStepIIAppealDeadlineCalculation',
+    'testDaysOpenCalculation',
+    'testDaysOpenForClosedGrievance',
+    'testNextActionDueLogic',
+
+    // Code.test.gs - Seeding validation tests
+    'testMemberSeedingValidation',
+    'testGrievanceSeedingValidation',
+    'testMemberEmailFormat',
+    'testMemberIDUniqueness',
+    'testGrievanceMemberLinking'
+  ];
+
+  // Slow tests (create test data, multiple sheet operations)
+  const slowTests = [
+    'testMemberDirectoryFormulas',
+    'testDataValidationSetup',
+    'testConfigDropdownValues',
+    'testMemberValidationRules',
+    'testGrievanceValidationRules',
+
+    // Integration tests - slowest
     'testCompleteGrievanceWorkflow',
     'testDashboardMetricsUpdate',
     'testMemberGrievanceSnapshot',
     'testConfigChangesPropagateToDropdowns',
     'testMultipleGrievancesSameMember',
     'testDashboardHandlesEmptyData',
+    'testGrievanceUpdatesTriggersRecalculation',
     'testDashboardRefreshPerformance',
-    'testFormulaPerformanceWithData',
-    'testGrievanceUpdatesTriggersRecalculation'
+    'testFormulaPerformanceWithData'
   ];
+
+  const testFunctions = [...fastTests, ...mediumTests, ...slowTests];
 
   // Ensure test registry is initialized
   ensureTestRegistry();
 
-  // Run each test using the test registry
+  // Run each test using the test registry with timeout protection
+  let timedOut = false;
   testFunctions.forEach(function(testName) {
+    // Check if we're approaching timeout
+    const elapsed = new Date() - startTime;
+    if (elapsed > TEST_MAX_EXECUTION_MS) {
+      if (!timedOut) {
+        timedOut = true;
+        Logger.log('⏱️ Test suite approaching timeout - skipping remaining tests');
+      }
+      TEST_RESULTS.skipped.push({
+        name: testName,
+        reason: 'Skipped due to timeout protection (5 min limit)'
+      });
+      return;
+    }
+
     try {
       // Look up function in the test registry
       const testFn = TEST_FUNCTION_REGISTRY[testName];
@@ -53060,6 +53089,105 @@ function runAllTests() {
     `Pass Rate: ${passRate}%\n` +
     `Duration: ${duration.toFixed(2)}s\n\n` +
     `View detailed results in the "Test Results" sheet.`,
+    ui.ButtonSet.OK
+  );
+}
+
+/**
+ * Run quick tests - only fast unit tests, skips slow integration tests
+ * Use this for rapid feedback during development
+ */
+function runQuickTests() {
+  const ui = SpreadsheetApp.getUi();
+
+  SpreadsheetApp.getActive().toast('⚡ Running quick tests...', 'Testing', -1);
+
+  // Clear previous results
+  TEST_RESULTS.passed = [];
+  TEST_RESULTS.failed = [];
+  TEST_RESULTS.skipped = [];
+
+  const startTime = new Date();
+
+  // Only fast unit tests (no sheet access or minimal sheet access)
+  const quickTests = [
+    // Column constant tests (very fast, no sheet access)
+    'testMemberColsConstants',
+    'testGrievanceColsConstants',
+    'testConfigColsConstants',
+    'testInternalSchemaConstants',
+    'testSheetsConstants',
+    'testColumnLetterConversion',
+    'testColumnIndexing',
+
+    // Input validation tests (very fast, no sheet access)
+    'testValidateRequired',
+    'testValidateString',
+    'testValidatePositiveInt',
+    'testValidateGrievanceId',
+    'testValidateMemberId',
+    'testValidateEmail',
+    'testValidateEnum',
+    'testSafeExecute',
+    'testGrievanceStatusValidation',
+    'testGrievanceStepValidation',
+    'testIssueCategoryValidation',
+    'testErrorMessageContext',
+    'testDateValidationEdgeCases',
+    'testArrayValidation'
+  ];
+
+  // Ensure test registry is initialized
+  ensureTestRegistry();
+
+  // Run each test
+  quickTests.forEach(function(testName) {
+    try {
+      const testFn = TEST_FUNCTION_REGISTRY[testName];
+      if (typeof testFn === 'function') {
+        testFn();
+        TEST_RESULTS.passed.push({
+          name: testName,
+          time: new Date() - startTime
+        });
+      } else {
+        TEST_RESULTS.skipped.push({
+          name: testName,
+          reason: 'Function not found in TEST_FUNCTION_REGISTRY'
+        });
+      }
+    } catch (error) {
+      TEST_RESULTS.failed.push({
+        name: testName,
+        error: error.message,
+        stack: error.stack
+      });
+    }
+  });
+
+  const endTime = new Date();
+  const duration = (endTime - startTime) / 1000;
+
+  // Show summary
+  const total = TEST_RESULTS.passed.length + TEST_RESULTS.failed.length + TEST_RESULTS.skipped.length;
+  const passRate = total > 0 ? ((TEST_RESULTS.passed.length / total) * 100).toFixed(1) : '0';
+
+  SpreadsheetApp.getActive().toast(
+    `✅ ${TEST_RESULTS.passed.length} passed | ❌ ${TEST_RESULTS.failed.length} failed`,
+    `Quick Tests (${duration.toFixed(1)}s)`,
+    5
+  );
+
+  ui.alert(
+    '⚡ Quick Tests Complete',
+    `Results:\n\n` +
+    `✅ Passed: ${TEST_RESULTS.passed.length}\n` +
+    `❌ Failed: ${TEST_RESULTS.failed.length}\n` +
+    `⏭️ Skipped: ${TEST_RESULTS.skipped.length}\n\n` +
+    `Duration: ${duration.toFixed(2)}s\n\n` +
+    (TEST_RESULTS.failed.length > 0 ?
+      `Failed tests:\n${TEST_RESULTS.failed.map(t => '• ' + t.name + ': ' + t.error).join('\n')}` :
+      'All quick tests passed!'),
     ui.ButtonSet.OK
   );
 }
@@ -54865,7 +54993,7 @@ function testCompleteGrievanceWorkflow() {
       .setValues([grievanceData]);
 
     SpreadsheetApp.flush();
-    Utilities.sleep(3000);
+    Utilities.sleep(500);
     SpreadsheetApp.flush();
 
     // Step 2: Verify auto-calculated deadlines
@@ -54904,7 +55032,7 @@ function testCompleteGrievanceWorkflow() {
     grievanceLog.getRange(initialGrievanceRow, GRIEVANCE_COLS.CURRENT_STEP).setValue('Step II'); // Update current step
 
     SpreadsheetApp.flush();
-    Utilities.sleep(2000);
+    Utilities.sleep(500);
 
     // Verify Step II deadline calculated
     const stepIIDeadline = grievanceLog.getRange(initialGrievanceRow, GRIEVANCE_COLS.STEP2_DUE).getValue();
@@ -54920,7 +55048,7 @@ function testCompleteGrievanceWorkflow() {
     grievanceLog.getRange(initialGrievanceRow, GRIEVANCE_COLS.RESOLUTION).setValue('Resolved favorably'); // Resolution
 
     SpreadsheetApp.flush();
-    Utilities.sleep(2000);
+    Utilities.sleep(500);
 
     // Verify Days Open is calculated correctly - using GRIEVANCE_COLS constant
     const daysOpen = grievanceLog.getRange(initialGrievanceRow, GRIEVANCE_COLS.DAYS_OPEN).getValue();
@@ -54965,7 +55093,7 @@ function testDashboardMetricsUpdate() {
 
   try {
     SpreadsheetApp.flush();
-    Utilities.sleep(2000);
+    Utilities.sleep(500);
 
     // Check that member count increased
     const updatedMemberCount = dashboard.getRange('B6').getValue();
@@ -55040,7 +55168,7 @@ function testMemberGrievanceSnapshot() {
       .setValues([grievanceData]);
 
     SpreadsheetApp.flush();
-    Utilities.sleep(3000);
+    Utilities.sleep(500);
     SpreadsheetApp.flush();
 
     // Find member row
@@ -55066,7 +55194,7 @@ function testMemberGrievanceSnapshot() {
     grievanceLog.getRange(grievanceRow, GRIEVANCE_COLS.STATUS).setValue('Open');
 
     SpreadsheetApp.flush();
-    Utilities.sleep(2000);
+    Utilities.sleep(500);
 
     // Check snapshot updated
     const updatedMemberData = memberDir.getRange(2, 1, memberDir.getLastRow() - 1, memberDir.getLastColumn()).getValues();
@@ -55112,7 +55240,7 @@ function testConfigChangesPropagateToDropdowns() {
 
   try {
     SpreadsheetApp.flush();
-    Utilities.sleep(1000);
+    Utilities.sleep(500);
 
     // Check that validation includes new location
     const locationCell = memberDir.getRange(2, MEMBER_COLS.WORK_LOCATION);
@@ -55196,7 +55324,7 @@ function testMultipleGrievancesSameMember() {
     }
 
     SpreadsheetApp.flush();
-    Utilities.sleep(3000);
+    Utilities.sleep(500);
     SpreadsheetApp.flush();
 
     // Verify all grievances created
@@ -55261,7 +55389,7 @@ function testDashboardHandlesEmptyData() {
     }
 
     SpreadsheetApp.flush();
-    Utilities.sleep(2000);
+    Utilities.sleep(500);
 
     // Check dashboard doesn't show errors
     // Member count should be 0
@@ -55433,7 +55561,7 @@ function testGrievanceUpdatesTriggersRecalculation() {
       .setValues([grievanceData]);
 
     SpreadsheetApp.flush();
-    Utilities.sleep(2000);
+    Utilities.sleep(500);
 
     // Check initial state - use MEMBER_COLS constant (column Z = 26, 0-indexed = 25)
     const statusIdx = MEMBER_COLS.GRIEVANCE_STATUS - 1;
@@ -55447,7 +55575,7 @@ function testGrievanceUpdatesTriggersRecalculation() {
     grievanceLog.getRange(grievanceRow, 5).setValue('Settled');
 
     SpreadsheetApp.flush();
-    Utilities.sleep(2000);
+    Utilities.sleep(500);
 
     // Check updated state
     const memberData2 = memberDir.getRange(2, 1, memberDir.getLastRow() - 1, memberDir.getLastColumn()).getValues();
