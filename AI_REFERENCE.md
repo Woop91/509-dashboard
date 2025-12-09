@@ -1,6 +1,6 @@
 # 509 Dashboard - Complete Feature Reference
 
-**Version:** 3.21
+**Version:** 3.24
 **Last Updated:** 2025-12-09
 **Purpose:** Union grievance tracking and member engagement system for SEIU Local 509
 
@@ -46,7 +46,129 @@
 
 ---
 
-## 🆕 Changelog - Version 3.21 (2025-12-09)
+## 🆕 Changelog - Version 3.24 (2025-12-09)
+
+**FIX: Multi-Select Dropdown Behavior Now Works**
+
+Google Sheets doesn't have native multi-select dropdowns. Added `onEdit` handler to implement multi-select behavior.
+
+**How Multi-Select Works Now:**
+1. User clicks dropdown and selects a value → Value is added to cell
+2. User clicks dropdown again and selects another value → Value is APPENDED (comma-separated)
+3. User selects a value that already exists → Value is REMOVED (toggle behavior)
+
+**Multi-Select Columns:**
+
+| Sheet | Columns |
+|-------|---------|
+| Member Directory | Office Days, Preferred Communication, Best Time to Contact, Committees |
+| Grievance Log | Articles Violated, Issue Category, Assigned Steward |
+
+**New Functions:**
+- `handleMultiSelectEdit(e)` - Handles append/toggle logic for multi-select dropdowns
+
+**Files Modified:**
+- `DataIntegrityEnhancements.gs` - Added `handleMultiSelectEdit()` and updated `onEdit()` to detect multi-select columns
+
+**Technical Details:**
+- `onEdit()` checks if edited column is in the multi-select list
+- If yes, calls `handleMultiSelectEdit()` which:
+  - Parses existing comma-separated values
+  - Adds new value if not present, removes if present (toggle)
+  - Joins values back with ", " separator
+
+---
+
+## Changelog - Version 3.23 (2025-12-09)
+
+**FEATURE: Grievance Status Bar & Auto-Sort**
+
+1. **Status Bar Auto-Start (Issue 5)**
+   - Visual color-coded status bar spans columns E-U (Status through Days to Deadline)
+   - Automatically applied when Grievance Log is created
+   - Colors based on Status value for quick visual identification:
+     - Open: Light green (#DCFCE7) - Active, needs attention
+     - Appealed: Light amber (#FEF3C7) - Under appeal
+     - Pending Info: Light blue (#DBEAFE) - Waiting for info
+     - Settled: Light gray (#E5E7EB) - Resolved favorably
+     - Withdrawn: Lighter gray (#F3F4F6)
+     - Closed: Very light gray (#F9FAFB)
+   - Due dates remain visible through semi-transparent colors
+
+2. **Auto-Sort on Status Edit (Issues 6 & 7)**
+   - When Status column is edited, Grievance Log automatically re-sorts
+   - Sort priority: Open → Appealed → Pending Info → Settled → Withdrawn → Closed
+   - Within same status, sorts by Days to Deadline (most urgent first)
+   - Resolved grievances (Settled, Withdrawn, Closed) automatically move to bottom
+
+3. **Config Tab Already Organized (Issue 4)**
+   - Config tab already has 12 color-coded category groups
+   - Logical grouping with borders between sections
+   - No changes needed
+
+**New Functions:**
+- `applyGrievanceStatusBar()` - Applies status bar conditional formatting
+- `applyGrievanceStatusBarSilent()` - Silent version called on tab creation
+- `sortGrievancesByStatusPriority()` - Sorts by status priority
+- `SORT_GRIEVANCES_BY_STATUS()` - Manual trigger with toast notification
+
+**Files Modified:**
+- `Code.gs` - Added `applyGrievanceStatusBar()`, `applyGrievanceStatusBarSilent()`, and auto-call in `createGrievanceLog()`
+- `DataIntegrityEnhancements.gs` - Added `sortGrievancesByStatusPriority()`, `SORT_GRIEVANCES_BY_STATUS()`, and onEdit trigger
+
+---
+
+## Changelog - Version 3.22 (2025-12-09)
+
+**FEATURE: Dropdown Improvements - Free-Form Text & Multi-Select Stewards**
+
+All dropdowns now allow free-form text entry (no more red validation errors for custom values).
+
+**Changes Made:**
+
+1. **All dropdowns allow free-form text** (`setAllowInvalid = true`)
+   - Users can select from dropdown OR type custom values
+   - Eliminates "Invalid: Input must be an item on the specified list" errors
+   - Applies to both Member Directory and Grievance Log
+
+2. **Grievance Log: Steward field changed to multi-select**
+   - A grievance can now have multiple stewards assigned
+   - Changed from `strictValidation = true` to `false`
+
+**Member Directory Dropdowns:**
+| Column | Type | Free-Form |
+|--------|------|-----------|
+| Job Title | Single-select | ✅ Yes |
+| Work Location | Single-select | ✅ Yes |
+| Unit | Single-select | ✅ Yes |
+| Office Days | Multi-select | ✅ Yes |
+| Preferred Communication | Multi-select | ✅ Yes |
+| Best Time to Contact | Multi-select | ✅ Yes |
+| Supervisor | Single-select | ✅ Yes |
+| Manager | Single-select | ✅ Yes |
+| Is Steward | Single-select | ✅ Yes |
+| Committees | Multi-select | ✅ Yes |
+| Assigned Steward | Single-select | ✅ Yes |
+| Contact Steward | Single-select | ✅ Yes |
+| Has Open Grievance? | Single-select | ✅ Yes |
+
+**Grievance Log Dropdowns:**
+| Column | Type | Free-Form |
+|--------|------|-----------|
+| Status | Single-select | ✅ Yes |
+| Current Step | Single-select | ✅ Yes |
+| Articles Violated | Multi-select | ✅ Yes |
+| Issue Category | Multi-select | ✅ Yes |
+| Unit | Single-select | ✅ Yes |
+| Work Location | Single-select | ✅ Yes |
+| Assigned Steward | **Multi-select** | ✅ Yes |
+
+**Files Modified:**
+- `MemberDirectoryDropdowns.gs` - All `strictValidation = true` changed to `false`
+
+---
+
+## Changelog - Version 3.21 (2025-12-09)
 
 **FIX: Comprehensive Row 1 Header Protection Across All Files**
 

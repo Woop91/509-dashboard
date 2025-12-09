@@ -715,6 +715,10 @@ function createGrievanceLog() {
   grievanceLog.getRange(2, GRIEVANCE_COLS.DAYS_TO_DEADLINE, maxRows - 1, 1).setNumberFormat("#,##0");
 
   grievanceLog.setTabColor("#DC2626");
+
+  // Apply status bar conditional formatting (auto-start)
+  // Colors rows based on Status value for quick visual identification
+  applyGrievanceStatusBarSilent();
 }
 
 /* --------------------- DASHBOARD - ONLY REAL DATA --------------------- */
@@ -3663,6 +3667,93 @@ function addGrievanceDateStatusBars() {
   grievanceLog.setConditionalFormatRules(rules);
 
   SpreadsheetApp.getUi().alert('✅ Date status bars added to Grievance Log!');
+}
+
+/**
+ * Apply status bar conditional formatting across grievance rows
+ * Colors span from Status (E) through Days to Deadline (U) based on Status value
+ * Uses semi-transparent colors so due dates remain visible
+ */
+function applyGrievanceStatusBar() {
+  const ss = SpreadsheetApp.getActiveSpreadsheet();
+  const grievanceLog = ss.getSheetByName(SHEETS.GRIEVANCE_LOG);
+
+  if (!grievanceLog) {
+    Logger.log('applyGrievanceStatusBar: Grievance Log not found');
+    return;
+  }
+
+  const MAX_ROWS = 6000;
+  // Status bar spans from Status (E=5) through Days to Deadline (U=21) = 17 columns
+  const startCol = GRIEVANCE_COLS.STATUS;  // Column E (5)
+  const numCols = GRIEVANCE_COLS.DAYS_TO_DEADLINE - GRIEVANCE_COLS.STATUS + 1;  // 17 columns
+
+  const statusRange = grievanceLog.getRange(2, startCol, MAX_ROWS, numCols);
+
+  // Status-based conditional formatting rules
+  // Priority statuses (active grievances) - shown at top by default sort
+  const openRule = SpreadsheetApp.newConditionalFormatRule()
+    .whenFormulaSatisfied('=$E2="Open"')
+    .setBackground('#DCFCE7')  // Light green - Active, needs attention
+    .setRanges([statusRange])
+    .build();
+
+  const appealedRule = SpreadsheetApp.newConditionalFormatRule()
+    .whenFormulaSatisfied('=$E2="Appealed"')
+    .setBackground('#FEF3C7')  // Light amber - Under appeal
+    .setRanges([statusRange])
+    .build();
+
+  const pendingInfoRule = SpreadsheetApp.newConditionalFormatRule()
+    .whenFormulaSatisfied('=$E2="Pending Info"')
+    .setBackground('#DBEAFE')  // Light blue - Waiting for info
+    .setRanges([statusRange])
+    .build();
+
+  // Resolved statuses - these get sorted to bottom
+  const settledRule = SpreadsheetApp.newConditionalFormatRule()
+    .whenFormulaSatisfied('=$E2="Settled"')
+    .setBackground('#E5E7EB')  // Light gray - Resolved favorably
+    .setRanges([statusRange])
+    .build();
+
+  const withdrawnRule = SpreadsheetApp.newConditionalFormatRule()
+    .whenFormulaSatisfied('=$E2="Withdrawn"')
+    .setBackground('#F3F4F6')  // Lighter gray - Withdrawn
+    .setRanges([statusRange])
+    .build();
+
+  const closedRule = SpreadsheetApp.newConditionalFormatRule()
+    .whenFormulaSatisfied('=$E2="Closed"')
+    .setBackground('#F9FAFB')  // Very light gray - Closed
+    .setRanges([statusRange])
+    .build();
+
+  // Get existing rules and add status bar rules
+  const existingRules = grievanceLog.getConditionalFormatRules();
+
+  // Remove any existing status bar rules (to avoid duplicates)
+  const newRules = existingRules.filter(function(rule) {
+    const ranges = rule.getRanges();
+    if (ranges.length === 0) return true;
+    const firstRange = ranges[0];
+    // Keep rules that don't span the full status bar range
+    return !(firstRange.getColumn() === startCol && firstRange.getNumColumns() === numCols);
+  });
+
+  // Add status bar rules at the beginning (lower priority than deadline urgency colors)
+  newRules.push(openRule, appealedRule, pendingInfoRule, settledRule, withdrawnRule, closedRule);
+  grievanceLog.setConditionalFormatRules(newRules);
+
+  Logger.log('Status bar conditional formatting applied to Grievance Log');
+}
+
+/**
+ * Silent version of applyGrievanceStatusBar - no UI alerts
+ * Called automatically when Grievance Log is created
+ */
+function applyGrievanceStatusBarSilent() {
+  applyGrievanceStatusBar();
 }
 
 /**
