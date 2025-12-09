@@ -16,6 +16,12 @@
 
 ---
 
+## 🤖 AI Behavior Rules
+
+**See:** `.claude/instructions.md` for AI session behavior rules (question-first workflow, communication style, git management).
+
+---
+
 ## 🔴 CRITICAL: Always Reference This Document
 
 **Before making ANY changes to the codebase:**
