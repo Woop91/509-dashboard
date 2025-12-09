@@ -14,10 +14,10 @@
  * Build Info:
  * - Version: 2.1.0 (Security Enhanced + Code Review Improvements)
  * - Build ID: 20251202-improvements
- * - Build Date: 2025-12-08T05:14:30.921Z
- * - Build Type: DEVELOPMENT
- * - Modules: 79 files
- * - Tests Included: Yes
+ * - Build Date: 2025-12-09T00:44:58.159Z
+ * - Build Type: PRODUCTION
+ * - Modules: 76 files
+ * - Tests Included: No
  *
  * ============================================================================
  */
@@ -1291,6 +1291,28 @@ function setupRequiredSheets() {
     }
   } catch (e) {
     results.errors.push('Analytics Data: ' + e.message);
+  }
+
+  // Setup Operations Analytics sheet (merged analytics dashboard)
+  try {
+    let opsAnalyticsSheet = ss.getSheetByName(SHEETS.OPERATIONS_ANALYTICS);
+    if (!opsAnalyticsSheet) {
+      // Call the full creation function from OperationsAnalytics.gs
+      if (typeof createOperationsAnalyticsSheet === 'function') {
+        createOperationsAnalyticsSheet();
+        results.created.push(SHEETS.OPERATIONS_ANALYTICS);
+      } else {
+        // Fallback: create basic sheet if function not available
+        opsAnalyticsSheet = ss.insertSheet(SHEETS.OPERATIONS_ANALYTICS);
+        opsAnalyticsSheet.getRange(1, 1).setValue('📊 Operations Analytics')
+          .setFontWeight('bold').setFontSize(14);
+        results.created.push(SHEETS.OPERATIONS_ANALYTICS + ' (basic)');
+      }
+    } else {
+      results.existing.push(SHEETS.OPERATIONS_ANALYTICS);
+    }
+  } catch (e) {
+    results.errors.push('Operations Analytics: ' + e.message);
   }
 
   return results;
@@ -3719,8 +3741,15 @@ function CREATE_509_DASHBOARD() {
     createStewardWorkloadSheet();
     Logger.log("Completed createStewardWorkloadSheet");
 
-    // Create comprehensive Executive Dashboard (includes Quick Stats, KPI Performance, Location Analytics, Type Analysis)
-    // NOTE: Operations Analytics and KPI Performance Dashboard are now MERGED into Executive Dashboard
+    // Create Operations Analytics sheet (merged: Trends & Timeline, Location Analytics, Type Analysis, Member Engagement, Cost Impact)
+    Logger.log("Starting createOperationsAnalyticsSheet...");
+    if (typeof createOperationsAnalyticsSheet === 'function') {
+      createOperationsAnalyticsSheet();
+    }
+    Logger.log("Completed createOperationsAnalyticsSheet");
+    SpreadsheetApp.getActive().toast("✅ Operations Analytics created", "75%", 2);
+
+    // Create comprehensive Executive Dashboard (includes Quick Stats, KPI Performance)
     Logger.log("Starting createExecutiveDashboard...");
     createExecutiveDashboard();
     Logger.log("Completed createExecutiveDashboard");
@@ -4840,6 +4869,7 @@ function createTrendsSheet() {
     createOperationsAnalyticsSheet();
   }
 }
+
 
 /**
  * @deprecated Use createOperationsAnalyticsSheet() instead
@@ -8377,25 +8407,22 @@ function reorderSheetsLogically() {
   // 8. Admin sheets (Config, Archive, etc.)
 
   // FIXED: Use only valid sheet names from SHEETS constant
+  // NOTE: 5 analytics tabs merged into Operations Analytics (Trends, Location, Type Analysis, Member Engagement, Cost Impact)
   const sheetOrder = [
     SHEETS.INTERACTIVE_DASHBOARD,  // 1. YOUR Custom View (most important for daily use)
     SHEETS.DASHBOARD,              // 2. Main Overview
     SHEETS.MEMBER_DIR,             // 3. Members
     SHEETS.GRIEVANCE_LOG,          // 4. Grievances
     SHEETS.STEWARD_WORKLOAD,       // 5. Workload
-    SHEETS.TRENDS,                 // 6. Trends & Timeline
-    SHEETS.LOCATION,               // 7. Location Analytics
-    SHEETS.TYPE_ANALYSIS,          // 8. Type Analysis
-    SHEETS.EXECUTIVE_DASHBOARD,    // 9. Executive Dashboard
-    SHEETS.KPI_PERFORMANCE,        // 10. KPI Performance
-    SHEETS.MEMBER_ENGAGEMENT,      // 11. Member Engagement
-    SHEETS.COST_IMPACT,            // 12. Cost Impact
-    SHEETS.MEMBER_SATISFACTION,    // 13. Member Satisfaction
-    SHEETS.FEEDBACK,               // 14. Feedback & Development
-    SHEETS.ANALYTICS,              // 15. Analytics Data
-    SHEETS.CONFIG,                 // 16. Config
-    SHEETS.ARCHIVE,                // 17. Archive
-    SHEETS.DIAGNOSTICS             // 18. Diagnostics
+    SHEETS.OPERATIONS_ANALYTICS,   // 6. Operations Analytics (merged: Trends, Location, Type, Engagement, Cost)
+    SHEETS.EXECUTIVE_DASHBOARD,    // 7. Executive Dashboard
+    SHEETS.KPI_PERFORMANCE,        // 8. KPI Performance
+    SHEETS.MEMBER_SATISFACTION,    // 9. Member Satisfaction
+    SHEETS.FEEDBACK,               // 10. Feedback & Development
+    SHEETS.ANALYTICS,              // 11. Analytics Data
+    SHEETS.CONFIG,                 // 12. Config
+    SHEETS.ARCHIVE,                // 13. Archive
+    SHEETS.DIAGNOSTICS             // 14. Diagnostics
   ];
 
   // Move sheets to correct positions
@@ -8670,6 +8697,12 @@ function createUserSettingsSheet() {
   sheet.setColumnWidth(2, 150);
   sheet.setColumnWidth(3, 200);
   sheet.setColumnWidth(6, 300);
+
+  // Delete unused columns beyond column F (6 columns)
+  const totalCols = sheet.getMaxColumns();
+  if (totalCols > 6) {
+    sheet.deleteColumns(7, totalCols - 6);
+  }
 
   // Hide gridlines
   sheet.setHiddenGridlines(true);
@@ -9096,6 +9129,12 @@ function createCommunicationsLogSheet(ss) {
 
   sheet.setFrozenRows(1);
   sheet.setColumnWidth(7, 400); // Message column wider
+
+  // Delete unused columns beyond the defined headers (9 columns)
+  const totalCols = sheet.getMaxColumns();
+  if (totalCols > headers.length) {
+    sheet.deleteColumns(headers.length + 1, totalCols - headers.length);
+  }
 
   return sheet;
 }
@@ -10589,6 +10628,12 @@ function createAuditLogSheetRBAC() {
     auditLog.setColumnWidth(7, 150); // Old Value
     auditLog.setColumnWidth(8, 150); // New Value
     auditLog.setColumnWidth(9, 300); // Details
+
+    // Delete unused columns beyond the defined headers (9 columns)
+    const totalCols = auditLog.getMaxColumns();
+    if (totalCols > headers.length) {
+      auditLog.deleteColumns(headers.length + 1, totalCols - headers.length);
+    }
   }
 
   return auditLog;
@@ -19297,6 +19342,12 @@ function createBackupLogSheet() {
 
   sheet.setFrozenRows(1);
 
+  // Delete unused columns beyond the defined headers (6 columns)
+  const totalCols = sheet.getMaxColumns();
+  if (totalCols > 6) {
+    sheet.deleteColumns(7, totalCols - 6);
+  }
+
   return sheet;
 }
 
@@ -20285,6 +20336,12 @@ function createChangeLogSheet() {
   changeLog.setColumnWidth(6, 150); // Field Name
   changeLog.setColumnWidth(7, 200); // Old Value
   changeLog.setColumnWidth(8, 200); // New Value
+
+  // Delete unused columns beyond the defined headers (8 columns)
+  const totalCols = changeLog.getMaxColumns();
+  if (totalCols > headers.length) {
+    changeLog.deleteColumns(headers.length + 1, totalCols - headers.length);
+  }
 
   SpreadsheetApp.getUi().alert(
     '✅ Change Log Created',
@@ -23782,6 +23839,12 @@ function createFAQDatabaseSheet() {
   // Freeze header
   faqSheet.setFrozenRows(1);
 
+  // Delete unused columns beyond the defined headers (11 columns)
+  const totalCols = faqSheet.getMaxColumns();
+  if (totalCols > headers.length) {
+    faqSheet.deleteColumns(headers.length + 1, totalCols - headers.length);
+  }
+
   // Add initial FAQs
   seedInitialFAQs();
 
@@ -24692,6 +24755,12 @@ function createGettingStartedSheet(ss) {
   // Freeze header row
   sheet.setFrozenRows(1);
 
+  // Delete unused columns beyond column D (4 columns)
+  const totalCols = sheet.getMaxColumns();
+  if (totalCols > 4) {
+    sheet.deleteColumns(5, totalCols - 4);
+  }
+
   return sheet;
 }
 
@@ -24875,6 +24944,12 @@ function createFAQSheet(ss) {
 
   // Freeze header row
   sheet.setFrozenRows(1);
+
+  // Delete unused columns beyond column C (3 columns)
+  const totalColsFAQ = sheet.getMaxColumns();
+  if (totalColsFAQ > 3) {
+    sheet.deleteColumns(4, totalColsFAQ - 3);
+  }
 
   return sheet;
 }
@@ -25488,6 +25563,12 @@ function createGmailCommunicationsLogSheet() {
 
   // Freeze header
   sheet.setFrozenRows(1);
+
+  // Delete unused columns beyond the defined headers (5 columns)
+  const totalCols = sheet.getMaxColumns();
+  if (totalCols > 5) {
+    sheet.deleteColumns(6, totalCols - 5);
+  }
 
   return sheet;
 }
@@ -37783,6 +37864,12 @@ function createPerformanceLogSheet() {
   // Set tab color
   perfLog.setTabColor('#059669'); // Green for monitoring
 
+  // Delete unused columns beyond the defined headers (8 columns)
+  const totalCols = perfLog.getMaxColumns();
+  if (totalCols > headers.length) {
+    perfLog.deleteColumns(headers.length + 1, totalCols - headers.length);
+  }
+
   Logger.log('Performance_Log sheet created successfully');
 }
 
@@ -38334,6 +38421,12 @@ function createPerformanceMonitoringSheet() {
 
   // Auto-resize columns
   perfSheet.autoResizeColumns(1, 7);
+
+  // Delete unused columns beyond the defined headers (7 columns)
+  const totalCols = perfSheet.getMaxColumns();
+  if (totalCols > 7) {
+    perfSheet.deleteColumns(8, totalCols - 7);
+  }
 
   Logger.log('✅ Performance monitoring sheet created/updated');
 
@@ -42313,12 +42406,11 @@ function checkForUpdates() {
  * REORGANIZED MENU SYSTEM
  * ------------------------------------------------------------------------====
  *
- * Comprehensive menu system with 43+ features organized into five categories:
+ * Comprehensive menu system with 43+ features organized into four categories:
  * 1. 👤 Dashboard - Daily operations, search, grievance tools, communications
  * 2. 📊 Sheet Manager - Data, performance, integrity, automations, analytics
- * 3. 🔧 Setup - Dropdown configuration, dashboard setup
- * 4. 🎭 Demo - Seed demo data, data management (nuke/clear)
- * 5. ⚙️ Administrator - System health, workflow, column toggles, RBAC
+ * 3. 🎭 Demo - Seed demo data, data management (nuke/clear)
+ * 4. ⚙️ Administrator - System health, workflow, column toggles, RBAC
  *
  * This file defines createReorganizedMenus(ui) which is called from Code.gs onOpen()
  * The 🧪 Tests menu is defined separately in Code.gs
@@ -43291,6 +43383,12 @@ function recreateAuditLogSheet() {
   // Set tab color
   auditLog.setTabColor('#DC2626'); // Red for security/audit
 
+  // Delete unused columns beyond the defined headers (10 columns)
+  const totalCols = auditLog.getMaxColumns();
+  if (totalCols > headers.length) {
+    auditLog.deleteColumns(headers.length + 1, totalCols - headers.length);
+  }
+
   Logger.log('Audit_Log sheet created successfully');
 }
 
@@ -44207,6 +44305,13 @@ function createUserRolesSheet() {
     .setFontColor('#FFFFFF');
 
   sheet.setFrozenRows(1);
+
+  // Delete unused columns beyond the defined headers (4 columns)
+  const totalCols = sheet.getMaxColumns();
+  if (totalCols > headers.length) {
+    sheet.deleteColumns(headers.length + 1, totalCols - headers.length);
+  }
+
   sheet.hideSheet(); // Hide from regular users
 
   return sheet;
@@ -44384,6 +44489,12 @@ function createAuditLogSheet() {
 
   sheet.setFrozenRows(1);
   sheet.autoResizeColumns(1, headers.length);
+
+  // Delete unused columns beyond the defined headers (6 columns)
+  const totalCols = sheet.getMaxColumns();
+  if (totalCols > headers.length) {
+    sheet.deleteColumns(headers.length + 1, totalCols - headers.length);
+  }
 
   return sheet;
 }
@@ -46517,6 +46628,12 @@ function createAutoAssignmentLogSheet() {
 
   // Freeze header
   sheet.setFrozenRows(1);
+
+  // Delete unused columns beyond the defined headers (7 columns)
+  const totalCols = sheet.getMaxColumns();
+  if (totalCols > 7) {
+    sheet.deleteColumns(8, totalCols - 7);
+  }
 
   return sheet;
 }
@@ -50909,6 +51026,223 @@ function clearOrgConfigCache() {
   Logger.log('Org config cache cleared');
 }
 
+/* --------------------= SHEET CLEANUP UTILITIES --------------------= */
+
+/**
+ * Sheet column configurations - defines how many columns each sheet should have
+ * @const {Object}
+ */
+const SHEET_COLUMN_CONFIG = {
+  // Getting Started & FAQ
+  "📚 Getting Started": 4,
+  "❓ FAQ": 3,
+
+  // Error & Audit Logs
+  "Error_Log": 8,
+  "Audit_Log": 6,
+  "Audit Log": 6,
+
+  // Communications & State Logs
+  "📞 Communications Log": 9,
+  "🔄 State Change Log": 5,
+  "📝 Change Log": 8,
+
+  // Performance & Backup Logs
+  "Performance_Log": 8,
+  "⚡ Performance Monitor": 7,
+  "💾 Backup Log": 6,
+
+  // Assignment & Roles
+  "🤖 Auto-Assignment Log": 7,
+  "User Roles": 4,
+
+  // FAQ & Knowledge Base
+  "📚 FAQ Database": 11,
+
+  // Settings
+  "⚙️ User Settings": 6
+};
+
+/**
+ * Removes unused columns from all sheets based on SHEET_COLUMN_CONFIG
+ * Call this function to clean up existing sheets that have extra columns
+ */
+function cleanAllSheetColumns() {
+  const ss = SpreadsheetApp.getActiveSpreadsheet();
+  const sheets = ss.getSheets();
+  let cleaned = 0;
+  let skipped = 0;
+
+  sheets.forEach(function(sheet) {
+    const sheetName = sheet.getName();
+    const expectedCols = SHEET_COLUMN_CONFIG[sheetName];
+
+    if (expectedCols) {
+      const totalCols = sheet.getMaxColumns();
+      if (totalCols > expectedCols) {
+        try {
+          sheet.deleteColumns(expectedCols + 1, totalCols - expectedCols);
+          Logger.log('Cleaned ' + sheetName + ': removed ' + (totalCols - expectedCols) + ' columns');
+          cleaned++;
+        } catch (e) {
+          Logger.log('Error cleaning ' + sheetName + ': ' + e.message);
+        }
+      } else {
+        skipped++;
+      }
+    }
+  });
+
+  const message = '✅ Sheet cleanup complete!\n\n' +
+    'Cleaned: ' + cleaned + ' sheets\n' +
+    'Already clean: ' + skipped + ' sheets';
+
+  SpreadsheetApp.getUi().alert('Column Cleanup', message, SpreadsheetApp.getUi().ButtonSet.OK);
+
+  return { cleaned: cleaned, skipped: skipped };
+}
+
+/**
+ * Cleans unused columns from a specific sheet
+ * @param {string} sheetName - Name of the sheet to clean
+ * @param {number} expectedColumns - Number of columns the sheet should have
+ */
+function cleanSheetColumns(sheetName, expectedColumns) {
+  const ss = SpreadsheetApp.getActiveSpreadsheet();
+  const sheet = ss.getSheetByName(sheetName);
+
+  if (!sheet) {
+    Logger.log('Sheet not found: ' + sheetName);
+    return false;
+  }
+
+  const totalCols = sheet.getMaxColumns();
+  if (totalCols > expectedColumns) {
+    sheet.deleteColumns(expectedColumns + 1, totalCols - expectedColumns);
+    Logger.log('Cleaned ' + sheetName + ': removed ' + (totalCols - expectedColumns) + ' columns');
+    return true;
+  }
+
+  return false;
+}
+
+/**
+ * Populates the Config sheet with default seed values for dropdown lists
+ * Call this before seeding member or grievance data
+ */
+function populateConfigDefaults() {
+  const ss = SpreadsheetApp.getActiveSpreadsheet();
+  let configSheet = ss.getSheetByName(SHEETS.CONFIG);
+
+  if (!configSheet) {
+    configSheet = ss.insertSheet(SHEETS.CONFIG);
+  }
+
+  // Row 1: Category headers
+  const categoryHeaders = [
+    'Employment Info', '', '', '', '',           // A-E
+    'Supervision', '',                           // F-G
+    'Steward Info', '',                          // H-I
+    'Grievance Settings', '', '', '', '',        // J-N
+    'Links & Coordinators', '', '',              // O-Q
+    'Notifications', '', '',                     // R-T
+    'Organization', '', '', ''                   // U-X
+  ];
+
+  // Row 2: Column headers
+  const columnHeaders = [
+    'Job Titles', 'Office Locations', 'Units', 'Office Days', 'Yes/No',  // A-E
+    'Supervisors', 'Managers',                    // F-G
+    'Stewards', 'Committees',                     // H-I
+    'Grievance Status', 'Grievance Step', 'Issue Category', 'Articles Violated', 'Comm Methods', // J-N
+    'Coordinators', 'Grievance Form URL', 'Contact Form URL', // O-Q
+    'Admin Emails', 'Alert Days', 'Notification Recipients',  // R-T
+    'Org Name', 'Local Number', 'Main Address', 'Main Phone'  // U-X
+  ];
+
+  // Default values for each column (starting from row 3)
+  const defaultData = {
+    // A: Job Titles
+    1: ['Social Worker I', 'Social Worker II', 'Social Worker III', 'Case Manager', 'Program Coordinator', 'Administrative Assistant', 'Supervisor', 'Manager', 'Director', 'Analyst'],
+    // B: Office Locations
+    2: ['Boston Office', 'Cambridge Office', 'Springfield Office', 'Worcester Office', 'Remote'],
+    // C: Units
+    3: ['Unit 8', 'Unit 10'],
+    // D: Office Days
+    4: ['Monday-Friday', 'Mon/Wed/Fri', 'Tue/Thu', 'Flexible', 'Remote Only'],
+    // E: Yes/No
+    5: ['Yes', 'No'],
+    // F: Supervisors
+    6: ['Jane Smith', 'John Doe', 'Maria Garcia', 'Robert Johnson', 'Sarah Williams'],
+    // G: Managers
+    7: ['Michael Brown', 'Linda Davis', 'James Wilson', 'Patricia Martinez'],
+    // H: Stewards
+    8: ['Alex Steward', 'Chris Union', 'Pat Representative', 'Jordan Advocate', 'Taylor Helper'],
+    // I: Committees
+    9: ['Grievance Committee', 'Safety Committee', 'Bargaining Committee', 'Social Committee', 'Education Committee'],
+    // J: Grievance Status
+    10: ['Open', 'In Progress', 'Pending Response', 'Appealed', 'Resolved - Won', 'Resolved - Lost', 'Resolved - Settled', 'Withdrawn', 'Closed'],
+    // K: Grievance Step
+    11: ['Pre-Filing', 'Step I - Filed', 'Step I - Awaiting Decision', 'Step II - Appeal Filed', 'Step II - Awaiting Decision', 'Step III - Arbitration', 'Resolved'],
+    // L: Issue Category
+    12: ['Discipline', 'Discharge', 'Contract Violation', 'Working Conditions', 'Harassment', 'Discrimination', 'Safety', 'Scheduling', 'Pay/Benefits', 'Other'],
+    // M: Articles Violated
+    13: ['Article 12 - Discipline', 'Article 15 - Workload', 'Article 23A - Grievance Procedure', 'Article 8 - Hours of Work', 'Article 10 - Leaves', 'Article 5 - Non-Discrimination'],
+    // N: Communication Methods
+    14: ['Email', 'Phone', 'Text', 'In Person', 'Video Call']
+  };
+
+  // Set category headers (row 1)
+  if (categoryHeaders.length > 0) {
+    configSheet.getRange(1, 1, 1, categoryHeaders.length).setValues([categoryHeaders]);
+    configSheet.getRange(1, 1, 1, categoryHeaders.length)
+      .setFontWeight('bold')
+      .setBackground('#1a73e8')
+      .setFontColor('#ffffff');
+  }
+
+  // Set column headers (row 2)
+  if (columnHeaders.length > 0) {
+    configSheet.getRange(2, 1, 1, columnHeaders.length).setValues([columnHeaders]);
+    configSheet.getRange(2, 1, 1, columnHeaders.length)
+      .setFontWeight('bold')
+      .setBackground('#e8f0fe');
+  }
+
+  // Populate default values for each column
+  for (const colIndex in defaultData) {
+    const col = parseInt(colIndex);
+    const values = defaultData[col];
+    if (values && values.length > 0) {
+      const valueArray = values.map(function(v) { return [v]; });
+      configSheet.getRange(3, col, values.length, 1).setValues(valueArray);
+    }
+  }
+
+  // Freeze header rows
+  configSheet.setFrozenRows(2);
+
+  // Auto-resize columns
+  configSheet.autoResizeColumns(1, 24);
+
+  SpreadsheetApp.getUi().alert(
+    '✅ Config Defaults Populated',
+    'The Config sheet has been populated with default values for:\n\n' +
+    '• Job Titles (10 values)\n' +
+    '• Office Locations (5 values)\n' +
+    '• Units (2 values)\n' +
+    '• Supervisors (5 values)\n' +
+    '• Managers (4 values)\n' +
+    '• Stewards (5 values)\n' +
+    '• Grievance Statuses & Steps\n' +
+    '• Issue Categories & Articles\n\n' +
+    'You can now seed member and grievance data!',
+    SpreadsheetApp.getUi().ButtonSet.OK
+  );
+
+  return true;
+}
+
 
 
 // ================================================================================
@@ -51438,6 +51772,12 @@ function createStateChangeLogSheet() {
   // Freeze header
   sheet.setFrozenRows(1);
 
+  // Delete unused columns beyond the defined headers (5 columns)
+  const totalCols = sheet.getMaxColumns();
+  if (totalCols > 5) {
+    sheet.deleteColumns(6, totalCols - 5);
+  }
+
   return sheet;
 }
 
@@ -51595,2742 +51935,6 @@ function batchUpdateWorkflowState() {
     `Successfully updated: ${updated}\nErrors (invalid transitions): ${errors}`,
     ui.ButtonSet.OK
   );
-}
-
-
-
-// ================================================================================
-// MODULE: TestFramework.gs
-// Source: TestFramework.gs
-// ================================================================================
-
-/**
- * ------------------------------------------------------------------------====
- * TEST FRAMEWORK - Simple Testing Library for Google Apps Script
- * ------------------------------------------------------------------------====
- *
- * A lightweight testing framework that runs within the Apps Script environment.
- * Provides assertion methods, test runners, and reporting.
- *
- * Usage:
- *   1. Write test functions (see tests/*.test.gs)
- *   2. Run via menu: 🧪 Tests > Run All Tests
- *   3. View results in test report sheet
- *
- * ------------------------------------------------------------------------====
- */
-
-// Test results storage
-TEST_RESULTS = {
-  passed: [],
-  failed: [],
-  skipped: []
-};
-
-/**
- * Code coverage tracking
- * Tracks which functions are called during test execution
- */
-const CODE_COVERAGE = {
-  enabled: true,
-  functionsExecuted: new Set(),
-  totalFunctions: 0,
-  coveredFunctions: 0,
-  coveragePercent: 0
-};
-
-/**
- * Test function registry - maps test names to their functions
- * This is necessary because Apps Script doesn't allow dynamic function lookup via this[name]
- * Functions are resolved at runtime when the registry is accessed
- */
-function getTestFunctionRegistry() {
-  return {
-    // Code.test.gs - Formula calculation tests
-    'testFilingDeadlineCalculation': testFilingDeadlineCalculation,
-    'testStepIDeadlineCalculation': testStepIDeadlineCalculation,
-    'testStepIIAppealDeadlineCalculation': testStepIIAppealDeadlineCalculation,
-    'testDaysOpenCalculation': testDaysOpenCalculation,
-    'testDaysOpenForClosedGrievance': testDaysOpenForClosedGrievance,
-    'testNextActionDueLogic': testNextActionDueLogic,
-    'testMemberDirectoryFormulas': testMemberDirectoryFormulas,
-
-    // Code.test.gs - Data validation tests
-    'testDataValidationSetup': testDataValidationSetup,
-    'testConfigDropdownValues': testConfigDropdownValues,
-    'testMemberValidationRules': testMemberValidationRules,
-    'testGrievanceValidationRules': testGrievanceValidationRules,
-
-    // Code.test.gs - Seeding validation tests
-    'testMemberSeedingValidation': testMemberSeedingValidation,
-    'testGrievanceSeedingValidation': testGrievanceSeedingValidation,
-    'testMemberEmailFormat': testMemberEmailFormat,
-    'testMemberIDUniqueness': testMemberIDUniqueness,
-    'testGrievanceMemberLinking': testGrievanceMemberLinking,
-    'testOpenRateRange': testOpenRateRange,
-
-    // Code.test.gs - Edge case tests
-    'testEmptySheetsHandling': testEmptySheetsHandling,
-    'testFutureDateHandling': testFutureDateHandling,
-    'testPastDeadlineHandling': testPastDeadlineHandling,
-
-    // Code.test.gs - Column constant tests
-    'testMemberColsConstants': testMemberColsConstants,
-    'testGrievanceColsConstants': testGrievanceColsConstants,
-    'testConfigColsConstants': testConfigColsConstants,
-    'testInternalSchemaConstants': testInternalSchemaConstants,
-    'testSheetsConstants': testSheetsConstants,
-    'testColumnLetterConversion': testColumnLetterConversion,
-    'testColumnIndexing': testColumnIndexing,
-
-    // Code.test.gs - Input validation tests
-    'testValidateRequired': testValidateRequired,
-    'testValidateString': testValidateString,
-    'testValidatePositiveInt': testValidatePositiveInt,
-    'testValidateGrievanceId': testValidateGrievanceId,
-    'testValidateMemberId': testValidateMemberId,
-    'testValidateEmail': testValidateEmail,
-    'testValidateEnum': testValidateEnum,
-    'testSafeExecute': testSafeExecute,
-    'testGrievanceStatusValidation': testGrievanceStatusValidation,
-    'testGrievanceStepValidation': testGrievanceStepValidation,
-    'testIssueCategoryValidation': testIssueCategoryValidation,
-    'testErrorMessageContext': testErrorMessageContext,
-    'testDateValidationEdgeCases': testDateValidationEdgeCases,
-    'testArrayValidation': testArrayValidation,
-
-    // Integration.test.gs - Workflow tests
-    'testCompleteGrievanceWorkflow': testCompleteGrievanceWorkflow,
-    'testDashboardMetricsUpdate': testDashboardMetricsUpdate,
-    'testMemberGrievanceSnapshot': testMemberGrievanceSnapshot,
-    'testConfigChangesPropagateToDropdowns': testConfigChangesPropagateToDropdowns,
-    'testMultipleGrievancesSameMember': testMultipleGrievancesSameMember,
-    'testDashboardHandlesEmptyData': testDashboardHandlesEmptyData,
-    'testDashboardRefreshPerformance': testDashboardRefreshPerformance,
-    'testFormulaPerformanceWithData': testFormulaPerformanceWithData,
-    'testGrievanceUpdatesTriggersRecalculation': testGrievanceUpdatesTriggersRecalculation,
-
-    // System tests
-    'testErrorLogging': typeof testErrorLogging === 'function' ? testErrorLogging : null,
-    'testDeadlineNotifications': typeof testDeadlineNotifications === 'function' ? testDeadlineNotifications : null
-  };
-}
-
-// Lazy-initialized registry (built on first access)
-var TEST_FUNCTION_REGISTRY = null;
-function ensureTestRegistry() {
-  if (TEST_FUNCTION_REGISTRY === null) {
-    TEST_FUNCTION_REGISTRY = getTestFunctionRegistry();
-  }
-  return TEST_FUNCTION_REGISTRY;
-}
-
-/**
- * Tracks function execution for code coverage
- * @param {string} functionName - Name of function being executed
- */
-function trackCoverage(functionName) {
-  if (CODE_COVERAGE.enabled) {
-    CODE_COVERAGE.functionsExecuted.add(functionName);
-  }
-}
-
-/**
- * Gets list of all testable functions in the project
- * @returns {Array<string>} Array of function names
- */
-function getAllFunctionNames() {
-  const functionNames = [];
-
-  // Get all global functions (this won't work perfectly in Apps Script, but provides baseline)
-  try {
-    // This is a best-effort approach
-    // In production, you'd maintain a manual list or use static analysis
-    const knownModules = [
-      'CREATE_509_DASHBOARD', 'createConfigTab', 'createMemberDirectory', 'createGrievanceLog',
-      'sanitizeHTML', 'isAdmin', 'requireRole', 'logAuditEvent',
-      'getMemberList', 'archiveOldGrievances', 't', 'getUserLanguage'
-      // Add more as needed
-    ];
-
-    return knownModules;
-  } catch (error) {
-    Logger.log('Error getting function names: ' + error.message);
-    return [];
-  }
-}
-
-/**
- * Calculates code coverage statistics
- * @returns {Object} Coverage statistics
- */
-function calculateCoverage() {
-  const allFunctions = getAllFunctionNames();
-  CODE_COVERAGE.totalFunctions = allFunctions.length;
-  CODE_COVERAGE.coveredFunctions = CODE_COVERAGE.functionsExecuted.size;
-
-  if (CODE_COVERAGE.totalFunctions > 0) {
-    CODE_COVERAGE.coveragePercent =
-      (CODE_COVERAGE.coveredFunctions / CODE_COVERAGE.totalFunctions) * 100;
-  }
-
-  return {
-    total: CODE_COVERAGE.totalFunctions,
-    covered: CODE_COVERAGE.coveredFunctions,
-    percent: CODE_COVERAGE.coveragePercent.toFixed(2),
-    uncovered: allFunctions.filter(fn => !CODE_COVERAGE.functionsExecuted.has(fn))
-  };
-}
-
-/**
- * Resets code coverage tracking
- */
-function resetCoverage() {
-  CODE_COVERAGE.functionsExecuted.clear();
-  CODE_COVERAGE.totalFunctions = 0;
-  CODE_COVERAGE.coveredFunctions = 0;
-  CODE_COVERAGE.coveragePercent = 0;
-}
-
-/**
- * Assertion library
- */
-const Assert = {
-  /**
-   * Assert that two values are equal
-   */
-  assertEquals: function(expected, actual, message) {
-    if (expected !== actual) {
-      throw new Error(
-        (message || 'Assertion failed') +
-        `\nExpected: ${JSON.stringify(expected)}` +
-        `\nActual: ${JSON.stringify(actual)}`
-      );
-    }
-  },
-
-  /**
-   * Assert that value is true
-   */
-  assertTrue: function(value, message) {
-    if (value !== true) {
-      throw new Error(
-        (message || 'Expected true') +
-        `\nActual: ${JSON.stringify(value)}`
-      );
-    }
-  },
-
-  /**
-   * Assert that value is false
-   */
-  assertFalse: function(value, message) {
-    if (value !== false) {
-      throw new Error(
-        (message || 'Expected false') +
-        `\nActual: ${JSON.stringify(value)}`
-      );
-    }
-  },
-
-  /**
-   * Assert that value is not null or undefined
-   */
-  assertNotNull: function(value, message) {
-    if (value === null || value === undefined) {
-      throw new Error(message || 'Value should not be null or undefined');
-    }
-  },
-
-  /**
-   * Assert that value is null
-   */
-  assertNull: function(value, message) {
-    if (value !== null) {
-      throw new Error(
-        (message || 'Expected null') +
-        `\nActual: ${JSON.stringify(value)}`
-      );
-    }
-  },
-
-  /**
-   * Assert that array contains value
-   */
-  assertContains: function(array, value, message) {
-    if (!Array.isArray(array)) {
-      throw new Error('First argument must be an array');
-    }
-    if (array.indexOf(value) === -1) {
-      throw new Error(
-        (message || 'Array does not contain value') +
-        `\nArray: ${JSON.stringify(array)}` +
-        `\nValue: ${JSON.stringify(value)}`
-      );
-    }
-  },
-
-  /**
-   * Assert that array has specific length
-   */
-  assertArrayLength: function(array, expectedLength, message) {
-    if (!Array.isArray(array)) {
-      throw new Error('First argument must be an array');
-    }
-    if (array.length !== expectedLength) {
-      throw new Error(
-        (message || 'Array length mismatch') +
-        `\nExpected length: ${expectedLength}` +
-        `\nActual length: ${array.length}`
-      );
-    }
-  },
-
-  /**
-   * Assert that function throws an error
-   */
-  assertThrows: function(fn, message) {
-    let threw = false;
-    try {
-      fn();
-    } catch (e) {
-      threw = true;
-    }
-    if (!threw) {
-      throw new Error(message || 'Expected function to throw an error');
-    }
-  },
-
-  /**
-   * Assert that two values are approximately equal (for floating point)
-   */
-  assertApproximately: function(expected, actual, tolerance, message) {
-    tolerance = tolerance || 0.001;
-    if (Math.abs(expected - actual) > tolerance) {
-      throw new Error(
-        (message || 'Values not approximately equal') +
-        `\nExpected: ${expected}` +
-        `\nActual: ${actual}` +
-        `\nTolerance: ${tolerance}`
-      );
-    }
-  },
-
-  /**
-   * Assert that date is within range
-   */
-  assertDateEquals: function(expected, actual, message) {
-    const expectedTime = expected instanceof Date ? expected.getTime() : new Date(expected).getTime();
-    const actualTime = actual instanceof Date ? actual.getTime() : new Date(actual).getTime();
-
-    if (expectedTime !== actualTime) {
-      throw new Error(
-        (message || 'Dates not equal') +
-        `\nExpected: ${new Date(expectedTime).toISOString()}` +
-        `\nActual: ${new Date(actualTime).toISOString()}`
-      );
-    }
-  },
-
-  /**
-   * Assert that function does NOT throw an error
-   */
-  assertNotThrows: function(fn, message) {
-    try {
-      fn();
-    } catch (e) {
-      throw new Error(
-        (message || 'Expected function to not throw') +
-        `\nError thrown: ${e.message}`
-      );
-    }
-  },
-
-  /**
-   * Explicitly fail a test
-   */
-  fail: function(message) {
-    throw new Error(message || 'Test failed');
-  }
-};
-
-/**
- * Test runner - discovers and runs all test functions
- */
-function runAllTests() {
-  const ui = SpreadsheetApp.getUi();
-
-  ui.alert(
-    '🧪 Running All Tests',
-    'This will run the complete test suite. This may take 2-3 minutes.\n\n' +
-    'Results will be displayed in a new "Test Results" sheet.',
-    ui.ButtonSet.OK
-  );
-
-  SpreadsheetApp.getActive().toast('🧪 Running test suite...', 'Testing', -1);
-
-  // Clear previous results
-  TEST_RESULTS.passed = [];
-  TEST_RESULTS.failed = [];
-  TEST_RESULTS.skipped = [];
-
-  // Reset code coverage
-  resetCoverage();
-
-  const startTime = new Date();
-
-  // Discover and run all test functions
-  // Note: All tests are defined in Code.test.gs and Integration.test.gs
-  const testFunctions = [
-    // Code.test.gs - Formula calculation tests
-    'testFilingDeadlineCalculation',
-    'testStepIDeadlineCalculation',
-    'testStepIIAppealDeadlineCalculation',
-    'testDaysOpenCalculation',
-    'testDaysOpenForClosedGrievance',
-    'testNextActionDueLogic',
-    'testMemberDirectoryFormulas',
-
-    // Code.test.gs - Data validation tests
-    'testDataValidationSetup',
-    'testConfigDropdownValues',
-    'testMemberValidationRules',
-    'testGrievanceValidationRules',
-
-    // Code.test.gs - Seeding validation tests
-    'testMemberSeedingValidation',
-    'testGrievanceSeedingValidation',
-    'testMemberEmailFormat',
-    'testMemberIDUniqueness',
-    'testGrievanceMemberLinking',
-    'testOpenRateRange',
-
-    // Code.test.gs - Edge case tests
-    'testEmptySheetsHandling',
-    'testFutureDateHandling',
-    'testPastDeadlineHandling',
-
-    // Code.test.gs - Column constant tests
-    'testMemberColsConstants',
-    'testGrievanceColsConstants',
-    'testConfigColsConstants',
-    'testInternalSchemaConstants',
-    'testSheetsConstants',
-    'testColumnLetterConversion',
-    'testColumnIndexing',
-
-    // Code.test.gs - Input validation tests
-    'testValidateRequired',
-    'testValidateString',
-    'testValidatePositiveInt',
-    'testValidateGrievanceId',
-    'testValidateMemberId',
-    'testValidateEmail',
-    'testValidateEnum',
-    'testSafeExecute',
-    'testGrievanceStatusValidation',
-    'testGrievanceStepValidation',
-    'testIssueCategoryValidation',
-    'testErrorMessageContext',
-    'testDateValidationEdgeCases',
-    'testArrayValidation',
-
-    // Integration.test.gs - Workflow tests
-    'testCompleteGrievanceWorkflow',
-    'testDashboardMetricsUpdate',
-    'testMemberGrievanceSnapshot',
-    'testConfigChangesPropagateToDropdowns',
-    'testMultipleGrievancesSameMember',
-    'testDashboardHandlesEmptyData',
-    'testDashboardRefreshPerformance',
-    'testFormulaPerformanceWithData',
-    'testGrievanceUpdatesTriggersRecalculation'
-  ];
-
-  // Ensure test registry is initialized
-  ensureTestRegistry();
-
-  // Run each test using the test registry
-  testFunctions.forEach(function(testName) {
-    try {
-      // Look up function in the test registry
-      const testFn = TEST_FUNCTION_REGISTRY[testName];
-      if (typeof testFn === 'function') {
-        testFn();
-        TEST_RESULTS.passed.push({
-          name: testName,
-          time: new Date() - startTime
-        });
-      } else {
-        TEST_RESULTS.skipped.push({
-          name: testName,
-          reason: 'Function not found in TEST_FUNCTION_REGISTRY'
-        });
-      }
-    } catch (error) {
-      TEST_RESULTS.failed.push({
-        name: testName,
-        error: error.message,
-        stack: error.stack
-      });
-    }
-  });
-
-  const endTime = new Date();
-  const duration = (endTime - startTime) / 1000;
-
-  // Calculate code coverage
-  const coverage = calculateCoverage();
-
-  // Generate test report
-  generateTestReport(duration);
-
-  // Show summary
-  const total = TEST_RESULTS.passed.length + TEST_RESULTS.failed.length + TEST_RESULTS.skipped.length;
-  const passRate = ((TEST_RESULTS.passed.length / total) * 100).toFixed(1);
-
-  SpreadsheetApp.getActive().toast(
-    `✅ ${TEST_RESULTS.passed.length} passed | ❌ ${TEST_RESULTS.failed.length} failed | ⏭️ ${TEST_RESULTS.skipped.length} skipped`,
-    `Tests Complete (${passRate}% pass rate)`,
-    10
-  );
-
-  // Show detailed results dialog
-  ui.alert(
-    '🧪 Test Suite Complete',
-    `Results:\n\n` +
-    `✅ Passed: ${TEST_RESULTS.passed.length}\n` +
-    `❌ Failed: ${TEST_RESULTS.failed.length}\n` +
-    `⏭️ Skipped: ${TEST_RESULTS.skipped.length}\n\n` +
-    `Total: ${total} tests\n` +
-    `Pass Rate: ${passRate}%\n` +
-    `Duration: ${duration.toFixed(2)}s\n\n` +
-    `View detailed results in the "Test Results" sheet.`,
-    ui.ButtonSet.OK
-  );
-}
-
-/**
- * Generates a detailed test report in a new sheet
- * @param {number} [duration=0] - Test duration in seconds
- */
-function generateTestReport(duration) {
-  duration = duration || 0;
-  const ss = SpreadsheetApp.getActive();
-
-  // Create or clear Test Results sheet
-  let reportSheet = ss.getSheetByName('Test Results');
-  if (!reportSheet) {
-    reportSheet = ss.insertSheet('Test Results');
-  }
-  reportSheet.clear();
-
-  // Header
-  reportSheet.getRange('A1:F1').merge()
-    .setValue('🧪 TEST RESULTS')
-    .setFontSize(18)
-    .setFontWeight('bold')
-    .setHorizontalAlignment('center')
-    .setBackground('#4A5568')
-    .setFontColor('#FFFFFF');
-
-  // Summary
-  const total = TEST_RESULTS.passed.length + TEST_RESULTS.failed.length + TEST_RESULTS.skipped.length;
-  const passRate = ((TEST_RESULTS.passed.length / total) * 100).toFixed(1);
-
-  // Get code coverage
-  const coverage = calculateCoverage();
-
-  const summary = [
-    ['Total Tests', total],
-    ['✅ Passed', TEST_RESULTS.passed.length],
-    ['❌ Failed', TEST_RESULTS.failed.length],
-    ['⏭️ Skipped', TEST_RESULTS.skipped.length],
-    ['Pass Rate', `${passRate}%`],
-    ['Duration', `${duration.toFixed(2)}s`],
-    ['📊 Code Coverage', `${coverage.percent}%`],
-    ['Functions Covered', `${coverage.covered}/${coverage.total}`],
-    ['Timestamp', new Date().toLocaleString()]
-  ];
-
-  reportSheet.getRange(3, 1, summary.length, 2).setValues(summary);
-  reportSheet.getRange(3, 1, summary.length, 1).setFontWeight('bold');
-
-  let currentRow = 3 + summary.length + 2;
-
-  // Passed tests
-  if (TEST_RESULTS.passed.length > 0) {
-    reportSheet.getRange(currentRow, 1, 1, 3).merge()
-      .setValue('✅ PASSED TESTS')
-      .setFontWeight('bold')
-      .setBackground('#D1FAE5')
-      .setFontColor('#065F46');
-
-    currentRow++;
-    reportSheet.getRange(currentRow, 1, 1, 3).setValues([['Test Name', 'Status', 'Duration (ms)']])
-      .setFontWeight('bold')
-      .setBackground('#F3F4F6');
-
-    currentRow++;
-    TEST_RESULTS.passed.forEach(function(test) {
-      reportSheet.getRange(currentRow, 1, 1, 3).setValues([[test.name, '✅ PASS', test.time]]);
-      currentRow++;
-    });
-    currentRow += 2;
-  }
-
-  // Failed tests
-  if (TEST_RESULTS.failed.length > 0) {
-    reportSheet.getRange(currentRow, 1, 1, 4).merge()
-      .setValue('❌ FAILED TESTS')
-      .setFontWeight('bold')
-      .setBackground('#FEE2E2')
-      .setFontColor('#991B1B');
-
-    currentRow++;
-    reportSheet.getRange(currentRow, 1, 1, 4).setValues([['Test Name', 'Status', 'Error', 'Stack Trace']])
-      .setFontWeight('bold')
-      .setBackground('#F3F4F6');
-
-    currentRow++;
-    TEST_RESULTS.failed.forEach(function(test) {
-      reportSheet.getRange(currentRow, 1, 1, 4).setValues([[
-        test.name,
-        '❌ FAIL',
-        test.error,
-        test.stack || 'N/A'
-      ]]);
-      reportSheet.getRange(currentRow, 3).setWrap(true);
-      currentRow++;
-    });
-    currentRow += 2;
-  }
-
-  // Skipped tests
-  if (TEST_RESULTS.skipped.length > 0) {
-    reportSheet.getRange(currentRow, 1, 1, 3).merge()
-      .setValue('⏭️ SKIPPED TESTS')
-      .setFontWeight('bold')
-      .setBackground('#FEF3C7')
-      .setFontColor('#92400E');
-
-    currentRow++;
-    reportSheet.getRange(currentRow, 1, 1, 3).setValues([['Test Name', 'Status', 'Reason']])
-      .setFontWeight('bold')
-      .setBackground('#F3F4F6');
-
-    currentRow++;
-    TEST_RESULTS.skipped.forEach(function(test) {
-      reportSheet.getRange(currentRow, 1, 1, 3).setValues([[test.name, '⏭️ SKIP', test.reason]]);
-      currentRow++;
-    });
-  }
-
-  // Auto-resize columns
-  reportSheet.autoResizeColumns(1, 4);
-  reportSheet.setColumnWidth(3, 400);
-  reportSheet.setColumnWidth(4, 300);
-
-  reportSheet.setTabColor('#7C3AED');
-  reportSheet.activate();
-}
-
-/**
- * Run a single test by name
- */
-function runSingleTest(testName) {
-  try {
-    const testFn = this[testName];
-    if (typeof testFn !== 'function') {
-      throw new Error(`Test function '${testName}' not found`);
-    }
-
-    testFn();
-    Logger.log(`✅ ${testName} PASSED`);
-    return true;
-  } catch (error) {
-    Logger.log(`❌ ${testName} FAILED: ${error.message}`);
-    Logger.log(error.stack);
-    return false;
-  }
-}
-
-/**
- * Test helper: Create a test member in Member Directory
- * NOTE: Dropdown fields (Job Title, Location, Unit, Supervisor, Manager, Steward) are left empty
- * because Config tab no longer has sample data (v3.11+). Tests should populate Config first
- * or use empty values to avoid data validation errors.
- */
-function createTestMember(memberId) {
-  const ss = SpreadsheetApp.getActive();
-  const memberDir = ss.getSheetByName(SHEETS.MEMBER_DIR);
-
-  // Dropdown fields are left empty to avoid validation errors (Config has no sample data)
-  const testMemberData = [
-    memberId || 'TEST-M001',
-    'Test',
-    'Member',
-    '',  // Job Title - empty (user populates Config)
-    '',  // Work Location - empty (user populates Config)
-    '',  // Unit - empty (user populates Config)
-    'Monday',
-    'test.member@union.org',
-    '(555) 123-4567',
-    'No',
-    '',  // Supervisor - empty (user populates Config)
-    '',  // Manager - empty (user populates Config)
-    '',  // Steward - empty (user populates Config)
-    new Date(),
-    new Date(),
-    new Date(),
-    new Date(),
-    85,
-    10,
-    'Yes',
-    'Yes',
-    'No',
-    new Date(),
-    'Email',
-    'Mornings',
-    'No',
-    '',
-    '',
-    '',
-    '',
-    ''
-  ];
-
-  memberDir.getRange(memberDir.getLastRow() + 1, 1, 1, testMemberData.length).setValues([testMemberData]);
-  return memberId || 'TEST-M001';
-}
-
-/**
- * Test helper: Clean up test data
- */
-function cleanupTestData() {
-  const ss = SpreadsheetApp.getActive();
-  const memberDir = ss.getSheetByName(SHEETS.MEMBER_DIR);
-  const grievanceLog = ss.getSheetByName(SHEETS.GRIEVANCE_LOG);
-
-  // Remove all rows starting with "TEST-"
-  const memberData = memberDir.getRange(2, 1, memberDir.getLastRow() - 1, 1).getValues();
-  for (let i = memberData.length - 1; i >= 0; i--) {
-    if (String(memberData[i][0]).startsWith('TEST-')) {
-      memberDir.deleteRow(i + 2);
-    }
-  }
-
-  const grievanceData = grievanceLog.getRange(2, 1, grievanceLog.getLastRow() - 1, 1).getValues();
-  for (let i = grievanceData.length - 1; i >= 0; i--) {
-    if (String(grievanceData[i][0]).startsWith('TEST-')) {
-      grievanceLog.deleteRow(i + 2);
-    }
-  }
-}
-
-/* --------------------= TEST CATEGORY RUNNERS --------------------= */
-
-/**
- * Shows test results in a dialog
- */
-function showTestResults() {
-  const ss = SpreadsheetApp.getActiveSpreadsheet();
-  const reportSheet = ss.getSheetByName('Test Results');
-
-  if (!reportSheet) {
-    SpreadsheetApp.getUi().alert(
-      'No Test Results',
-      'No test results found. Run some tests first using the Testing menu.',
-      SpreadsheetApp.getUi().ButtonSet.OK
-    );
-    return;
-  }
-
-  reportSheet.activate();
-  SpreadsheetApp.getActiveSpreadsheet().toast('Showing test results', 'Test Results', 3);
-}
-
-/**
- * Run all unit tests
- */
-function runUnitTests() {
-  SpreadsheetApp.getActiveSpreadsheet().toast('Running unit tests...', 'Tests', -1);
-
-  const unitTests = [
-    'testFilingDeadlineCalculation',
-    'testStepIDeadlineCalculation',
-    'testStepIIAppealDeadlineCalculation',
-    'testDaysOpenCalculation',
-    'testDaysOpenForClosedGrievance',
-    'testNextActionDueLogic',
-    'testMemberDirectoryFormulas',
-    'testOpenRateRange',
-    'testEmptySheetsHandling',
-    'testFutureDateHandling',
-    'testPastDeadlineHandling'
-  ];
-
-  runTestCategory('Unit Tests', unitTests);
-}
-
-/**
- * Run all validation tests
- */
-function runValidationTests() {
-  SpreadsheetApp.getActiveSpreadsheet().toast('Running validation tests...', 'Tests', -1);
-
-  const validationTests = [
-    'testDataValidationSetup',
-    'testConfigDropdownValues',
-    'testMemberValidationRules',
-    'testGrievanceValidationRules',
-    'testMemberSeedingValidation',
-    'testGrievanceSeedingValidation',
-    'testMemberEmailFormat',
-    'testMemberIDUniqueness',
-    'testGrievanceMemberLinking'
-  ];
-
-  runTestCategory('Validation Tests', validationTests);
-}
-
-/**
- * Run all integration tests
- */
-function runIntegrationTests() {
-  SpreadsheetApp.getActiveSpreadsheet().toast('Running integration tests...', 'Tests', -1);
-
-  const integrationTests = [
-    'testCompleteGrievanceWorkflow',
-    'testDashboardMetricsUpdate',
-    'testMemberGrievanceSnapshot',
-    'testConfigChangesPropagateToDropdowns',
-    'testMultipleGrievancesSameMember',
-    'testDashboardHandlesEmptyData',
-    'testGrievanceUpdatesTriggersRecalculation'
-  ];
-
-  runTestCategory('Integration Tests', integrationTests);
-}
-
-/**
- * Run all performance tests
- */
-function runPerformanceTests() {
-  SpreadsheetApp.getActiveSpreadsheet().toast('Running performance tests...', 'Tests', -1);
-
-  const performanceTests = [
-    'testDashboardRefreshPerformance',
-    'testFormulaPerformanceWithData'
-  ];
-
-  runTestCategory('Performance Tests', performanceTests);
-}
-
-/**
- * Run a category of tests
- * @param {string} categoryName - Name of the test category
- * @param {string[]} testNames - Array of test function names
- */
-function runTestCategory(categoryName, testNames) {
-  // Reset results
-  TEST_RESULTS.passed = [];
-  TEST_RESULTS.failed = [];
-  TEST_RESULTS.skipped = [];
-
-  let passed = 0;
-  let failed = 0;
-  let skipped = 0;
-
-  const startTime = new Date();
-
-  // Ensure test registry is initialized
-  ensureTestRegistry();
-
-  testNames.forEach(function(testName) {
-    try {
-      // Look up function in the test registry
-      const testFn = TEST_FUNCTION_REGISTRY[testName];
-      if (typeof testFn !== 'function') {
-        TEST_RESULTS.skipped.push({ name: testName, reason: 'Function not found in TEST_FUNCTION_REGISTRY' });
-        skipped++;
-        return;
-      }
-
-      testFn();
-      TEST_RESULTS.passed.push({ name: testName, time: new Date() - startTime });
-      passed++;
-    } catch (error) {
-      TEST_RESULTS.failed.push({
-        name: testName,
-        error: error.message,
-        stack: error.stack
-      });
-      failed++;
-    }
-  });
-
-  const endTime = new Date();
-  const duration = (endTime - startTime) / 1000;
-
-  // Generate report
-  generateTestReport(duration);
-
-  // Show summary
-  const total = passed + failed + skipped;
-  SpreadsheetApp.getUi().alert(
-    categoryName + ' Complete',
-    `Results:\n✅ Passed: ${passed}/${total}\n❌ Failed: ${failed}/${total}\n⏭️ Skipped: ${skipped}/${total}\n\nDuration: ${duration.toFixed(2)}s\n\nView the Test Results sheet for details.`,
-    SpreadsheetApp.getUi().ButtonSet.OK
-  );
-}
-
-
-
-// ================================================================================
-// MODULE: Code.test.gs
-// Source: Code.test.gs
-// ================================================================================
-
-/**
- * ------------------------------------------------------------------------====
- * UNIT TESTS FOR CODE.GS
- * ------------------------------------------------------------------------====
- *
- * Tests for core functionality:
- * - Formula calculations (deadlines, days open, etc.)
- * - Data validation setup
- * - Seeding functions
- * - Helper functions
- *
- * ------------------------------------------------------------------------====
- */
-
-/* --------------------= FORMULA CALCULATION TESTS --------------------= */
-
-/**
- * Test: Filing Deadline = Incident Date + 21 days
- */
-function testFilingDeadlineCalculation() {
-  const incidentDate = new Date(2025, 0, 1); // Jan 1, 2025
-  const expectedDeadline = new Date(2025, 0, 22); // Jan 22, 2025
-
-  // Calculate deadline (Incident + 21 days)
-  const actualDeadline = new Date(incidentDate.getTime() + 21 * 24 * 60 * 60 * 1000);
-
-  Assert.assertDateEquals(
-    expectedDeadline,
-    actualDeadline,
-    'Filing deadline should be 21 days after incident date'
-  );
-
-  Logger.log('✅ Filing deadline calculation test passed');
-}
-
-/**
- * Test: Step I Decision Due = Date Filed + 30 days
- */
-function testStepIDeadlineCalculation() {
-  const dateFiled = new Date(2025, 0, 15); // Jan 15, 2025
-  const expectedDeadline = new Date(2025, 1, 14); // Feb 14, 2025
-
-  // Calculate deadline (Filed + 30 days)
-  const actualDeadline = new Date(dateFiled.getTime() + 30 * 24 * 60 * 60 * 1000);
-
-  Assert.assertDateEquals(
-    expectedDeadline,
-    actualDeadline,
-    'Step I decision should be due 30 days after filing'
-  );
-
-  Logger.log('✅ Step I deadline calculation test passed');
-}
-
-/**
- * Test: Step II Appeal Due = Step I Decision Received + 10 days
- */
-function testStepIIAppealDeadlineCalculation() {
-  const stepIDecisionDate = new Date(2025, 1, 14); // Feb 14, 2025
-  const expectedDeadline = new Date(2025, 1, 24); // Feb 24, 2025
-
-  // Calculate deadline (Decision + 10 days)
-  const actualDeadline = new Date(stepIDecisionDate.getTime() + 10 * 24 * 60 * 60 * 1000);
-
-  Assert.assertDateEquals(
-    expectedDeadline,
-    actualDeadline,
-    'Step II appeal should be due 10 days after Step I decision'
-  );
-
-  Logger.log('✅ Step II appeal deadline calculation test passed');
-}
-
-/**
- * Test: Days Open calculation for active grievance
- */
-function testDaysOpenCalculation() {
-  const dateFiled = new Date(2025, 0, 1); // Jan 1, 2025
-  const today = new Date(2025, 0, 31); // Jan 31, 2025
-
-  const expectedDaysOpen = 30;
-  const actualDaysOpen = Math.floor((today - dateFiled) / (24 * 60 * 60 * 1000));
-
-  Assert.assertEquals(
-    expectedDaysOpen,
-    actualDaysOpen,
-    'Days open should be 30 for a grievance filed 30 days ago'
-  );
-
-  Logger.log('✅ Days open calculation test passed');
-}
-
-/**
- * Test: Days Open calculation for closed grievance
- */
-function testDaysOpenForClosedGrievance() {
-  const dateFiled = new Date(2025, 0, 1); // Jan 1, 2025
-  const dateClosed = new Date(2025, 0, 31); // Jan 31, 2025
-
-  const expectedDaysOpen = 30;
-  const actualDaysOpen = Math.floor((dateClosed - dateFiled) / (24 * 60 * 60 * 1000));
-
-  Assert.assertEquals(
-    expectedDaysOpen,
-    actualDaysOpen,
-    'Days open should use close date for closed grievances'
-  );
-
-  Logger.log('✅ Closed grievance days open calculation test passed');
-}
-
-/**
- * Test: Next Action Due logic based on current step
- */
-function testNextActionDueLogic() {
-  // Test data structure mimicking Grievance Log row
-  const testCases = [
-    {
-      status: 'Open',
-      step: 'Step I',
-      stepIDeadline: new Date(2025, 1, 14),
-      stepIIDeadline: new Date(2025, 1, 24),
-      stepIIIDeadline: new Date(2025, 2, 26),
-      filingDeadline: new Date(2025, 0, 22),
-      expected: new Date(2025, 1, 14) // Should use Step I deadline
-    },
-    {
-      status: 'Open',
-      step: 'Step II',
-      stepIDeadline: new Date(2025, 1, 14),
-      stepIIDeadline: new Date(2025, 1, 24),
-      stepIIIDeadline: new Date(2025, 2, 26),
-      filingDeadline: new Date(2025, 0, 22),
-      expected: new Date(2025, 1, 24) // Should use Step II deadline
-    },
-    {
-      status: 'Open',
-      step: 'Step III',
-      stepIDeadline: new Date(2025, 1, 14),
-      stepIIDeadline: new Date(2025, 1, 24),
-      stepIIIDeadline: new Date(2025, 2, 26),
-      filingDeadline: new Date(2025, 0, 22),
-      expected: new Date(2025, 2, 26) // Should use Step III deadline
-    },
-    {
-      status: 'Open',
-      step: 'Informal',
-      stepIDeadline: new Date(2025, 1, 14),
-      stepIIDeadline: new Date(2025, 1, 24),
-      stepIIIDeadline: new Date(2025, 2, 26),
-      filingDeadline: new Date(2025, 0, 22),
-      expected: new Date(2025, 0, 22) // Should use filing deadline
-    }
-  ];
-
-  testCases.forEach(function(testCase, index) {
-    let nextAction;
-    if (testCase.status === 'Open') {
-      if (testCase.step === 'Step I') {
-        nextAction = testCase.stepIDeadline;
-      } else if (testCase.step === 'Step II') {
-        nextAction = testCase.stepIIDeadline;
-      } else if (testCase.step === 'Step III') {
-        nextAction = testCase.stepIIIDeadline;
-      } else {
-        nextAction = testCase.filingDeadline;
-      }
-    }
-
-    Assert.assertDateEquals(
-      testCase.expected,
-      nextAction,
-      `Test case ${index + 1}: Next action should match expected deadline for ${testCase.step}`
-    );
-  });
-
-  Logger.log('✅ Next action due logic test passed');
-}
-
-/**
- * Test: Member Directory formulas
- */
-function testMemberDirectoryFormulas() {
-  // Create test setup
-  const testMemberId = createTestMember('TEST-M-FORMULA-001');
-
-  try {
-    const ss = SpreadsheetApp.getActive();
-    const memberDir = ss.getSheetByName(SHEETS.MEMBER_DIR);
-    const grievanceLog = ss.getSheetByName(SHEETS.GRIEVANCE_LOG);
-
-    // Create a test grievance for this member
-    // NOTE: Unit, Location, and Steward are left empty to avoid data validation errors
-    // (Config tab no longer has sample data as of v3.11+)
-    const testGrievanceData = [
-      'TEST-G-001',
-      testMemberId,
-      'Test',
-      'Member',
-      'Open',
-      'Step I',
-      new Date(2025, 0, 1),
-      '',
-      new Date(2025, 0, 10),
-      '',
-      '',
-      '',
-      '',
-      '',
-      '',
-      '',
-      '',
-      '',
-      '',
-      '',
-      '',
-      'Art. 23 - Grievance Procedure',
-      'Discipline',
-      'test.member@union.org',
-      '',  // Unit - empty (user populates Config)
-      '',  // Location - empty (user populates Config)
-      '',  // Steward - empty (user populates Config)
-      ''
-    ];
-
-    grievanceLog.getRange(grievanceLog.getLastRow() + 1, 1, 1, testGrievanceData.length)
-      .setValues([testGrievanceData]);
-
-    // Force recalculation
-    SpreadsheetApp.flush();
-    Utilities.sleep(2000); // Wait for formulas to recalculate
-
-    // Find the test member row
-    const memberData = memberDir.getRange(2, 1, memberDir.getLastRow() - 1, 31).getValues();
-    const testMemberRow = memberData.findIndex(function(row) { return row[0] === testMemberId; });
-
-    Assert.assertTrue(
-      testMemberRow >= 0,
-      'Test member should exist in Member Directory'
-    );
-
-    // Check "Has Open Grievance?" - using MEMBER_COLS constant (column AB = 28, index 27)
-    const hasOpenGrievance = memberData[testMemberRow][MEMBER_COLS.HAS_OPEN_GRIEVANCE - 1];
-    Assert.assertTrue(
-      hasOpenGrievance === 'Yes' || hasOpenGrievance === true,
-      'Member with open grievance should show "Yes" in Has Open Grievance column'
-    );
-
-    // Check "Grievance Status Snapshot" - using MEMBER_COLS constant (column AC = 29, index 28)
-    const statusSnapshot = memberData[testMemberRow][MEMBER_COLS.GRIEVANCE_STATUS - 1];
-    Assert.assertEquals(
-      'Open',
-      statusSnapshot,
-      'Grievance status snapshot should match grievance status'
-    );
-
-    Logger.log('✅ Member Directory formulas test passed');
-
-  } finally {
-    cleanupTestData();
-  }
-}
-
-/* --------------------= DATA VALIDATION TESTS --------------------= */
-
-/**
- * Test: Data validation setup creates proper rules
- */
-function testDataValidationSetup() {
-  const ss = SpreadsheetApp.getActive();
-  const memberDir = ss.getSheetByName(SHEETS.MEMBER_DIR);
-  const config = ss.getSheetByName(SHEETS.CONFIG);
-
-  // Check that validation exists for Job Title column
-  const jobTitleCell = memberDir.getRange(2, MEMBER_COLS.JOB_TITLE);
-  const validation = jobTitleCell.getDataValidation();
-
-  Assert.assertNotNull(
-    validation,
-    'Job Title column should have data validation'
-  );
-
-  Logger.log('✅ Data validation setup test passed');
-}
-
-/**
- * Test: Config dropdown values are properly defined
- * NOTE: As of v3.11, Job Titles, Office Locations, Units, Supervisors, Managers, Stewards,
- * Grievance Coordinators, and Home Towns are NO LONGER pre-populated. Users populate these.
- * Only system-required values (Grievance Status, Step, Issue Categories, etc.) are pre-populated.
- */
-function testConfigDropdownValues() {
-  const ss = SpreadsheetApp.getActive();
-  const config = ss.getSheetByName(SHEETS.CONFIG);
-
-  // Test Job Titles column exists and is readable (but may be empty - user populates)
-  const jobTitlesCol = getColumnLetter(CONFIG_COLS.JOB_TITLES);
-  const jobTitlesRange = config.getRange(jobTitlesCol + '3:' + jobTitlesCol + '14');
-  Assert.assertNotNull(
-    jobTitlesRange,
-    'Job Titles column should be readable'
-  );
-  // Note: Job Titles are user-populated (v3.11+), so we don't assert specific values
-
-  // Test Office Locations column exists and is readable (but may be empty - user populates)
-  const locationsCol = getColumnLetter(CONFIG_COLS.OFFICE_LOCATIONS);
-  const locationsRange = config.getRange(locationsCol + '3:' + locationsCol + '14');
-  Assert.assertNotNull(
-    locationsRange,
-    'Office Locations column should be readable'
-  );
-  // Note: Office Locations are user-populated (v3.11+), so we don't assert specific values
-
-  // Test Grievance Status using CONFIG_COLS constant (col J = 10)
-  // This IS pre-populated by the system and should contain values
-  const statusCol = getColumnLetter(CONFIG_COLS.GRIEVANCE_STATUS);
-  const statuses = config.getRange(statusCol + '3:' + statusCol + '10').getValues().flat().filter(String);
-  Assert.assertTrue(
-    statuses.length > 0,
-    'Config should have grievance statuses defined'
-  );
-  Assert.assertContains(
-    statuses,
-    'Open',
-    'Config should contain Open status'
-  );
-
-  Logger.log('✅ Config dropdown values test passed');
-}
-
-/**
- * Test: Member validation rules reference correct Config columns
- */
-function testMemberValidationRules() {
-  const ss = SpreadsheetApp.getActive();
-  const memberDir = ss.getSheetByName(SHEETS.MEMBER_DIR);
-
-  // Check critical validations exist - using MEMBER_COLS constants
-  const columnsToCheck = [
-    { col: MEMBER_COLS.JOB_TITLE, name: 'Job Title' },        // Column D (4)
-    { col: MEMBER_COLS.WORK_LOCATION, name: 'Work Location' }, // Column E (5)
-    { col: MEMBER_COLS.UNIT, name: 'Unit' },                   // Column F (6)
-    { col: MEMBER_COLS.IS_STEWARD, name: 'Is Steward' }        // Column N (14)
-  ];
-
-  columnsToCheck.forEach(function(item) {
-    const cell = memberDir.getRange(2, item.col);
-    const validation = cell.getDataValidation();
-
-    Assert.assertNotNull(
-      validation,
-      `${item.name} (column ${item.col}) should have data validation`
-    );
-  });
-
-  Logger.log('✅ Member validation rules test passed');
-}
-
-/**
- * Test: Grievance validation rules reference correct Config columns
- */
-function testGrievanceValidationRules() {
-  const ss = SpreadsheetApp.getActive();
-  const grievanceLog = ss.getSheetByName(SHEETS.GRIEVANCE_LOG);
-
-  // Check critical validations exist - using GRIEVANCE_COLS constants
-  const columnsToCheck = [
-    { col: GRIEVANCE_COLS.STATUS, name: 'Status' },             // Column E (5)
-    { col: GRIEVANCE_COLS.CURRENT_STEP, name: 'Current Step' }, // Column F (6)
-    { col: GRIEVANCE_COLS.ISSUE_CATEGORY, name: 'Issue Category' }, // Column W (23)
-    { col: GRIEVANCE_COLS.ARTICLES, name: 'Articles Violated' }  // Column V (22)
-  ];
-
-  columnsToCheck.forEach(function(item) {
-    const cell = grievanceLog.getRange(2, item.col);
-    const validation = cell.getDataValidation();
-
-    Assert.assertNotNull(
-      validation,
-      `${item.name} (column ${item.col}) should have data validation`
-    );
-  });
-
-  Logger.log('✅ Grievance validation rules test passed');
-}
-
-/* --------------------= SEEDING FUNCTION TESTS --------------------= */
-
-/**
- * Test: Member seeding generates valid data
- */
-function testMemberSeedingValidation() {
-  // This test validates the data structure, not actual seeding
-  // (to avoid creating 20k test records)
-
-  const firstNames = ["James", "Mary", "John"];
-  const lastNames = ["Smith", "Johnson", "Williams"];
-
-  // Simulate member generation
-  const testMember = {
-    memberId: "M" + String(1).padStart(6, '0'),
-    firstName: firstNames[0],
-    lastName: lastNames[0],
-    email: `${firstNames[0].toLowerCase()}.${lastNames[0].toLowerCase()}1@union.org`,
-    phone: `(555) 123-4567`,
-    openRate: 75
-  };
-
-  // Validate structure
-  Assert.assertTrue(
-    testMember.memberId.startsWith('M'),
-    'Member ID should start with M'
-  );
-
-  Assert.assertEquals(
-    7,
-    testMember.memberId.length,
-    'Member ID should be 7 characters (M + 6 digits)'
-  );
-
-  Assert.assertTrue(
-    testMember.email.includes('@union.org'),
-    'Email should end with @union.org'
-  );
-
-  Assert.assertTrue(
-    testMember.openRate >= 0 && testMember.openRate <= 100,
-    'Open rate should be between 0-100'
-  );
-
-  Logger.log('✅ Member seeding validation test passed');
-}
-
-/**
- * Test: Grievance seeding generates valid data
- */
-function testGrievanceSeedingValidation() {
-  // Simulate grievance generation
-  const testGrievance = {
-    grievanceId: "G-" + String(1).padStart(6, '0'),
-    memberId: "M000001",
-    status: "Open",
-    step: "Step I",
-    incidentDate: new Date(2025, 0, 1),
-    dateFiled: new Date(2025, 0, 10)
-  };
-
-  // Validate structure
-  Assert.assertTrue(
-    testGrievance.grievanceId.startsWith('G-'),
-    'Grievance ID should start with G-'
-  );
-
-  Assert.assertEquals(
-    8,
-    testGrievance.grievanceId.length,
-    'Grievance ID should be 8 characters (G- + 6 digits)'
-  );
-
-  Assert.assertTrue(
-    testGrievance.dateFiled >= testGrievance.incidentDate,
-    'Date filed should be after incident date'
-  );
-
-  Logger.log('✅ Grievance seeding validation test passed');
-}
-
-/**
- * Test: Member email format is valid
- */
-function testMemberEmailFormat() {
-  const testEmails = [
-    'john.smith123@union.org',
-    'mary.jones456@union.org',
-    'robert.wilson789@union.org'
-  ];
-
-  const emailRegex = /^[a-z]+\.[a-z]+\d+@union\.org$/;
-
-  testEmails.forEach(function(email) {
-    Assert.assertTrue(
-      emailRegex.test(email),
-      `Email ${email} should match format firstname.lastnameNNN@union.org`
-    );
-  });
-
-  Logger.log('✅ Member email format test passed');
-}
-
-/**
- * Test: Member IDs are unique
- */
-function testMemberIDUniqueness() {
-  const memberIds = new Set();
-
-  // Simulate generating 100 member IDs
-  for (let i = 1; i <= 100; i++) {
-    const memberId = "M" + String(i).padStart(6, '0');
-    Assert.assertFalse(
-      memberIds.has(memberId),
-      `Member ID ${memberId} should be unique`
-    );
-    memberIds.add(memberId);
-  }
-
-  Assert.assertEquals(
-    100,
-    memberIds.size,
-    'Should have 100 unique member IDs'
-  );
-
-  Logger.log('✅ Member ID uniqueness test passed');
-}
-
-/**
- * Test: Grievances link to valid members
- */
-function testGrievanceMemberLinking() {
-  const testMemberId = createTestMember('TEST-M-LINK-001');
-
-  try {
-    const ss = SpreadsheetApp.getActive();
-    const grievanceLog = ss.getSheetByName(SHEETS.GRIEVANCE_LOG);
-
-    // Create test grievance
-    // NOTE: Unit, Location, and Steward are left empty to avoid data validation errors
-    // (Config tab no longer has sample data as of v3.11+)
-    const testGrievanceData = [
-      'TEST-G-LINK-001',
-      testMemberId, // Valid member ID
-      'Test',
-      'Member',
-      'Open',
-      'Step I',
-      new Date(),
-      '',
-      new Date(),
-      '',
-      '',
-      '',
-      '',
-      '',
-      '',
-      '',
-      '',
-      '',
-      '',
-      '',
-      '',
-      'Art. 23 - Grievance Procedure',
-      'Discipline',
-      'test.member@union.org',
-      '',  // Unit - empty (user populates Config)
-      '',  // Location - empty (user populates Config)
-      '',  // Steward - empty (user populates Config)
-      ''
-    ];
-
-    grievanceLog.getRange(grievanceLog.getLastRow() + 1, 1, 1, testGrievanceData.length)
-      .setValues([testGrievanceData]);
-
-    // Verify it was created
-    const grievanceData = grievanceLog.getRange(2, 1, grievanceLog.getLastRow() - 1, 2).getValues();
-    const testGrievance = grievanceData.find(function(row) { return row[0] === 'TEST-G-LINK-001'; });
-
-    Assert.assertNotNull(
-      testGrievance,
-      'Test grievance should exist'
-    );
-
-    Assert.assertEquals(
-      testMemberId,
-      testGrievance[1],
-      'Grievance should link to correct member ID'
-    );
-
-    Logger.log('✅ Grievance-member linking test passed');
-
-  } finally {
-    cleanupTestData();
-  }
-}
-
-/**
- * Test: Open Rate is within valid range
- */
-function testOpenRateRange() {
-  // Simulate 50 random open rates
-  for (let i = 0; i < 50; i++) {
-    const openRate = Math.floor(Math.random() * 40) + 60; // 60-100 range
-
-    Assert.assertTrue(
-      openRate >= 0 && openRate <= 100,
-      `Open rate ${openRate} should be between 0-100`
-    );
-
-    Assert.assertTrue(
-      openRate >= 60,
-      `Open rate ${openRate} should be at least 60 (as per seeding logic)`
-    );
-  }
-
-  Logger.log('✅ Open rate range test passed');
-}
-
-/* --------------------= EDGE CASE TESTS --------------------= */
-
-/**
- * Test: Empty sheets don't break formulas
- */
-function testEmptySheetsHandling() {
-  const ss = SpreadsheetApp.getActive();
-  const dashboard = ss.getSheetByName(SHEETS.DASHBOARD);
-
-  // Dashboard should handle empty data gracefully
-  // (formulas should return 0 or empty, not #DIV/0! or #REF!)
-
-  Assert.assertNotNull(
-    dashboard,
-    'Dashboard sheet should exist'
-  );
-
-  Logger.log('✅ Empty sheets handling test passed');
-}
-
-/**
- * Test: Future dates are handled correctly
- */
-function testFutureDateHandling() {
-  const today = new Date();
-  const futureDate = new Date(today.getTime() + 30 * 24 * 60 * 60 * 1000);
-
-  // Days to deadline should be positive for future dates
-  const daysToDeadline = Math.floor((futureDate - today) / (24 * 60 * 60 * 1000));
-
-  Assert.assertTrue(
-    daysToDeadline > 0,
-    'Days to deadline should be positive for future dates'
-  );
-
-  Assert.assertApproximately(
-    30,
-    daysToDeadline,
-    1,
-    'Days to deadline should be approximately 30'
-  );
-
-  Logger.log('✅ Future date handling test passed');
-}
-
-/**
- * Test: Past deadlines show negative days
- */
-function testPastDeadlineHandling() {
-  const today = new Date();
-  const pastDate = new Date(today.getTime() - 5 * 24 * 60 * 60 * 1000);
-
-  // Days to deadline should be negative for past dates
-  const daysToDeadline = Math.floor((pastDate - today) / (24 * 60 * 60 * 1000));
-
-  Assert.assertTrue(
-    daysToDeadline < 0,
-    'Days to deadline should be negative for overdue deadlines'
-  );
-
-  Assert.assertApproximately(
-    -5,
-    daysToDeadline,
-    1,
-    'Days to deadline should be approximately -5 for 5 days overdue'
-  );
-
-  Logger.log('✅ Past deadline handling test passed');
-}
-
-/* --------------------= COLUMN CONSTANTS TESTS --------------------= */
-
-/**
- * Test: MEMBER_COLS constants are properly defined
- */
-function testMemberColsConstants() {
-  // Verify all required columns exist
-  const requiredCols = [
-    'MEMBER_ID', 'FIRST_NAME', 'LAST_NAME', 'JOB_TITLE', 'WORK_LOCATION',
-    'UNIT', 'OFFICE_DAYS', 'EMAIL', 'PHONE', 'IS_STEWARD', 'COMMITTEES',
-    'SUPERVISOR', 'MANAGER', 'ASSIGNED_STEWARD', 'HAS_OPEN_GRIEVANCE',
-    'GRIEVANCE_STATUS', 'NEXT_DEADLINE'
-  ];
-
-  requiredCols.forEach(function(col) {
-    Assert.assertTrue(
-      typeof MEMBER_COLS[col] === 'number',
-      `MEMBER_COLS.${col} should be defined as a number`
-    );
-    Assert.assertTrue(
-      MEMBER_COLS[col] >= 1,
-      `MEMBER_COLS.${col} should be >= 1 (1-indexed)`
-    );
-  });
-
-  // Verify column ordering (first columns should be in expected order)
-  Assert.assertEquals(1, MEMBER_COLS.MEMBER_ID, 'MEMBER_ID should be column 1');
-  Assert.assertEquals(2, MEMBER_COLS.FIRST_NAME, 'FIRST_NAME should be column 2');
-  Assert.assertEquals(3, MEMBER_COLS.LAST_NAME, 'LAST_NAME should be column 3');
-  Assert.assertEquals(8, MEMBER_COLS.EMAIL, 'EMAIL should be column 8');
-  Assert.assertEquals(9, MEMBER_COLS.PHONE, 'PHONE should be column 9');
-
-  Logger.log('✅ MEMBER_COLS constants test passed');
-}
-
-/**
- * Test: GRIEVANCE_COLS constants are properly defined
- */
-function testGrievanceColsConstants() {
-  // Verify all required columns exist
-  const requiredCols = [
-    'GRIEVANCE_ID', 'MEMBER_ID', 'FIRST_NAME', 'LAST_NAME', 'STATUS',
-    'CURRENT_STEP', 'INCIDENT_DATE', 'FILING_DEADLINE', 'DATE_FILED',
-    'DATE_CLOSED', 'DAYS_OPEN', 'NEXT_ACTION_DUE',
-    'ISSUE_CATEGORY', 'MEMBER_EMAIL', 'LOCATION', 'STEWARD', 'RESOLUTION'
-  ];
-
-  requiredCols.forEach(function(col) {
-    Assert.assertTrue(
-      typeof GRIEVANCE_COLS[col] === 'number',
-      `GRIEVANCE_COLS.${col} should be defined as a number`
-    );
-    Assert.assertTrue(
-      GRIEVANCE_COLS[col] >= 1,
-      `GRIEVANCE_COLS.${col} should be >= 1 (1-indexed)`
-    );
-  });
-
-  // Verify key column positions
-  Assert.assertEquals(1, GRIEVANCE_COLS.GRIEVANCE_ID, 'GRIEVANCE_ID should be column 1');
-  Assert.assertEquals(5, GRIEVANCE_COLS.STATUS, 'STATUS should be column 5');
-  Assert.assertEquals(9, GRIEVANCE_COLS.DATE_FILED, 'DATE_FILED should be column 9');
-  Assert.assertEquals(18, GRIEVANCE_COLS.DATE_CLOSED, 'DATE_CLOSED should be column 18');
-  Assert.assertEquals(27, GRIEVANCE_COLS.STEWARD, 'STEWARD should be column 27');
-
-  Logger.log('✅ GRIEVANCE_COLS constants test passed');
-}
-
-/**
- * Test: CONFIG_COLS constants are properly defined
- */
-function testConfigColsConstants() {
-  // Verify key config columns exist
-  const requiredCols = [
-    'JOB_TITLES', 'OFFICE_LOCATIONS', 'UNITS', 'STEWARDS',
-    'GRIEVANCE_STATUS', 'GRIEVANCE_STEP', 'ISSUE_CATEGORY'
-  ];
-
-  requiredCols.forEach(function(col) {
-    Assert.assertTrue(
-      typeof CONFIG_COLS[col] === 'number',
-      `CONFIG_COLS.${col} should be defined as a number`
-    );
-  });
-
-  Logger.log('✅ CONFIG_COLS constants test passed');
-}
-
-/**
- * Test: Internal schema constants are properly defined
- */
-function testInternalSchemaConstants() {
-  // Test AUDIT_LOG_COLS
-  Assert.assertTrue(typeof AUDIT_LOG_COLS === 'object', 'AUDIT_LOG_COLS should be defined');
-  Assert.assertEquals(1, AUDIT_LOG_COLS.TIMESTAMP, 'AUDIT_LOG_COLS.TIMESTAMP should be 1');
-  Assert.assertEquals(4, AUDIT_LOG_COLS.ACTION, 'AUDIT_LOG_COLS.ACTION should be 4');
-
-  // Test FAQ_COLS
-  Assert.assertTrue(typeof FAQ_COLS === 'object', 'FAQ_COLS should be defined');
-  Assert.assertEquals(1, FAQ_COLS.ID, 'FAQ_COLS.ID should be 1');
-  Assert.assertEquals(3, FAQ_COLS.QUESTION, 'FAQ_COLS.QUESTION should be 3');
-  Assert.assertEquals(4, FAQ_COLS.ANSWER, 'FAQ_COLS.ANSWER should be 4');
-
-  // Test ERROR_LOG_COLS
-  Assert.assertTrue(typeof ERROR_LOG_COLS === 'object', 'ERROR_LOG_COLS should be defined');
-  Assert.assertEquals(1, ERROR_LOG_COLS.TIMESTAMP, 'ERROR_LOG_COLS.TIMESTAMP should be 1');
-  Assert.assertEquals(2, ERROR_LOG_COLS.LEVEL, 'ERROR_LOG_COLS.LEVEL should be 2');
-
-  Logger.log('✅ Internal schema constants test passed');
-}
-
-/**
- * Test: SHEETS constants match expected sheet names
- */
-function testSheetsConstants() {
-  // Verify core sheets are defined
-  Assert.assertEquals('Config', SHEETS.CONFIG, 'SHEETS.CONFIG should be "Config"');
-  Assert.assertEquals('Member Directory', SHEETS.MEMBER_DIR, 'SHEETS.MEMBER_DIR should be "Member Directory"');
-  Assert.assertEquals('Grievance Log', SHEETS.GRIEVANCE_LOG, 'SHEETS.GRIEVANCE_LOG should be "Grievance Log"');
-  Assert.assertEquals('Dashboard', SHEETS.DASHBOARD, 'SHEETS.DASHBOARD should be "Dashboard"');
-
-  // Verify internal system sheets are defined
-  Assert.assertTrue(typeof SHEETS.AUDIT_LOG === 'string', 'SHEETS.AUDIT_LOG should be defined');
-  Assert.assertTrue(typeof SHEETS.FAQ_DATABASE === 'string', 'SHEETS.FAQ_DATABASE should be defined');
-  Assert.assertTrue(typeof SHEETS.ERROR_LOG === 'string', 'SHEETS.ERROR_LOG should be defined');
-
-  Logger.log('✅ SHEETS constants test passed');
-}
-
-/**
- * Test: Column letter conversion utility
- */
-function testColumnLetterConversion() {
-  // Test getColumnLetter
-  Assert.assertEquals('A', getColumnLetter(1), 'Column 1 should be A');
-  Assert.assertEquals('B', getColumnLetter(2), 'Column 2 should be B');
-  Assert.assertEquals('Z', getColumnLetter(26), 'Column 26 should be Z');
-  Assert.assertEquals('AA', getColumnLetter(27), 'Column 27 should be AA');
-  Assert.assertEquals('AB', getColumnLetter(28), 'Column 28 should be AB');
-
-  // Test getColumnNumber
-  Assert.assertEquals(1, getColumnNumber('A'), 'A should be column 1');
-  Assert.assertEquals(26, getColumnNumber('Z'), 'Z should be column 26');
-  Assert.assertEquals(27, getColumnNumber('AA'), 'AA should be column 27');
-
-  Logger.log('✅ Column letter conversion test passed');
-}
-
-/**
- * Test: Column constants are used correctly (no off-by-one errors)
- */
-function testColumnIndexing() {
-  // Verify that constants are 1-indexed (for spreadsheet columns)
-  // and that array access uses [CONSTANT - 1]
-
-  // Simulate a row of data
-  const mockRow = ['ID', 'First', 'Last', 'Title', 'Location'];
-
-  // Access using constant pattern (constant - 1 for 0-indexed array)
-  const firstElement = mockRow[1 - 1]; // Should be 'ID'
-  const secondElement = mockRow[2 - 1]; // Should be 'First'
-
-  Assert.assertEquals('ID', firstElement, 'First element accessed with [1-1] should be ID');
-  Assert.assertEquals('First', secondElement, 'Second element accessed with [2-1] should be First');
-
-  // Verify MEMBER_COLS pattern works
-  const mockMemberRow = new Array(31).fill('').map((_, i) => `col${i}`);
-  mockMemberRow[MEMBER_COLS.MEMBER_ID - 1] = 'M000001';
-  mockMemberRow[MEMBER_COLS.EMAIL - 1] = 'test@union.org';
-
-  Assert.assertEquals('M000001', mockMemberRow[MEMBER_COLS.MEMBER_ID - 1], 'MEMBER_ID access should work');
-  Assert.assertEquals('test@union.org', mockMemberRow[MEMBER_COLS.EMAIL - 1], 'EMAIL access should work');
-
-  Logger.log('✅ Column indexing test passed');
-}
-
-/**
- * Run all column constant tests
- */
-function runColumnConstantTests() {
-  Logger.log('=== Running Column Constant Tests ===');
-
-  testMemberColsConstants();
-  testGrievanceColsConstants();
-  testConfigColsConstants();
-  testInternalSchemaConstants();
-  testSheetsConstants();
-  testColumnLetterConversion();
-  testColumnIndexing();
-
-  Logger.log('=== All Column Constant Tests Passed ===');
-}
-
-/* --------------------= INPUT VALIDATION TESTS --------------------= */
-
-/**
- * Test: validateRequired throws on null/undefined/empty
- */
-function testValidateRequired() {
-  // Should throw on null
-  Assert.assertThrows(
-    function() { validateRequired(null, 'testParam'); },
-    'validateRequired should throw on null'
-  );
-
-  // Should throw on undefined
-  Assert.assertThrows(
-    function() { validateRequired(undefined, 'testParam'); },
-    'validateRequired should throw on undefined'
-  );
-
-  // Should throw on empty string
-  Assert.assertThrows(
-    function() { validateRequired('', 'testParam'); },
-    'validateRequired should throw on empty string'
-  );
-
-  // Should NOT throw on valid values
-  Assert.assertNotThrows(
-    function() { validateRequired('value', 'testParam'); },
-    'validateRequired should not throw on valid string'
-  );
-
-  Assert.assertNotThrows(
-    function() { validateRequired(0, 'testParam'); },
-    'validateRequired should not throw on zero'
-  );
-
-  Logger.log('✅ validateRequired test passed');
-}
-
-/**
- * Test: validateString validates string type
- */
-function testValidateString() {
-  // Should throw on number
-  Assert.assertThrows(
-    function() { validateString(123, 'testParam'); },
-    'validateString should throw on number'
-  );
-
-  // Should NOT throw on valid string
-  Assert.assertNotThrows(
-    function() { validateString('valid', 'testParam'); },
-    'validateString should not throw on valid string'
-  );
-
-  Logger.log('✅ validateString test passed');
-}
-
-/**
- * Test: validatePositiveInt validates positive integers
- */
-function testValidatePositiveInt() {
-  // Should throw on negative
-  Assert.assertThrows(
-    function() { validatePositiveInt(-1, 'testParam'); },
-    'validatePositiveInt should throw on negative'
-  );
-
-  // Should throw on zero
-  Assert.assertThrows(
-    function() { validatePositiveInt(0, 'testParam'); },
-    'validatePositiveInt should throw on zero'
-  );
-
-  // Should NOT throw on positive integer
-  Assert.assertNotThrows(
-    function() { validatePositiveInt(1, 'testParam'); },
-    'validatePositiveInt should not throw on 1'
-  );
-
-  Logger.log('✅ validatePositiveInt test passed');
-}
-
-/**
- * Test: validateGrievanceId validates G-XXXXXX format
- */
-function testValidateGrievanceId() {
-  // Should throw on invalid format
-  Assert.assertThrows(
-    function() { validateGrievanceId('12345', 'testValidateGrievanceId'); },
-    'validateGrievanceId should throw on missing prefix'
-  );
-
-  Assert.assertThrows(
-    function() { validateGrievanceId('G-123', 'testValidateGrievanceId'); },
-    'validateGrievanceId should throw on short ID'
-  );
-
-  // Should NOT throw on valid format
-  Assert.assertNotThrows(
-    function() { validateGrievanceId('G-000001', 'testValidateGrievanceId'); },
-    'validateGrievanceId should not throw on valid ID'
-  );
-
-  Logger.log('✅ validateGrievanceId test passed');
-}
-
-/**
- * Test: validateMemberId validates MXXXXXX format
- */
-function testValidateMemberId() {
-  // Should throw on invalid format
-  Assert.assertThrows(
-    function() { validateMemberId('12345', 'testValidateMemberId'); },
-    'validateMemberId should throw on missing prefix'
-  );
-
-  // Should NOT throw on valid format
-  Assert.assertNotThrows(
-    function() { validateMemberId('M000001', 'testValidateMemberId'); },
-    'validateMemberId should not throw on valid ID'
-  );
-
-  Logger.log('✅ validateMemberId test passed');
-}
-
-/**
- * Test: validateEmail validates email format
- */
-function testValidateEmail() {
-  // Should throw on invalid emails
-  Assert.assertThrows(
-    function() { validateEmail('notanemail', 'testValidateEmail'); },
-    'validateEmail should throw on missing @'
-  );
-
-  // Should NOT throw on valid emails
-  Assert.assertNotThrows(
-    function() { validateEmail('user@example.com', 'testValidateEmail'); },
-    'validateEmail should not throw on valid email'
-  );
-
-  Logger.log('✅ validateEmail test passed');
-}
-
-/**
- * Test: validateEnum validates against allowed values
- */
-function testValidateEnum() {
-  const allowedStatuses = ['Open', 'Closed', 'Pending'];
-
-  // Should throw on invalid value
-  Assert.assertThrows(
-    function() { validateEnum('Invalid', allowedStatuses, 'status'); },
-    'validateEnum should throw on invalid value'
-  );
-
-  // Should NOT throw on valid values
-  Assert.assertNotThrows(
-    function() { validateEnum('Open', allowedStatuses, 'status'); },
-    'validateEnum should not throw on valid value'
-  );
-
-  Logger.log('✅ validateEnum test passed');
-}
-
-/**
- * Test: safeExecute handles errors properly
- */
-function testSafeExecute() {
-  // Test successful execution
-  const successResult = safeExecute(function() { return 42; }, { context: 'testSuccess' });
-  Assert.assertTrue(successResult.success, 'safeExecute should return success=true');
-  Assert.assertEquals(42, successResult.data, 'safeExecute should return correct data');
-
-  // Test error with silent mode
-  const errorResult = safeExecute(
-    function() { throw new Error('Test error'); },
-    { silent: true, defaultValue: 'default', context: 'testError' }
-  );
-  Assert.assertFalse(errorResult.success, 'safeExecute should return success=false on error');
-  Assert.assertEquals('default', errorResult.data, 'safeExecute should return defaultValue');
-
-  Logger.log('✅ safeExecute test passed');
-}
-
-/* --------------------= ERROR SCENARIO TESTS --------------------= */
-
-/**
- * Test: Grievance status values are all valid
- */
-function testGrievanceStatusValidation() {
-  GRIEVANCE_STATUSES.forEach(function(status) {
-    Assert.assertNotThrows(
-      function() { validateEnum(status, GRIEVANCE_STATUSES, 'status'); },
-      'Status "' + status + '" should be valid'
-    );
-  });
-
-  Assert.assertThrows(
-    function() { validateEnum('InvalidStatus', GRIEVANCE_STATUSES, 'status'); },
-    'Invalid status should throw'
-  );
-
-  Logger.log('✅ Grievance status validation test passed');
-}
-
-/**
- * Test: Grievance step values are all valid
- */
-function testGrievanceStepValidation() {
-  GRIEVANCE_STEPS.forEach(function(step) {
-    Assert.assertNotThrows(
-      function() { validateEnum(step, GRIEVANCE_STEPS, 'step'); },
-      'Step "' + step + '" should be valid'
-    );
-  });
-
-  Logger.log('✅ Grievance step validation test passed');
-}
-
-/**
- * Test: Issue categories are all valid
- */
-function testIssueCategoryValidation() {
-  ISSUE_CATEGORIES.forEach(function(category) {
-    Assert.assertNotThrows(
-      function() { validateEnum(category, ISSUE_CATEGORIES, 'category'); },
-      'Category "' + category + '" should be valid'
-    );
-  });
-
-  Logger.log('✅ Issue category validation test passed');
-}
-
-/**
- * Test: Error messages include context when provided
- */
-function testErrorMessageContext() {
-  try {
-    validateRequired(null, 'testParam', 'testFunction');
-    Assert.fail('Should have thrown');
-  } catch (e) {
-    Assert.assertTrue(
-      e.message.indexOf('testParam') >= 0,
-      'Error should include parameter name'
-    );
-    Assert.assertTrue(
-      e.message.indexOf('testFunction') >= 0,
-      'Error should include function name when provided'
-    );
-  }
-
-  Logger.log('✅ Error message context test passed');
-}
-
-/**
- * Test: Date validation handles edge cases
- */
-function testDateValidationEdgeCases() {
-  // Invalid date (NaN time)
-  Assert.assertThrows(
-    function() { validateDate(new Date('invalid'), 'testDate'); },
-    'validateDate should throw on invalid date string'
-  );
-
-  // Valid dates
-  Assert.assertNotThrows(
-    function() { validateDate(new Date(), 'testDate'); },
-    'validateDate should accept current date'
-  );
-
-  Logger.log('✅ Date validation edge cases test passed');
-}
-
-/**
- * Test: Array validation
- */
-function testArrayValidation() {
-  // Should throw on non-array
-  Assert.assertThrows(
-    function() { validateArray('string', 'testArray'); },
-    'validateArray should throw on string'
-  );
-
-  // Should NOT throw on arrays
-  Assert.assertNotThrows(
-    function() { validateArray([], 'testArray'); },
-    'validateArray should accept empty array'
-  );
-
-  Assert.assertNotThrows(
-    function() { validateArray([1, 2, 3], 'testArray'); },
-    'validateArray should accept populated array'
-  );
-
-  Logger.log('✅ Array validation test passed');
-}
-
-/**
- * Run all input validation tests (testing validate* helper functions)
- * Note: runValidationTests() in TestFramework.gs tests data validation setup
- */
-function runInputValidationTests() {
-  Logger.log('=== Running Input Validation Tests ===');
-
-  testValidateRequired();
-  testValidateString();
-  testValidatePositiveInt();
-  testValidateGrievanceId();
-  testValidateMemberId();
-  testValidateEmail();
-  testValidateEnum();
-  testSafeExecute();
-  testGrievanceStatusValidation();
-  testGrievanceStepValidation();
-  testIssueCategoryValidation();
-  testErrorMessageContext();
-  testDateValidationEdgeCases();
-  testArrayValidation();
-
-  Logger.log('=== All Input Validation Tests Passed ===');
-}
-
-/**
- * Run column and validation tests only (subset of all tests)
- * Note: The main runAllTests() function is defined in TestFramework.gs
- * This function is kept for running a quick subset of tests
- */
-function runQuickTests() {
-  Logger.log('========================================');
-  Logger.log('  RUNNING QUICK TESTS (Column + Input Validation)');
-  Logger.log('========================================');
-
-  runColumnConstantTests();
-  runInputValidationTests();
-
-  Logger.log('========================================');
-  Logger.log('  QUICK TESTS COMPLETE');
-  Logger.log('========================================');
-}
-
-
-
-// ================================================================================
-// MODULE: Integration.test.gs
-// Source: Integration.test.gs
-// ================================================================================
-
-/**
- * ------------------------------------------------------------------------====
- * INTEGRATION TESTS
- * ------------------------------------------------------------------------====
- *
- * End-to-end tests for complete workflows:
- * - Complete grievance lifecycle
- * - Dashboard metrics updates
- * - Member-grievance linking
- * - Data consistency across sheets
- *
- * ------------------------------------------------------------------------====
- */
-
-/* --------------------= COMPLETE WORKFLOW TESTS --------------------= */
-
-/**
- * Test: Complete grievance workflow from creation to closure
- */
-function testCompleteGrievanceWorkflow() {
-  const testMemberId = createTestMember('TEST-M-INTEGRATION-001');
-
-  try {
-    const ss = SpreadsheetApp.getActive();
-    const memberDir = ss.getSheetByName(SHEETS.MEMBER_DIR);
-    const grievanceLog = ss.getSheetByName(SHEETS.GRIEVANCE_LOG);
-
-    // Step 1: Create a new grievance
-    const incidentDate = new Date(2025, 0, 1); // Jan 1, 2025
-    const dateFiled = new Date(2025, 0, 10); // Jan 10, 2025
-
-    const grievanceData = [
-      'TEST-G-INTEGRATION-001',
-      testMemberId,
-      'Test',
-      'Member',
-      'Open',
-      'Step I',
-      incidentDate,
-      '',
-      dateFiled,
-      '',
-      '',
-      '',
-      '',
-      '',
-      '',
-      '',
-      '',
-      '',
-      '',
-      '',
-      '',
-      'Art. 23 - Grievance Procedure',
-      'Discipline',
-      'test.member@union.org',
-      '',  // Unit - empty (user populates Config)
-      '',  // Location - empty (user populates Config)
-      '',  // Steward - empty (user populates Config)
-      ''
-    ];
-
-    const initialGrievanceRow = grievanceLog.getLastRow() + 1;
-    grievanceLog.getRange(initialGrievanceRow, 1, 1, grievanceData.length)
-      .setValues([grievanceData]);
-
-    SpreadsheetApp.flush();
-    Utilities.sleep(2000);
-
-    // Step 2: Verify auto-calculated deadlines
-    const filingDeadline = grievanceLog.getRange(initialGrievanceRow, 8).getValue();
-    const expectedFilingDeadline = new Date(incidentDate.getTime() + 21 * 24 * 60 * 60 * 1000);
-
-    Assert.assertNotNull(
-      filingDeadline,
-      'Filing deadline should be auto-calculated'
-    );
-
-    const stepIDeadline = grievanceLog.getRange(initialGrievanceRow, 10).getValue();
-    const expectedStepIDeadline = new Date(dateFiled.getTime() + 30 * 24 * 60 * 60 * 1000);
-
-    Assert.assertNotNull(
-      stepIDeadline,
-      'Step I deadline should be auto-calculated'
-    );
-
-    // Step 3: Verify Member Directory snapshot updates
-    const memberData = memberDir.getRange(2, 1, memberDir.getLastRow() - 1, 31).getValues();
-    const memberRow = memberData.find(function(row) { return row[0] === testMemberId; });
-
-    Assert.assertNotNull(memberRow, 'Member should exist');
-
-    // Using MEMBER_COLS constant - column AB (28), index 27
-    const hasOpenGrievance = memberRow[MEMBER_COLS.HAS_OPEN_GRIEVANCE - 1];
-    Assert.assertTrue(
-      hasOpenGrievance === 'Yes' || hasOpenGrievance === true,
-      'Member should show as having open grievance'
-    );
-
-    // Step 4: Progress grievance to Step II - using GRIEVANCE_COLS constants
-    grievanceLog.getRange(initialGrievanceRow, GRIEVANCE_COLS.STEP1_RCVD).setValue(new Date(2025, 1, 10)); // Step I Decision Rcvd
-    grievanceLog.getRange(initialGrievanceRow, GRIEVANCE_COLS.STEP2_APPEAL_FILED).setValue(new Date(2025, 1, 15)); // Step II Appeal Filed
-    grievanceLog.getRange(initialGrievanceRow, GRIEVANCE_COLS.CURRENT_STEP).setValue('Step II'); // Update current step
-
-    SpreadsheetApp.flush();
-    Utilities.sleep(2000);
-
-    // Verify Step II deadline calculated
-    const stepIIDeadline = grievanceLog.getRange(initialGrievanceRow, GRIEVANCE_COLS.STEP2_DUE).getValue();
-    Assert.assertNotNull(
-      stepIIDeadline,
-      'Step II deadline should be auto-calculated'
-    );
-
-    // Step 5: Close the grievance - using GRIEVANCE_COLS constants
-    const closedDate = new Date(2025, 2, 1); // March 1, 2025
-    grievanceLog.getRange(initialGrievanceRow, GRIEVANCE_COLS.STATUS).setValue('Settled'); // Status
-    grievanceLog.getRange(initialGrievanceRow, GRIEVANCE_COLS.DATE_CLOSED).setValue(closedDate); // Date Closed
-    grievanceLog.getRange(initialGrievanceRow, GRIEVANCE_COLS.RESOLUTION).setValue('Resolved favorably'); // Resolution
-
-    SpreadsheetApp.flush();
-    Utilities.sleep(2000);
-
-    // Verify Days Open is calculated correctly - using GRIEVANCE_COLS constant
-    const daysOpen = grievanceLog.getRange(initialGrievanceRow, GRIEVANCE_COLS.DAYS_OPEN).getValue();
-    Assert.assertTrue(
-      daysOpen > 0,
-      'Days Open should be calculated for closed grievance'
-    );
-
-    // Step 6: Verify Member Directory snapshot updates to Settled
-    const updatedMemberData = memberDir.getRange(2, 1, memberDir.getLastRow() - 1, 31).getValues();
-    const updatedMemberRow = updatedMemberData.find(function(row) { return row[0] === testMemberId; });
-
-    // Using MEMBER_COLS constant - column AC (29), index 28
-    const updatedStatus = updatedMemberRow[MEMBER_COLS.GRIEVANCE_STATUS - 1];
-    Assert.assertEquals(
-      'Settled',
-      updatedStatus,
-      'Member grievance status snapshot should update to Settled'
-    );
-
-    Logger.log('✅ Complete grievance workflow test passed');
-
-  } finally {
-    cleanupTestData();
-  }
-}
-
-/**
- * Test: Dashboard metrics update when data changes
- */
-function testDashboardMetricsUpdate() {
-  const ss = SpreadsheetApp.getActive();
-  const dashboard = ss.getSheetByName(SHEETS.DASHBOARD);
-
-  // Get initial member count
-  const initialMemberCount = dashboard.getRange('B6').getValue() || 0;
-
-  // Create new test members
-  createTestMember('TEST-M-DASHBOARD-001');
-  createTestMember('TEST-M-DASHBOARD-002');
-  createTestMember('TEST-M-DASHBOARD-003');
-
-  try {
-    SpreadsheetApp.flush();
-    Utilities.sleep(2000);
-
-    // Check that member count increased
-    const updatedMemberCount = dashboard.getRange('B6').getValue();
-
-    Assert.assertTrue(
-      updatedMemberCount >= initialMemberCount + 3,
-      `Member count should increase (was ${initialMemberCount}, now ${updatedMemberCount})`
-    );
-
-    Logger.log('✅ Dashboard metrics update test passed');
-
-  } finally {
-    cleanupTestData();
-  }
-}
-
-/**
- * Test: Member-Grievance linking maintains data consistency
- */
-function testMemberGrievanceSnapshot() {
-  const testMemberId = createTestMember('TEST-M-SNAPSHOT-001');
-
-  try {
-    const ss = SpreadsheetApp.getActive();
-    const memberDir = ss.getSheetByName(SHEETS.MEMBER_DIR);
-    const grievanceLog = ss.getSheetByName(SHEETS.GRIEVANCE_LOG);
-
-    // Create grievance for member
-    const grievanceData = [
-      'TEST-G-SNAPSHOT-001',
-      testMemberId,
-      'Test',
-      'Member',
-      'Pending Info',
-      'Step I',
-      new Date(),
-      '',
-      new Date(),
-      '',
-      '',
-      '',
-      '',
-      '',
-      '',
-      '',
-      '',
-      '',
-      '',
-      '',
-      '',
-      'Art. 24 - Discipline',
-      'Workload',
-      'test@union.org',
-      '',  // Unit - empty (user populates Config)
-      '',  // Location - empty (user populates Config)
-      '',  // Steward - empty (user populates Config)
-      ''
-    ];
-
-    grievanceLog.getRange(grievanceLog.getLastRow() + 1, 1, 1, grievanceData.length)
-      .setValues([grievanceData]);
-
-    SpreadsheetApp.flush();
-    Utilities.sleep(2000);
-
-    // Check member snapshot
-    const memberData = memberDir.getRange(2, 1, memberDir.getLastRow() - 1, 31).getValues();
-    const memberRow = memberData.find(function(row) { return row[0] === testMemberId; });
-
-    Assert.assertNotNull(memberRow, 'Member should exist');
-
-    // Check status snapshot - using MEMBER_COLS constant (column AC = 29, index 28)
-    const statusSnapshot = memberRow[MEMBER_COLS.GRIEVANCE_STATUS - 1];
-    Assert.assertEquals(
-      'Pending Info',
-      statusSnapshot,
-      'Status snapshot should match grievance status'
-    );
-
-    // Update grievance status - using GRIEVANCE_COLS constant
-    const grievanceRow = grievanceLog.getRange(2, 1, grievanceLog.getLastRow() - 1, GRIEVANCE_COLS.STATUS).getValues()
-      .findIndex(function(row) { return row[0] === 'TEST-G-SNAPSHOT-001'; }) + 2;
-
-    grievanceLog.getRange(grievanceRow, GRIEVANCE_COLS.STATUS).setValue('Open');
-
-    SpreadsheetApp.flush();
-    Utilities.sleep(2000);
-
-    // Check snapshot updated
-    const updatedMemberData = memberDir.getRange(2, 1, memberDir.getLastRow() - 1, 31).getValues();
-    const updatedMemberRow = updatedMemberData.find(function(row) { return row[0] === testMemberId; });
-
-    const updatedStatusSnapshot = updatedMemberRow[MEMBER_COLS.GRIEVANCE_STATUS - 1];
-    Assert.assertEquals(
-      'Open',
-      updatedStatusSnapshot,
-      'Status snapshot should update when grievance status changes'
-    );
-
-    Logger.log('✅ Member-grievance snapshot test passed');
-
-  } finally {
-    cleanupTestData();
-  }
-}
-
-/* --------------------= DATA CONSISTENCY TESTS --------------------= */
-
-/**
- * Test: Config changes propagate to dropdowns
- */
-function testConfigChangesPropagateToDropdowns() {
-  const ss = SpreadsheetApp.getActive();
-  const config = ss.getSheetByName(SHEETS.CONFIG);
-  const memberDir = ss.getSheetByName(SHEETS.MEMBER_DIR);
-
-  // Add a new location to Config
-  const lastConfigRow = config.getLastRow();
-  const testLocation = 'TEST-LOCATION-INTEGRATION';
-  config.getRange(lastConfigRow + 1, 2).setValue(testLocation);
-
-  try {
-    SpreadsheetApp.flush();
-    Utilities.sleep(1000);
-
-    // Check that validation includes new location
-    const locationCell = memberDir.getRange(2, MEMBER_COLS.WORK_LOCATION);
-    const validation = locationCell.getDataValidation();
-
-    Assert.assertNotNull(
-      validation,
-      'Location validation should exist'
-    );
-
-    // The validation range should include the new location
-    // (We can't easily check dropdown contents programmatically,
-    // but we verify validation still exists)
-
-    Logger.log('✅ Config changes propagate test passed');
-
-  } finally {
-    // Remove test location
-    const data = config.getRange(2, 2, config.getLastRow() - 1, 1).getValues();
-    for (let i = data.length - 1; i >= 0; i--) {
-      if (data[i][0] === testLocation) {
-        config.deleteRow(i + 2);
-      }
-    }
-  }
-}
-
-/**
- * Test: Multiple grievances for same member
- */
-function testMultipleGrievancesSameMember() {
-  const testMemberId = createTestMember('TEST-M-MULTIPLE-001');
-
-  try {
-    const ss = SpreadsheetApp.getActive();
-    const grievanceLog = ss.getSheetByName(SHEETS.GRIEVANCE_LOG);
-
-    // Create 3 grievances for same member
-    for (let i = 1; i <= 3; i++) {
-      const grievanceData = [
-        `TEST-G-MULTIPLE-00${i}`,
-        testMemberId,
-        'Test',
-        'Member',
-        i === 1 ? 'Open' : 'Closed',
-        'Step I',
-        new Date(),
-        '',
-        new Date(),
-        '',
-        '',
-        '',
-        '',
-        '',
-        '',
-        '',
-        '',
-        i === 1 ? '' : new Date(),
-        '',
-        '',
-        '',
-        'Art. 23 - Grievance Procedure',
-        'Discipline',
-        'test@union.org',
-        '',  // Unit - empty (user populates Config)
-        '',  // Location - empty (user populates Config)
-        '',  // Steward - empty (user populates Config)
-        i === 1 ? '' : 'Resolved'
-      ];
-
-      grievanceLog.getRange(grievanceLog.getLastRow() + 1, 1, 1, grievanceData.length)
-        .setValues([grievanceData]);
-    }
-
-    SpreadsheetApp.flush();
-    Utilities.sleep(2000);
-
-    // Verify all grievances created
-    const grievances = grievanceLog.getRange(2, 1, grievanceLog.getLastRow() - 1, 2).getValues()
-      .filter(function(row) { return row[1] === testMemberId; });
-
-    Assert.assertEquals(
-      3,
-      grievances.length,
-      'Should have 3 grievances for test member'
-    );
-
-    // Verify member shows as having open grievance (from first one)
-    const memberDir = ss.getSheetByName(SHEETS.MEMBER_DIR);
-    const memberData = memberDir.getRange(2, 1, memberDir.getLastRow() - 1, 31).getValues();
-    const memberRow = memberData.find(function(row) { return row[0] === testMemberId; });
-
-    // Using MEMBER_COLS constant - column AB (28), index 27
-    const hasOpenGrievance = memberRow[MEMBER_COLS.HAS_OPEN_GRIEVANCE - 1];
-    Assert.assertTrue(
-      hasOpenGrievance === 'Yes' || hasOpenGrievance === true,
-      'Member with multiple grievances should show as having open grievance'
-    );
-
-    Logger.log('✅ Multiple grievances same member test passed');
-
-  } finally {
-    cleanupTestData();
-  }
-}
-
-/**
- * Test: Dashboard handles empty data gracefully
- */
-function testDashboardHandlesEmptyData() {
-  const ss = SpreadsheetApp.getActive();
-  const memberDir = ss.getSheetByName(SHEETS.MEMBER_DIR);
-  const grievanceLog = ss.getSheetByName(SHEETS.GRIEVANCE_LOG);
-  const dashboard = ss.getSheetByName(SHEETS.DASHBOARD);
-
-  // Backup data
-  const memberBackup = memberDir.getLastRow() > 1 ?
-    memberDir.getRange(2, 1, memberDir.getLastRow() - 1, 31).getValues() : [];
-  const grievanceBackup = grievanceLog.getLastRow() > 1 ?
-    grievanceLog.getRange(2, 1, grievanceLog.getLastRow() - 1, 28).getValues() : [];
-
-  try {
-    // Clear all data
-    if (memberDir.getLastRow() > 1) {
-      memberDir.deleteRows(2, memberDir.getLastRow() - 1);
-    }
-    if (grievanceLog.getLastRow() > 1) {
-      grievanceLog.deleteRows(2, grievanceLog.getLastRow() - 1);
-    }
-
-    SpreadsheetApp.flush();
-    Utilities.sleep(2000);
-
-    // Check dashboard doesn't show errors
-    // Member count should be 0
-    const memberCount = dashboard.getRange('B6').getValue();
-
-    // Should be 0 or empty, not #DIV/0! or #REF!
-    Assert.assertTrue(
-      memberCount === 0 || memberCount === '' || memberCount === null,
-      'Dashboard should handle empty data (member count should be 0 or empty)'
-    );
-
-    Logger.log('✅ Dashboard handles empty data test passed');
-
-  } finally {
-    // Restore data
-    if (memberBackup.length > 0) {
-      memberDir.getRange(2, 1, memberBackup.length, memberBackup[0].length)
-        .setValues(memberBackup);
-    }
-    if (grievanceBackup.length > 0) {
-      grievanceLog.getRange(2, 1, grievanceBackup.length, grievanceBackup[0].length)
-        .setValues(grievanceBackup);
-    }
-  }
-}
-
-/* --------------------= PERFORMANCE TESTS --------------------= */
-
-/**
- * Test: Dashboard refresh completes in reasonable time
- */
-function testDashboardRefreshPerformance() {
-  const startTime = new Date();
-
-  refreshCalculations();
-
-  const endTime = new Date();
-  const duration = (endTime - startTime) / 1000; // seconds
-
-  Assert.assertTrue(
-    duration < 10,
-    `Dashboard refresh should complete in < 10 seconds (took ${duration.toFixed(2)}s)`
-  );
-
-  Logger.log(`✅ Dashboard refresh performance test passed (${duration.toFixed(2)}s)`);
-}
-
-/**
- * Test: Formula calculations on moderate dataset
- */
-function testFormulaPerformanceWithData() {
-  // Create 10 test members and 10 grievances
-  const testMemberIds = [];
-  for (let i = 1; i <= 10; i++) {
-    const memberId = createTestMember(`TEST-M-PERF-${String(i).padStart(3, '0')}`);
-    testMemberIds.push(memberId);
-  }
-
-  try {
-    const ss = SpreadsheetApp.getActive();
-    const grievanceLog = ss.getSheetByName(SHEETS.GRIEVANCE_LOG);
-
-    const startTime = new Date();
-
-    // Create 10 grievances
-    for (let i = 1; i <= 10; i++) {
-      const grievanceData = [
-        `TEST-G-PERF-${String(i).padStart(3, '0')}`,
-        testMemberIds[i - 1],
-        'Test',
-        'Member',
-        'Open',
-        'Step I',
-        new Date(),
-        '',
-        new Date(),
-        '',
-        '',
-        '',
-        '',
-        '',
-        '',
-        '',
-        '',
-        '',
-        '',
-        '',
-        '',
-        'Art. 23 - Grievance Procedure',
-        'Discipline',
-        'test@union.org',
-        '',  // Unit - empty (user populates Config)
-        '',  // Location - empty (user populates Config)
-        '',  // Steward - empty (user populates Config)
-        ''
-      ];
-
-      grievanceLog.getRange(grievanceLog.getLastRow() + 1, 1, 1, grievanceData.length)
-        .setValues([grievanceData]);
-    }
-
-    SpreadsheetApp.flush();
-
-    const endTime = new Date();
-    const duration = (endTime - startTime) / 1000; // seconds
-
-    Assert.assertTrue(
-      duration < 30,
-      `Creating 10 grievances with formulas should complete in < 30 seconds (took ${duration.toFixed(2)}s)`
-    );
-
-    Logger.log(`✅ Formula performance test passed (${duration.toFixed(2)}s)`);
-
-  } finally {
-    cleanupTestData();
-  }
-}
-
-/* --------------------= REGRESSION TESTS --------------------= */
-
-/**
- * Test: Grievance updates trigger Member Directory recalculation
- */
-function testGrievanceUpdatesTriggersRecalculation() {
-  const testMemberId = createTestMember('TEST-M-RECALC-001');
-
-  try {
-    const ss = SpreadsheetApp.getActive();
-    const memberDir = ss.getSheetByName(SHEETS.MEMBER_DIR);
-    const grievanceLog = ss.getSheetByName(SHEETS.GRIEVANCE_LOG);
-
-    // Create grievance
-    const grievanceData = [
-      'TEST-G-RECALC-001',
-      testMemberId,
-      'Test',
-      'Member',
-      'Open',
-      'Step I',
-      new Date(),
-      '',
-      new Date(),
-      '',
-      '',
-      '',
-      '',
-      '',
-      '',
-      '',
-      '',
-      '',
-      '',
-      '',
-      '',
-      'Art. 23 - Grievance Procedure',
-      'Discipline',
-      'test@union.org',
-      '',  // Unit - empty (user populates Config)
-      '',  // Location - empty (user populates Config)
-      '',  // Steward - empty (user populates Config)
-      ''
-    ];
-
-    const grievanceRow = grievanceLog.getLastRow() + 1;
-    grievanceLog.getRange(grievanceRow, 1, 1, grievanceData.length)
-      .setValues([grievanceData]);
-
-    SpreadsheetApp.flush();
-    Utilities.sleep(2000);
-
-    // Check initial state - use MEMBER_COLS constant (column Z = 26, 0-indexed = 25)
-    const statusIdx = MEMBER_COLS.GRIEVANCE_STATUS - 1;
-    const memberData1 = memberDir.getRange(2, 1, memberDir.getLastRow() - 1, 31).getValues();
-    const memberRow1 = memberData1.find(function(row) { return row[0] === testMemberId; });
-    const status1 = memberRow1[statusIdx];
-
-    Assert.assertEquals('Open', status1, 'Initial status should be Open');
-
-    // Update grievance
-    grievanceLog.getRange(grievanceRow, 5).setValue('Settled');
-
-    SpreadsheetApp.flush();
-    Utilities.sleep(2000);
-
-    // Check updated state
-    const memberData2 = memberDir.getRange(2, 1, memberDir.getLastRow() - 1, 31).getValues();
-    const memberRow2 = memberData2.find(function(row) { return row[0] === testMemberId; });
-    const status2 = memberRow2[statusIdx];
-
-    Assert.assertEquals(
-      'Settled',
-      status2,
-      'Status should update to Settled after grievance update'
-    );
-
-    Logger.log('✅ Grievance updates trigger recalculation test passed');
-
-  } finally {
-    cleanupTestData();
-  }
 }
 
 
