@@ -409,11 +409,11 @@ function setDashboardDimensions(sheet) {
   // Freeze header rows
   sheet.setFrozenRows(2);
 
-  // Delete unused columns beyond expected count (from SHEET_COLUMN_COUNTS)
-  const expectedCols = SHEET_COLUMN_COUNTS.INTERACTIVE_DASHBOARD;
+  // Delete unused columns - detect last used column dynamically
+  const lastCol = sheet.getLastColumn();
   const totalCols = sheet.getMaxColumns();
-  if (totalCols > expectedCols) {
-    sheet.deleteColumns(expectedCols + 1, totalCols - expectedCols);
+  if (lastCol > 0 && totalCols > lastCol) {
+    sheet.deleteColumns(lastCol + 1, totalCols - lastCol);
   }
 
   sheet.setTabColor(COLORS.PRIMARY_BLUE);
