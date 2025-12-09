@@ -14,7 +14,7 @@
  * Build Info:
  * - Version: 2.1.0 (Security Enhanced + Code Review Improvements)
  * - Build ID: 20251202-improvements
- * - Build Date: 2025-12-09T13:00:12.927Z
+ * - Build Date: 2025-12-09T15:37:24.056Z
  * - Build Type: DEVELOPMENT
  * - Modules: 79 files
  * - Tests Included: Yes
@@ -6092,6 +6092,58 @@ function onOpen() {
     .addItem("⚙️ Shortcuts Configuration", "showKeyboardShortcutsConfig")
     .addItem("F1 Context Help", "showContextHelp")
     .addToUi();
+}
+
+/**
+ * Installs an onOpen trigger that works reliably on page refresh
+ * Run this ONCE to set up the trigger. The menus will then appear
+ * on every page load, including browser refresh.
+ *
+ * Find this in: 509 Dashboard > Administrator > Setup > Install Menu Trigger
+ */
+function installOnOpenTrigger() {
+  // Remove any existing onOpen triggers to avoid duplicates
+  const triggers = ScriptApp.getProjectTriggers();
+  triggers.forEach(function(trigger) {
+    if (trigger.getHandlerFunction() === 'onOpen') {
+      ScriptApp.deleteTrigger(trigger);
+    }
+  });
+
+  // Create a new installable trigger for onOpen
+  ScriptApp.newTrigger('onOpen')
+    .forSpreadsheet(SpreadsheetApp.getActive())
+    .onOpen()
+    .create();
+
+  SpreadsheetApp.getUi().alert(
+    '✅ Menu Trigger Installed',
+    'The menu trigger has been installed successfully.\n\n' +
+    'The menus will now appear reliably when you refresh the page.',
+    SpreadsheetApp.getUi().ButtonSet.OK
+  );
+}
+
+/**
+ * Removes the installable onOpen trigger
+ * Use this if you want to go back to the simple trigger behavior
+ */
+function uninstallOnOpenTrigger() {
+  const triggers = ScriptApp.getProjectTriggers();
+  let removed = 0;
+  triggers.forEach(function(trigger) {
+    if (trigger.getHandlerFunction() === 'onOpen') {
+      ScriptApp.deleteTrigger(trigger);
+      removed++;
+    }
+  });
+
+  SpreadsheetApp.getUi().alert(
+    '✅ Trigger Removed',
+    'Removed ' + removed + ' onOpen trigger(s).\n\n' +
+    'Menus will now use the simple trigger (may not appear on every refresh).',
+    SpreadsheetApp.getUi().ButtonSet.OK
+  );
 }
 
 function refreshCalculations() {
@@ -43062,6 +43114,12 @@ function createReorganizedMenus(ui) {
       .addItem("Add Viewer", "addViewer")
       .addSeparator()
       .addItem("My Permissions", "showMyPermissions"))
+    .addSeparator()
+    .addSubMenu(ui.createMenu("🔧 Setup & Triggers")
+      .addItem("📋 Install Menu Trigger", "installOnOpenTrigger")
+      .addItem("🗑️ Remove Menu Trigger", "uninstallOnOpenTrigger")
+      .addSeparator()
+      .addItem("📋 Initialize Required Sheets", "showSetupRequiredSheets"))
     .addSeparator()
     .addSubMenu(ui.createMenu("⚙️ User Settings")
       .addItem("⚙️ Preferences Editor", "showPreferencesEditor")
