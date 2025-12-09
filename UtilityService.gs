@@ -732,3 +732,120 @@ function cleanSheetColumns(sheetName, expectedColumns) {
 
   return false;
 }
+
+/**
+ * Populates the Config sheet with default seed values for dropdown lists
+ * Call this before seeding member or grievance data
+ */
+function populateConfigDefaults() {
+  const ss = SpreadsheetApp.getActiveSpreadsheet();
+  let configSheet = ss.getSheetByName(SHEETS.CONFIG);
+
+  if (!configSheet) {
+    configSheet = ss.insertSheet(SHEETS.CONFIG);
+  }
+
+  // Row 1: Category headers
+  const categoryHeaders = [
+    'Employment Info', '', '', '', '',           // A-E
+    'Supervision', '',                           // F-G
+    'Steward Info', '',                          // H-I
+    'Grievance Settings', '', '', '', '',        // J-N
+    'Links & Coordinators', '', '',              // O-Q
+    'Notifications', '', '',                     // R-T
+    'Organization', '', '', ''                   // U-X
+  ];
+
+  // Row 2: Column headers
+  const columnHeaders = [
+    'Job Titles', 'Office Locations', 'Units', 'Office Days', 'Yes/No',  // A-E
+    'Supervisors', 'Managers',                    // F-G
+    'Stewards', 'Committees',                     // H-I
+    'Grievance Status', 'Grievance Step', 'Issue Category', 'Articles Violated', 'Comm Methods', // J-N
+    'Coordinators', 'Grievance Form URL', 'Contact Form URL', // O-Q
+    'Admin Emails', 'Alert Days', 'Notification Recipients',  // R-T
+    'Org Name', 'Local Number', 'Main Address', 'Main Phone'  // U-X
+  ];
+
+  // Default values for each column (starting from row 3)
+  const defaultData = {
+    // A: Job Titles
+    1: ['Social Worker I', 'Social Worker II', 'Social Worker III', 'Case Manager', 'Program Coordinator', 'Administrative Assistant', 'Supervisor', 'Manager', 'Director', 'Analyst'],
+    // B: Office Locations
+    2: ['Boston Office', 'Cambridge Office', 'Springfield Office', 'Worcester Office', 'Remote'],
+    // C: Units
+    3: ['Unit 8', 'Unit 10'],
+    // D: Office Days
+    4: ['Monday-Friday', 'Mon/Wed/Fri', 'Tue/Thu', 'Flexible', 'Remote Only'],
+    // E: Yes/No
+    5: ['Yes', 'No'],
+    // F: Supervisors
+    6: ['Jane Smith', 'John Doe', 'Maria Garcia', 'Robert Johnson', 'Sarah Williams'],
+    // G: Managers
+    7: ['Michael Brown', 'Linda Davis', 'James Wilson', 'Patricia Martinez'],
+    // H: Stewards
+    8: ['Alex Steward', 'Chris Union', 'Pat Representative', 'Jordan Advocate', 'Taylor Helper'],
+    // I: Committees
+    9: ['Grievance Committee', 'Safety Committee', 'Bargaining Committee', 'Social Committee', 'Education Committee'],
+    // J: Grievance Status
+    10: ['Open', 'In Progress', 'Pending Response', 'Appealed', 'Resolved - Won', 'Resolved - Lost', 'Resolved - Settled', 'Withdrawn', 'Closed'],
+    // K: Grievance Step
+    11: ['Pre-Filing', 'Step I - Filed', 'Step I - Awaiting Decision', 'Step II - Appeal Filed', 'Step II - Awaiting Decision', 'Step III - Arbitration', 'Resolved'],
+    // L: Issue Category
+    12: ['Discipline', 'Discharge', 'Contract Violation', 'Working Conditions', 'Harassment', 'Discrimination', 'Safety', 'Scheduling', 'Pay/Benefits', 'Other'],
+    // M: Articles Violated
+    13: ['Article 12 - Discipline', 'Article 15 - Workload', 'Article 23A - Grievance Procedure', 'Article 8 - Hours of Work', 'Article 10 - Leaves', 'Article 5 - Non-Discrimination'],
+    // N: Communication Methods
+    14: ['Email', 'Phone', 'Text', 'In Person', 'Video Call']
+  };
+
+  // Set category headers (row 1)
+  if (categoryHeaders.length > 0) {
+    configSheet.getRange(1, 1, 1, categoryHeaders.length).setValues([categoryHeaders]);
+    configSheet.getRange(1, 1, 1, categoryHeaders.length)
+      .setFontWeight('bold')
+      .setBackground('#1a73e8')
+      .setFontColor('#ffffff');
+  }
+
+  // Set column headers (row 2)
+  if (columnHeaders.length > 0) {
+    configSheet.getRange(2, 1, 1, columnHeaders.length).setValues([columnHeaders]);
+    configSheet.getRange(2, 1, 1, columnHeaders.length)
+      .setFontWeight('bold')
+      .setBackground('#e8f0fe');
+  }
+
+  // Populate default values for each column
+  for (const colIndex in defaultData) {
+    const col = parseInt(colIndex);
+    const values = defaultData[col];
+    if (values && values.length > 0) {
+      const valueArray = values.map(function(v) { return [v]; });
+      configSheet.getRange(3, col, values.length, 1).setValues(valueArray);
+    }
+  }
+
+  // Freeze header rows
+  configSheet.setFrozenRows(2);
+
+  // Auto-resize columns
+  configSheet.autoResizeColumns(1, 24);
+
+  SpreadsheetApp.getUi().alert(
+    '✅ Config Defaults Populated',
+    'The Config sheet has been populated with default values for:\n\n' +
+    '• Job Titles (10 values)\n' +
+    '• Office Locations (5 values)\n' +
+    '• Units (2 values)\n' +
+    '• Supervisors (5 values)\n' +
+    '• Managers (4 values)\n' +
+    '• Stewards (5 values)\n' +
+    '• Grievance Statuses & Steps\n' +
+    '• Issue Categories & Articles\n\n' +
+    'You can now seed member and grievance data!',
+    SpreadsheetApp.getUi().ButtonSet.OK
+  );
+
+  return true;
+}
