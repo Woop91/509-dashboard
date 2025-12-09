@@ -238,22 +238,23 @@ function calculateGrievanceTimeline(row, today) {
       break;
   }
 
-  // Calculate days to deadline and validate next action due
+  // Calculate days to deadline
+  // RULE: If deadline has passed, both Next Action Due and Days to Deadline are blank
+  // Appeals cannot be filed after the due date, so past deadlines are not actionable
   let daysToDeadline = '';
-  let validNextActionDue = nextActionDue; // Will be cleared if in the past
+  let validNextActionDue = nextActionDue;
 
   if (nextActionDue && nextActionDue !== '') {
     const deadline = new Date(nextActionDue);
     const daysDiff = Math.floor((deadline - today) / (1000 * 60 * 60 * 24));
 
     if (daysDiff < 0) {
-      // Overdue - still show the deadline but negative days
-      daysToDeadline = daysDiff; // Show negative to indicate overdue
-    } else if (daysDiff === 0) {
-      // Due today - show 0 days
-      daysToDeadline = 0;
+      // Past due - deadline has passed, no longer actionable
+      // Clear both fields since the window for action has closed
+      validNextActionDue = '';
+      daysToDeadline = '';
     } else {
-      // Future deadline - show positive number
+      // Due today (0) or in the future (positive)
       daysToDeadline = daysDiff;
     }
   }
