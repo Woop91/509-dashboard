@@ -762,17 +762,21 @@ Applied via `setupDataValidations()`:
 
 ## Seed Data Functions
 
+**⚠️ Column counts enforced by `npm run verify`**
+
 ### SEED_20K_MEMBERS()
-Generate 20,000 realistic member records in batches of 1,000.
+Generate 20,000 member records. Must output **31 columns** (MEMBER_COLS).
+- Cols 28-31: HAS_OPEN_GRIEVANCE, GRIEVANCE_STATUS, NEXT_DEADLINE, START_GRIEVANCE
 
 ### SEED_5K_GRIEVANCES()
-Generate 5,000 realistic grievance records in batches of 500.
+Generate 5,000 grievance records. Must output **34 columns** (GRIEVANCE_COLS).
+- Cols 29-34: MESSAGE_ALERT, COORDINATOR_MESSAGE, ACKNOWLEDGED_BY, ACKNOWLEDGED_DATE, DRIVE_FOLDER_ID, DRIVE_FOLDER_URL
 
 ### nukeSeedData()
-Exit Demo Mode - Remove seed/test data and prepare for production use.
+Exit Demo Mode - Remove seed/test data.
 
 ### DIAGNOSE_SETUP()
-Comprehensive system health check - validates all 22 sheets and column counts.
+System health check - validates sheets and column counts.
 
 ---
 
@@ -796,15 +800,18 @@ const COLORS = {
 
 ### Current Issues
 
-1. **Toggle Grievance Columns - DISABLED** - Function shows informative alert instead
-2. **Member Directory Column Groups** - createMemberDirectory() now deletes and recreates sheet
-3. **Win Rate Formula Dependency** - Resolution text must include "Won", "Lost", or "Settled"
+1. **Toggle Grievance Columns - DISABLED** - Shows alert instead
+2. **Member Directory Column Groups** - createMemberDirectory() recreates sheet
+3. **Win Rate Formula Dependency** - Resolution must include "Won", "Lost", or "Settled"
+
+### ✅ Resolved (v3.29)
+
+- ~~Seed column mismatch~~ - Fixed. Now enforced by `npm run verify`
 
 ### Limitations
 
-- Seed functions can take 2-3 minutes for 20k members + 5k grievances
-- Google Sheets has 6-minute execution limit
-- Max 10 million cells per spreadsheet
+- Seed: 2-3 min for 20k members + 5k grievances
+- Google Sheets: 6-min execution limit, 10M cell max
 
 ---
 
