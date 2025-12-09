@@ -288,9 +288,14 @@ function testDataValidationSetup() {
   const memberDir = ss.getSheetByName(SHEETS.MEMBER_DIR);
   const config = ss.getSheetByName(SHEETS.CONFIG);
 
-  // Populate Config with test values and set up dropdowns
+  // Populate Config with test values
   populateConfigForTesting();
+  SpreadsheetApp.flush(); // Ensure Config values are written before reading
+  Utilities.sleep(500);
+
+  // Set up dropdowns (reads from Config)
   setupMemberDirectoryDropdowns();
+  SpreadsheetApp.flush();
 
   try {
     // Check that validation exists for Job Title column
@@ -362,9 +367,14 @@ function testMemberValidationRules() {
   const ss = SpreadsheetApp.getActive();
   const memberDir = ss.getSheetByName(SHEETS.MEMBER_DIR);
 
-  // Populate Config with test values and set up dropdowns
+  // Populate Config with test values
   populateConfigForTesting();
+  SpreadsheetApp.flush(); // Ensure Config values are written before reading
+  Utilities.sleep(500);
+
+  // Set up dropdowns (reads from Config)
   setupMemberDirectoryDropdowns();
+  SpreadsheetApp.flush();
 
   try {
     // Check critical validations exist - using MEMBER_COLS constants

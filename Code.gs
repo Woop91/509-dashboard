@@ -2059,22 +2059,25 @@ function setupFormulasAndCalculations() {
   // IMPORTANT: Using 21000 rows to support large datasets (20k members + 1k buffer)
 
   // Has Open Grievance? - Column AB (28)
+  // Uses MAP/LAMBDA to check each member for active grievances
   // Counts grievances with ANY active status: Open, Pending Info, Appealed, In Arbitration
   const hasGrievanceCol = getColumnLetter(MEMBER_COLS.HAS_OPEN_GRIEVANCE);
   memberDir.getRange(hasGrievanceCol + "2").setFormula(
-    `=ARRAYFORMULA(IF(A2:A21000<>"",IF(SUMPRODUCT((('Grievance Log'!${gMemberIdCol}:${gMemberIdCol}=A2:A21000)*(('Grievance Log'!${gStatusCol}:${gStatusCol}="Open")+('Grievance Log'!${gStatusCol}:${gStatusCol}="Pending Info")+('Grievance Log'!${gStatusCol}:${gStatusCol}="Appealed")+('Grievance Log'!${gStatusCol}:${gStatusCol}="In Arbitration"))))>0,"Yes","No"),""))`
+    `=MAP(A2:A21000,LAMBDA(m,IF(m="","",IF(SUM(COUNTIFS('Grievance Log'!${gMemberIdCol}:${gMemberIdCol},m,'Grievance Log'!${gStatusCol}:${gStatusCol},{"Open","Pending Info","Appealed","In Arbitration"}))>0,"Yes","No"))))`
   );
 
   // Grievance Status Snapshot - Column AC (29)
+  // Uses MAP/LAMBDA for reliable row-by-row lookup
   const statusSnapshotCol = getColumnLetter(MEMBER_COLS.GRIEVANCE_STATUS);
   memberDir.getRange(statusSnapshotCol + "2").setFormula(
-    `=ARRAYFORMULA(IF(A2:A21000<>"",IFERROR(INDEX('Grievance Log'!${gStatusCol}:${gStatusCol},MATCH(A2:A21000,'Grievance Log'!${gMemberIdCol}:${gMemberIdCol},0)),""),""))`
+    `=MAP(A2:A21000,LAMBDA(m,IF(m="","",IFERROR(INDEX('Grievance Log'!${gStatusCol}:${gStatusCol},MATCH(m,'Grievance Log'!${gMemberIdCol}:${gMemberIdCol},0)),""))))`
   );
 
   // Next Grievance Deadline - Column AD (30)
+  // Uses MAP/LAMBDA for reliable row-by-row lookup
   const nextDeadlineCol = getColumnLetter(MEMBER_COLS.NEXT_DEADLINE);
   memberDir.getRange(nextDeadlineCol + "2").setFormula(
-    `=ARRAYFORMULA(IF(A2:A21000<>"",IFERROR(INDEX('Grievance Log'!${gNextActionCol}:${gNextActionCol},MATCH(A2:A21000,'Grievance Log'!${gMemberIdCol}:${gMemberIdCol},0)),""),""))`
+    `=MAP(A2:A21000,LAMBDA(m,IF(m="","",IFERROR(INDEX('Grievance Log'!${gNextActionCol}:${gNextActionCol},MATCH(m,'Grievance Log'!${gMemberIdCol}:${gMemberIdCol},0)),""))))`
   );
 
   // Apply progress bar formatting
