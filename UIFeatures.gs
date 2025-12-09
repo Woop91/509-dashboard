@@ -350,7 +350,7 @@ function showSearchDialog() {
  */
 function searchGrievances(searchType, searchTerm) {
   const ss = SpreadsheetApp.getActiveSpreadsheet();
-  const grievanceLog = ss.getSheetByName('Grievance Log');
+  const grievanceLog = ss.getSheetByName(SHEETS.GRIEVANCE_LOG);
 
   if (!grievanceLog) {
     throw new Error('Grievance Log sheet not found');
@@ -580,7 +580,7 @@ function showFilterDialog() {
  */
 function applyGrievanceFilters(filters) {
   const ss = SpreadsheetApp.getActiveSpreadsheet();
-  const grievanceLog = ss.getSheetByName('Grievance Log');
+  const grievanceLog = ss.getSheetByName(SHEETS.GRIEVANCE_LOG);
 
   if (!grievanceLog) {
     throw new Error('Grievance Log sheet not found');
@@ -644,7 +644,7 @@ function applyGrievanceFilters(filters) {
  */
 function clearGrievanceFilters() {
   const ss = SpreadsheetApp.getActiveSpreadsheet();
-  const grievanceLog = ss.getSheetByName('Grievance Log');
+  const grievanceLog = ss.getSheetByName(SHEETS.GRIEVANCE_LOG);
 
   if (!grievanceLog) {
     throw new Error('Grievance Log sheet not found');
@@ -879,10 +879,10 @@ function exportData(options) {
   let sourceSheet;
   switch (options.exportType) {
     case 'grievances':
-      sourceSheet = ss.getSheetByName('Grievance Log');
+      sourceSheet = ss.getSheetByName(SHEETS.GRIEVANCE_LOG);
       break;
     case 'members':
-      sourceSheet = ss.getSheetByName('Member Directory');
+      sourceSheet = ss.getSheetByName(SHEETS.MEMBER_DIR);
       break;
     case 'audit':
       sourceSheet = ss.getSheetByName('Audit_Log');
@@ -891,7 +891,7 @@ function exportData(options) {
       sourceSheet = ss.getSheetByName('Performance_Log');
       break;
     default:
-      sourceSheet = ss.getSheetByName('Grievance Log');
+      sourceSheet = ss.getSheetByName(SHEETS.GRIEVANCE_LOG);
   }
 
   if (!sourceSheet) {
@@ -1169,9 +1169,9 @@ function importData(options) {
     let destSheet;
 
     if (options.importType === 'members') {
-      destSheet = ss.getSheetByName('Member Directory');
+      destSheet = ss.getSheetByName(SHEETS.MEMBER_DIR);
     } else if (options.importType === 'grievances') {
-      destSheet = ss.getSheetByName('Grievance Log');
+      destSheet = ss.getSheetByName(SHEETS.GRIEVANCE_LOG);
     }
 
     if (!destSheet) {

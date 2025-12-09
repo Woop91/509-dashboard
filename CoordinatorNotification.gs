@@ -326,7 +326,7 @@ function getStewardEmail(stewardName) {
 
   try {
     const ss = SpreadsheetApp.getActiveSpreadsheet();
-    const memberDir = ss.getSheetByName('Member Directory');
+    const memberDir = ss.getSheetByName(SHEETS.MEMBER_DIR);
 
     if (!memberDir) {
       Logger.log('Member Directory sheet not found');
@@ -445,7 +445,7 @@ function showCoordinatorMessageDialog() {
 function showBatchCoordinatorNotification() {
   const ui = SpreadsheetApp.getUi();
   const ss = SpreadsheetApp.getActiveSpreadsheet();
-  const sheet = ss.getSheetByName('Grievance Log');
+  const sheet = ss.getSheetByName(SHEETS.GRIEVANCE_LOG);
 
   if (!sheet) {
     ui.alert('Error', 'Grievance Log sheet not found.', ui.ButtonSet.OK);
@@ -515,7 +515,7 @@ function clearAllCoordinatorNotifications() {
   }
 
   const ss = SpreadsheetApp.getActiveSpreadsheet();
-  const sheet = ss.getSheetByName('Grievance Log');
+  const sheet = ss.getSheetByName(SHEETS.GRIEVANCE_LOG);
 
   if (!sheet) {
     ui.alert('Error', 'Grievance Log sheet not found.', ui.ButtonSet.OK);

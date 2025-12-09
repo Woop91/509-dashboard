@@ -484,7 +484,7 @@ function enforceDataRetention(retentionYears = 7) {
   let archivedCount = 0;
 
   // Process Grievance Log
-  const grievanceLog = ss.getSheetByName('Grievance Log');
+  const grievanceLog = ss.getSheetByName(SHEETS.GRIEVANCE_LOG);
   if (grievanceLog) {
     const data = grievanceLog.getDataRange().getValues();
     const headers = data[0];
