@@ -1194,7 +1194,7 @@ The 509 Dashboard is a comprehensive Google Apps Script-based union management s
 |---|------------|------|---------|
 | 1 | Config | Core | Master dropdown lists for validation |
 | 2 | Member Directory | Core | All member data (31 columns) |
-| 3 | Grievance Log | Core | All grievance cases (28 columns) |
+| 3 | Grievance Log | Core | All grievance cases (34 columns) |
 | 4 | Dashboard | Dashboard | Main real-time metrics dashboard |
 | 5 | Analytics Data | Hidden | Computed aggregations for dashboards |
 | 6 | Member Satisfaction | Core | Survey tracking and satisfaction scores |
@@ -2253,7 +2253,7 @@ const resolution = isClosed ? [
 
 **Process:**
 1. Reads all member IDs
-2. Reads all grievance data (all 28 columns)
+2. Reads all grievance data (all 34 columns)
 3. Builds memberSnapshots object mapping member ID to:
    - Status (prioritizes Open/Filed/Pending)
    - Next deadline (earliest upcoming deadline)
@@ -2378,9 +2378,9 @@ const resolution = isClosed ? [
 **Functionality:**
 1. Checks for all 22 expected sheets
 2. Validates column counts:
-   - Member Directory: 31 columns
-   - Grievance Log: 28 columns
-   - Config: 13 columns
+   - Member Directory: 31 columns (A-AE)
+   - Grievance Log: 34 columns (A-AH)
+   - Config: 43 columns (A-AQ)
 3. Reports data status (row counts)
 4. Generates health report with ✅/⚠️ indicators
 5. Logs diagnostic run to Diagnostics sheet
@@ -2403,8 +2403,8 @@ const resolution = isClosed ? [
 
 📋 COLUMN COUNTS:
    Member Directory: 31 columns ✅
-   Grievance Log: 28 columns ✅
-   Config: 13 columns ✅
+   Grievance Log: 34 columns ✅
+   Config: 43 columns ✅
 
 📈 DATA STATUS:
    Members: 150 rows
@@ -2531,7 +2531,7 @@ const MEMBER_COLS = {
 
 ### GRIEVANCE_COLS Constant
 
-**Purpose:** Single source of truth for all Grievance Log column positions (28 columns)
+**Purpose:** Single source of truth for all Grievance Log column positions (34 columns)
 
 **Why This Exists:**
 - Hardcoded column letters (AB:AB, Y:Y, etc.) break if columns are reordered
@@ -2950,9 +2950,9 @@ The following advanced feature modules have been implemented and integrated:
 ### Verification Checklist
 
 - [ ] 21 sheets exist with correct names
-- [ ] Config sheet has 13 columns with sample data
+- [ ] Config sheet has 43 columns with sample data
 - [ ] Member Directory has 31 columns with correct headers
-- [ ] Grievance Log has 28 columns with correct headers
+- [ ] Grievance Log has 34 columns with correct headers
 - [ ] Dashboard shows live metrics (after seeding)
 - [ ] Menu "📊 509 Dashboard" appears
 - [ ] All menu items work without errors
@@ -2966,7 +2966,7 @@ The following advanced feature modules have been implemented and integrated:
   - [ ] `grep "'Member Directory'![A-Z]:[A-Z]" *.gs` → 0 matches
   - [ ] `grep "'Grievance Log'![A-Z]:[A-Z]" *.gs` → 0 matches
   - [ ] MEMBER_COLS constant defined with all 31 columns
-  - [ ] GRIEVANCE_COLS constant defined with all 28 columns
+  - [ ] GRIEVANCE_COLS constant defined with all 34 columns
 
 ---
 

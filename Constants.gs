@@ -167,7 +167,7 @@ const MEMBER_COLS = {
  * @const {Object}
  */
 const GRIEVANCE_COLS = {
-  // Matches the 28-column layout in createGrievanceLog()
+  // Matches the 34-column layout in createGrievanceLog() - A through AH
   // Section 1: Identity (A-D)
   GRIEVANCE_ID: 1,        // A - Grievance ID
   MEMBER_ID: 2,           // B - Member ID

@@ -14,7 +14,7 @@
  * Build Info:
  * - Version: 2.1.0 (Security Enhanced + Code Review Improvements)
  * - Build ID: 20251202-improvements
- * - Build Date: 2025-12-09T01:12:34.390Z
+ * - Build Date: 2025-12-09T01:18:00.152Z
  * - Build Type: PRODUCTION
  * - Modules: 76 files
  * - Tests Included: No
@@ -197,7 +197,7 @@ const MEMBER_COLS = {
  * @const {Object}
  */
 const GRIEVANCE_COLS = {
-  // Matches the 28-column layout in createGrievanceLog()
+  // Matches the 34-column layout in createGrievanceLog() - A through AH
   // Section 1: Identity (A-D)
   GRIEVANCE_ID: 1,        // A - Grievance ID
   MEMBER_ID: 2,           // B - Member ID
