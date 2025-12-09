@@ -590,7 +590,7 @@ function createMemberDirectory() {
     .setFontSize(10);
 
   // Apply comma number formatting to numeric columns
-  const maxMemberRows = 25000;  // Support up to 25k members
+  const maxMemberRows = 21000;  // Support up to 20k members + 1k buffer
   // Open Rate (%) (column S = 19) - percentage format
   memberDir.getRange(2, MEMBER_COLS.OPEN_RATE, maxMemberRows - 1, 1).setNumberFormat("#,##0");
   // Volunteer Hours (column T = 20) - whole number format
@@ -2052,25 +2052,25 @@ function setupFormulasAndCalculations() {
   grievanceLog.setConditionalFormatRules([overdueRule, dueTodayRule, dueSoonRule, onTrackRule, ...existingRules]);
 
   // ----- MEMBER DIRECTORY FORMULAS -----
-  // IMPORTANT: Using 25000 rows to support large datasets (20k members + buffer)
+  // IMPORTANT: Using 21000 rows to support large datasets (20k members + 1k buffer)
 
   // Has Open Grievance? - Column AB (28)
   // Counts grievances with ANY active status: Open, Pending Info, Appealed, In Arbitration
   const hasGrievanceCol = getColumnLetter(MEMBER_COLS.HAS_OPEN_GRIEVANCE);
   memberDir.getRange(hasGrievanceCol + "2").setFormula(
-    `=ARRAYFORMULA(IF(A2:A25000<>"",IF(SUMPRODUCT((('Grievance Log'!${gMemberIdCol}:${gMemberIdCol}=A2:A25000)*(('Grievance Log'!${gStatusCol}:${gStatusCol}="Open")+('Grievance Log'!${gStatusCol}:${gStatusCol}="Pending Info")+('Grievance Log'!${gStatusCol}:${gStatusCol}="Appealed")+('Grievance Log'!${gStatusCol}:${gStatusCol}="In Arbitration"))))>0,"Yes","No"),""))`
+    `=ARRAYFORMULA(IF(A2:A21000<>"",IF(SUMPRODUCT((('Grievance Log'!${gMemberIdCol}:${gMemberIdCol}=A2:A21000)*(('Grievance Log'!${gStatusCol}:${gStatusCol}="Open")+('Grievance Log'!${gStatusCol}:${gStatusCol}="Pending Info")+('Grievance Log'!${gStatusCol}:${gStatusCol}="Appealed")+('Grievance Log'!${gStatusCol}:${gStatusCol}="In Arbitration"))))>0,"Yes","No"),""))`
   );
 
   // Grievance Status Snapshot - Column AC (29)
   const statusSnapshotCol = getColumnLetter(MEMBER_COLS.GRIEVANCE_STATUS);
   memberDir.getRange(statusSnapshotCol + "2").setFormula(
-    `=ARRAYFORMULA(IF(A2:A25000<>"",IFERROR(INDEX('Grievance Log'!${gStatusCol}:${gStatusCol},MATCH(A2:A25000,'Grievance Log'!${gMemberIdCol}:${gMemberIdCol},0)),""),""))`
+    `=ARRAYFORMULA(IF(A2:A21000<>"",IFERROR(INDEX('Grievance Log'!${gStatusCol}:${gStatusCol},MATCH(A2:A21000,'Grievance Log'!${gMemberIdCol}:${gMemberIdCol},0)),""),""))`
   );
 
   // Next Grievance Deadline - Column AD (30)
   const nextDeadlineCol = getColumnLetter(MEMBER_COLS.NEXT_DEADLINE);
   memberDir.getRange(nextDeadlineCol + "2").setFormula(
-    `=ARRAYFORMULA(IF(A2:A25000<>"",IFERROR(INDEX('Grievance Log'!${gNextActionCol}:${gNextActionCol},MATCH(A2:A25000,'Grievance Log'!${gMemberIdCol}:${gMemberIdCol},0)),""),""))`
+    `=ARRAYFORMULA(IF(A2:A21000<>"",IFERROR(INDEX('Grievance Log'!${gNextActionCol}:${gNextActionCol},MATCH(A2:A21000,'Grievance Log'!${gMemberIdCol}:${gMemberIdCol},0)),""),""))`
   );
 
   // Apply progress bar formatting
