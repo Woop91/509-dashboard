@@ -155,10 +155,17 @@ Additional review found sheet names used in comparisons, object keys, and HTML:
 
 **Note:** Sheet names in Google Sheets FORMULAS (like `=COUNTIF('Grievance Log'!...)`) are intentionally kept as literals - formulas require actual sheet names, not JavaScript constants.
 
+✅ **Fixed ARRAYFORMULA Row Ranges** (`Code.gs`)
+
+Changed ARRAYFORMULA ranges from 25000 to 21000 rows (20k members + 1k buffer):
+- `maxMemberRows`: 25000 → 21000
+- `A2:A25000` → `A2:A21000` in all Member Directory formulas
+
 **Commits:**
 - 5f4e101: Fix SHEETS constant mismatches and convert hardcoded sheet names
 - a17e071: Fix hardcoded insertSheet calls to use SHEETS.* constants
 - c283a17: Fix hardcoded sheet names in comparisons, object keys, and HTML
+- eaa9658: Change ARRAYFORMULA ranges from 25000 to 21000 rows
 
 ---
 
