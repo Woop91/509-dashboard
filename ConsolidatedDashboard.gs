@@ -14,7 +14,7 @@
  * Build Info:
  * - Version: 2.1.0 (Security Enhanced + Code Review Improvements)
  * - Build ID: 20251202-improvements
- * - Build Date: 2025-12-09T00:44:58.159Z
+ * - Build Date: 2025-12-09T00:59:15.616Z
  * - Build Type: PRODUCTION
  * - Modules: 76 files
  * - Tests Included: No
@@ -7473,12 +7473,39 @@ function getMemberSeedConfig() {
     contactNotes: getSeedContactNotes()
   };
 
-  // Validate required config
+  // Validate required config - auto-populate if missing
   if (seedConfig.jobTitles.length === 0 || seedConfig.locations.length === 0 ||
       seedConfig.units.length === 0 || seedConfig.supervisors.length === 0 ||
       seedConfig.managers.length === 0 || seedConfig.stewards.length === 0) {
-    SpreadsheetApp.getUi().alert('Error', 'Config data is incomplete. Please ensure all dropdown lists in Config sheet are populated.', SpreadsheetApp.getUi().ButtonSet.OK);
-    return null;
+
+    // Offer to auto-populate config defaults
+    const ui = SpreadsheetApp.getUi();
+    const response = ui.alert(
+      '⚙️ Config Setup Required',
+      'Config data is incomplete. Would you like to populate it with default values?\n\n' +
+      'This will add sample Job Titles, Locations, Units, Supervisors, Managers, and Stewards to the Config sheet.',
+      ui.ButtonSet.YES_NO
+    );
+
+    if (response === ui.Button.YES) {
+      // Run populateConfigDefaults silently (it has its own alert)
+      if (typeof populateConfigDefaults === 'function') {
+        populateConfigDefaults();
+        // Re-fetch the dropdowns after populating
+        const newDropdowns = getMemberDirectoryDropdownValues();
+        seedConfig.jobTitles = newDropdowns.jobTitles;
+        seedConfig.locations = newDropdowns.locations;
+        seedConfig.units = newDropdowns.units;
+        seedConfig.supervisors = newDropdowns.supervisors;
+        seedConfig.managers = newDropdowns.managers;
+        seedConfig.stewards = newDropdowns.stewards;
+      } else {
+        ui.alert('Error', 'populateConfigDefaults function not found. Please run it manually from Demo menu.', ui.ButtonSet.OK);
+        return null;
+      }
+    } else {
+      return null;
+    }
   }
 
   return seedConfig;
@@ -7769,11 +7796,37 @@ function getGrievanceSeedConfig() {
     resolutions: ["Won - Resolved favorably", "Won - Full remedy granted", "Lost - No violation found", "Lost - Withdrawn by member", "Settled - Partial remedy", "Settled - Compromise reached"]
   };
 
+  // Validate required config - auto-populate if missing
   if (seedConfig.statuses.length === 0 || seedConfig.steps.length === 0 ||
       seedConfig.articles.length === 0 || seedConfig.categories.length === 0 ||
       seedConfig.stewards.length === 0) {
-    SpreadsheetApp.getUi().alert('Error', 'Config data is incomplete. Please ensure all dropdown lists in Config sheet are populated.', SpreadsheetApp.getUi().ButtonSet.OK);
-    return null;
+
+    // Offer to auto-populate config defaults
+    const ui = SpreadsheetApp.getUi();
+    const response = ui.alert(
+      '⚙️ Config Setup Required',
+      'Config data is incomplete. Would you like to populate it with default values?\n\n' +
+      'This will add sample Statuses, Steps, Categories, Articles, and Stewards to the Config sheet.',
+      ui.ButtonSet.YES_NO
+    );
+
+    if (response === ui.Button.YES) {
+      if (typeof populateConfigDefaults === 'function') {
+        populateConfigDefaults();
+        // Re-fetch the dropdowns after populating
+        const newDropdowns = getGrievanceLogDropdownValues();
+        seedConfig.statuses = newDropdowns.statuses;
+        seedConfig.steps = newDropdowns.steps;
+        seedConfig.categories = newDropdowns.categories;
+        seedConfig.articles = newDropdowns.articles;
+        seedConfig.stewards = newDropdowns.stewards;
+      } else {
+        ui.alert('Error', 'populateConfigDefaults function not found. Please run it manually from Demo menu.', ui.ButtonSet.OK);
+        return null;
+      }
+    } else {
+      return null;
+    }
   }
 
   return seedConfig;
@@ -42622,6 +42675,8 @@ function createReorganizedMenus(ui) {
 
   // ------------ DEMO MENU ------------
   ui.createMenu("🎭 Demo")
+    .addItem("⚙️ Populate Config Defaults (Run First!)", "populateConfigDefaults")
+    .addSeparator()
     .addSubMenu(ui.createMenu("🌱 Seed Demo Data")
       .addSubMenu(ui.createMenu("👥 Seed Members")
         .addItem("Seed Members - Toggle 1 (5,000)", "SEED_MEMBERS_TOGGLE_1")

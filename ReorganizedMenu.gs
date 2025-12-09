@@ -219,6 +219,8 @@ function createReorganizedMenus(ui) {
 
   // ------------ DEMO MENU ------------
   ui.createMenu("🎭 Demo")
+    .addItem("⚙️ Populate Config Defaults (Run First!)", "populateConfigDefaults")
+    .addSeparator()
     .addSubMenu(ui.createMenu("🌱 Seed Demo Data")
       .addSubMenu(ui.createMenu("👥 Seed Members")
         .addItem("Seed Members - Toggle 1 (5,000)", "SEED_MEMBERS_TOGGLE_1")
