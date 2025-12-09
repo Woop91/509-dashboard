@@ -114,79 +114,92 @@ const TUTORIAL_STEPS = [
 
 /**
  * Video tutorial library
+ *
+ * NOTE: Update URLs once videos are recorded. See VIDEO_SCRIPTS.md for
+ * detailed recording scripts for each tutorial.
+ *
+ * Recommended hosting: YouTube (unlisted), Vimeo, or Google Drive
  */
 const VIDEO_TUTORIALS = [
   {
     id: 'getting_started',
     title: 'Getting Started with 509 Dashboard',
-    description: 'Complete overview of the dashboard and its features',
-    duration: '10:00',
+    description: 'Navigate the dashboard, understand the 6 menus, explore Member Directory, Grievance Log, and Dashboard sheets',
+    duration: '8-10 min',
     category: 'Basics',
     url: 'https://example.com/tutorials/getting-started',
-    thumbnail: '🎬'
+    thumbnail: '🎬',
+    scriptRef: 'VIDEO_SCRIPTS.md#video-1-getting-started-with-509-dashboard'
   },
   {
     id: 'member_management',
     title: 'Managing Members',
-    description: 'How to add, edit, and search for members',
-    duration: '8:00',
+    description: 'Add new members (31 columns), search and filter, update contact info, track engagement metrics',
+    duration: '6-8 min',
     category: 'Members',
     url: 'https://example.com/tutorials/members',
-    thumbnail: '👥'
+    thumbnail: '👥',
+    scriptRef: 'VIDEO_SCRIPTS.md#video-2-managing-members'
   },
   {
     id: 'grievance_workflow',
     title: 'Grievance Workflow',
-    description: 'Filing and tracking grievances from start to finish',
-    duration: '15:00',
+    description: 'Complete grievance lifecycle: filing, automatic deadline calculations (Article 23), status updates, outcomes, Google Drive folders',
+    duration: '12-15 min',
     category: 'Grievances',
     url: 'https://example.com/tutorials/grievances',
-    thumbnail: '📋'
+    thumbnail: '📋',
+    scriptRef: 'VIDEO_SCRIPTS.md#video-3-grievance-workflow'
   },
   {
     id: 'email_communications',
     title: 'Email Communications',
-    description: 'Using email templates and tracking communications',
-    duration: '6:00',
+    description: 'Email templates, compose custom emails, bulk communications, automatic logging',
+    duration: '5-6 min',
     category: 'Communication',
     url: 'https://example.com/tutorials/email',
-    thumbnail: '📧'
+    thumbnail: '📧',
+    scriptRef: 'VIDEO_SCRIPTS.md#video-4-email-communications'
   },
   {
     id: 'reports_analytics',
     title: 'Reports & Analytics',
-    description: 'Generating reports and understanding analytics',
-    duration: '12:00',
+    description: 'Main Dashboard metrics, Unified Operations Monitor, Interactive Dashboard customization, Steward Workload analysis, report generation',
+    duration: '10-12 min',
     category: 'Reporting',
     url: 'https://example.com/tutorials/reports',
-    thumbnail: '📊'
+    thumbnail: '📊',
+    scriptRef: 'VIDEO_SCRIPTS.md#video-5-reports--analytics'
   },
   {
     id: 'calendar_integration',
     title: 'Calendar Integration',
-    description: 'Syncing deadlines with Google Calendar',
-    duration: '5:00',
+    description: 'Sync grievance deadlines with Google Calendar, set up reminders, never miss a deadline',
+    duration: '4-5 min',
     category: 'Integration',
     url: 'https://example.com/tutorials/calendar',
-    thumbnail: '📅'
+    thumbnail: '📅',
+    scriptRef: 'VIDEO_SCRIPTS.md#video-6-calendar-integration'
   },
   {
     id: 'batch_operations',
     title: 'Batch Operations',
-    description: 'Performing bulk updates and operations',
-    duration: '7:00',
+    description: 'Bulk updates, import/export CSV data, data cleanup and validation tools',
+    duration: '6-7 min',
     category: 'Advanced',
     url: 'https://example.com/tutorials/batch',
-    thumbnail: '⚡'
+    thumbnail: '⚡',
+    scriptRef: 'VIDEO_SCRIPTS.md#video-7-batch-operations'
   },
   {
     id: 'steward_guide',
     title: 'Steward Quick Guide',
-    description: 'Essential features for union stewards',
-    duration: '10:00',
+    description: 'Daily workflow for stewards: checking deadlines, helping members file, tracking your cases, updating progress',
+    duration: '8-10 min',
     category: 'Role-Specific',
     url: 'https://example.com/tutorials/steward',
-    thumbnail: '👨‍⚖️'
+    thumbnail: '👨‍⚖️',
+    scriptRef: 'VIDEO_SCRIPTS.md#video-8-steward-quick-guide'
   }
 ];
 

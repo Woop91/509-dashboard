@@ -225,7 +225,7 @@ You now have a fully functional union management system with:
 
 ---
 
-****Version:** 3.28
+**Version:** 3.28
 **Last Updated:** 2025-12-09
 **GitHub:** https://github.com/Woop91/509-dashboard
 
