@@ -46,6 +46,64 @@
 
 ---
 
+## 🛫 AI PREFLIGHT CHECKLIST
+
+**MANDATORY: Run this checklist before ANY code changes**
+
+This checklist exists because previous AI sessions introduced bugs by not verifying assumptions. **Do not skip this.**
+
+### Before Making Changes:
+
+```
+□ 1. RUN: node verify-columns.js
+     - Must pass before ANY changes to seed functions or column definitions
+     - If it fails, fix the issue before proceeding
+
+□ 2. READ Constants.gs (NOT this doc) for current column definitions
+     - MEMBER_COLS is in Constants.gs lines 117-161
+     - GRIEVANCE_COLS is in Constants.gs lines 170-240
+     - This doc may be stale - Constants.gs is the source of truth
+
+□ 3. COUNT array elements if modifying seed functions
+     - generateSingleMemberRow() must return exactly 31 elements
+     - generateSingleGrievanceRow() must return exactly 34 elements
+
+□ 4. CHECK the changelog for recent changes to the area you're modifying
+```
+
+### After Making Changes:
+
+```
+□ 5. RUN: node verify-columns.js
+     - Must still pass after your changes
+
+□ 6. RUN: node build.js
+     - Must complete without errors
+
+□ 7. UPDATE this document if you changed:
+     - Column definitions (update the MEMBER_COLS/GRIEVANCE_COLS sections)
+     - Seed functions (document what columns they generate)
+     - Any structural changes
+
+□ 8. ADD changelog entry for significant changes
+```
+
+### Why This Exists:
+
+On 2025-12-09, a critical bug was discovered where:
+- `generateSingleMemberRow()` generated 27 columns instead of 31
+- `generateSingleGrievanceRow()` generated 28 columns instead of 34
+- AIR.md had completely wrong column mappings that didn't match Constants.gs
+
+This caused data to populate in wrong columns. The bug persisted across multiple AI sessions because:
+1. AI assistants trusted AIR.md instead of reading Constants.gs directly
+2. No automated verification existed to catch the mismatch
+3. The issue wasn't documented in Known Issues
+
+**Never trust documentation over code. Always verify.**
+
+---
+
 ## 🚀 Quick Reference for AI
 
 ### Key Constants (from Constants.gs)
