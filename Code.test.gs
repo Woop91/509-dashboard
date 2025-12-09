@@ -179,6 +179,7 @@ function testNextActionDueLogic() {
 
 /**
  * Test: Member Directory formulas
+ * NOTE: This test requires the ARRAYFORMULA in the Has Open Grievance column to be set up.
  */
 function testMemberDirectoryFormulas() {
   // Create test setup
@@ -189,38 +190,48 @@ function testMemberDirectoryFormulas() {
     const memberDir = ss.getSheetByName(SHEETS.MEMBER_DIR);
     const grievanceLog = ss.getSheetByName(SHEETS.GRIEVANCE_LOG);
 
+    // Ensure formulas are set up (in case dashboard wasn't fully initialized)
+    setupFormulasAndCalculations();
+
     // Create a test grievance for this member
     // NOTE: Unit, Location, and Steward are left empty to avoid data validation errors
     // (Config tab no longer has sample data as of v3.11+)
+    // Array has 34 columns to match GRIEVANCE_COLS (A through AH)
     const testGrievanceData = [
-      'TEST-G-001',
-      testMemberId,
-      'Test',
-      'Member',
-      'Open',
-      'Step I',
-      new Date(2025, 0, 1),
-      '',
-      new Date(2025, 0, 10),
-      '',
-      '',
-      '',
-      '',
-      '',
-      '',
-      '',
-      '',
-      '',
-      '',
-      '',
-      '',
-      'Art. 23 - Grievance Procedure',
-      'Discipline',
-      'test.member@union.org',
-      '',  // Unit - empty (user populates Config)
-      '',  // Location - empty (user populates Config)
-      '',  // Steward - empty (user populates Config)
-      ''
+      'TEST-G-001',       // Col 1 (A) - GRIEVANCE_ID
+      testMemberId,       // Col 2 (B) - MEMBER_ID
+      'Test',             // Col 3 (C) - FIRST_NAME
+      'Member',           // Col 4 (D) - LAST_NAME
+      'Open',             // Col 5 (E) - STATUS
+      'Step I',           // Col 6 (F) - CURRENT_STEP
+      new Date(2025, 0, 1), // Col 7 (G) - INCIDENT_DATE
+      '',                 // Col 8 (H) - FILING_DEADLINE (auto-calc)
+      new Date(2025, 0, 10), // Col 9 (I) - DATE_FILED
+      '',                 // Col 10 (J) - STEP1_DUE (auto-calc)
+      '',                 // Col 11 (K) - STEP1_RCVD
+      '',                 // Col 12 (L) - STEP2_APPEAL_DUE (auto-calc)
+      '',                 // Col 13 (M) - STEP2_APPEAL_FILED
+      '',                 // Col 14 (N) - STEP2_DUE (auto-calc)
+      '',                 // Col 15 (O) - STEP2_RCVD
+      '',                 // Col 16 (P) - STEP3_APPEAL_DUE (auto-calc)
+      '',                 // Col 17 (Q) - STEP3_APPEAL_FILED
+      '',                 // Col 18 (R) - DATE_CLOSED
+      '',                 // Col 19 (S) - DAYS_OPEN (auto-calc)
+      '',                 // Col 20 (T) - NEXT_ACTION_DUE (auto-calc)
+      '',                 // Col 21 (U) - DAYS_TO_DEADLINE (auto-calc)
+      'Art. 23 - Grievance Procedure', // Col 22 (V) - ARTICLES
+      'Discipline',       // Col 23 (W) - ISSUE_CATEGORY
+      'test.member@union.org', // Col 24 (X) - MEMBER_EMAIL
+      '',                 // Col 25 (Y) - UNIT (user populates Config)
+      '',                 // Col 26 (Z) - LOCATION (user populates Config)
+      '',                 // Col 27 (AA) - STEWARD (user populates Config)
+      '',                 // Col 28 (AB) - RESOLUTION
+      false,              // Col 29 (AC) - MESSAGE_ALERT
+      '',                 // Col 30 (AD) - COORDINATOR_MESSAGE
+      '',                 // Col 31 (AE) - ACKNOWLEDGED_BY
+      '',                 // Col 32 (AF) - ACKNOWLEDGED_DATE
+      '',                 // Col 33 (AG) - DRIVE_FOLDER_ID
+      ''                  // Col 34 (AH) - DRIVE_FOLDER_URL
     ];
 
     // Ensure we never write to row 1 (preserve headers)
@@ -228,28 +239,31 @@ function testMemberDirectoryFormulas() {
     grievanceLog.getRange(startRow, 1, 1, testGrievanceData.length)
       .setValues([testGrievanceData]);
 
-    // Force recalculation
+    // Force recalculation - wait longer for ARRAYFORMULA to process
     SpreadsheetApp.flush();
-    Utilities.sleep(2000); // Wait for formulas to recalculate
+    Utilities.sleep(3000); // Wait for formulas to recalculate
+    SpreadsheetApp.flush(); // Force second flush to ensure formulas are evaluated
 
-    // Find the test member row
-    const memberData = memberDir.getRange(2, 1, memberDir.getLastRow() - 1, memberDir.getLastColumn()).getValues();
-    const testMemberRow = memberData.findIndex(function(row) { return row[0] === testMemberId; });
+    // Find the test member row number (not array index)
+    const memberIds = memberDir.getRange(2, 1, memberDir.getLastRow() - 1, 1).getValues();
+    const testMemberRowIndex = memberIds.findIndex(function(row) { return row[0] === testMemberId; });
 
     Assert.assertTrue(
-      testMemberRow >= 0,
+      testMemberRowIndex >= 0,
       'Test member should exist in Member Directory'
     );
 
-    // Check "Has Open Grievance?" - using MEMBER_COLS constant (column AB = 28, index 27)
-    const hasOpenGrievance = memberData[testMemberRow][MEMBER_COLS.HAS_OPEN_GRIEVANCE - 1];
+    const testMemberRowNum = testMemberRowIndex + 2; // +2 because data starts at row 2
+
+    // Check "Has Open Grievance?" - read directly from cell to get fresh formula value
+    const hasOpenGrievance = memberDir.getRange(testMemberRowNum, MEMBER_COLS.HAS_OPEN_GRIEVANCE).getValue();
     Assert.assertTrue(
       hasOpenGrievance === 'Yes' || hasOpenGrievance === true,
-      'Member with open grievance should show "Yes" in Has Open Grievance column'
+      'Member with open grievance should show "Yes" in Has Open Grievance column\nActual: ' + hasOpenGrievance
     );
 
-    // Check "Grievance Status Snapshot" - using MEMBER_COLS constant (column AC = 29, index 28)
-    const statusSnapshot = memberData[testMemberRow][MEMBER_COLS.GRIEVANCE_STATUS - 1];
+    // Check "Grievance Status Snapshot" - read directly from cell
+    const statusSnapshot = memberDir.getRange(testMemberRowNum, MEMBER_COLS.GRIEVANCE_STATUS).getValue();
     Assert.assertEquals(
       'Open',
       statusSnapshot,
@@ -267,22 +281,32 @@ function testMemberDirectoryFormulas() {
 
 /**
  * Test: Data validation setup creates proper rules
+ * NOTE: Requires Config to be populated first, then dropdowns set up.
  */
 function testDataValidationSetup() {
   const ss = SpreadsheetApp.getActive();
   const memberDir = ss.getSheetByName(SHEETS.MEMBER_DIR);
   const config = ss.getSheetByName(SHEETS.CONFIG);
 
-  // Check that validation exists for Job Title column
-  const jobTitleCell = memberDir.getRange(2, MEMBER_COLS.JOB_TITLE);
-  const validation = jobTitleCell.getDataValidation();
+  // Populate Config with test values and set up dropdowns
+  populateConfigForTesting();
+  setupMemberDirectoryDropdowns();
 
-  Assert.assertNotNull(
-    validation,
-    'Job Title column should have data validation'
-  );
+  try {
+    // Check that validation exists for Job Title column
+    const jobTitleCell = memberDir.getRange(2, MEMBER_COLS.JOB_TITLE);
+    const validation = jobTitleCell.getDataValidation();
 
-  Logger.log('✅ Data validation setup test passed');
+    Assert.assertNotNull(
+      validation,
+      'Job Title column should have data validation'
+    );
+
+    Logger.log('✅ Data validation setup test passed');
+  } finally {
+    // Clean up test config values
+    clearConfigTestValues();
+  }
 }
 
 /**
@@ -332,30 +356,40 @@ function testConfigDropdownValues() {
 
 /**
  * Test: Member validation rules reference correct Config columns
+ * NOTE: Requires Config to be populated first, then dropdowns set up.
  */
 function testMemberValidationRules() {
   const ss = SpreadsheetApp.getActive();
   const memberDir = ss.getSheetByName(SHEETS.MEMBER_DIR);
 
-  // Check critical validations exist - using MEMBER_COLS constants
-  const columnsToCheck = [
-    { col: MEMBER_COLS.JOB_TITLE, name: 'Job Title' },        // Column D (4)
-    { col: MEMBER_COLS.WORK_LOCATION, name: 'Work Location' }, // Column E (5)
-    { col: MEMBER_COLS.UNIT, name: 'Unit' },                   // Column F (6)
-    { col: MEMBER_COLS.IS_STEWARD, name: 'Is Steward' }        // Column N (14)
-  ];
+  // Populate Config with test values and set up dropdowns
+  populateConfigForTesting();
+  setupMemberDirectoryDropdowns();
 
-  columnsToCheck.forEach(function(item) {
-    const cell = memberDir.getRange(2, item.col);
-    const validation = cell.getDataValidation();
+  try {
+    // Check critical validations exist - using MEMBER_COLS constants
+    const columnsToCheck = [
+      { col: MEMBER_COLS.JOB_TITLE, name: 'Job Title' },        // Column D (4)
+      { col: MEMBER_COLS.WORK_LOCATION, name: 'Work Location' }, // Column E (5)
+      { col: MEMBER_COLS.UNIT, name: 'Unit' },                   // Column F (6)
+      { col: MEMBER_COLS.IS_STEWARD, name: 'Is Steward' }        // Column N (14)
+    ];
 
-    Assert.assertNotNull(
-      validation,
-      `${item.name} (column ${item.col}) should have data validation`
-    );
-  });
+    columnsToCheck.forEach(function(item) {
+      const cell = memberDir.getRange(2, item.col);
+      const validation = cell.getDataValidation();
 
-  Logger.log('✅ Member validation rules test passed');
+      Assert.assertNotNull(
+        validation,
+        `${item.name} (column ${item.col}) should have data validation`
+      );
+    });
+
+    Logger.log('✅ Member validation rules test passed');
+  } finally {
+    // Clean up test config values
+    clearConfigTestValues();
+  }
 }
 
 /**
