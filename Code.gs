@@ -1228,7 +1228,7 @@ function createTypeAnalysisSheet() {
 /* Merges: Quick Stats, Detailed KPIs, KPI Performance, Location Analytics, Type Analysis */
 function createExecutiveDashboard() {
   const ss = SpreadsheetApp.getActive();
-  let sheet = ss.getSheetByName("💼 Executive Dashboard");
+  let sheet = ss.getSheetByName(SHEETS.EXECUTIVE_DASHBOARD);
 
   if (!sheet) {
     sheet = ss.insertSheet("💼 Executive Dashboard");
@@ -1433,7 +1433,7 @@ function createExecutiveDashboard() {
 /* --------------------- KPI PERFORMANCE DASHBOARD (Merged Performance + KPI Board) --------------------- */
 function createKPIPerformanceDashboard() {
   const ss = SpreadsheetApp.getActive();
-  let sheet = ss.getSheetByName("📊 KPI Performance Dashboard");
+  let sheet = ss.getSheetByName(SHEETS.KPI_PERFORMANCE);
 
   if (!sheet) {
     sheet = ss.insertSheet("📊 KPI Performance Dashboard");

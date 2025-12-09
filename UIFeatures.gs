@@ -885,10 +885,10 @@ function exportData(options) {
       sourceSheet = ss.getSheetByName(SHEETS.MEMBER_DIR);
       break;
     case 'audit':
-      sourceSheet = ss.getSheetByName('Audit_Log');
+      sourceSheet = ss.getSheetByName(SHEETS.AUDIT_LOG);
       break;
     case 'performance':
-      sourceSheet = ss.getSheetByName('Performance_Log');
+      sourceSheet = ss.getSheetByName(SHEETS.PERFORMANCE_LOG);
       break;
     default:
       sourceSheet = ss.getSheetByName(SHEETS.GRIEVANCE_LOG);

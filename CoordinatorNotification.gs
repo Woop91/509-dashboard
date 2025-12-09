@@ -60,7 +60,7 @@ function onGrievanceEdit(e) {
     const sheetName = sheet.getName();
 
     // Only process Grievance Log edits
-    if (sheetName !== 'Grievance Log') return;
+    if (sheetName !== SHEETS.GRIEVANCE_LOG) return;
 
     const row = e.range.getRow();
     const col = e.range.getColumn();
@@ -394,7 +394,7 @@ function showCoordinatorMessageDialog() {
   const sheet = ss.getActiveSheet();
 
   // Check if we're on Grievance Log
-  if (sheet.getName() !== 'Grievance Log') {
+  if (sheet.getName() !== SHEETS.GRIEVANCE_LOG) {
     ui.alert('Error', 'Please select a row in the Grievance Log sheet first.', ui.ButtonSet.OK);
     return;
   }

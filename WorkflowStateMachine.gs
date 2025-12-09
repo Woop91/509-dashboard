@@ -461,7 +461,7 @@ function mapStatusToState(status) {
  */
 function logStateChange(grievanceId, fromState, toState) {
   const ss = SpreadsheetApp.getActiveSpreadsheet();
-  let stateLog = ss.getSheetByName('🔄 State Change Log');
+  let stateLog = ss.getSheetByName(SHEETS.STATE_CHANGE_LOG);
 
   if (!stateLog) {
     stateLog = createStateChangeLogSheet();

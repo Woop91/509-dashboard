@@ -20,10 +20,10 @@
  */
 function createAuditLogSheetRBAC() {
   const ss = SpreadsheetApp.getActive();
-  let auditLog = ss.getSheetByName("Audit_Log");
+  let auditLog = ss.getSheetByName(SHEETS.AUDIT_LOG);
 
   if (!auditLog) {
-    auditLog = ss.insertSheet("Audit_Log");
+    auditLog = ss.insertSheet(SHEETS.AUDIT_LOG);
 
     // Set up headers
     const headers = [

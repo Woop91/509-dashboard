@@ -540,7 +540,7 @@ function getReportRecipients(reportType) {
   // This would be stored in a configuration sheet
   // For now, return a placeholder
   const ss = SpreadsheetApp.getActiveSpreadsheet();
-  const configSheet = ss.getSheetByName('⚙️ Configuration');
+  const configSheet = ss.getSheetByName(SHEETS.CONFIGURATION);
 
   if (!configSheet) {
     // Default to script owner

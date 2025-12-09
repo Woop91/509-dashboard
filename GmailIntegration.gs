@@ -481,7 +481,7 @@ function sendGrievanceEmail(emailData) {
  */
 function logCommunication(grievanceId, type, details) {
   const ss = SpreadsheetApp.getActiveSpreadsheet();
-  let commLog = ss.getSheetByName('📞 Communications Log');
+  let commLog = ss.getSheetByName(SHEETS.COMMUNICATIONS_LOG);
 
   if (!commLog) {
     commLog = createCommunicationsLogSheet();
@@ -513,7 +513,7 @@ function createGmailCommunicationsLogSheet() {
   const ss = SpreadsheetApp.getActiveSpreadsheet();
 
   // Check if sheet already exists
-  let sheet = ss.getSheetByName('📞 Communications Log');
+  let sheet = ss.getSheetByName(SHEETS.COMMUNICATIONS_LOG);
   if (sheet) {
     return sheet; // Return existing sheet
   }
@@ -708,7 +708,7 @@ function showEmailTemplateManager() {
  */
 function showGrievanceCommunications(grievanceId) {
   const ss = SpreadsheetApp.getActiveSpreadsheet();
-  const commLog = ss.getSheetByName('📞 Communications Log');
+  const commLog = ss.getSheetByName(SHEETS.COMMUNICATIONS_LOG);
 
   if (!commLog) {
     SpreadsheetApp.getUi().alert('No communications logged yet.');

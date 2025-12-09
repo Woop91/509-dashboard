@@ -161,7 +161,7 @@ function showDuplicateGrievanceIDWarning(grievanceId) {
  */
 function createChangeLogSheet() {
   const ss = SpreadsheetApp.getActiveSpreadsheet();
-  let changeLog = ss.getSheetByName('📝 Change Log');
+  let changeLog = ss.getSheetByName(SHEETS.CHANGE_LOG);
 
   if (!changeLog) {
     changeLog = ss.insertSheet('📝 Change Log');
@@ -256,7 +256,7 @@ function onEdit(e) {
     return;
   }
 
-  const changeLog = ss.getSheetByName('📝 Change Log');
+  const changeLog = ss.getSheetByName(SHEETS.CHANGE_LOG);
   if (!changeLog) return; // Change log not created yet
 
   try {

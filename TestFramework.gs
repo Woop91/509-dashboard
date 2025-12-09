@@ -513,7 +513,7 @@ function generateTestReport(duration) {
   const ss = SpreadsheetApp.getActive();
 
   // Create or clear Test Results sheet
-  let reportSheet = ss.getSheetByName('Test Results');
+  let reportSheet = ss.getSheetByName(SHEETS.TEST_RESULTS);
   if (!reportSheet) {
     reportSheet = ss.insertSheet('Test Results');
   }
@@ -729,7 +729,7 @@ function cleanupTestData() {
  */
 function showTestResults() {
   const ss = SpreadsheetApp.getActiveSpreadsheet();
-  const reportSheet = ss.getSheetByName('Test Results');
+  const reportSheet = ss.getSheetByName(SHEETS.TEST_RESULTS);
 
   if (!reportSheet) {
     SpreadsheetApp.getUi().alert(

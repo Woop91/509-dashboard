@@ -12,7 +12,7 @@
  */
 function createPerformanceLogSheet() {
   const ss = SpreadsheetApp.getActiveSpreadsheet();
-  let perfLog = ss.getSheetByName('Performance_Log');
+  let perfLog = ss.getSheetByName(SHEETS.PERFORMANCE_LOG);
 
   // Delete existing sheet if present
   if (perfLog) {
@@ -109,12 +109,12 @@ function trackPerformance(functionName, callback, options = {}) {
 function logPerformance(functionName, executionTime, status, recordsProcessed, memoryUsage, notes) {
   try {
     const ss = SpreadsheetApp.getActiveSpreadsheet();
-    let perfLog = ss.getSheetByName('Performance_Log');
+    let perfLog = ss.getSheetByName(SHEETS.PERFORMANCE_LOG);
 
     // Create performance log sheet if it doesn't exist
     if (!perfLog) {
       createPerformanceLogSheet();
-      perfLog = ss.getSheetByName('Performance_Log');
+      perfLog = ss.getSheetByName(SHEETS.PERFORMANCE_LOG);
     }
 
     const userEmail = Session.getActiveUser().getEmail() || 'Unknown';
@@ -152,7 +152,7 @@ function logPerformance(functionName, executionTime, status, recordsProcessed, m
  */
 function generatePerformanceReport() {
   const ss = SpreadsheetApp.getActiveSpreadsheet();
-  const perfLog = ss.getSheetByName('Performance_Log');
+  const perfLog = ss.getSheetByName(SHEETS.PERFORMANCE_LOG);
 
   if (!perfLog) {
     SpreadsheetApp.getUi().alert('Error', 'Performance_Log sheet not found. No performance data available.', SpreadsheetApp.getUi().ButtonSet.OK);

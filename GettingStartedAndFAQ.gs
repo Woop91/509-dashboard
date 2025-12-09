@@ -13,11 +13,11 @@
  * Creates the Getting Started sheet
  */
 function createGettingStartedSheet(ss) {
-  let sheet = ss.getSheetByName("📚 Getting Started");
+  let sheet = ss.getSheetByName(SHEETS.GETTING_STARTED);
   if (sheet) {
     ss.deleteSheet(sheet);
   }
-  sheet = ss.insertSheet("📚 Getting Started");
+  sheet = ss.insertSheet(SHEETS.GETTING_STARTED);
 
   sheet.clear();
 
@@ -305,11 +305,11 @@ function createGettingStartedSheet(ss) {
  * Creates the FAQ sheet
  */
 function createFAQSheet(ss) {
-  let sheet = ss.getSheetByName("❓ FAQ");
+  let sheet = ss.getSheetByName(SHEETS.FAQ);
   if (sheet) {
     ss.deleteSheet(sheet);
   }
-  sheet = ss.insertSheet("❓ FAQ");
+  sheet = ss.insertSheet(SHEETS.FAQ);
 
   sheet.clear();
 

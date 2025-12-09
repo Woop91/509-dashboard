@@ -78,7 +78,7 @@ function getUserRoleFromSheet(userEmail) {
 
   try {
     const ss = SpreadsheetApp.getActiveSpreadsheet();
-    let userRolesSheet = ss.getSheetByName('User Roles');
+    let userRolesSheet = ss.getSheetByName(SHEETS.USER_ROLES);
 
     if (!userRolesSheet) {
       // If sheet doesn't exist, create it and assign current user as admin
@@ -146,7 +146,7 @@ function assignRole(userEmail, role) {
     }
 
     const ss = SpreadsheetApp.getActiveSpreadsheet();
-    let userRolesSheet = ss.getSheetByName('User Roles');
+    let userRolesSheet = ss.getSheetByName(SHEETS.USER_ROLES);
 
     if (!userRolesSheet) {
       userRolesSheet = createUserRolesSheet();
@@ -336,7 +336,7 @@ function logAudit(eventType, description, metadata) {
     }
 
     const ss = SpreadsheetApp.getActiveSpreadsheet();
-    let auditSheet = ss.getSheetByName('Audit Log');
+    let auditSheet = ss.getSheetByName(SHEETS.AUDIT_LOG);
 
     if (!auditSheet) {
       auditSheet = createAuditLogSheet();
@@ -383,7 +383,7 @@ function createAuditLogSheet() {
   }
 
   // Also check for underscore variant
-  sheet = ss.getSheetByName('Audit_Log');
+  sheet = ss.getSheetByName(SHEETS.AUDIT_LOG);
   if (sheet) {
     return sheet;
   }
