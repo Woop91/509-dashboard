@@ -1,6 +1,6 @@
 # 509 Dashboard - Complete Feature Reference
 
-**Version:** 3.31
+**Version:** 3.32
 **Last Updated:** 2025-12-09
 **Purpose:** Union grievance tracking and member engagement system for SEIU Local 509
 
@@ -752,7 +752,7 @@ Applied via `setupDataValidations()`:
 | P (16) | Step III Appeal Due | STEP2_RCVD + 30 days | Step II Decision Rcvd exists |
 | S (19) | Days Open | DATE_CLOSED - DATE_FILED (or TODAY - DATE_FILED) | Date Filed exists |
 | T (20) | Next Action Due | Based on Current Step (see below) | Not closed/settled/withdrawn/denied |
-| U (21) | Days to Deadline | NEXT_ACTION_DUE - TODAY | Next Action Due exists |
+| U (21) | Days to Deadline | NEXT_ACTION_DUE - TODAY | Next Action Due exists AND not past due |
 
 **Manual Entry Columns (never overwritten):** G, I, K, M, O, Q, R
 
@@ -763,6 +763,15 @@ Applied via `setupDataValidations()`:
 - Step III: Step III Appeal Due (P)
 - Mediation/Arbitration: Blank (no automatic deadline)
 - Closed/Settled/Withdrawn/Denied: Blank
+
+**Days to Deadline Rule (Column U):**
+- If deadline is in the future: Shows positive number (days remaining)
+- If deadline is TODAY: Shows 0
+- If deadline has PASSED: **Blank** (not negative)
+
+**IMPORTANT:** Appeals cannot be filed after the due date. Once a deadline passes, the window for action closes. Therefore:
+- Past-due deadlines show **blank** in both Next Action Due (T) and Days to Deadline (U)
+- This prevents confusion about deadlines that are no longer actionable
 
 **To Recalculate:**
 - Menu: Dashboard → Grievance Tools → Refresh Grievance Formulas
@@ -846,7 +855,29 @@ const COLORS = {
 
 ## Appendix: Changelog
 
-### Version 3.31 (2025-12-09) - LATEST
+### Version 3.32 (2025-12-09) - LATEST
+
+**FIX: Days to Deadline Cannot Show Negative (Past Due)**
+
+Fixed logic in BatchGrievanceRecalc.gs so that past-due deadlines show blank instead of negative numbers.
+
+**Rule Applied:**
+- Appeals cannot be filed after the due date has passed
+- Once a deadline passes, the window for action is closed
+- Therefore, both Next Action Due (T) and Days to Deadline (U) show **blank** for past-due deadlines
+
+**Days to Deadline (Column U) now shows:**
+- Positive number: Days remaining until deadline
+- 0: Due today
+- Blank: Deadline has passed OR no deadline applies
+
+**Files Changed:**
+- BatchGrievanceRecalc.gs: Updated calculateGrievanceTimeline() logic
+- AIR.md: Documented the past-due deadline rule
+
+---
+
+### Version 3.31 (2025-12-09)
 
 **CRITICAL FIX: Grievance Timeline Calculation Bug**
 
@@ -1123,7 +1154,7 @@ See git history for complete changelog. Key milestones:
 
 ---
 
-**Document Version:** 3.31
+**Document Version:** 3.32
 **Last Updated:** 2025-12-09
 **Maintained By:** Claude (AI Assistant)
 
