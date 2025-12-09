@@ -1,6 +1,6 @@
 # 509 Dashboard - Complete Feature Reference
 
-**Version:** 3.29
+**Version:** 3.30
 **Last Updated:** 2025-12-09
 **Purpose:** Union grievance tracking and member engagement system for SEIU Local 509
 
@@ -836,7 +836,34 @@ const COLORS = {
 
 ## Appendix: Changelog
 
-### Version 3.29 (2025-12-09) - LATEST
+### Version 3.30 (2025-12-09) - LATEST
+
+**FEATURE: Grievance Timeline Colors & Auto-Sort**
+
+Updated grievance log timeline visual progress bar and added automatic sorting.
+
+**Timeline Color Changes (Code.gs - setupGrievanceProgressBar):**
+- Past/completed steps: Green (#D1FAE5)
+- Current step (normal): Orange (#FED7AA)
+- Current step (Pending Info): Light Blue (#BFDBFE)
+- Next step: Red (#FECACA)
+- Future steps: Gray (#F3F4F6)
+- Closed/Settled/Withdrawn/Denied: Light Brown (#D7CCC8) - full bar
+
+**Auto-Sort Feature (GrievanceFloatToggle.gs):**
+- Grievances with status Closed/Settled/Withdrawn automatically move to bottom of list
+- Added `onEditGrievanceAutoSort()` - onEdit trigger handler
+- Added `installGrievanceAutoSortTrigger()` - installs the trigger
+- Added `removeGrievanceAutoSortTrigger()` - removes the trigger
+- Trigger auto-installed during CREATE_509_DASHBOARD()
+
+**Files Changed:**
+- Code.gs: Updated setupGrievanceProgressBar(), added trigger installation to CREATE_509_DASHBOARD()
+- GrievanceFloatToggle.gs: Added auto-sort onEdit handler and trigger management functions
+
+---
+
+### Version 3.29 (2025-12-09)
 
 **CRITICAL FIX: Seed Data Column Mismatch**
 
@@ -1055,7 +1082,7 @@ See git history for complete changelog. Key milestones:
 
 ---
 
-**Document Version:** 3.29
+**Document Version:** 3.30
 **Last Updated:** 2025-12-09
 **Maintained By:** Claude (AI Assistant)
 

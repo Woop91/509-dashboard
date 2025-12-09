@@ -139,6 +139,11 @@ function CREATE_509_DASHBOARD() {
       setupQuarterlyReports();
     }
 
+    // Install grievance auto-sort trigger (sends Closed/Settled/Withdrawn to bottom)
+    if (typeof installGrievanceAutoSortTrigger === 'function') {
+      installGrievanceAutoSortTrigger();
+    }
+
     SpreadsheetApp.getActive().toast("✅ Triggers installed", "99%", 2);
 
     onOpen();
