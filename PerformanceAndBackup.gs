@@ -20,7 +20,7 @@ function createPerformanceLogSheet() {
   }
 
   // Create new sheet
-  perfLog = ss.insertSheet('Performance_Log');
+  perfLog = ss.insertSheet(SHEETS.PERFORMANCE_LOG);
 
   // Set up headers
   const headers = [

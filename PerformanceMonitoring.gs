@@ -64,7 +64,7 @@ function createPerformanceMonitoringSheet() {
   let perfSheet = ss.getSheetByName(SHEETS.PERFORMANCE_MONITOR);
 
   if (!perfSheet) {
-    perfSheet = ss.insertSheet('⚡ Performance Monitor');
+    perfSheet = ss.insertSheet(SHEETS.PERFORMANCE_MONITOR);
   }
 
   perfSheet.clear();

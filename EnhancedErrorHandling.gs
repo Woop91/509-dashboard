@@ -740,7 +740,7 @@ function createErrorTrendReport() {
   if (trendsSheet) {
     trendsSheet.clear();
   } else {
-    trendsSheet = ss.insertSheet('Error_Trends');
+    trendsSheet = ss.insertSheet(SHEETS.ERROR_TRENDS);
   }
 
   // Analyze trends by day

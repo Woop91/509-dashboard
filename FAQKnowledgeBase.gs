@@ -40,7 +40,7 @@ function createFAQDatabaseSheet() {
     return;
   }
 
-  faqSheet = ss.insertSheet('📚 FAQ Database');
+  faqSheet = ss.insertSheet(SHEETS.FAQ_DATABASE);
 
   // Set headers
   const headers = [

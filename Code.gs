@@ -1231,7 +1231,7 @@ function createExecutiveDashboard() {
   let sheet = ss.getSheetByName(SHEETS.EXECUTIVE_DASHBOARD);
 
   if (!sheet) {
-    sheet = ss.insertSheet("💼 Executive Dashboard");
+    sheet = ss.insertSheet(SHEETS.EXECUTIVE_DASHBOARD);
   }
   sheet.clear();
 
@@ -1436,7 +1436,7 @@ function createKPIPerformanceDashboard() {
   let sheet = ss.getSheetByName(SHEETS.KPI_PERFORMANCE);
 
   if (!sheet) {
-    sheet = ss.insertSheet("📊 KPI Performance Dashboard");
+    sheet = ss.insertSheet(SHEETS.KPI_PERFORMANCE);
   }
   sheet.clear();
 
