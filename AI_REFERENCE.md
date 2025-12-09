@@ -142,9 +142,23 @@ Additional review found insertSheet() calls using hardcoded names instead of SHE
 
 **Note:** Remaining hardcoded insertSheet() calls are intentionally for temporary/export sheets (Visualizations, Benchmark_Report, Members_Export, etc.)
 
+✅ **Fixed Hardcoded Sheet Names in Comparisons & Object Keys** (4 files)
+
+Additional review found sheet names used in comparisons, object keys, and HTML:
+
+| File | Fix |
+|------|-----|
+| ADHDEnhancements.gs | `sheetName.includes('Config')` → `sheetName !== SHEETS.CONFIG` |
+| ContextSensitiveHelp.gs | `'Member Directory': {...}` → `[SHEETS.MEMBER_DIR]: {...}` |
+| InteractiveTutorial.gs | `sheet: 'Member Directory'` → `sheet: SHEETS.MEMBER_DIR` |
+| SessionManagement.gs | `value="Grievance Log"` → `value="${SHEETS.GRIEVANCE_LOG}"` |
+
+**Note:** Sheet names in Google Sheets FORMULAS (like `=COUNTIF('Grievance Log'!...)`) are intentionally kept as literals - formulas require actual sheet names, not JavaScript constants.
+
 **Commits:**
 - 5f4e101: Fix SHEETS constant mismatches and convert hardcoded sheet names
 - a17e071: Fix hardcoded insertSheet calls to use SHEETS.* constants
+- c283a17: Fix hardcoded sheet names in comparisons, object keys, and HTML
 
 ---
 
