@@ -62,8 +62,15 @@ function CREATE_509_DASHBOARD() {
     createStewardWorkloadSheet();
     Logger.log("Completed createStewardWorkloadSheet");
 
-    // Create comprehensive Executive Dashboard (includes Quick Stats, KPI Performance, Location Analytics, Type Analysis)
-    // NOTE: Operations Analytics and KPI Performance Dashboard are now MERGED into Executive Dashboard
+    // Create Operations Analytics sheet (merged: Trends & Timeline, Location Analytics, Type Analysis, Member Engagement, Cost Impact)
+    Logger.log("Starting createOperationsAnalyticsSheet...");
+    if (typeof createOperationsAnalyticsSheet === 'function') {
+      createOperationsAnalyticsSheet();
+    }
+    Logger.log("Completed createOperationsAnalyticsSheet");
+    SpreadsheetApp.getActive().toast("✅ Operations Analytics created", "75%", 2);
+
+    // Create comprehensive Executive Dashboard (includes Quick Stats, KPI Performance)
     Logger.log("Starting createExecutiveDashboard...");
     createExecutiveDashboard();
     Logger.log("Completed createExecutiveDashboard");
