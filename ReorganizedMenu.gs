@@ -126,6 +126,12 @@ function createReorganizedMenus(ui) {
 
   // ------------ SHEET MANAGER MENU ------------
   ui.createMenu("📊 Sheet Manager")
+    .addSubMenu(ui.createMenu("🔄 Config Sync")
+      .addItem("🔄 Sync Data → Config (One-Time)", "syncAllDataToConfig")
+      .addItem("⚡ Install Auto-Sync Trigger", "installConfigSyncTrigger")
+      .addSeparator()
+      .addItem("ℹ️ How Config Sync Works", "showConfigSyncHelp"))
+    .addSeparator()
     .addSubMenu(ui.createMenu("💾 Data Management")
       .addItem("💾 Backup & Recovery Manager", "showBackupManager")
       .addSeparator()

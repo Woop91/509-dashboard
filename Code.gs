@@ -149,6 +149,13 @@ function CREATE_509_DASHBOARD() {
       installEssentialTriggers();
     }
     Logger.log("Completed installEssentialTriggers");
+
+    // Install Config sync trigger (auto-add new values to Config)
+    Logger.log("Starting installConfigSyncTrigger...");
+    if (typeof installConfigSyncTrigger === 'function') {
+      installConfigSyncTrigger();
+    }
+    Logger.log("Completed installConfigSyncTrigger");
     SpreadsheetApp.getActive().toast("✅ Triggers installed", "99%", 2);
 
     onOpen();

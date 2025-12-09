@@ -849,3 +849,242 @@ function populateConfigDefaults() {
 
   return true;
 }
+
+/* --------------------= BIDIRECTIONAL CONFIG SYNC --------------------= */
+
+/**
+ * Mapping of Member Directory columns to Config columns
+ * Key: MEMBER_COLS column number, Value: CONFIG_COLS column number
+ */
+const MEMBER_TO_CONFIG_MAP = {
+  4: 1,   // Job Title (D) → Job Titles (A)
+  5: 2,   // Work Location (E) → Office Locations (B)
+  6: 3,   // Unit (F) → Units (C)
+  7: 4,   // Office Days (G) → Office Days (D)
+  12: 6,  // Supervisor (L) → Supervisors (F)
+  13: 7,  // Manager (M) → Managers (G)
+  16: 8,  // Assigned Steward (P) → Stewards (H)
+  24: 32  // Home Town (X) → Home Towns (AF)
+};
+
+/**
+ * Mapping of Grievance Log columns to Config columns
+ * Key: GRIEVANCE_COLS column number, Value: CONFIG_COLS column number
+ */
+const GRIEVANCE_TO_CONFIG_MAP = {
+  5: 12,  // Issue Category (E) → Issue Category (L)
+  6: 13,  // Articles Violated (F) → Articles Violated (M)
+  9: 10,  // Status (I) → Grievance Status (J)
+  10: 11, // Current Step (J) → Grievance Step (K)
+  11: 8,  // Steward (K) → Stewards (H)
+  27: 3,  // Unit (AA) → Units (C)
+  28: 2   // Location (AB) → Office Locations (B)
+};
+
+/**
+ * onEdit trigger handler for bidirectional Config sync
+ * Automatically adds new values to Config when entered in Member Directory or Grievance Log
+ * @param {Object} e - The edit event object
+ */
+function onEditSyncToConfig(e) {
+  if (!e || !e.range) return;
+
+  const sheet = e.range.getSheet();
+  const sheetName = sheet.getName();
+  const col = e.range.getColumn();
+  const row = e.range.getRow();
+  const newValue = e.value;
+
+  // Skip header rows and empty values
+  if (row <= 1 || !newValue || newValue.toString().trim() === '') return;
+
+  let configCol = null;
+
+  // Check if this is a Member Directory edit
+  if (sheetName === SHEETS.MEMBER_DIR && MEMBER_TO_CONFIG_MAP[col]) {
+    configCol = MEMBER_TO_CONFIG_MAP[col];
+  }
+  // Check if this is a Grievance Log edit
+  else if (sheetName === SHEETS.GRIEVANCE_LOG && GRIEVANCE_TO_CONFIG_MAP[col]) {
+    configCol = GRIEVANCE_TO_CONFIG_MAP[col];
+  }
+
+  // If not a synced column, exit
+  if (!configCol) return;
+
+  // Add the value to Config if it doesn't exist
+  addValueToConfigIfNew(newValue, configCol);
+}
+
+/**
+ * Adds a value to the Config sheet if it doesn't already exist
+ * @param {string} value - The value to add
+ * @param {number} configCol - The Config column number (1-based)
+ * @returns {boolean} True if value was added, false if it already existed
+ */
+function addValueToConfigIfNew(value, configCol) {
+  if (!value || value.toString().trim() === '') return false;
+
+  const ss = SpreadsheetApp.getActiveSpreadsheet();
+  const configSheet = ss.getSheetByName(SHEETS.CONFIG);
+
+  if (!configSheet) {
+    Logger.log('Config sheet not found for sync');
+    return false;
+  }
+
+  const trimmedValue = value.toString().trim();
+
+  // Get existing values in the Config column (starting from row 3, after headers)
+  const lastRow = Math.max(configSheet.getLastRow(), 3);
+  const existingRange = configSheet.getRange(3, configCol, lastRow - 2, 1);
+  const existingValues = existingRange.getValues().flat().map(function(v) { return v.toString().trim().toLowerCase(); });
+
+  // Check if value already exists (case-insensitive)
+  if (existingValues.includes(trimmedValue.toLowerCase())) {
+    return false; // Value already exists
+  }
+
+  // Find the first empty row in this column
+  let insertRow = 3;
+  for (let i = 0; i < existingValues.length; i++) {
+    if (existingValues[i] !== '') {
+      insertRow = i + 4; // +3 for header offset, +1 for next row
+    }
+  }
+
+  // Insert the new value
+  configSheet.getRange(insertRow, configCol).setValue(trimmedValue);
+
+  Logger.log('Config sync: Added "' + trimmedValue + '" to Config column ' + configCol);
+  return true;
+}
+
+/**
+ * Syncs all existing values from Member Directory and Grievance Log to Config
+ * Run this once to populate Config from existing data
+ */
+function syncAllDataToConfig() {
+  const ss = SpreadsheetApp.getActiveSpreadsheet();
+  const configSheet = ss.getSheetByName(SHEETS.CONFIG);
+
+  if (!configSheet) {
+    SpreadsheetApp.getUi().alert('Error', 'Config sheet not found!', SpreadsheetApp.getUi().ButtonSet.OK);
+    return;
+  }
+
+  let addedCount = 0;
+
+  // Sync from Member Directory
+  const memberSheet = ss.getSheetByName(SHEETS.MEMBER_DIR);
+  if (memberSheet && memberSheet.getLastRow() > 1) {
+    const memberData = memberSheet.getDataRange().getValues();
+
+    for (let row = 1; row < memberData.length; row++) { // Skip header
+      for (const memberCol in MEMBER_TO_CONFIG_MAP) {
+        const value = memberData[row][parseInt(memberCol) - 1];
+        if (value && addValueToConfigIfNew(value, MEMBER_TO_CONFIG_MAP[memberCol])) {
+          addedCount++;
+        }
+      }
+    }
+  }
+
+  // Sync from Grievance Log
+  const grievanceSheet = ss.getSheetByName(SHEETS.GRIEVANCE_LOG);
+  if (grievanceSheet && grievanceSheet.getLastRow() > 1) {
+    const grievanceData = grievanceSheet.getDataRange().getValues();
+
+    for (let row = 1; row < grievanceData.length; row++) { // Skip header
+      for (const gCol in GRIEVANCE_TO_CONFIG_MAP) {
+        const value = grievanceData[row][parseInt(gCol) - 1];
+        if (value && addValueToConfigIfNew(value, GRIEVANCE_TO_CONFIG_MAP[gCol])) {
+          addedCount++;
+        }
+      }
+    }
+  }
+
+  SpreadsheetApp.getUi().alert(
+    '✅ Config Sync Complete',
+    'Synced data from Member Directory and Grievance Log to Config.\n\n' +
+    addedCount + ' new values were added to Config.',
+    SpreadsheetApp.getUi().ButtonSet.OK
+  );
+}
+
+/**
+ * Installs the Config sync trigger
+ * This should be called once during setup
+ */
+function installConfigSyncTrigger() {
+  // Remove existing triggers for this function
+  const triggers = ScriptApp.getProjectTriggers();
+  triggers.forEach(function(trigger) {
+    if (trigger.getHandlerFunction() === 'onEditSyncToConfig') {
+      ScriptApp.deleteTrigger(trigger);
+    }
+  });
+
+  // Create new onEdit trigger
+  ScriptApp.newTrigger('onEditSyncToConfig')
+    .forSpreadsheet(SpreadsheetApp.getActive())
+    .onEdit()
+    .create();
+
+  Logger.log('Config sync trigger installed');
+  SpreadsheetApp.getActiveSpreadsheet().toast('✅ Config sync trigger installed', 'Setup Complete', 3);
+}
+
+/**
+ * Shows help information about Config sync
+ */
+function showConfigSyncHelp() {
+  const html = HtmlService.createHtmlOutput(`
+    <style>
+      body { font-family: Arial, sans-serif; padding: 20px; line-height: 1.6; }
+      h2 { color: #1a73e8; }
+      h3 { color: #5f6368; margin-top: 20px; }
+      ul { padding-left: 20px; }
+      li { margin: 8px 0; }
+      .highlight { background: #e8f0fe; padding: 10px; border-radius: 5px; margin: 10px 0; }
+    </style>
+    <h2>🔄 Bidirectional Config Sync</h2>
+
+    <h3>How It Works</h3>
+    <p>Config Sync automatically keeps your Config sheet and data sheets in sync:</p>
+
+    <div class="highlight">
+      <strong>Member Directory / Grievance Log → Config</strong><br>
+      When you enter a NEW value (e.g., a new location or job title), it's automatically added to the Config dropdown list.
+    </div>
+
+    <div class="highlight">
+      <strong>Config → Member Directory / Grievance Log</strong><br>
+      Values in Config appear as dropdown options in your data sheets.
+    </div>
+
+    <h3>Synced Fields</h3>
+    <ul>
+      <li><strong>Member Directory:</strong> Job Title, Work Location, Unit, Office Days, Supervisor, Manager, Assigned Steward, Home Town</li>
+      <li><strong>Grievance Log:</strong> Issue Category, Articles Violated, Status, Current Step, Steward, Unit, Location</li>
+    </ul>
+
+    <h3>Setup</h3>
+    <ol>
+      <li><strong>One-Time Sync:</strong> Run "Sync Data → Config" to populate Config from existing data</li>
+      <li><strong>Auto-Sync:</strong> Run "Install Auto-Sync Trigger" so new values are automatically added</li>
+    </ol>
+
+    <h3>Notes</h3>
+    <ul>
+      <li>Duplicate values are automatically ignored (case-insensitive)</li>
+      <li>Values are added to Config immediately when entered</li>
+      <li>The trigger only fires on edits to synced columns</li>
+    </ul>
+  `)
+  .setWidth(500)
+  .setHeight(550);
+
+  SpreadsheetApp.getUi().showModalDialog(html, '🔄 Config Sync Help');
+}
