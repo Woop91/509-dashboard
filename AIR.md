@@ -1,6 +1,6 @@
 # 509 Dashboard - Complete Feature Reference
 
-**Version:** 3.27
+**Version:** 3.28
 **Last Updated:** 2025-12-09
 **Purpose:** Union grievance tracking and member engagement system for SEIU Local 509
 
@@ -20,7 +20,7 @@
 
 **Before making ANY changes to the codebase:**
 
-1. **READ AI_REFERENCE.md first** - This document is the single source of truth for the entire system
+1. **READ AIR.md first** - This document is the single source of truth for the entire system
 2. **Check the Changelog** - Understand recent changes and current version
 3. **Review Code Quality section** - Avoid repeating fixed issues
 4. **Verify dynamic column usage** - ALL column references MUST use MEMBER_COLS and GRIEVANCE_COLS
@@ -772,7 +772,22 @@ grep "addEventListenerfunction" *.gs | wc -l
 
 ## Appendix: Changelog
 
-### Version 3.27 (2025-12-09) - LATEST
+### Version 3.28 (2025-12-09) - LATEST
+
+**FIX: Undefined STEP3_FILED Constant**
+
+Fixed runtime error "The number of columns in the range must be at least 1" in `setupGrievanceProgressBar()`.
+
+**Issue:** Line 2169 in Code.gs used `GRIEVANCE_COLS.STEP3_FILED` which doesn't exist.
+**Fix:** Changed to `GRIEVANCE_COLS.STEP3_APPEAL_FILED` (the correct constant name).
+
+**Root Cause:** The undefined constant caused `STEP3_END` to be `undefined`, and when used in range calculations like `CLOSE_COL - STEP3_END + 1`, it produced `NaN`, resulting in an invalid range.
+
+**Codebase Audit Completed:** All GRIEVANCE_COLS (34 columns + 8 aliases), MEMBER_COLS (31 columns + 1 alias), and CONFIG_COLS (43 columns + 1 alias) references verified as valid.
+
+---
+
+### Version 3.27 (2025-12-09)
 
 **FIX: Member Directory Formulas - SUMPRODUCT/ARRAYFORMULA Issue**
 

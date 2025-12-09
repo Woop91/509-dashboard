@@ -2166,7 +2166,7 @@ function setupGrievanceProgressBar() {
   const STEP2_START = GRIEVANCE_COLS.STEP2_APPEAL_DUE;  // Column L
   const STEP2_END = GRIEVANCE_COLS.STEP2_RCVD;          // Column O
   const STEP3_START = GRIEVANCE_COLS.STEP3_APPEAL_DUE;  // Column P
-  const STEP3_END = GRIEVANCE_COLS.STEP3_FILED;         // Column Q
+  const STEP3_END = GRIEVANCE_COLS.STEP3_APPEAL_FILED;  // Column Q (was incorrectly STEP3_FILED)
   const CLOSE_COL = GRIEVANCE_COLS.DATE_CLOSED;         // Column R
 
   const step1FutureRule = SpreadsheetApp.newConditionalFormatRule()
@@ -2412,6 +2412,58 @@ function onOpen() {
     .addItem("⚙️ Shortcuts Configuration", "showKeyboardShortcutsConfig")
     .addItem("F1 Context Help", "showContextHelp")
     .addToUi();
+}
+
+/**
+ * Installs an onOpen trigger that works reliably on page refresh
+ * Run this ONCE to set up the trigger. The menus will then appear
+ * on every page load, including browser refresh.
+ *
+ * Find this in: 509 Dashboard > Administrator > Setup > Install Menu Trigger
+ */
+function installOnOpenTrigger() {
+  // Remove any existing onOpen triggers to avoid duplicates
+  const triggers = ScriptApp.getProjectTriggers();
+  triggers.forEach(function(trigger) {
+    if (trigger.getHandlerFunction() === 'onOpen') {
+      ScriptApp.deleteTrigger(trigger);
+    }
+  });
+
+  // Create a new installable trigger for onOpen
+  ScriptApp.newTrigger('onOpen')
+    .forSpreadsheet(SpreadsheetApp.getActive())
+    .onOpen()
+    .create();
+
+  SpreadsheetApp.getUi().alert(
+    '✅ Menu Trigger Installed',
+    'The menu trigger has been installed successfully.\n\n' +
+    'The menus will now appear reliably when you refresh the page.',
+    SpreadsheetApp.getUi().ButtonSet.OK
+  );
+}
+
+/**
+ * Removes the installable onOpen trigger
+ * Use this if you want to go back to the simple trigger behavior
+ */
+function uninstallOnOpenTrigger() {
+  const triggers = ScriptApp.getProjectTriggers();
+  let removed = 0;
+  triggers.forEach(function(trigger) {
+    if (trigger.getHandlerFunction() === 'onOpen') {
+      ScriptApp.deleteTrigger(trigger);
+      removed++;
+    }
+  });
+
+  SpreadsheetApp.getUi().alert(
+    '✅ Trigger Removed',
+    'Removed ' + removed + ' onOpen trigger(s).\n\n' +
+    'Menus will now use the simple trigger (may not appear on every refresh).',
+    SpreadsheetApp.getUi().ButtonSet.OK
+  );
 }
 
 function refreshCalculations() {

@@ -1,6 +1,6 @@
 # 509 Dashboard - User Tutorials
 
-**Version:** 3.27
+****Version:** 3.28
 **Last Updated:** 2025-12-09
 
 Quick, practical tutorials for common tasks in the 509 Dashboard.
@@ -390,5 +390,5 @@ After entering, these columns auto-populate:
 
 ---
 
-**Version:** 3.27
+****Version:** 3.28
 **Last Updated:** 2025-12-09
