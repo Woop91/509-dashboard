@@ -2356,6 +2356,7 @@ function onOpen() {
 
   // ============ 🧪 TESTING MENU ============
   ui.createMenu("🧪 Tests")
+    .addItem("⚡ Run Quick Tests", "runQuickTests")
     .addItem("🧪 Run All Tests", "runAllTests")
     .addItem("📊 View Test Results", "showTestResults")
     .addSeparator()
