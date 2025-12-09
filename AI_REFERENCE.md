@@ -1,6 +1,6 @@
 # 509 Dashboard - Complete Feature Reference
 
-**Version:** 3.23
+**Version:** 3.24
 **Last Updated:** 2025-12-09
 **Purpose:** Union grievance tracking and member engagement system for SEIU Local 509
 
@@ -46,7 +46,40 @@
 
 ---
 
-## 🆕 Changelog - Version 3.23 (2025-12-09)
+## 🆕 Changelog - Version 3.24 (2025-12-09)
+
+**FIX: Multi-Select Dropdown Behavior Now Works**
+
+Google Sheets doesn't have native multi-select dropdowns. Added `onEdit` handler to implement multi-select behavior.
+
+**How Multi-Select Works Now:**
+1. User clicks dropdown and selects a value → Value is added to cell
+2. User clicks dropdown again and selects another value → Value is APPENDED (comma-separated)
+3. User selects a value that already exists → Value is REMOVED (toggle behavior)
+
+**Multi-Select Columns:**
+
+| Sheet | Columns |
+|-------|---------|
+| Member Directory | Office Days, Preferred Communication, Best Time to Contact, Committees |
+| Grievance Log | Articles Violated, Issue Category, Assigned Steward |
+
+**New Functions:**
+- `handleMultiSelectEdit(e)` - Handles append/toggle logic for multi-select dropdowns
+
+**Files Modified:**
+- `DataIntegrityEnhancements.gs` - Added `handleMultiSelectEdit()` and updated `onEdit()` to detect multi-select columns
+
+**Technical Details:**
+- `onEdit()` checks if edited column is in the multi-select list
+- If yes, calls `handleMultiSelectEdit()` which:
+  - Parses existing comma-separated values
+  - Adds new value if not present, removes if present (toggle)
+  - Joins values back with ", " separator
+
+---
+
+## Changelog - Version 3.23 (2025-12-09)
 
 **FEATURE: Grievance Status Bar & Auto-Sort**
 

@@ -225,6 +225,47 @@ function createChangeLogSheet() {
 }
 
 /**
+ * Handles multi-select dropdown behavior
+ * When user selects from dropdown, appends to existing value instead of replacing
+ * @param {object} e - The edit event object
+ */
+function handleMultiSelectEdit(e) {
+  if (!e || !e.value) return;
+
+  const oldValue = e.oldValue || '';
+  const newValue = e.value;
+
+  // If there's no old value, just keep the new value
+  if (!oldValue || oldValue.trim() === '') {
+    return; // Keep the new value as-is
+  }
+
+  // If new value is same as old, do nothing (user just clicked without changing)
+  if (oldValue === newValue) {
+    return;
+  }
+
+  // Parse existing values into array (comma-separated)
+  const existingValues = oldValue.split(',').map(function(v) { return v.trim(); }).filter(function(v) { return v !== ''; });
+
+  // Check if new value already exists (toggle behavior - remove if exists)
+  const newValueTrimmed = newValue.trim();
+  const existingIndex = existingValues.indexOf(newValueTrimmed);
+
+  if (existingIndex !== -1) {
+    // Value already exists - remove it (toggle off)
+    existingValues.splice(existingIndex, 1);
+  } else {
+    // Value doesn't exist - add it
+    existingValues.push(newValueTrimmed);
+  }
+
+  // Set the combined value back to the cell
+  const combinedValue = existingValues.join(', ');
+  e.range.setValue(combinedValue);
+}
+
+/**
  * Logs a change to the Change Log sheet
  * @param {object} e - The edit event object
  */
@@ -234,19 +275,49 @@ function onEdit(e) {
   const ss = e.source;
   const sheet = e.range.getSheet();
   const sheetName = sheet.getName();
+  const row = e.range.getRow();
+  const col = e.range.getColumn();
+
+  // Skip header row
+  if (row === 1) return;
 
   // Handle Start Grievance checkbox in Member Directory
   if (sheetName === SHEETS.MEMBER_DIR) {
-    const row = e.range.getRow();
-    const col = e.range.getColumn();
-
     // Check if Start Grievance checkbox was clicked (column 32/AF)
-    if (col === MEMBER_COLS.START_GRIEVANCE && row > 1 && e.value === true) {
+    if (col === MEMBER_COLS.START_GRIEVANCE && e.value === true) {
       // Reset checkbox immediately to allow re-use
       e.range.setValue(false);
 
       // Open grievance form with prepopulated member data
       openGrievanceFormForMember(row);
+      return;
+    }
+
+    // Handle multi-select dropdowns in Member Directory
+    // These columns should append values instead of replacing
+    const memberMultiSelectCols = [
+      MEMBER_COLS.OFFICE_DAYS,
+      MEMBER_COLS.PREFERRED_COMM,
+      MEMBER_COLS.BEST_TIME,
+      MEMBER_COLS.COMMITTEES
+    ];
+
+    if (memberMultiSelectCols.indexOf(col) !== -1) {
+      handleMultiSelectEdit(e);
+      return;
+    }
+  }
+
+  // Handle multi-select dropdowns in Grievance Log
+  if (sheetName === SHEETS.GRIEVANCE_LOG) {
+    const grievanceMultiSelectCols = [
+      GRIEVANCE_COLS.ARTICLES,
+      GRIEVANCE_COLS.ISSUE_CATEGORY,
+      GRIEVANCE_COLS.STEWARD
+    ];
+
+    if (grievanceMultiSelectCols.indexOf(col) !== -1) {
+      handleMultiSelectEdit(e);
       return;
     }
   }
