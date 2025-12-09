@@ -126,6 +126,12 @@ function createReorganizedMenus(ui) {
 
   // ------------ SHEET MANAGER MENU ------------
   ui.createMenu("📊 Sheet Manager")
+    .addSubMenu(ui.createMenu("🔄 Config Sync")
+      .addItem("🔄 Sync Data → Config (One-Time)", "syncAllDataToConfig")
+      .addItem("⚡ Install Auto-Sync Trigger", "installConfigSyncTrigger")
+      .addSeparator()
+      .addItem("ℹ️ How Config Sync Works", "showConfigSyncHelp"))
+    .addSeparator()
     .addSubMenu(ui.createMenu("💾 Data Management")
       .addItem("💾 Backup & Recovery Manager", "showBackupManager")
       .addSeparator()
@@ -219,6 +225,8 @@ function createReorganizedMenus(ui) {
 
   // ------------ DEMO MENU ------------
   ui.createMenu("🎭 Demo")
+    .addItem("⚙️ Populate Config Defaults (Run First!)", "populateConfigDefaults")
+    .addSeparator()
     .addSubMenu(ui.createMenu("🌱 Seed Demo Data")
       .addSubMenu(ui.createMenu("👥 Seed Members")
         .addItem("Seed Members - Toggle 1 (5,000)", "SEED_MEMBERS_TOGGLE_1")

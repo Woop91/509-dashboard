@@ -149,6 +149,13 @@ function CREATE_509_DASHBOARD() {
       installEssentialTriggers();
     }
     Logger.log("Completed installEssentialTriggers");
+
+    // Install Config sync trigger (auto-add new values to Config)
+    Logger.log("Starting installConfigSyncTrigger...");
+    if (typeof installConfigSyncTrigger === 'function') {
+      installConfigSyncTrigger();
+    }
+    Logger.log("Completed installConfigSyncTrigger");
     SpreadsheetApp.getActive().toast("✅ Triggers installed", "99%", 2);
 
     onOpen();
@@ -3794,12 +3801,39 @@ function getMemberSeedConfig() {
     contactNotes: getSeedContactNotes()
   };
 
-  // Validate required config
+  // Validate required config - auto-populate if missing
   if (seedConfig.jobTitles.length === 0 || seedConfig.locations.length === 0 ||
       seedConfig.units.length === 0 || seedConfig.supervisors.length === 0 ||
       seedConfig.managers.length === 0 || seedConfig.stewards.length === 0) {
-    SpreadsheetApp.getUi().alert('Error', 'Config data is incomplete. Please ensure all dropdown lists in Config sheet are populated.', SpreadsheetApp.getUi().ButtonSet.OK);
-    return null;
+
+    // Offer to auto-populate config defaults
+    const ui = SpreadsheetApp.getUi();
+    const response = ui.alert(
+      '⚙️ Config Setup Required',
+      'Config data is incomplete. Would you like to populate it with default values?\n\n' +
+      'This will add sample Job Titles, Locations, Units, Supervisors, Managers, and Stewards to the Config sheet.',
+      ui.ButtonSet.YES_NO
+    );
+
+    if (response === ui.Button.YES) {
+      // Run populateConfigDefaults silently (it has its own alert)
+      if (typeof populateConfigDefaults === 'function') {
+        populateConfigDefaults();
+        // Re-fetch the dropdowns after populating
+        const newDropdowns = getMemberDirectoryDropdownValues();
+        seedConfig.jobTitles = newDropdowns.jobTitles;
+        seedConfig.locations = newDropdowns.locations;
+        seedConfig.units = newDropdowns.units;
+        seedConfig.supervisors = newDropdowns.supervisors;
+        seedConfig.managers = newDropdowns.managers;
+        seedConfig.stewards = newDropdowns.stewards;
+      } else {
+        ui.alert('Error', 'populateConfigDefaults function not found. Please run it manually from Demo menu.', ui.ButtonSet.OK);
+        return null;
+      }
+    } else {
+      return null;
+    }
   }
 
   return seedConfig;
@@ -4090,11 +4124,37 @@ function getGrievanceSeedConfig() {
     resolutions: ["Won - Resolved favorably", "Won - Full remedy granted", "Lost - No violation found", "Lost - Withdrawn by member", "Settled - Partial remedy", "Settled - Compromise reached"]
   };
 
+  // Validate required config - auto-populate if missing
   if (seedConfig.statuses.length === 0 || seedConfig.steps.length === 0 ||
       seedConfig.articles.length === 0 || seedConfig.categories.length === 0 ||
       seedConfig.stewards.length === 0) {
-    SpreadsheetApp.getUi().alert('Error', 'Config data is incomplete. Please ensure all dropdown lists in Config sheet are populated.', SpreadsheetApp.getUi().ButtonSet.OK);
-    return null;
+
+    // Offer to auto-populate config defaults
+    const ui = SpreadsheetApp.getUi();
+    const response = ui.alert(
+      '⚙️ Config Setup Required',
+      'Config data is incomplete. Would you like to populate it with default values?\n\n' +
+      'This will add sample Statuses, Steps, Categories, Articles, and Stewards to the Config sheet.',
+      ui.ButtonSet.YES_NO
+    );
+
+    if (response === ui.Button.YES) {
+      if (typeof populateConfigDefaults === 'function') {
+        populateConfigDefaults();
+        // Re-fetch the dropdowns after populating
+        const newDropdowns = getGrievanceLogDropdownValues();
+        seedConfig.statuses = newDropdowns.statuses;
+        seedConfig.steps = newDropdowns.steps;
+        seedConfig.categories = newDropdowns.categories;
+        seedConfig.articles = newDropdowns.articles;
+        seedConfig.stewards = newDropdowns.stewards;
+      } else {
+        ui.alert('Error', 'populateConfigDefaults function not found. Please run it manually from Demo menu.', ui.ButtonSet.OK);
+        return null;
+      }
+    } else {
+      return null;
+    }
   }
 
   return seedConfig;
