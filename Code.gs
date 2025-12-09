@@ -2166,7 +2166,7 @@ function setupGrievanceProgressBar() {
   const STEP2_START = GRIEVANCE_COLS.STEP2_APPEAL_DUE;  // Column L
   const STEP2_END = GRIEVANCE_COLS.STEP2_RCVD;          // Column O
   const STEP3_START = GRIEVANCE_COLS.STEP3_APPEAL_DUE;  // Column P
-  const STEP3_END = GRIEVANCE_COLS.STEP3_FILED;         // Column Q
+  const STEP3_END = GRIEVANCE_COLS.STEP3_APPEAL_FILED;  // Column Q (was incorrectly STEP3_FILED)
   const CLOSE_COL = GRIEVANCE_COLS.DATE_CLOSED;         // Column R
 
   const step1FutureRule = SpreadsheetApp.newConditionalFormatRule()
