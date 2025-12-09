@@ -428,68 +428,68 @@ function createConfigTab() {
     .setFontSize(10)
     .setHorizontalAlignment("center");
 
-  // Category colors for row 1 (dark colors) - 43 columns total
-  // Employment Info (cols 1-5) - Blue
-  config.getRange(1, 1, 1, 5).setBackground("#3B82F6").setFontColor("#FFFFFF");
-  // Supervision (cols 6-7) - Green (managers only)
-  config.getRange(1, 6, 1, 2).setBackground("#10B981").setFontColor("#FFFFFF");
-  // Steward Info (cols 8-9) - Purple (union reps, separate from management)
-  config.getRange(1, 8, 1, 2).setBackground("#7C3AED").setFontColor("#FFFFFF");
-  // Grievance Settings (cols 10-14) - Orange
-  config.getRange(1, 10, 1, 5).setBackground("#F59E0B").setFontColor("#FFFFFF");
-  // Links & Coordinators (cols 15-17) - Deep Purple
-  config.getRange(1, 15, 1, 3).setBackground("#8B5CF6").setFontColor("#FFFFFF");
-  // Notifications (cols 18-20) - Red/Pink
-  config.getRange(1, 18, 1, 3).setBackground("#EF4444").setFontColor("#FFFFFF");
-  // Organization (cols 21-24) - Teal
-  config.getRange(1, 21, 1, 4).setBackground("#14B8A6").setFontColor("#FFFFFF");
-  // Integration (cols 25-26) - Indigo
-  config.getRange(1, 25, 1, 2).setBackground("#6366F1").setFontColor("#FFFFFF");
-  // Deadlines (cols 27-30) - Amber/Gold
-  config.getRange(1, 27, 1, 4).setBackground("#D97706").setFontColor("#FFFFFF");
-  // Multi-select Options (cols 31-32) - Cyan
-  config.getRange(1, 31, 1, 2).setBackground("#06B6D4").setFontColor("#FFFFFF");
-  // Contract & Legal (cols 33-36) - Dark Green
-  config.getRange(1, 33, 1, 4).setBackground("#059669").setFontColor("#FFFFFF");
-  // Org Identity (cols 37-39) - Dark Teal
-  config.getRange(1, 37, 1, 3).setBackground("#0D9488").setFontColor("#FFFFFF");
-  // Extended Contact (cols 40-43) - Dark Blue
-  config.getRange(1, 40, 1, 4).setBackground("#1E40AF").setFontColor("#FFFFFF");
+  // Category colors for row 1 (dark colors) - uses CONFIG_COLS for dynamic positioning
+  // Employment Info - Blue
+  config.getRange(1, CONFIG_COLS.JOB_TITLES, 1, 5).setBackground("#3B82F6").setFontColor("#FFFFFF");
+  // Supervision - Green (managers only)
+  config.getRange(1, CONFIG_COLS.SUPERVISORS, 1, 2).setBackground("#10B981").setFontColor("#FFFFFF");
+  // Steward Info - Purple (union reps, separate from management)
+  config.getRange(1, CONFIG_COLS.STEWARDS, 1, 2).setBackground("#7C3AED").setFontColor("#FFFFFF");
+  // Grievance Settings - Orange
+  config.getRange(1, CONFIG_COLS.GRIEVANCE_STATUS, 1, 5).setBackground("#F59E0B").setFontColor("#FFFFFF");
+  // Links & Coordinators - Deep Purple
+  config.getRange(1, CONFIG_COLS.GRIEVANCE_COORDINATORS, 1, 3).setBackground("#8B5CF6").setFontColor("#FFFFFF");
+  // Notifications - Red/Pink
+  config.getRange(1, CONFIG_COLS.ADMIN_EMAILS, 1, 3).setBackground("#EF4444").setFontColor("#FFFFFF");
+  // Organization - Teal
+  config.getRange(1, CONFIG_COLS.ORG_NAME, 1, 4).setBackground("#14B8A6").setFontColor("#FFFFFF");
+  // Integration - Indigo
+  config.getRange(1, CONFIG_COLS.DRIVE_FOLDER_ID, 1, 2).setBackground("#6366F1").setFontColor("#FFFFFF");
+  // Deadlines - Amber/Gold
+  config.getRange(1, CONFIG_COLS.FILING_DEADLINE_DAYS, 1, 4).setBackground("#D97706").setFontColor("#FFFFFF");
+  // Multi-select Options - Cyan
+  config.getRange(1, CONFIG_COLS.BEST_TIMES, 1, 2).setBackground("#06B6D4").setFontColor("#FFFFFF");
+  // Contract & Legal - Dark Green
+  config.getRange(1, CONFIG_COLS.CONTRACT_ARTICLE_GRIEVANCE, 1, 4).setBackground("#059669").setFontColor("#FFFFFF");
+  // Org Identity - Dark Teal
+  config.getRange(1, CONFIG_COLS.UNION_PARENT, 1, 3).setBackground("#0D9488").setFontColor("#FFFFFF");
+  // Extended Contact - Dark Blue
+  config.getRange(1, CONFIG_COLS.OFFICE_ADDRESSES, 1, 4).setBackground("#1E40AF").setFontColor("#FFFFFF");
 
   // Style column header row (Row 2) with matching lighter colors
   config.getRange(2, 1, 1, configData[0].length)
     .setFontWeight("bold")
     .setFontSize(9);
 
-  // Light colors for column headers (Row 2) - 43 columns total
-  config.getRange(2, 1, 1, 5).setBackground("#DBEAFE");   // Light blue - Employment (1-5)
-  config.getRange(2, 6, 1, 2).setBackground("#D1FAE5");   // Light green - Supervision (6-7)
-  config.getRange(2, 8, 1, 2).setBackground("#E8E3F3");   // Light purple - Steward Info (8-9)
-  config.getRange(2, 10, 1, 5).setBackground("#FEF3C7");  // Light orange - Grievance Settings (10-14)
-  config.getRange(2, 15, 1, 3).setBackground("#EDE9FE");  // Light purple - Links (15-17)
-  config.getRange(2, 18, 1, 3).setBackground("#FEE2E2");  // Light red - Notifications (18-20)
-  config.getRange(2, 21, 1, 4).setBackground("#CCFBF1");  // Light teal - Organization (21-24)
-  config.getRange(2, 25, 1, 2).setBackground("#E0E7FF");  // Light indigo - Integration (25-26)
-  config.getRange(2, 27, 1, 4).setBackground("#FEF3C7");  // Light amber - Deadlines (27-30)
-  config.getRange(2, 31, 1, 2).setBackground("#CFFAFE");  // Light cyan - Multi-select Options (31-32)
-  config.getRange(2, 33, 1, 4).setBackground("#D1FAE5");  // Light green - Contract & Legal (33-36)
-  config.getRange(2, 37, 1, 3).setBackground("#CCFBF1");  // Light teal - Org Identity (37-39)
-  config.getRange(2, 40, 1, 4).setBackground("#DBEAFE");  // Light blue - Extended Contact (40-43)
+  // Light colors for column headers (Row 2) - uses CONFIG_COLS for dynamic positioning
+  config.getRange(2, CONFIG_COLS.JOB_TITLES, 1, 5).setBackground("#DBEAFE");   // Light blue - Employment
+  config.getRange(2, CONFIG_COLS.SUPERVISORS, 1, 2).setBackground("#D1FAE5");   // Light green - Supervision
+  config.getRange(2, CONFIG_COLS.STEWARDS, 1, 2).setBackground("#E8E3F3");   // Light purple - Steward Info
+  config.getRange(2, CONFIG_COLS.GRIEVANCE_STATUS, 1, 5).setBackground("#FEF3C7");  // Light orange - Grievance Settings
+  config.getRange(2, CONFIG_COLS.GRIEVANCE_COORDINATORS, 1, 3).setBackground("#EDE9FE");  // Light purple - Links
+  config.getRange(2, CONFIG_COLS.ADMIN_EMAILS, 1, 3).setBackground("#FEE2E2");  // Light red - Notifications
+  config.getRange(2, CONFIG_COLS.ORG_NAME, 1, 4).setBackground("#CCFBF1");  // Light teal - Organization
+  config.getRange(2, CONFIG_COLS.DRIVE_FOLDER_ID, 1, 2).setBackground("#E0E7FF");  // Light indigo - Integration
+  config.getRange(2, CONFIG_COLS.FILING_DEADLINE_DAYS, 1, 4).setBackground("#FEF3C7");  // Light amber - Deadlines
+  config.getRange(2, CONFIG_COLS.BEST_TIMES, 1, 2).setBackground("#CFFAFE");  // Light cyan - Multi-select Options
+  config.getRange(2, CONFIG_COLS.CONTRACT_ARTICLE_GRIEVANCE, 1, 4).setBackground("#D1FAE5");  // Light green - Contract & Legal
+  config.getRange(2, CONFIG_COLS.UNION_PARENT, 1, 3).setBackground("#CCFBF1");  // Light teal - Org Identity
+  config.getRange(2, CONFIG_COLS.OFFICE_ADDRESSES, 1, 4).setBackground("#DBEAFE");  // Light blue - Extended Contact
 
-  // Add borders between category groups (right border after last column of each category)
+  // Add borders between category groups - uses CONFIG_COLS for dynamic positioning
   const totalRows = configData.length + 1;
-  config.getRange(1, 5, totalRows, 1).setBorder(null, null, null, true, null, null, "#9CA3AF", SpreadsheetApp.BorderStyle.SOLID_MEDIUM);   // After Employment (5)
-  config.getRange(1, 7, totalRows, 1).setBorder(null, null, null, true, null, null, "#9CA3AF", SpreadsheetApp.BorderStyle.SOLID_MEDIUM);   // After Supervision (7)
-  config.getRange(1, 9, totalRows, 1).setBorder(null, null, null, true, null, null, "#9CA3AF", SpreadsheetApp.BorderStyle.SOLID_MEDIUM);   // After Steward Info (9)
-  config.getRange(1, 14, totalRows, 1).setBorder(null, null, null, true, null, null, "#9CA3AF", SpreadsheetApp.BorderStyle.SOLID_MEDIUM);  // After Grievance Settings (14)
-  config.getRange(1, 17, totalRows, 1).setBorder(null, null, null, true, null, null, "#9CA3AF", SpreadsheetApp.BorderStyle.SOLID_MEDIUM);  // After Links (17)
-  config.getRange(1, 20, totalRows, 1).setBorder(null, null, null, true, null, null, "#9CA3AF", SpreadsheetApp.BorderStyle.SOLID_MEDIUM);  // After Notifications (20)
-  config.getRange(1, 24, totalRows, 1).setBorder(null, null, null, true, null, null, "#9CA3AF", SpreadsheetApp.BorderStyle.SOLID_MEDIUM);  // After Organization (24)
-  config.getRange(1, 26, totalRows, 1).setBorder(null, null, null, true, null, null, "#9CA3AF", SpreadsheetApp.BorderStyle.SOLID_MEDIUM);  // After Integration (26)
-  config.getRange(1, 30, totalRows, 1).setBorder(null, null, null, true, null, null, "#9CA3AF", SpreadsheetApp.BorderStyle.SOLID_MEDIUM);  // After Deadlines (30)
-  config.getRange(1, 32, totalRows, 1).setBorder(null, null, null, true, null, null, "#9CA3AF", SpreadsheetApp.BorderStyle.SOLID_MEDIUM);  // After Multi-select Options (32)
-  config.getRange(1, 36, totalRows, 1).setBorder(null, null, null, true, null, null, "#9CA3AF", SpreadsheetApp.BorderStyle.SOLID_MEDIUM);  // After Contract & Legal (36)
-  config.getRange(1, 39, totalRows, 1).setBorder(null, null, null, true, null, null, "#9CA3AF", SpreadsheetApp.BorderStyle.SOLID_MEDIUM);  // After Org Identity (39)
+  config.getRange(1, CONFIG_COLS.YES_NO, totalRows, 1).setBorder(null, null, null, true, null, null, "#9CA3AF", SpreadsheetApp.BorderStyle.SOLID_MEDIUM);   // After Employment
+  config.getRange(1, CONFIG_COLS.MANAGERS, totalRows, 1).setBorder(null, null, null, true, null, null, "#9CA3AF", SpreadsheetApp.BorderStyle.SOLID_MEDIUM);   // After Supervision
+  config.getRange(1, CONFIG_COLS.STEWARD_COMMITTEES, totalRows, 1).setBorder(null, null, null, true, null, null, "#9CA3AF", SpreadsheetApp.BorderStyle.SOLID_MEDIUM);   // After Steward Info
+  config.getRange(1, CONFIG_COLS.COMM_METHODS, totalRows, 1).setBorder(null, null, null, true, null, null, "#9CA3AF", SpreadsheetApp.BorderStyle.SOLID_MEDIUM);  // After Grievance Settings
+  config.getRange(1, CONFIG_COLS.CONTACT_FORM_URL, totalRows, 1).setBorder(null, null, null, true, null, null, "#9CA3AF", SpreadsheetApp.BorderStyle.SOLID_MEDIUM);  // After Links
+  config.getRange(1, CONFIG_COLS.NOTIFICATION_RECIPIENTS, totalRows, 1).setBorder(null, null, null, true, null, null, "#9CA3AF", SpreadsheetApp.BorderStyle.SOLID_MEDIUM);  // After Notifications
+  config.getRange(1, CONFIG_COLS.MAIN_PHONE, totalRows, 1).setBorder(null, null, null, true, null, null, "#9CA3AF", SpreadsheetApp.BorderStyle.SOLID_MEDIUM);  // After Organization
+  config.getRange(1, CONFIG_COLS.CALENDAR_ID, totalRows, 1).setBorder(null, null, null, true, null, null, "#9CA3AF", SpreadsheetApp.BorderStyle.SOLID_MEDIUM);  // After Integration
+  config.getRange(1, CONFIG_COLS.STEP2_RESPONSE_DAYS, totalRows, 1).setBorder(null, null, null, true, null, null, "#9CA3AF", SpreadsheetApp.BorderStyle.SOLID_MEDIUM);  // After Deadlines
+  config.getRange(1, CONFIG_COLS.HOME_TOWNS, totalRows, 1).setBorder(null, null, null, true, null, null, "#9CA3AF", SpreadsheetApp.BorderStyle.SOLID_MEDIUM);  // After Multi-select Options
+  config.getRange(1, CONFIG_COLS.CONTRACT_NAME, totalRows, 1).setBorder(null, null, null, true, null, null, "#9CA3AF", SpreadsheetApp.BorderStyle.SOLID_MEDIUM);  // After Contract & Legal
+  config.getRange(1, CONFIG_COLS.ORG_WEBSITE, totalRows, 1).setBorder(null, null, null, true, null, null, "#9CA3AF", SpreadsheetApp.BorderStyle.SOLID_MEDIUM);  // After Org Identity
 
   for (let i = 1; i <= configData[0].length; i++) {
     config.autoResizeColumn(i);
@@ -3487,68 +3487,68 @@ function setupMemberDirectoryValidations() {
     .setAllowInvalid(true)
     .setHelpText('Enter multiple days comma-separated (e.g., "Monday, Wednesday, Friday")')
     .build();
-  memberDir.getRange(2, 7, MAX_ROWS, 1).setDataValidation(officeDaysRule);
+  memberDir.getRange(2, MEMBER_COLS.OFFICE_DAYS, MAX_ROWS, 1).setDataValidation(officeDaysRule);
 
-  // Is Steward (Column J = 10)
+  // Is Steward - uses MEMBER_COLS for dynamic column reference
   const yesNoRule = SpreadsheetApp.newDataValidation()
     .requireValueInList(['Yes', 'No'], true)
     .setAllowInvalid(false)
     .build();
-  memberDir.getRange(2, 10, MAX_ROWS, 1).setDataValidation(yesNoRule);
+  memberDir.getRange(2, MEMBER_COLS.IS_STEWARD, MAX_ROWS, 1).setDataValidation(yesNoRule);
 
-  // Supervisor (Column K = 11) - Allow blank/custom values (user populates Config)
+  // Supervisor - Allow blank/custom values (user populates Config)
   if (supervisors.length > 0) {
     const supervisorRule = SpreadsheetApp.newDataValidation()
       .requireValueInList(supervisors, true)
       .setAllowInvalid(true)
       .build();
-    memberDir.getRange(2, 11, MAX_ROWS, 1).setDataValidation(supervisorRule);
+    memberDir.getRange(2, MEMBER_COLS.SUPERVISOR, MAX_ROWS, 1).setDataValidation(supervisorRule);
   }
 
-  // Manager (Column L = 12) - Allow blank/custom values (user populates Config)
+  // Manager - Allow blank/custom values (user populates Config)
   if (managers.length > 0) {
     const managerRule = SpreadsheetApp.newDataValidation()
       .requireValueInList(managers, true)
       .setAllowInvalid(true)
       .build();
-    memberDir.getRange(2, 12, MAX_ROWS, 1).setDataValidation(managerRule);
+    memberDir.getRange(2, MEMBER_COLS.MANAGER, MAX_ROWS, 1).setDataValidation(managerRule);
   }
 
-  // Assigned Steward (Column M = 13) and Steward Who Contacted Member (Column AD = 30)
+  // Assigned Steward and Contact Steward - uses MEMBER_COLS for dynamic column reference
   // Allow blank/custom values (user populates Config)
   if (stewards.length > 0) {
     const stewardRule = SpreadsheetApp.newDataValidation()
       .requireValueInList(stewards, true)
       .setAllowInvalid(true)
       .build();
-    memberDir.getRange(2, 13, MAX_ROWS, 1).setDataValidation(stewardRule);
-    memberDir.getRange(2, 30, MAX_ROWS, 1).setDataValidation(stewardRule);
+    memberDir.getRange(2, MEMBER_COLS.ASSIGNED_STEWARD, MAX_ROWS, 1).setDataValidation(stewardRule);
+    memberDir.getRange(2, MEMBER_COLS.CONTACT_STEWARD, MAX_ROWS, 1).setDataValidation(stewardRule);
   }
 
-  // Interest: Local Actions (Column T = 20)
-  memberDir.getRange(2, 20, MAX_ROWS, 1).setDataValidation(yesNoRule);
+  // Interest: Local Actions
+  memberDir.getRange(2, MEMBER_COLS.INTEREST_LOCAL, MAX_ROWS, 1).setDataValidation(yesNoRule);
 
-  // Interest: Chapter Actions (Column U = 21)
-  memberDir.getRange(2, 21, MAX_ROWS, 1).setDataValidation(yesNoRule);
+  // Interest: Chapter Actions
+  memberDir.getRange(2, MEMBER_COLS.INTEREST_CHAPTER, MAX_ROWS, 1).setDataValidation(yesNoRule);
 
-  // Interest: Allied Chapter Actions (Column V = 22)
-  memberDir.getRange(2, 22, MAX_ROWS, 1).setDataValidation(yesNoRule);
+  // Interest: Allied Chapter Actions
+  memberDir.getRange(2, MEMBER_COLS.INTEREST_ALLIED, MAX_ROWS, 1).setDataValidation(yesNoRule);
 
-  // Preferred Communication Methods (Column X = 24) - Multiple selections
+  // Preferred Communication Methods - Multiple selections
   const commMethodsRule = SpreadsheetApp.newDataValidation()
     .requireTextContains("")
     .setAllowInvalid(true)
     .setHelpText('Enter multiple methods comma-separated (e.g., "Email, Phone, Text")')
     .build();
-  memberDir.getRange(2, 24, MAX_ROWS, 1).setDataValidation(commMethodsRule);
+  memberDir.getRange(2, MEMBER_COLS.PREFERRED_COMM, MAX_ROWS, 1).setDataValidation(commMethodsRule);
 
-  // Best Time(s) to Reach Member (Column Y = 25) - Multiple selections
+  // Best Time(s) to Reach Member - Multiple selections
   const bestTimeRule = SpreadsheetApp.newDataValidation()
     .requireValueInList(['Morning (8am-12pm)', 'Afternoon (12pm-5pm)', 'Evening (5pm-8pm)', 'Anytime'], true)
     .setAllowInvalid(true)
     .setHelpText('Select one or enter multiple comma-separated')
     .build();
-  memberDir.getRange(2, 25, MAX_ROWS, 1).setDataValidation(bestTimeRule);
+  memberDir.getRange(2, MEMBER_COLS.BEST_TIME, MAX_ROWS, 1).setDataValidation(bestTimeRule);
 
   // Add conditional formatting for empty email/phone
   // Email (Column H = 8) - Red background if empty
