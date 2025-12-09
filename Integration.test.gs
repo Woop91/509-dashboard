@@ -313,7 +313,7 @@ function testConfigChangesPropagateToDropdowns() {
   Utilities.sleep(500);
 
   // Set up initial dropdowns
-  setupMemberDirectoryDropdowns();
+  setupMemberDirectoryDropdownsSilent();
   SpreadsheetApp.flush();
 
   // Add a new location to Config
