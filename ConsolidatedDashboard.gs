@@ -14,7 +14,7 @@
  * Build Info:
  * - Version: 2.1.0 (Security Enhanced + Code Review Improvements)
  * - Build ID: 20251202-improvements
- * - Build Date: 2025-12-09T18:45:20.298Z
+ * - Build Date: 2025-12-09T19:00:38.513Z
  * - Build Type: DEVELOPMENT
  * - Modules: 79 files
  * - Tests Included: Yes
@@ -53947,7 +53947,7 @@ function testDataValidationSetup() {
   Utilities.sleep(500);
 
   // Set up dropdowns (reads from Config)
-  setupMemberDirectoryDropdowns();
+  setupMemberDirectoryDropdownsSilent();
   SpreadsheetApp.flush();
 
   try {
@@ -54026,7 +54026,7 @@ function testMemberValidationRules() {
   Utilities.sleep(500);
 
   // Set up dropdowns (reads from Config)
-  setupMemberDirectoryDropdowns();
+  setupMemberDirectoryDropdownsSilent();
   SpreadsheetApp.flush();
 
   try {
@@ -55230,7 +55230,7 @@ function testConfigChangesPropagateToDropdowns() {
   Utilities.sleep(500);
 
   // Set up initial dropdowns
-  setupMemberDirectoryDropdowns();
+  setupMemberDirectoryDropdownsSilent();
   SpreadsheetApp.flush();
 
   // Add a new location to Config

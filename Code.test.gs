@@ -294,7 +294,7 @@ function testDataValidationSetup() {
   Utilities.sleep(500);
 
   // Set up dropdowns (reads from Config)
-  setupMemberDirectoryDropdowns();
+  setupMemberDirectoryDropdownsSilent();
   SpreadsheetApp.flush();
 
   try {
@@ -373,7 +373,7 @@ function testMemberValidationRules() {
   Utilities.sleep(500);
 
   // Set up dropdowns (reads from Config)
-  setupMemberDirectoryDropdowns();
+  setupMemberDirectoryDropdownsSilent();
   SpreadsheetApp.flush();
 
   try {
