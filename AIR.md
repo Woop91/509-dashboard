@@ -857,6 +857,46 @@ Fixed seed functions that were generating incomplete row data, causing data to p
 
 ---
 
+## Appendix: Changelog
+
+### Version 3.29 (2025-12-09) - LATEST
+
+**CRITICAL FIX: Data Field Mapping Bugs**
+
+Multiple critical bugs causing seed data to populate wrong columns and formulas to not match expected values.
+
+**Issue 1 - updateMemberDirectorySnapshots() Wrong Columns:**
+- Was writing to columns 10-14 (J-N) instead of 25-27 (Y-AA)
+- This overwrote PREFERRED_COMM, BEST_TIME, SUPERVISOR, MANAGER with grievance snapshot data
+- Fixed to write only contact-related data to RECENT_CONTACT_DATE (Y), CONTACT_STEWARD (Z), CONTACT_NOTES (AA)
+
+**Issue 2 - Member Seed Missing 4 Columns:**
+- generateSingleMemberRow() generated 27 columns, schema requires 31
+- Added: HAS_OPEN_GRIEVANCE (AB), GRIEVANCE_STATUS (AC), NEXT_DEADLINE (AD), START_GRIEVANCE (AE)
+
+**Issue 3 - Grievance Seed Missing 6 Columns:**
+- generateSingleGrievanceRow() generated 28 columns, schema requires 34
+- Added: MESSAGE_ALERT (AC), COORDINATOR_MESSAGE (AD), ACKNOWLEDGED_BY (AE), ACKNOWLEDGED_DATE (AF), DRIVE_FOLDER_ID (AG), DRIVE_FOLDER_URL (AH)
+
+**Issue 4 - Config Status/Step Mismatch:**
+- Config defaults had statuses not recognized by formulas: "In Progress", "Pending Response", "Resolved - Won/Lost/Settled"
+- Formula expects: "Open", "Pending Info", "Appealed", "In Arbitration"
+- Fixed Config defaults to match formula expectations
+
+**Issue 5 - Menu Disappearing on Refresh:**
+- CREATE_509_DASHBOARD did not call installOnOpenTrigger()
+- Fixed to auto-install menu trigger during dashboard creation
+
+**Issue 6 - GRIEVANCE_STATUS Formula Inconsistency:**
+- HAS_OPEN_GRIEVANCE correctly showed "Yes" for active cases
+- GRIEVANCE_STATUS returned first match (could be closed) instead of active status
+- Fixed both GRIEVANCE_STATUS and NEXT_DEADLINE formulas to prioritize active grievances
+
+**Documentation Update:**
+- Updated AIR.md MEMBER_COLS and GRIEVANCE_COLS to match actual Constants.gs values
+
+---
+
 ### Version 3.28 (2025-12-09)
 
 **FIX: Undefined STEP3_FILED Constant**
