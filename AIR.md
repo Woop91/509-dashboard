@@ -28,7 +28,7 @@
 
 1. **READ AIR.md first** - This document is the single source of truth for the entire system
 2. **Check the Changelog** - Understand recent changes and current version
-3. **Review Code Quality section** - Avoid repeating fixed issues
+3. **Run `npm run verify`** - Catches column mismatches before they break things
 4. **Verify dynamic column usage** - ALL column references MUST use MEMBER_COLS and GRIEVANCE_COLS
 5. **Follow established patterns** - Don't introduce inconsistencies
 
