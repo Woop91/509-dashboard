@@ -1533,12 +1533,14 @@ function createKPIPerformanceDashboard() {
 
 /**
  * Delete standalone tabs that are now merged into Executive Dashboard
- * Tabs deleted: Operations Analytics, KPI Performance Dashboard
+ * Note: Operations Analytics is the merged dashboard - do NOT delete it
+ * Tabs deleted: KPI Performance Dashboard (superseded by Executive Dashboard)
  */
 function deleteStandaloneMergedTabs() {
   const ss = SpreadsheetApp.getActive();
   const tabsToDelete = [
-    "📊 Operations Analytics",
+    // NOTE: "📊 Operations Analytics" should NOT be deleted - it IS the merged analytics dashboard
+    // Only delete KPI Performance Dashboard which is now part of Executive Dashboard
     "📊 KPI Performance Dashboard"
   ];
 
