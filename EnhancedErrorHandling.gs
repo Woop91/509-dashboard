@@ -736,7 +736,7 @@ function createErrorTrendReport() {
   }
 
   // Create or get trends sheet
-  let trendsSheet = ss.getSheetByName('Error_Trends');
+  let trendsSheet = ss.getSheetByName(SHEETS.ERROR_TRENDS);
   if (trendsSheet) {
     trendsSheet.clear();
   } else {

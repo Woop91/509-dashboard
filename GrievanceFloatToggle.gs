@@ -22,7 +22,7 @@
 function getGrievanceFloatState() {
   try {
     const ss = SpreadsheetApp.getActiveSpreadsheet();
-    const settingsSheet = ss.getSheetByName('User Settings');
+    const settingsSheet = ss.getSheetByName(SHEETS.USER_SETTINGS);
 
     if (!settingsSheet) {
       return false;
@@ -50,11 +50,11 @@ function getGrievanceFloatState() {
 function setGrievanceFloatState(enabled) {
   try {
     const ss = SpreadsheetApp.getActiveSpreadsheet();
-    let settingsSheet = ss.getSheetByName('User Settings');
+    let settingsSheet = ss.getSheetByName(SHEETS.USER_SETTINGS);
 
     if (!settingsSheet) {
       // Create settings sheet if it doesn't exist
-      settingsSheet = ss.insertSheet('User Settings');
+      settingsSheet = ss.insertSheet(SHEETS.USER_SETTINGS);
       settingsSheet.getRange('A1:B1').setValues([['Setting', 'Value']])
         .setFontWeight('bold')
         .setBackground('#4A5568')

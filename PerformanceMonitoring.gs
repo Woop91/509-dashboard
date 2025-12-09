@@ -61,7 +61,7 @@ function logPerformanceMetric(funcName, duration, error = false) {
  */
 function createPerformanceMonitoringSheet() {
   const ss = SpreadsheetApp.getActiveSpreadsheet();
-  let perfSheet = ss.getSheetByName('⚡ Performance Monitor');
+  let perfSheet = ss.getSheetByName(SHEETS.PERFORMANCE_MONITOR);
 
   if (!perfSheet) {
     perfSheet = ss.insertSheet('⚡ Performance Monitor');

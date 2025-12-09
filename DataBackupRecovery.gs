@@ -84,7 +84,7 @@ function getOrCreateBackupFolder() {
  */
 function logBackup(backupName, fileId, automated) {
   const ss = SpreadsheetApp.getActiveSpreadsheet();
-  let backupLog = ss.getSheetByName('💾 Backup Log');
+  let backupLog = ss.getSheetByName(SHEETS.BACKUP_LOG);
 
   if (!backupLog) {
     backupLog = createBackupLogSheet();
@@ -114,7 +114,7 @@ function createBackupLogSheet() {
   const ss = SpreadsheetApp.getActiveSpreadsheet();
 
   // Check if sheet already exists
-  let sheet = ss.getSheetByName('💾 Backup Log');
+  let sheet = ss.getSheetByName(SHEETS.BACKUP_LOG);
   if (sheet) {
     return sheet; // Return existing sheet
   }
@@ -445,7 +445,7 @@ function createBackupManagerHTML() {
  */
 function navigateToBackupLog() {
   const ss = SpreadsheetApp.getActiveSpreadsheet();
-  let backupLog = ss.getSheetByName('💾 Backup Log');
+  let backupLog = ss.getSheetByName(SHEETS.BACKUP_LOG);
 
   if (!backupLog) {
     backupLog = createBackupLogSheet();

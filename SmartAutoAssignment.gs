@@ -306,7 +306,7 @@ function generateAssignmentReasoning(steward, grievance) {
  */
 function logAssignment(grievanceId, selectedSteward, topCandidates) {
   const ss = SpreadsheetApp.getActiveSpreadsheet();
-  let assignmentLog = ss.getSheetByName('🤖 Auto-Assignment Log');
+  let assignmentLog = ss.getSheetByName(SHEETS.ASSIGNMENT_LOG);
 
   if (!assignmentLog) {
     assignmentLog = createAutoAssignmentLogSheet();
@@ -335,7 +335,7 @@ function logAssignment(grievanceId, selectedSteward, topCandidates) {
  */
 function createAutoAssignmentLogSheet() {
   const ss = SpreadsheetApp.getActiveSpreadsheet();
-  const sheet = ss.insertSheet('🤖 Auto-Assignment Log');
+  const sheet = ss.insertSheet(SHEETS.ASSIGNMENT_LOG);
 
   // Set headers
   const headers = [

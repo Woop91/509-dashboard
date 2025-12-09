@@ -13,7 +13,7 @@
  */
 function recreateAuditLogSheet() {
   const ss = SpreadsheetApp.getActiveSpreadsheet();
-  let auditLog = ss.getSheetByName('Audit_Log');
+  let auditLog = ss.getSheetByName(SHEETS.AUDIT_LOG);
 
   // Delete existing sheet if present
   if (auditLog) {
@@ -21,7 +21,7 @@ function recreateAuditLogSheet() {
   }
 
   // Create new sheet
-  auditLog = ss.insertSheet('Audit_Log');
+  auditLog = ss.insertSheet(SHEETS.AUDIT_LOG);
 
   // Set up headers
   const headers = [
@@ -85,12 +85,12 @@ function recreateAuditLogSheet() {
 function logDataModificationAdmin(actionType, sheetName, recordId, fieldChanged, oldValue, newValue) {
   try {
     const ss = SpreadsheetApp.getActiveSpreadsheet();
-    let auditLog = ss.getSheetByName('Audit_Log');
+    let auditLog = ss.getSheetByName(SHEETS.AUDIT_LOG);
 
     // Create audit log sheet if it doesn't exist
     if (!auditLog) {
       createAuditLogSheet();
-      auditLog = ss.getSheetByName('Audit_Log');
+      auditLog = ss.getSheetByName(SHEETS.AUDIT_LOG);
     }
 
     // Get user info
@@ -328,7 +328,7 @@ function sanitizeInput(input, type = 'text') {
  */
 function generateAuditReport(startDate, endDate) {
   const ss = SpreadsheetApp.getActiveSpreadsheet();
-  const auditLog = ss.getSheetByName('Audit_Log');
+  const auditLog = ss.getSheetByName(SHEETS.AUDIT_LOG);
 
   if (!auditLog) {
     SpreadsheetApp.getUi().alert('Error', 'Audit_Log sheet not found. Please enable audit logging first.', SpreadsheetApp.getUi().ButtonSet.OK);
@@ -484,7 +484,7 @@ function enforceDataRetention(retentionYears = 7) {
   let archivedCount = 0;
 
   // Process Grievance Log
-  const grievanceLog = ss.getSheetByName('Grievance Log');
+  const grievanceLog = ss.getSheetByName(SHEETS.GRIEVANCE_LOG);
   if (grievanceLog) {
     const data = grievanceLog.getDataRange().getValues();
     const headers = data[0];
@@ -519,7 +519,7 @@ function enforceDataRetention(retentionYears = 7) {
   }
 
   // Process Audit Log
-  const auditLog = ss.getSheetByName('Audit_Log');
+  const auditLog = ss.getSheetByName(SHEETS.AUDIT_LOG);
   if (auditLog) {
     const data = auditLog.getDataRange().getValues();
     const headers = data[0];
@@ -560,10 +560,10 @@ function enforceDataRetention(retentionYears = 7) {
  */
 function archiveRecords(itemType, records, headers) {
   const ss = SpreadsheetApp.getActiveSpreadsheet();
-  let archive = ss.getSheetByName('📦 Archive');
+  let archive = ss.getSheetByName(SHEETS.ARCHIVE);
 
   if (!archive) {
-    archive = ss.getSheetByName('Archive');
+    archive = ss.getSheetByName(SHEETS.ARCHIVE);
   }
 
   if (!archive) {
@@ -600,7 +600,7 @@ function archiveRecords(itemType, records, headers) {
  */
 function detectSuspiciousActivity() {
   const ss = SpreadsheetApp.getActiveSpreadsheet();
-  const auditLog = ss.getSheetByName('Audit_Log');
+  const auditLog = ss.getSheetByName(SHEETS.AUDIT_LOG);
 
   if (!auditLog) {
     return { suspicious: false, message: 'Audit log not available' };
@@ -692,11 +692,11 @@ function setupSuspiciousActivityMonitoring() {
  */
 function viewAuditLog() {
   const ss = SpreadsheetApp.getActiveSpreadsheet();
-  let auditLog = ss.getSheetByName('Audit_Log');
+  let auditLog = ss.getSheetByName(SHEETS.AUDIT_LOG);
 
   if (!auditLog) {
     createAuditLogSheet();
-    auditLog = ss.getSheetByName('Audit_Log');
+    auditLog = ss.getSheetByName(SHEETS.AUDIT_LOG);
   }
 
   auditLog.activate();
@@ -708,11 +708,11 @@ function viewAuditLog() {
  */
 function viewPerformanceLog() {
   const ss = SpreadsheetApp.getActiveSpreadsheet();
-  let perfLog = ss.getSheetByName('Performance_Log');
+  let perfLog = ss.getSheetByName(SHEETS.PERFORMANCE_LOG);
 
   if (!perfLog) {
     createPerformanceLogSheet();
-    perfLog = ss.getSheetByName('Performance_Log');
+    perfLog = ss.getSheetByName(SHEETS.PERFORMANCE_LOG);
   }
 
   perfLog.activate();

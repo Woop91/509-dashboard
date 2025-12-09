@@ -60,7 +60,7 @@ function onGrievanceEdit(e) {
     const sheetName = sheet.getName();
 
     // Only process Grievance Log edits
-    if (sheetName !== 'Grievance Log') return;
+    if (sheetName !== SHEETS.GRIEVANCE_LOG) return;
 
     const row = e.range.getRow();
     const col = e.range.getColumn();
@@ -326,7 +326,7 @@ function getStewardEmail(stewardName) {
 
   try {
     const ss = SpreadsheetApp.getActiveSpreadsheet();
-    const memberDir = ss.getSheetByName('Member Directory');
+    const memberDir = ss.getSheetByName(SHEETS.MEMBER_DIR);
 
     if (!memberDir) {
       Logger.log('Member Directory sheet not found');
@@ -394,7 +394,7 @@ function showCoordinatorMessageDialog() {
   const sheet = ss.getActiveSheet();
 
   // Check if we're on Grievance Log
-  if (sheet.getName() !== 'Grievance Log') {
+  if (sheet.getName() !== SHEETS.GRIEVANCE_LOG) {
     ui.alert('Error', 'Please select a row in the Grievance Log sheet first.', ui.ButtonSet.OK);
     return;
   }
@@ -445,7 +445,7 @@ function showCoordinatorMessageDialog() {
 function showBatchCoordinatorNotification() {
   const ui = SpreadsheetApp.getUi();
   const ss = SpreadsheetApp.getActiveSpreadsheet();
-  const sheet = ss.getSheetByName('Grievance Log');
+  const sheet = ss.getSheetByName(SHEETS.GRIEVANCE_LOG);
 
   if (!sheet) {
     ui.alert('Error', 'Grievance Log sheet not found.', ui.ButtonSet.OK);
@@ -515,7 +515,7 @@ function clearAllCoordinatorNotifications() {
   }
 
   const ss = SpreadsheetApp.getActiveSpreadsheet();
-  const sheet = ss.getSheetByName('Grievance Log');
+  const sheet = ss.getSheetByName(SHEETS.GRIEVANCE_LOG);
 
   if (!sheet) {
     ui.alert('Error', 'Grievance Log sheet not found.', ui.ButtonSet.OK);

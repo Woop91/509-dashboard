@@ -231,7 +231,7 @@ function testMemberDirectoryFormulas() {
     Utilities.sleep(2000); // Wait for formulas to recalculate
 
     // Find the test member row
-    const memberData = memberDir.getRange(2, 1, memberDir.getLastRow() - 1, 31).getValues();
+    const memberData = memberDir.getRange(2, 1, memberDir.getLastRow() - 1, memberDir.getLastColumn()).getValues();
     const testMemberRow = memberData.findIndex(function(row) { return row[0] === testMemberId; });
 
     Assert.assertTrue(

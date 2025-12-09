@@ -85,7 +85,7 @@ function testCompleteGrievanceWorkflow() {
     );
 
     // Step 3: Verify Member Directory snapshot updates
-    const memberData = memberDir.getRange(2, 1, memberDir.getLastRow() - 1, 31).getValues();
+    const memberData = memberDir.getRange(2, 1, memberDir.getLastRow() - 1, memberDir.getLastColumn()).getValues();
     const memberRow = memberData.find(function(row) { return row[0] === testMemberId; });
 
     Assert.assertNotNull(memberRow, 'Member should exist');
@@ -129,7 +129,7 @@ function testCompleteGrievanceWorkflow() {
     );
 
     // Step 6: Verify Member Directory snapshot updates to Settled
-    const updatedMemberData = memberDir.getRange(2, 1, memberDir.getLastRow() - 1, 31).getValues();
+    const updatedMemberData = memberDir.getRange(2, 1, memberDir.getLastRow() - 1, memberDir.getLastColumn()).getValues();
     const updatedMemberRow = updatedMemberData.find(function(row) { return row[0] === testMemberId; });
 
     // Using MEMBER_COLS constant - column AC (29), index 28
@@ -231,7 +231,7 @@ function testMemberGrievanceSnapshot() {
     Utilities.sleep(2000);
 
     // Check member snapshot
-    const memberData = memberDir.getRange(2, 1, memberDir.getLastRow() - 1, 31).getValues();
+    const memberData = memberDir.getRange(2, 1, memberDir.getLastRow() - 1, memberDir.getLastColumn()).getValues();
     const memberRow = memberData.find(function(row) { return row[0] === testMemberId; });
 
     Assert.assertNotNull(memberRow, 'Member should exist');
@@ -254,7 +254,7 @@ function testMemberGrievanceSnapshot() {
     Utilities.sleep(2000);
 
     // Check snapshot updated
-    const updatedMemberData = memberDir.getRange(2, 1, memberDir.getLastRow() - 1, 31).getValues();
+    const updatedMemberData = memberDir.getRange(2, 1, memberDir.getLastRow() - 1, memberDir.getLastColumn()).getValues();
     const updatedMemberRow = updatedMemberData.find(function(row) { return row[0] === testMemberId; });
 
     const updatedStatusSnapshot = updatedMemberRow[MEMBER_COLS.GRIEVANCE_STATUS - 1];
@@ -378,7 +378,7 @@ function testMultipleGrievancesSameMember() {
 
     // Verify member shows as having open grievance (from first one)
     const memberDir = ss.getSheetByName(SHEETS.MEMBER_DIR);
-    const memberData = memberDir.getRange(2, 1, memberDir.getLastRow() - 1, 31).getValues();
+    const memberData = memberDir.getRange(2, 1, memberDir.getLastRow() - 1, memberDir.getLastColumn()).getValues();
     const memberRow = memberData.find(function(row) { return row[0] === testMemberId; });
 
     // Using MEMBER_COLS constant - column AB (28), index 27
@@ -406,9 +406,9 @@ function testDashboardHandlesEmptyData() {
 
   // Backup data
   const memberBackup = memberDir.getLastRow() > 1 ?
-    memberDir.getRange(2, 1, memberDir.getLastRow() - 1, 31).getValues() : [];
+    memberDir.getRange(2, 1, memberDir.getLastRow() - 1, memberDir.getLastColumn()).getValues() : [];
   const grievanceBackup = grievanceLog.getLastRow() > 1 ?
-    grievanceLog.getRange(2, 1, grievanceLog.getLastRow() - 1, 28).getValues() : [];
+    grievanceLog.getRange(2, 1, grievanceLog.getLastRow() - 1, grievanceLog.getLastColumn()).getValues() : [];
 
   try {
     // Clear all data
@@ -593,7 +593,7 @@ function testGrievanceUpdatesTriggersRecalculation() {
 
     // Check initial state - use MEMBER_COLS constant (column Z = 26, 0-indexed = 25)
     const statusIdx = MEMBER_COLS.GRIEVANCE_STATUS - 1;
-    const memberData1 = memberDir.getRange(2, 1, memberDir.getLastRow() - 1, 31).getValues();
+    const memberData1 = memberDir.getRange(2, 1, memberDir.getLastRow() - 1, memberDir.getLastColumn()).getValues();
     const memberRow1 = memberData1.find(function(row) { return row[0] === testMemberId; });
     const status1 = memberRow1[statusIdx];
 
@@ -606,7 +606,7 @@ function testGrievanceUpdatesTriggersRecalculation() {
     Utilities.sleep(2000);
 
     // Check updated state
-    const memberData2 = memberDir.getRange(2, 1, memberDir.getLastRow() - 1, 31).getValues();
+    const memberData2 = memberDir.getRange(2, 1, memberDir.getLastRow() - 1, memberDir.getLastColumn()).getValues();
     const memberRow2 = memberData2.find(function(row) { return row[0] === testMemberId; });
     const status2 = memberRow2[statusIdx];
 

@@ -33,7 +33,7 @@ FAQ_CATEGORIES = {
  */
 function createFAQDatabaseSheet() {
   const ss = SpreadsheetApp.getActiveSpreadsheet();
-  let faqSheet = ss.getSheetByName('📚 FAQ Database');
+  let faqSheet = ss.getSheetByName(SHEETS.FAQ_DATABASE);
 
   if (faqSheet) {
     SpreadsheetApp.getUi().alert('FAQ Database sheet already exists.');
@@ -178,7 +178,7 @@ function seedInitialFAQs() {
   ];
 
   const ss = SpreadsheetApp.getActiveSpreadsheet();
-  const faqSheet = ss.getSheetByName('📚 FAQ Database');
+  const faqSheet = ss.getSheetByName(SHEETS.FAQ_DATABASE);
 
   const rows = initialFAQs.map((faq, index) => [
     index + 1,
@@ -514,7 +514,7 @@ function createFAQSearchHTML() {
  */
 function getAllFAQs() {
   const ss = SpreadsheetApp.getActiveSpreadsheet();
-  const faqSheet = ss.getSheetByName('📚 FAQ Database');
+  const faqSheet = ss.getSheetByName(SHEETS.FAQ_DATABASE);
 
   if (!faqSheet) {
     return [];
@@ -549,7 +549,7 @@ function getAllFAQs() {
  */
 function updateFAQHelpfulness(faqId, isHelpful) {
   const ss = SpreadsheetApp.getActiveSpreadsheet();
-  const faqSheet = ss.getSheetByName('📚 FAQ Database');
+  const faqSheet = ss.getSheetByName(SHEETS.FAQ_DATABASE);
 
   if (!faqSheet) return;
 
@@ -671,11 +671,11 @@ function createFAQAdminHTML() {
  */
 function addNewFAQ(faq) {
   const ss = SpreadsheetApp.getActiveSpreadsheet();
-  let faqSheet = ss.getSheetByName('📚 FAQ Database');
+  let faqSheet = ss.getSheetByName(SHEETS.FAQ_DATABASE);
 
   if (!faqSheet) {
     createFAQDatabaseSheet();
-    faqSheet = ss.getSheetByName('📚 FAQ Database');
+    faqSheet = ss.getSheetByName(SHEETS.FAQ_DATABASE);
   }
 
   const lastRow = faqSheet.getLastRow();

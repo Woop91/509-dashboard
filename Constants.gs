@@ -48,7 +48,7 @@ const SHEETS = {
 
   // Internal system sheets
   USER_ROLES: "User Roles",
-  AUDIT_LOG: "Audit Log",
+  AUDIT_LOG: "Audit_Log",
   CHANGE_LOG: "📝 Change Log",
   BACKUP_LOG: "💾 Backup Log",
   ERROR_LOG: "Error_Log",
@@ -56,10 +56,11 @@ const SHEETS = {
   FAQ_DATABASE: "📚 FAQ Database",
   COMMUNICATIONS_LOG: "📞 Communications Log",
   PERFORMANCE_MONITOR: "⚡ Performance Monitor",
+  PERFORMANCE_LOG: "Performance_Log",
   TEST_RESULTS: "Test Results",
   STATE_CHANGE_LOG: "🔄 State Change Log",
   CONFIGURATION: "⚙️ Configuration",
-  ASSIGNMENT_LOG: "📋 Assignment Log"
+  ASSIGNMENT_LOG: "🤖 Auto-Assignment Log"
 };
 
 /* --------------------= COLOR SCHEME --------------------= */
