@@ -3961,7 +3961,9 @@ function generateSingleMemberRow(index, startingRow, config, stewardCount, maxSt
  */
 function writeMemberBatch(memberDir, data, currentIndex, totalCount, toggleName) {
   try {
-    memberDir.getRange(memberDir.getLastRow() + 1, 1, data.length, data[0].length).setValues(data);
+    // Ensure we never write to row 1 (preserve headers) - start at row 2 minimum
+    const startRow = Math.max(memberDir.getLastRow() + 1, 2);
+    memberDir.getRange(startRow, 1, data.length, data[0].length).setValues(data);
     SpreadsheetApp.getActive().toast(`Added ${currentIndex} of ${totalCount} members (${toggleName})...`, "Progress", 1);
     SpreadsheetApp.flush();
   } catch (e) {
@@ -3969,7 +3971,8 @@ function writeMemberBatch(memberDir, data, currentIndex, totalCount, toggleName)
     SpreadsheetApp.getActive().toast(`⚠️ Error at ${currentIndex}. Retrying...`, "Warning", 2);
     Utilities.sleep(1000);
     try {
-      memberDir.getRange(memberDir.getLastRow() + 1, 1, data.length, data[0].length).setValues(data);
+      const startRow = Math.max(memberDir.getLastRow() + 1, 2);
+      memberDir.getRange(startRow, 1, data.length, data[0].length).setValues(data);
     } catch (e2) {
       Logger.log(`Retry failed: ${e2.message}`);
       throw new Error(`Failed to write members: ${e2.message}`);
@@ -4265,7 +4268,9 @@ function generateSingleGrievanceRow(index, startingRow, memberID, memberData, co
  */
 function writeGrievanceBatch(grievanceLog, data, currentCount, totalCount, toggleName) {
   try {
-    grievanceLog.getRange(grievanceLog.getLastRow() + 1, 1, data.length, data[0].length).setValues(data);
+    // Ensure we never write to row 1 (preserve headers) - start at row 2 minimum
+    const startRow = Math.max(grievanceLog.getLastRow() + 1, 2);
+    grievanceLog.getRange(startRow, 1, data.length, data[0].length).setValues(data);
     SpreadsheetApp.getActive().toast(`Added ${currentCount} of ${totalCount} grievances (${toggleName})...`, "Progress", 1);
     SpreadsheetApp.flush();
   } catch (e) {
@@ -4273,7 +4278,8 @@ function writeGrievanceBatch(grievanceLog, data, currentCount, totalCount, toggl
     SpreadsheetApp.getActive().toast(`⚠️ Error at ${currentCount}. Retrying...`, "Warning", 2);
     Utilities.sleep(1000);
     try {
-      grievanceLog.getRange(grievanceLog.getLastRow() + 1, 1, data.length, data[0].length).setValues(data);
+      const startRow = Math.max(grievanceLog.getLastRow() + 1, 2);
+      grievanceLog.getRange(startRow, 1, data.length, data[0].length).setValues(data);
     } catch (e2) {
       Logger.log(`Retry failed: ${e2.message}`);
       throw new Error(`Failed to write grievances: ${e2.message}`);
