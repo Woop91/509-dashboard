@@ -478,7 +478,7 @@ function getChartData(dataSource) {
     return { headers: [], rows: [], stats: [] };
   }
 
-  const data = grievanceSheet.getRange(2, 1, grievanceSheet.getLastRow() - 1, 28).getValues();
+  const data = grievanceSheet.getRange(2, 1, grievanceSheet.getLastRow() - 1, grievanceSheet.getLastColumn()).getValues();
 
   switch (dataSource) {
     case 'grievances-by-status':

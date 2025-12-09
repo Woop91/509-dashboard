@@ -143,7 +143,7 @@ function calculateBenchmarks() {
     return getEmptyBenchmarks();
   }
 
-  const data = grievanceSheet.getRange(2, 1, grievanceSheet.getLastRow() - 1, 28).getValues();
+  const data = grievanceSheet.getRange(2, 1, grievanceSheet.getLastRow() - 1, grievanceSheet.getLastColumn()).getValues();
 
   const now = new Date();
   const currentYear = now.getFullYear();

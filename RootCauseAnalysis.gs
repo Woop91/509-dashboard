@@ -27,7 +27,7 @@ function performRootCauseAnalysis() {
     return { error: 'Insufficient data for analysis' };
   }
 
-  const data = grievanceSheet.getRange(2, 1, lastRow - 1, 28).getValues();
+  const data = grievanceSheet.getRange(2, 1, lastRow - 1, grievanceSheet.getLastColumn()).getValues();
 
   const analysis = {
     locationClusters: analyzeLocationClusters(data),
