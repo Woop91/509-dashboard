@@ -660,38 +660,39 @@ function createTestMember(memberId) {
   const memberDir = ss.getSheetByName(SHEETS.MEMBER_DIR);
 
   // Dropdown fields are left empty to avoid validation errors (Config has no sample data)
+  // Array must match MEMBER_COLS exactly (31 columns A-AE)
   const testMemberData = [
-    memberId || 'TEST-M001',
-    'Test',
-    'Member',
-    '',  // Job Title - empty (user populates Config)
-    '',  // Work Location - empty (user populates Config)
-    '',  // Unit - empty (user populates Config)
-    'Monday',
-    'test.member@union.org',
-    '(555) 123-4567',
-    'No',
-    '',  // Supervisor - empty (user populates Config)
-    '',  // Manager - empty (user populates Config)
-    '',  // Steward - empty (user populates Config)
-    new Date(),
-    new Date(),
-    new Date(),
-    new Date(),
-    85,
-    10,
-    'Yes',
-    'Yes',
-    'No',
-    new Date(),
-    'Email',
-    'Mornings',
-    'No',
-    '',
-    '',
-    '',
-    '',
-    ''
+    memberId || 'TEST-M001',    // Col 1 (A) - MEMBER_ID
+    'Test',                     // Col 2 (B) - FIRST_NAME
+    'Member',                   // Col 3 (C) - LAST_NAME
+    '',                         // Col 4 (D) - JOB_TITLE (empty - user populates Config)
+    '',                         // Col 5 (E) - WORK_LOCATION (empty - user populates Config)
+    '',                         // Col 6 (F) - UNIT (empty - user populates Config)
+    'Monday',                   // Col 7 (G) - OFFICE_DAYS
+    'test.member@union.org',    // Col 8 (H) - EMAIL
+    '(555) 123-4567',           // Col 9 (I) - PHONE
+    'Email',                    // Col 10 (J) - PREFERRED_COMM
+    'Mornings',                 // Col 11 (K) - BEST_TIME
+    '',                         // Col 12 (L) - SUPERVISOR (empty - user populates Config)
+    '',                         // Col 13 (M) - MANAGER (empty - user populates Config)
+    'No',                       // Col 14 (N) - IS_STEWARD
+    '',                         // Col 15 (O) - COMMITTEES
+    '',                         // Col 16 (P) - ASSIGNED_STEWARD (empty - user populates Config)
+    new Date(),                 // Col 17 (Q) - LAST_VIRTUAL_MTG
+    new Date(),                 // Col 18 (R) - LAST_INPERSON_MTG
+    85,                         // Col 19 (S) - OPEN_RATE
+    10,                         // Col 20 (T) - VOLUNTEER_HOURS
+    'Yes',                      // Col 21 (U) - INTEREST_LOCAL
+    'Yes',                      // Col 22 (V) - INTEREST_CHAPTER
+    'No',                       // Col 23 (W) - INTEREST_ALLIED
+    '',                         // Col 24 (X) - HOME_TOWN
+    new Date(),                 // Col 25 (Y) - RECENT_CONTACT_DATE
+    '',                         // Col 26 (Z) - CONTACT_STEWARD
+    '',                         // Col 27 (AA) - CONTACT_NOTES
+    '',                         // Col 28 (AB) - HAS_OPEN_GRIEVANCE (formula populates)
+    '',                         // Col 29 (AC) - GRIEVANCE_STATUS (formula populates)
+    '',                         // Col 30 (AD) - NEXT_DEADLINE (formula populates)
+    ''                          // Col 31 (AE) - START_GRIEVANCE
   ];
 
   // Ensure we never write to row 1 (preserve headers)
@@ -722,6 +723,80 @@ function cleanupTestData() {
       grievanceLog.deleteRow(i + 2);
     }
   }
+}
+
+/**
+ * Test helper: Populate Config with test values for validation tests
+ * This enables dropdowns to be created so validation tests can pass.
+ * Call this before running validation-dependent tests.
+ */
+function populateConfigForTesting() {
+  const ss = SpreadsheetApp.getActive();
+  const config = ss.getSheetByName(SHEETS.CONFIG);
+
+  if (!config) {
+    Logger.log('Config sheet not found - skipping test config population');
+    return false;
+  }
+
+  // Add test values to Config columns (row 3 is first data row after headers)
+  // Job Titles (Column A / CONFIG_COLS.JOB_TITLES)
+  const jobTitlesCol = getColumnLetter(CONFIG_COLS.JOB_TITLES);
+  config.getRange(jobTitlesCol + '3:' + jobTitlesCol + '5').setValues([
+    ['Test Job Title 1'],
+    ['Test Job Title 2'],
+    ['Test Job Title 3']
+  ]);
+
+  // Office Locations (Column B / CONFIG_COLS.OFFICE_LOCATIONS)
+  const locationsCol = getColumnLetter(CONFIG_COLS.OFFICE_LOCATIONS);
+  config.getRange(locationsCol + '3:' + locationsCol + '5').setValues([
+    ['Test Location 1'],
+    ['Test Location 2'],
+    ['Test Location 3']
+  ]);
+
+  // Units (Column C / CONFIG_COLS.UNITS)
+  const unitsCol = getColumnLetter(CONFIG_COLS.UNITS);
+  config.getRange(unitsCol + '3:' + unitsCol + '5').setValues([
+    ['Test Unit 1'],
+    ['Test Unit 2'],
+    ['Test Unit 3']
+  ]);
+
+  // Stewards (Column G / CONFIG_COLS.STEWARDS)
+  const stewardsCol = getColumnLetter(CONFIG_COLS.STEWARDS);
+  config.getRange(stewardsCol + '3:' + stewardsCol + '5').setValues([
+    ['Test Steward 1'],
+    ['Test Steward 2'],
+    ['Test Steward 3']
+  ]);
+
+  Logger.log('✅ Config populated with test values');
+  return true;
+}
+
+/**
+ * Test helper: Clear test values from Config
+ */
+function clearConfigTestValues() {
+  const ss = SpreadsheetApp.getActive();
+  const config = ss.getSheetByName(SHEETS.CONFIG);
+
+  if (!config) return;
+
+  // Clear test values from Config columns (rows 3-5)
+  const jobTitlesCol = getColumnLetter(CONFIG_COLS.JOB_TITLES);
+  const locationsCol = getColumnLetter(CONFIG_COLS.OFFICE_LOCATIONS);
+  const unitsCol = getColumnLetter(CONFIG_COLS.UNITS);
+  const stewardsCol = getColumnLetter(CONFIG_COLS.STEWARDS);
+
+  config.getRange(jobTitlesCol + '3:' + jobTitlesCol + '5').clearContent();
+  config.getRange(locationsCol + '3:' + locationsCol + '5').clearContent();
+  config.getRange(unitsCol + '3:' + unitsCol + '5').clearContent();
+  config.getRange(stewardsCol + '3:' + stewardsCol + '5').clearContent();
+
+  Logger.log('✅ Config test values cleared');
 }
 
 /* --------------------= TEST CATEGORY RUNNERS --------------------= */

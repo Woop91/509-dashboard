@@ -1,6 +1,6 @@
 # 509 Dashboard - Complete Feature Reference
 
-**Version:** 3.25
+**Version:** 3.26
 **Last Updated:** 2025-12-09
 **Purpose:** Union grievance tracking and member engagement system for SEIU Local 509
 
@@ -46,7 +46,39 @@
 
 ---
 
-## 🆕 Changelog - Version 3.25 (2025-12-09)
+## 🆕 Changelog - Version 3.26 (2025-12-09)
+
+**FIX: Test Framework and Integration Tests**
+
+Fixed multiple test failures related to data structure mismatches and formula timing:
+
+1. **TestFramework.gs - createTestMember():**
+   - Updated testMemberData array to have 31 columns (matching MEMBER_COLS)
+   - Fixed column order and data types to match Member Directory structure
+   - Added `populateConfigForTesting()` helper to set up test data in Config
+   - Added `clearConfigTestValues()` helper for cleanup
+
+2. **Code.test.gs - Validation Tests:**
+   - Updated `testDataValidationSetup()` to populate Config and call `setupMemberDirectoryDropdowns()`
+   - Updated `testMemberValidationRules()` similarly
+   - Both now properly set up prerequisites before testing
+
+3. **Integration.test.gs - Grievance Data:**
+   - Updated all grievance test data arrays to have 34 columns (matching GRIEVANCE_COLS)
+   - Added `setupFormulasAndCalculations()` calls to ensure formulas exist
+   - Changed from bulk data reads to direct cell reads for formula values
+   - Increased wait times for formula recalculation (3s with double flush)
+   - Fixed `testDashboardHandlesEmptyData()` to use `clearContent()` instead of `deleteRows()`
+
+**Technical Details:**
+- MEMBER_COLS has 31 columns (A-AE)
+- GRIEVANCE_COLS has 34 columns (A-AH)
+- Test data arrays must match these column counts exactly
+- Formula values should be read directly from cells, not from cached getValues() arrays
+
+---
+
+## Changelog - Version 3.25 (2025-12-09)
 
 **FIX: Duplicate Variable Declaration in createMainDashboard()**
 
