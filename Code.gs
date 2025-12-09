@@ -498,9 +498,9 @@ function createConfigTab() {
   config.setFrozenRows(2); // Freeze both category and header rows
   config.setTabColor("#2563EB");
 
-  // Delete unused columns beyond the defined layout (32 columns used)
+  // Delete unused columns beyond the defined layout (43 columns used)
   const totalCols = config.getMaxColumns();
-  const usedCols = 32;  // Config uses 32 columns (A-AF)
+  const usedCols = 43;  // Config uses 43 columns (A-AQ) - see CONFIG_COLS in Constants.gs
   if (totalCols > usedCols) {
     config.deleteColumns(usedCols + 1, totalCols - usedCols);
   }
