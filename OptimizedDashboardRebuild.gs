@@ -67,29 +67,49 @@ function rebuildDashboardOptimized() {
  * Build in-memory cache of all data
  * Single read of all sheets
  * Note: Does not use CacheService for raw data as it exceeds 100KB limit with large datasets
+ * For large datasets (>5000 rows), skips full read to avoid timeout
  */
 function buildDataCache() {
   Logger.log('Building data cache...');
 
   const ss = SpreadsheetApp.getActiveSpreadsheet();
+  const MAX_ROWS_FOR_CACHE = 5000; // Limit to avoid timeout with large datasets
 
   // Build fresh cache (in-memory only - no CacheService for large raw data)
   const dataCache = {
     timestamp: Date.now(),
     members: null,
     grievances: null,
-    config: null
+    config: null,
+    isLargeDataset: false
   };
 
   try {
     const memberSheet = ss.getSheetByName(SHEETS.MEMBER_DIR);
     if (memberSheet) {
-      dataCache.members = memberSheet.getDataRange().getValues();
+      const rowCount = memberSheet.getLastRow();
+      if (rowCount > MAX_ROWS_FOR_CACHE) {
+        Logger.log(`⚠️ Member Directory has ${rowCount} rows - using summary mode to avoid timeout`);
+        dataCache.isLargeDataset = true;
+        // Just get headers and count for large datasets
+        dataCache.members = memberSheet.getRange(1, 1, 1, memberSheet.getLastColumn()).getValues();
+        dataCache.memberCount = rowCount - 1; // Exclude header
+      } else {
+        dataCache.members = memberSheet.getDataRange().getValues();
+      }
     }
 
     const grievanceSheet = ss.getSheetByName(SHEETS.GRIEVANCE_LOG);
     if (grievanceSheet) {
-      dataCache.grievances = grievanceSheet.getDataRange().getValues();
+      const rowCount = grievanceSheet.getLastRow();
+      if (rowCount > MAX_ROWS_FOR_CACHE) {
+        Logger.log(`⚠️ Grievance Log has ${rowCount} rows - using summary mode`);
+        dataCache.isLargeDataset = true;
+        dataCache.grievances = grievanceSheet.getRange(1, 1, 1, grievanceSheet.getLastColumn()).getValues();
+        dataCache.grievanceCount = rowCount - 1;
+      } else {
+        dataCache.grievances = grievanceSheet.getDataRange().getValues();
+      }
     }
 
     const configSheet = ss.getSheetByName(SHEETS.CONFIG);
@@ -97,7 +117,7 @@ function buildDataCache() {
       dataCache.config = configSheet.getDataRange().getValues();
     }
 
-    Logger.log('✅ Data cache built');
+    Logger.log(`✅ Data cache built (large dataset mode: ${dataCache.isLargeDataset})`);
 
   } catch (error) {
     Logger.log(`Error building data cache: ${error.message}`);
@@ -136,8 +156,19 @@ function calculateAllMetricsOptimized(dataCache) {
     chapterActionInterest: 0,
 
     // Deadline tracking
-    upcomingDeadlines: []
+    upcomingDeadlines: [],
+
+    // Large dataset mode flag
+    isLargeDataset: dataCache.isLargeDataset || false
   };
+
+  // For large datasets, just return basic counts - dashboard will use formulas
+  if (dataCache.isLargeDataset) {
+    Logger.log('⚠️ Large dataset mode - returning basic counts only');
+    metrics.totalMembers = dataCache.memberCount || 0;
+    metrics.totalGrievances = dataCache.grievanceCount || 0;
+    return metrics;
+  }
 
   if (!dataCache.members || !dataCache.grievances) {
     return metrics;
