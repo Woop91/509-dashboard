@@ -14,7 +14,7 @@
  * Build Info:
  * - Version: 2.1.0 (Security Enhanced + Code Review Improvements)
  * - Build ID: 20251202-improvements
- * - Build Date: 2025-12-10T03:51:39.536Z
+ * - Build Date: 2025-12-10T21:05:20.996Z
  * - Build Type: DEVELOPMENT
  * - Modules: 79 files
  * - Tests Included: Yes
@@ -3879,6 +3879,104 @@ function CREATE_509_DASHBOARD() {
     Logger.log(`Stack trace: ${error.stack || 'N/A'}`);
     ss.toast("❌ Error: " + error.toString(), "Error", 15);
     SpreadsheetApp.flush();
+  }
+}
+
+/* --------------------- CONFIG TAB --------------------- */
+
+/**
+ * LITE version - Creates only essential sheets to avoid timeout
+ * Run this first, then run CREATE_509_DASHBOARD_PART2 for remaining sheets
+ */
+function CREATE_509_DASHBOARD_LITE() {
+  const ss = SpreadsheetApp.getActive();
+
+  ss.toast("🚀 Creating 509 Dashboard (LITE)...", "Starting", 5);
+  Logger.log("Starting CREATE_509_DASHBOARD_LITE");
+
+  try {
+    // Essential sheets only
+    createConfigTab();
+    ss.toast("✅ Config created", "25%", 2);
+    SpreadsheetApp.flush();
+
+    createMemberDirectory();
+    ss.toast("✅ Member Directory created", "50%", 2);
+    SpreadsheetApp.flush();
+
+    createGrievanceLog();
+    ss.toast("✅ Grievance Log created", "75%", 2);
+    SpreadsheetApp.flush();
+
+    createMainDashboard();
+    ss.toast("✅ Dashboard created", "90%", 2);
+    SpreadsheetApp.flush();
+
+    // Essential setup
+    setupDataValidations();
+    setupAllDropdowns();
+    ss.toast("✅ Dropdowns configured", "95%", 2);
+    SpreadsheetApp.flush();
+
+    onOpen();
+
+    ss.toast("✅ LITE setup complete! Run PART2 for analytics sheets.", "Done!", 10);
+    Logger.log("CREATE_509_DASHBOARD_LITE completed successfully");
+
+  } catch (error) {
+    Logger.log("Error in CREATE_509_DASHBOARD_LITE: " + error.toString());
+    ss.toast("❌ Error: " + error.toString(), "Error", 15);
+  }
+}
+
+/**
+ * PART 2 - Creates analytics and extra sheets (run after LITE)
+ */
+function CREATE_509_DASHBOARD_PART2() {
+  const ss = SpreadsheetApp.getActive();
+
+  ss.toast("🚀 Creating analytics sheets (Part 2)...", "Starting", 5);
+  Logger.log("Starting CREATE_509_DASHBOARD_PART2");
+
+  try {
+    createAnalyticsDataSheet();
+    createFeedbackSheet();
+    ss.toast("✅ Data sheets created", "20%", 2);
+    SpreadsheetApp.flush();
+
+    createInteractiveDashboardSheet(ss);
+    ss.toast("✅ Interactive Dashboard created", "40%", 2);
+    SpreadsheetApp.flush();
+
+    createStewardWorkloadSheet();
+    if (typeof createOperationsAnalyticsSheet === 'function') {
+      createOperationsAnalyticsSheet();
+    }
+    ss.toast("✅ Analytics sheets created", "60%", 2);
+    SpreadsheetApp.flush();
+
+    createExecutiveDashboard();
+    ss.toast("✅ Executive Dashboard created", "80%", 2);
+    SpreadsheetApp.flush();
+
+    // Cleanup
+    deleteStandaloneMergedTabs();
+
+    setupFormulasAndCalculations();
+    setupInteractiveDashboardControls();
+    ss.toast("✅ Formulas configured", "90%", 2);
+    SpreadsheetApp.flush();
+
+    populateAllAnalyticsSheetsOnCreate();
+
+    onOpen();
+
+    ss.toast("✅ Part 2 complete! Dashboard fully configured.", "Done!", 10);
+    Logger.log("CREATE_509_DASHBOARD_PART2 completed successfully");
+
+  } catch (error) {
+    Logger.log("Error in CREATE_509_DASHBOARD_PART2: " + error.toString());
+    ss.toast("❌ Error: " + error.toString(), "Error", 15);
   }
 }
 
