@@ -4234,6 +4234,51 @@ function SEED_MEMBERS_TOGGLE_3() { seedMembersWithCount(5000, "Toggle 3"); }
 function SEED_MEMBERS_TOGGLE_4() { seedMembersWithCount(5000, "Toggle 4"); }
 
 /**
+ * Seeds 10,000 members in two batches to avoid timeout
+ */
+function SEED_MEMBERS_10K() {
+  const ui = SpreadsheetApp.getUi();
+  const response = ui.alert(
+    'Seed 10,000 Members',
+    'This will add 10,000 member records in 2 batches of 5,000.\nThis may take 2-3 minutes. Continue?',
+    ui.ButtonSet.YES_NO
+  );
+  if (response !== ui.Button.YES) return;
+
+  const ss = SpreadsheetApp.getActive();
+  const memberDir = ss.getSheetByName(SHEETS.MEMBER_DIR);
+  const config = ss.getSheetByName(SHEETS.CONFIG);
+
+  if (!validateSeedSheets(memberDir, config)) return;
+
+  const seedConfig = getMemberSeedConfig();
+  if (!seedConfig) return;
+
+  // Batch 1: First 5,000
+  ss.toast("🚀 Seeding batch 1 of 2 (5,000 members)...", "Processing", -1);
+  clearMemberValidationsForSeed(memberDir, 5000);
+  let startingRow = memberDir.getLastRow();
+  generateAndWriteMemberData(memberDir, 5000, startingRow, "Batch 1", seedConfig);
+  SpreadsheetApp.flush();
+
+  ss.toast("✅ Batch 1 complete. Starting batch 2...", "Progress", 3);
+  Utilities.sleep(2000); // Brief pause between batches
+
+  // Batch 2: Next 5,000
+  ss.toast("🚀 Seeding batch 2 of 2 (5,000 members)...", "Processing", -1);
+  clearMemberValidationsForSeed(memberDir, 5000);
+  startingRow = memberDir.getLastRow();
+  generateAndWriteMemberData(memberDir, 5000, startingRow, "Batch 2", seedConfig);
+
+  // Restore sheet state
+  restoreMemberSheetAfterSeed(memberDir, startingRow, 5000);
+  SpreadsheetApp.flush();
+
+  const finalRow = memberDir.getLastRow();
+  ss.toast(`✅ 10,000 members added! Sheet now has ${finalRow - 1} total members.`, "Complete", 10);
+}
+
+/**
  * Seeds member directory with test data
  * Refactored to use helper functions for maintainability
  */

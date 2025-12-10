@@ -229,6 +229,8 @@ function createReorganizedMenus(ui) {
     .addSeparator()
     .addSubMenu(ui.createMenu("🌱 Seed Demo Data")
       .addSubMenu(ui.createMenu("👥 Seed Members")
+        .addItem("⭐ Seed 10K Members (Recommended)", "SEED_MEMBERS_10K")
+        .addSeparator()
         .addItem("Seed Members - Toggle 1 (5,000)", "SEED_MEMBERS_TOGGLE_1")
         .addItem("Seed Members - Toggle 2 (5,000)", "SEED_MEMBERS_TOGGLE_2")
         .addItem("Seed Members - Toggle 3 (5,000)", "SEED_MEMBERS_TOGGLE_3")
