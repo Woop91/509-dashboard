@@ -1,7 +1,7 @@
 # 509 Dashboard - Complete Feature Reference
 
-**Version:** 3.32
-**Last Updated:** 2025-12-09
+**Version:** 3.35
+**Last Updated:** 2025-12-10
 **Purpose:** Union grievance tracking and member engagement system for SEIU Local 509
 
 ---
@@ -855,7 +855,34 @@ const COLORS = {
 
 ## Appendix: Changelog
 
-### Version 3.34 (2025-12-10) - LATEST
+### Version 3.35 (2025-12-10) - LATEST
+
+**FIX: CREATE_509_DASHBOARD "starts but nothing happens"**
+
+The script appeared to hang with no visible progress because:
+1. Toast notification with `-1` duration (indefinite) was blocking subsequent toasts
+2. No `SpreadsheetApp.flush()` calls to force UI updates
+3. No detailed logging to identify where script might be stalling
+
+**Solution:** Enhanced CREATE_509_DASHBOARD with comprehensive debugging:
+- Added elapsed time logging for each step (visible in View > Logs)
+- Changed initial toast from `-1` to `5` seconds duration
+- Added `SpreadsheetApp.flush()` after each major step to force UI refresh
+- Added stack trace logging on errors
+- Each toast now shows for 3 seconds instead of 2
+
+**Files Changed:**
+- Code.gs:17-202: Rewrote CREATE_509_DASHBOARD with logging and flush
+
+**How to Debug:**
+1. Run CREATE_509_DASHBOARD from menu
+2. Watch toast notifications - they should appear sequentially
+3. After script completes (or fails), go to View > Logs to see detailed timing
+4. Log format: `[X.Xs] Step description` shows elapsed seconds
+
+---
+
+### Version 3.34 (2025-12-10)
 
 **FIX: Menu Disappearing on Page Refresh**
 
