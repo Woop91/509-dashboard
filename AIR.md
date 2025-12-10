@@ -855,7 +855,26 @@ const COLORS = {
 
 ## Appendix: Changelog
 
-### Version 3.33 (2025-12-10) - LATEST
+### Version 3.34 (2025-12-10) - LATEST
+
+**FIX: Menu Disappearing on Page Refresh**
+
+The menus were disappearing on page refresh because `onOpen()` was calling `logUserAccess()` and `validateConfigurationOnOpen()` before creating menus. If these functions failed or timed out, menus wouldn't appear.
+
+**Solution:** Reordered `onOpen()` to create menus FIRST before any other operations.
+
+**Changes:**
+- Menu creation now happens immediately when onOpen runs
+- Wrapped menu creation in its own try-catch block
+- Moved non-critical operations (logging, validation) AFTER menus
+- These won't block menu creation if they fail
+
+**Files Changed:**
+- Code.gs:2468-2568: Reordered onOpen() function
+
+---
+
+### Version 3.33 (2025-12-10)
 
 **FIX: Operations Analytics Sheet Deletion Bug**
 
