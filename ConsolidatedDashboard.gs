@@ -14,7 +14,7 @@
  * Build Info:
  * - Version: 2.1.0 (Security Enhanced + Code Review Improvements)
  * - Build ID: 20251202-improvements
- * - Build Date: 2025-12-10T00:06:57.091Z
+ * - Build Date: 2025-12-10T01:00:36.005Z
  * - Build Type: DEVELOPMENT
  * - Modules: 79 files
  * - Tests Included: Yes
@@ -6146,17 +6146,6 @@ function cleanupGrievanceLog() {
  * Runs when spreadsheet opens - creates menu and validates configuration
  */
 function onOpen() {
-  // Log user access for audit trail
-  try {
-    logUserAccess();
-  } catch (e) {
-    // Don't let audit logging break the app
-    Logger.log('onOpen: Failed to log user access: ' + e.message);
-  }
-
-  // Validate configuration on startup
-  const configValid = validateConfigurationOnOpen();
-
   // Wrap UI operations in try-catch to handle contexts where UI isn't available
   // (e.g., when called from time-driven triggers or CREATE_509_DASHBOARD)
   let ui;
@@ -6168,13 +6157,15 @@ function onOpen() {
     return;
   }
 
-  // ============ CREATE ALL MAIN MENUS ============
-  // Use the comprehensive reorganized menu system with all 43+ features
-  // This calls the reorganized menu from ReorganizedMenu.gs
-  createReorganizedMenus(ui);
+  // ============ CREATE MENUS FIRST (before any other operations) ============
+  // This ensures menus always appear even if other operations fail
+  try {
+    // Use the comprehensive reorganized menu system with all 43+ features
+    // This calls the reorganized menu from ReorganizedMenu.gs
+    createReorganizedMenus(ui);
 
-  // ============ 🧪 TESTING MENU ============
-  ui.createMenu("🧪 Tests")
+    // ============ 🧪 TESTING MENU ============
+    ui.createMenu("🧪 Tests")
     .addItem("⚡ Run Quick Tests", "runQuickTests")
     .addItem("🧪 Run All Tests", "runAllTests")
     .addItem("📊 View Test Results", "showTestResults")
@@ -6232,6 +6223,28 @@ function onOpen() {
     .addItem("⚙️ Shortcuts Configuration", "showKeyboardShortcutsConfig")
     .addItem("F1 Context Help", "showContextHelp")
     .addToUi();
+  } catch (menuError) {
+    // Log menu creation error but don't fail
+    Logger.log('onOpen: Error creating menus: ' + menuError.message);
+  }
+
+  // ============ NON-CRITICAL OPERATIONS (after menus are created) ============
+  // These run after menus so menu always appears even if these fail
+
+  // Log user access for audit trail
+  try {
+    logUserAccess();
+  } catch (e) {
+    // Don't let audit logging break the app
+    Logger.log('onOpen: Failed to log user access: ' + e.message);
+  }
+
+  // Validate configuration on startup (non-blocking)
+  try {
+    validateConfigurationOnOpen();
+  } catch (e) {
+    Logger.log('onOpen: Failed to validate config: ' + e.message);
+  }
 }
 
 /**
