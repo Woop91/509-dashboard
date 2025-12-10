@@ -1,6 +1,6 @@
 # 509 Dashboard - Complete Feature Reference
 
-**Version:** 3.36
+**Version:** 3.37
 **Last Updated:** 2025-12-10
 **Purpose:** Union grievance tracking and member engagement system for SEIU Local 509
 
@@ -855,7 +855,34 @@ const COLORS = {
 
 ## Appendix: Changelog
 
-### Version 3.36 (2025-12-10) - LATEST
+### Version 3.37 (2025-12-10) - LATEST
+
+**NEW: CREATE_509_DASHBOARD_LITE and PART2**
+
+Split dashboard creation into two functions to avoid Google Apps Script timeout on slow connections.
+
+**Changes:**
+- `CREATE_509_DASHBOARD_LITE()` - Creates only essential sheets (Config, Member Directory, Grievance Log, Dashboard)
+- `CREATE_509_DASHBOARD_PART2()` - Creates analytics and extra sheets (Interactive Dashboard, Executive Dashboard, etc.)
+- Run LITE first, then PART2 for full setup
+
+**FIX: buildDataCache timeout with large datasets**
+
+The `buildDataCache` function was timing out when trying to read 20K+ rows.
+
+**Solution:**
+- Check row count before reading entire sheet
+- For datasets >5000 rows, use "summary mode" (only reads headers and stores count)
+- Dashboard formulas handle detailed calculations instead
+
+**Files Changed:**
+- Code.gs:211-301: Added CREATE_509_DASHBOARD_LITE and CREATE_509_DASHBOARD_PART2
+- OptimizedDashboardRebuild.gs:71-128: Modified buildDataCache for large dataset handling
+- OptimizedDashboardRebuild.gs:135-171: Modified calculateAllMetricsOptimized for large dataset mode
+
+---
+
+### Version 3.36 (2025-12-10)
 
 **NEW: SEED_MEMBERS_10K Function**
 
