@@ -4613,12 +4613,16 @@ function clearGrievanceValidationsForSeed(grievanceLog, count) {
 function getGrievanceSeedConfig() {
   const grievanceDropdowns = getGrievanceLogDropdownValues();
 
+  // Get actual steward names from Member Directory (critical for steward workload matching)
+  const actualStewards = getActualStewardNamesFromMemberDirectory();
+
   const seedConfig = {
     statuses: grievanceDropdowns.statuses,
     steps: grievanceDropdowns.steps,
     categories: grievanceDropdowns.categories,
     articles: grievanceDropdowns.articles,
-    stewards: grievanceDropdowns.stewards,
+    // Use actual steward names from Member Directory if available, otherwise fall back to config
+    stewards: actualStewards.length > 0 ? actualStewards : grievanceDropdowns.stewards,
     deadlineConfig: getAllDeadlineConfig(),
     resolutions: ["Won - Resolved favorably", "Won - Full remedy granted", "Lost - No violation found", "Lost - Withdrawn by member", "Settled - Partial remedy", "Settled - Compromise reached"]
   };
@@ -4646,7 +4650,9 @@ function getGrievanceSeedConfig() {
         seedConfig.steps = newDropdowns.steps;
         seedConfig.categories = newDropdowns.categories;
         seedConfig.articles = newDropdowns.articles;
-        seedConfig.stewards = newDropdowns.stewards;
+        // Still prefer actual stewards from Member Directory
+        const updatedStewards = getActualStewardNamesFromMemberDirectory();
+        seedConfig.stewards = updatedStewards.length > 0 ? updatedStewards : newDropdowns.stewards;
       } else {
         ui.alert('Error', 'populateConfigDefaults function not found. Please run it manually from Demo menu.', ui.ButtonSet.OK);
         return null;
@@ -4657,6 +4663,42 @@ function getGrievanceSeedConfig() {
   }
 
   return seedConfig;
+}
+
+/**
+ * Gets actual steward names from Member Directory
+ * Used by grievance seed to ensure steward assignments match real stewards
+ * @returns {string[]} Array of steward full names
+ */
+function getActualStewardNamesFromMemberDirectory() {
+  const ss = SpreadsheetApp.getActiveSpreadsheet();
+  const memberSheet = ss.getSheetByName(SHEETS.MEMBER_DIR);
+
+  if (!memberSheet) {
+    return [];
+  }
+
+  const data = memberSheet.getDataRange().getValues();
+  const stewardNames = [];
+
+  // Start from row 2 (skip header)
+  for (let i = 1; i < data.length; i++) {
+    const row = data[i];
+    const isSteward = row[MEMBER_COLS.IS_STEWARD - 1];
+
+    if (isSteward === 'Yes') {
+      const firstName = row[MEMBER_COLS.FIRST_NAME - 1] || '';
+      const lastName = row[MEMBER_COLS.LAST_NAME - 1] || '';
+      const fullName = `${firstName} ${lastName}`.trim();
+
+      if (fullName) {
+        stewardNames.push(fullName);
+      }
+    }
+  }
+
+  Logger.log(`Found ${stewardNames.length} actual stewards in Member Directory`);
+  return stewardNames;
 }
 
 /**
