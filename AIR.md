@@ -855,7 +855,51 @@ const COLORS = {
 
 ## Appendix: Changelog
 
-### Version 3.32 (2025-12-09) - LATEST
+### Version 3.33 (2025-12-10) - LATEST
+
+**FIX: Operations Analytics Sheet Deletion Bug**
+
+Fixed bug where `deleteStandaloneMergedTabs()` was deleting the Operations Analytics sheet right after it was created, causing `populateOperationsAnalytics()` to fail with "sheet not found".
+
+**Root Cause:** Operations Analytics IS the merged dashboard - it should NOT be deleted. Only KPI Performance Dashboard should be deleted.
+
+**Files Changed:**
+- Code.gs:1538-1545: Removed "📊 Operations Analytics" from tabsToDelete array
+
+---
+
+**FIX: Interactive Dashboard Quick Action Dropdown Not Working**
+
+The Quick Action dropdown at cell I7 had no onEdit handler to respond to selections.
+
+**Added:**
+- `handleInteractiveDashboardQuickAction()` - Main handler for Quick Action selections
+- `resetInteractiveDashboardFilters()` - Resets all dropdowns to defaults
+- `showAllInteractiveDashboardData()` - Shows all data with comparison mode
+- `exportInteractiveDashboardSummary()` - Exports metrics to new sheet
+
+**Files Changed:**
+- DataIntegrityEnhancements.gs:325-337: Added onEdit check for Interactive Dashboard I7
+- InteractiveDashboard.gs:1434-1573: Added handler functions
+
+---
+
+**FIX: Steward Workload Showing 0 Stewards**
+
+`populateStewardWorkload()` was finding 0 matches because grievance seed used `config.stewards` from Config sheet (empty by design), while Member Directory had stewards with randomly generated names.
+
+**Solution:** Grievance seed now uses actual steward names from Member Directory.
+
+**Added:**
+- `getActualStewardNamesFromMemberDirectory()` - Collects real steward names
+- Modified `getGrievanceSeedConfig()` to prefer actual stewards over config
+
+**Files Changed:**
+- Code.gs:4613-4701: Added function and modified seed config
+
+---
+
+### Version 3.32 (2025-12-09)
 
 **FIX: Days to Deadline Cannot Show Negative (Past Due)**
 
