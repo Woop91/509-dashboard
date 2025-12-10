@@ -1,6 +1,6 @@
 # 509 Dashboard - Complete Feature Reference
 
-**Version:** 3.35
+**Version:** 3.36
 **Last Updated:** 2025-12-10
 **Purpose:** Union grievance tracking and member engagement system for SEIU Local 509
 
@@ -855,7 +855,24 @@ const COLORS = {
 
 ## Appendix: Changelog
 
-### Version 3.35 (2025-12-10) - LATEST
+### Version 3.36 (2025-12-10) - LATEST
+
+**NEW: SEED_MEMBERS_10K Function**
+
+Added optimized 10K member seeding function that avoids timeout issues.
+
+**Changes:**
+- New `SEED_MEMBERS_10K()` function seeds 10,000 members in 2 batches of 5,000
+- Includes `SpreadsheetApp.flush()` and 2-second pause between batches
+- Added to menu: 🎭 Demo > 🌱 Seed Demo Data > 👥 Seed Members > ⭐ Seed 10K Members (Recommended)
+
+**Files Changed:**
+- Code.gs:4239-4279: Added SEED_MEMBERS_10K function
+- ReorganizedMenu.gs:232: Added menu item
+
+---
+
+### Version 3.35 (2025-12-10)
 
 **FIX: CREATE_509_DASHBOARD "starts but nothing happens"**
 
