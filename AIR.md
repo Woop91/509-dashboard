@@ -855,7 +855,30 @@ const COLORS = {
 
 ## Appendix: Changelog
 
-### Version 3.38 (2025-12-11) - LATEST
+### Version 3.39 (2025-12-11) - LATEST
+
+**FIX: DESIGN-001 Mixed column constants/raw numeric indexes**
+
+Code review identified raw numeric indexes in searchGrievances() function that should use GRIEVANCE_COLS constants for maintainability.
+
+**Changes:**
+- Replaced `row[0]`, `row[2]`, `row[3]`, `row[4]` with proper GRIEVANCE_COLS constants
+- Updated switch statement for searchCol to use constants
+- Now uses: `GRIEVANCE_COLS.GRIEVANCE_ID`, `GRIEVANCE_COLS.FIRST_NAME`, `GRIEVANCE_COLS.LAST_NAME`, `GRIEVANCE_COLS.STATUS`
+
+**Files Changed:**
+- UIFeatures.gs:363-408: Fixed searchGrievances() to use GRIEVANCE_COLS constants
+- ConsolidatedDashboard.gs:49079-49125: Same fix in consolidated build
+
+**Other Code Review Items Investigated:**
+- MD-001/MD-002 (Contact sidebar, Engagement report): Functions not found in codebase
+- DB-001 (Duplicate calculateAllMetrics): Two functions exist but serve different purposes (InteractiveDashboard vs OptimizedDashboard)
+- TP-001/TP-003 (Diagnostics performance): runDiagnosticsBatch function not found
+- CFG-001 (Placeholder URLs): Intentional design - NOTE says to update when videos recorded
+
+---
+
+### Version 3.38 (2025-12-11)
 
 **FIX: Tests timeout with 10K+ member datasets**
 
