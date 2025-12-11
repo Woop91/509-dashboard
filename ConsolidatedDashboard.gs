@@ -14,7 +14,7 @@
  * Build Info:
  * - Version: 2.1.0 (Security Enhanced + Code Review Improvements)
  * - Build ID: 20251202-improvements
- * - Build Date: 2025-12-10T21:08:54.987Z
+ * - Build Date: 2025-12-11T23:21:19.021Z
  * - Build Type: DEVELOPMENT
  * - Modules: 79 files
  * - Tests Included: Yes
@@ -49076,14 +49076,14 @@ function searchGrievances(searchType, searchTerm) {
   const headers = data[0];
   const records = data.slice(1);
 
-  // Determine which column to search
+  // Determine which column to search (using GRIEVANCE_COLS constants)
   let searchCol;
   switch (searchType) {
     case 'id':
-      searchCol = 0; // Grievance ID
+      searchCol = GRIEVANCE_COLS.GRIEVANCE_ID - 1; // Grievance ID
       break;
     case 'member':
-      searchCol = 2; // First Name (will also check Last Name)
+      searchCol = GRIEVANCE_COLS.FIRST_NAME - 1; // First Name (will also check Last Name)
       break;
     case 'type':
       searchCol = headers.indexOf('Issue Category');
@@ -49105,9 +49105,9 @@ function searchGrievances(searchType, searchTerm) {
     let match = false;
 
     if (searchType === 'member') {
-      // Search both first and last name
-      const firstName = String(row[2] || '').toLowerCase();
-      const lastName = String(row[3] || '').toLowerCase();
+      // Search both first and last name (using GRIEVANCE_COLS constants)
+      const firstName = String(row[GRIEVANCE_COLS.FIRST_NAME - 1] || '').toLowerCase();
+      const lastName = String(row[GRIEVANCE_COLS.LAST_NAME - 1] || '').toLowerCase();
       match = firstName.includes(searchLower) || lastName.includes(searchLower);
     } else {
       const cellValue = String(row[searchCol] || '').toLowerCase();
@@ -49116,9 +49116,9 @@ function searchGrievances(searchType, searchTerm) {
 
     if (match) {
       results.push({
-        id: row[0],
-        name: row[2] + ' ' + row[3],
-        status: row[4],
+        id: row[GRIEVANCE_COLS.GRIEVANCE_ID - 1],
+        name: row[GRIEVANCE_COLS.FIRST_NAME - 1] + ' ' + row[GRIEVANCE_COLS.LAST_NAME - 1],
+        status: row[GRIEVANCE_COLS.STATUS - 1],
         type: row[headers.indexOf('Issue Category')]
       });
     }
@@ -53894,19 +53894,53 @@ const Assert = {
 const TEST_MAX_EXECUTION_MS = 5 * 60 * 1000;
 
 /**
+ * Maximum rows before switching to "large dataset mode" for tests
+ */
+const TEST_LARGE_DATASET_THRESHOLD = 5000;
+
+/**
+ * Check if we have a large dataset that requires skipping slow tests
+ */
+function isLargeDataset() {
+  try {
+    const ss = SpreadsheetApp.getActive();
+    const memberDir = ss.getSheetByName(SHEETS.MEMBER_DIR);
+    if (memberDir) {
+      const rowCount = memberDir.getLastRow();
+      return rowCount > TEST_LARGE_DATASET_THRESHOLD;
+    }
+  } catch (e) {
+    Logger.log('Error checking dataset size: ' + e.message);
+  }
+  return false;
+}
+
+/**
  * Test runner - discovers and runs all test functions
  * Includes timeout protection to avoid exceeding Apps Script limits
  */
 function runAllTests() {
   const ui = SpreadsheetApp.getUi();
+  const largeDataset = isLargeDataset();
 
-  ui.alert(
-    '🧪 Running All Tests',
-    'This will run the complete test suite.\n\n' +
-    'Note: Tests will stop automatically before the 6-minute timeout.\n' +
-    'For faster results, use "Run Quick Tests" which skips slow integration tests.',
-    ui.ButtonSet.OK
-  );
+  if (largeDataset) {
+    ui.alert(
+      '🧪 Running Tests (Large Dataset Mode)',
+      'Detected 5,000+ rows in Member Directory.\n\n' +
+      'Slow integration tests will be SKIPPED to avoid timeout.\n' +
+      'Only fast unit tests and medium tests will run.\n\n' +
+      'To run ALL tests, reduce data to <5,000 rows first.',
+      ui.ButtonSet.OK
+    );
+  } else {
+    ui.alert(
+      '🧪 Running All Tests',
+      'This will run the complete test suite.\n\n' +
+      'Note: Tests will stop automatically before the 6-minute timeout.\n' +
+      'For faster results, use "Run Quick Tests" which skips slow integration tests.',
+      ui.ButtonSet.OK
+    );
+  }
 
   SpreadsheetApp.getActive().toast('🧪 Running test suite...', 'Testing', -1);
 
@@ -53992,7 +54026,21 @@ function runAllTests() {
     'testFormulaPerformanceWithData'
   ];
 
-  const testFunctions = [...fastTests, ...mediumTests, ...slowTests];
+  // Skip slow tests for large datasets to avoid timeout
+  let testFunctions;
+  if (largeDataset) {
+    Logger.log('📊 Large dataset detected - skipping slow integration tests');
+    testFunctions = [...fastTests, ...mediumTests];
+    // Mark slow tests as skipped
+    slowTests.forEach(function(testName) {
+      TEST_RESULTS.skipped.push({
+        name: testName,
+        reason: 'Skipped due to large dataset (>5,000 rows)'
+      });
+    });
+  } else {
+    testFunctions = [...fastTests, ...mediumTests, ...slowTests];
+  }
 
   // Ensure test registry is initialized
   ensureTestRegistry();

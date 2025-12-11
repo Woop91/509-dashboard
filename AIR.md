@@ -1,6 +1,6 @@
 # 509 Dashboard - Complete Feature Reference
 
-**Version:** 3.37
+**Version:** 3.38
 **Last Updated:** 2025-12-10
 **Purpose:** Union grievance tracking and member engagement system for SEIU Local 509
 
@@ -855,7 +855,49 @@ const COLORS = {
 
 ## Appendix: Changelog
 
-### Version 3.37 (2025-12-10) - LATEST
+### Version 3.39 (2025-12-11) - LATEST
+
+**FIX: DESIGN-001 Mixed column constants/raw numeric indexes**
+
+Code review identified raw numeric indexes in searchGrievances() function that should use GRIEVANCE_COLS constants for maintainability.
+
+**Changes:**
+- Replaced `row[0]`, `row[2]`, `row[3]`, `row[4]` with proper GRIEVANCE_COLS constants
+- Updated switch statement for searchCol to use constants
+- Now uses: `GRIEVANCE_COLS.GRIEVANCE_ID`, `GRIEVANCE_COLS.FIRST_NAME`, `GRIEVANCE_COLS.LAST_NAME`, `GRIEVANCE_COLS.STATUS`
+
+**Files Changed:**
+- UIFeatures.gs:363-408: Fixed searchGrievances() to use GRIEVANCE_COLS constants
+- ConsolidatedDashboard.gs:49079-49125: Same fix in consolidated build
+
+**Other Code Review Items Investigated:**
+- MD-001/MD-002 (Contact sidebar, Engagement report): Functions not found in codebase
+- DB-001 (Duplicate calculateAllMetrics): Two functions exist but serve different purposes (InteractiveDashboard vs OptimizedDashboard)
+- TP-001/TP-003 (Diagnostics performance): runDiagnosticsBatch function not found
+- CFG-001 (Placeholder URLs): Intentional design - NOTE says to update when videos recorded
+
+---
+
+### Version 3.38 (2025-12-11)
+
+**FIX: Tests timeout with 10K+ member datasets**
+
+Tests were timing out when running against sheets with 5,000+ rows.
+
+**Solution:**
+- Added `isLargeDataset()` function to detect >5,000 rows
+- Tests now auto-detect large datasets and skip slow integration tests
+- Fast unit tests and medium tests still run (no sheet reads)
+- Shows clear message: "Large Dataset Mode - slow tests skipped"
+
+**Files Changed:**
+- TestFramework.gs:356-376: Added TEST_LARGE_DATASET_THRESHOLD and isLargeDataset()
+- TestFramework.gs:382-403: Modified runAllTests() to detect large datasets
+- TestFramework.gs:489-503: Skip slow tests array when large dataset detected
+
+---
+
+### Version 3.37 (2025-12-10)
 
 **NEW: CREATE_509_DASHBOARD_LITE and PART2**
 

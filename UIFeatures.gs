@@ -360,14 +360,14 @@ function searchGrievances(searchType, searchTerm) {
   const headers = data[0];
   const records = data.slice(1);
 
-  // Determine which column to search
+  // Determine which column to search (using GRIEVANCE_COLS constants)
   let searchCol;
   switch (searchType) {
     case 'id':
-      searchCol = 0; // Grievance ID
+      searchCol = GRIEVANCE_COLS.GRIEVANCE_ID - 1; // Grievance ID
       break;
     case 'member':
-      searchCol = 2; // First Name (will also check Last Name)
+      searchCol = GRIEVANCE_COLS.FIRST_NAME - 1; // First Name (will also check Last Name)
       break;
     case 'type':
       searchCol = headers.indexOf('Issue Category');
@@ -389,9 +389,9 @@ function searchGrievances(searchType, searchTerm) {
     let match = false;
 
     if (searchType === 'member') {
-      // Search both first and last name
-      const firstName = String(row[2] || '').toLowerCase();
-      const lastName = String(row[3] || '').toLowerCase();
+      // Search both first and last name (using GRIEVANCE_COLS constants)
+      const firstName = String(row[GRIEVANCE_COLS.FIRST_NAME - 1] || '').toLowerCase();
+      const lastName = String(row[GRIEVANCE_COLS.LAST_NAME - 1] || '').toLowerCase();
       match = firstName.includes(searchLower) || lastName.includes(searchLower);
     } else {
       const cellValue = String(row[searchCol] || '').toLowerCase();
@@ -400,9 +400,9 @@ function searchGrievances(searchType, searchTerm) {
 
     if (match) {
       results.push({
-        id: row[0],
-        name: row[2] + ' ' + row[3],
-        status: row[4],
+        id: row[GRIEVANCE_COLS.GRIEVANCE_ID - 1],
+        name: row[GRIEVANCE_COLS.FIRST_NAME - 1] + ' ' + row[GRIEVANCE_COLS.LAST_NAME - 1],
+        status: row[GRIEVANCE_COLS.STATUS - 1],
         type: row[headers.indexOf('Issue Category')]
       });
     }
