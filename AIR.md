@@ -1,6 +1,6 @@
 # 509 Dashboard - Complete Feature Reference
 
-**Version:** 3.37
+**Version:** 3.38
 **Last Updated:** 2025-12-10
 **Purpose:** Union grievance tracking and member engagement system for SEIU Local 509
 
@@ -855,7 +855,26 @@ const COLORS = {
 
 ## Appendix: Changelog
 
-### Version 3.37 (2025-12-10) - LATEST
+### Version 3.38 (2025-12-11) - LATEST
+
+**FIX: Tests timeout with 10K+ member datasets**
+
+Tests were timing out when running against sheets with 5,000+ rows.
+
+**Solution:**
+- Added `isLargeDataset()` function to detect >5,000 rows
+- Tests now auto-detect large datasets and skip slow integration tests
+- Fast unit tests and medium tests still run (no sheet reads)
+- Shows clear message: "Large Dataset Mode - slow tests skipped"
+
+**Files Changed:**
+- TestFramework.gs:356-376: Added TEST_LARGE_DATASET_THRESHOLD and isLargeDataset()
+- TestFramework.gs:382-403: Modified runAllTests() to detect large datasets
+- TestFramework.gs:489-503: Skip slow tests array when large dataset detected
+
+---
+
+### Version 3.37 (2025-12-10)
 
 **NEW: CREATE_509_DASHBOARD_LITE and PART2**
 
