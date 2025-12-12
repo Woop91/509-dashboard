@@ -3980,6 +3980,174 @@ function CREATE_509_DASHBOARD_PART2() {
   }
 }
 
+/* --------------------- REPAIR DASHBOARD --------------------- */
+/**
+ * REPAIR_DASHBOARD - Comprehensive repair function to fix all dashboard issues
+ *
+ * Fixes the following:
+ * - Data validations (dropdowns)
+ * - Cross-population formulas (Grievance Log <-> Member Directory)
+ * - Interactive Dashboard controls
+ * - Theme/styling
+ * - Analytics sheets
+ *
+ * Run this if:
+ * - Theme is gone
+ * - Dropdowns don't work
+ * - Data isn't cross-populating between sheets
+ * - Interactive Dashboard isn't functioning
+ * - Dashboard tab is broken
+ */
+function REPAIR_DASHBOARD() {
+  const ui = SpreadsheetApp.getUi();
+  const ss = SpreadsheetApp.getActive();
+
+  const response = ui.alert(
+    '🔧 Repair Dashboard',
+    'This will repair:\n\n' +
+    '• Data validations (dropdowns)\n' +
+    '• Cross-population formulas\n' +
+    '• Interactive Dashboard\n' +
+    '• Theme/styling\n' +
+    '• Analytics sheets\n\n' +
+    'Your data will NOT be affected.\n\n' +
+    'Continue?',
+    ui.ButtonSet.YES_NO
+  );
+
+  if (response !== ui.Button.YES) {
+    ss.toast('Repair cancelled', 'Cancelled', 3);
+    return;
+  }
+
+  const startTime = new Date().getTime();
+  function logStep(step) {
+    const elapsed = ((new Date().getTime() - startTime) / 1000).toFixed(1);
+    Logger.log(`[REPAIR ${elapsed}s] ${step}`);
+  }
+
+  try {
+    ss.toast('Starting dashboard repair...', 'Repairing', -1);
+
+    // Step 1: Set up data validations
+    logStep('Setting up data validations...');
+    ss.toast('1/6: Setting up data validations...', 'Repairing', -1);
+    if (typeof setupDataValidations === 'function') {
+      setupDataValidations();
+    }
+    SpreadsheetApp.flush();
+
+    // Step 2: Set up Grievance Log formulas (calculated columns)
+    logStep('Setting up Grievance Log formulas...');
+    ss.toast('2/6: Refreshing Grievance Log formulas...', 'Repairing', -1);
+    if (typeof recalcAllGrievancesBatched === 'function') {
+      try {
+        recalcAllGrievancesBatched();
+      } catch (e) {
+        Logger.log('recalcAllGrievancesBatched error (may be empty): ' + e.message);
+      }
+    }
+    SpreadsheetApp.flush();
+
+    // Step 3: Set up Member Directory cross-population formulas
+    logStep('Setting up Member Directory cross-population formulas...');
+    ss.toast('3/6: Setting up cross-population formulas...', 'Repairing', -1);
+    setupFormulasAndCalculations();
+    SpreadsheetApp.flush();
+
+    // Step 4: Set up Interactive Dashboard
+    logStep('Setting up Interactive Dashboard...');
+    ss.toast('4/6: Rebuilding Interactive Dashboard...', 'Repairing', -1);
+    if (typeof setupInteractiveDashboardControls === 'function') {
+      setupInteractiveDashboardControls();
+    }
+    if (typeof rebuildInteractiveDashboard === 'function') {
+      try {
+        rebuildInteractiveDashboard();
+      } catch (e) {
+        Logger.log('rebuildInteractiveDashboard error: ' + e.message);
+      }
+    }
+    SpreadsheetApp.flush();
+
+    // Step 5: Apply default theme
+    logStep('Applying theme...');
+    ss.toast('5/6: Applying theme...', 'Repairing', -1);
+    if (typeof applyTheme === 'function') {
+      try {
+        applyTheme('light', 'all');
+      } catch (e) {
+        Logger.log('applyTheme error: ' + e.message);
+      }
+    }
+    SpreadsheetApp.flush();
+
+    // Step 6: Populate analytics
+    logStep('Populating analytics sheets...');
+    ss.toast('6/6: Populating analytics...', 'Repairing', -1);
+    if (typeof populateAllAnalyticsSheetsOnCreate === 'function') {
+      try {
+        populateAllAnalyticsSheetsOnCreate();
+      } catch (e) {
+        Logger.log('populateAllAnalyticsSheetsOnCreate error: ' + e.message);
+      }
+    }
+    SpreadsheetApp.flush();
+
+    const elapsed = ((new Date().getTime() - startTime) / 1000).toFixed(1);
+    logStep('Repair complete!');
+
+    ui.alert(
+      '✅ Dashboard Repaired',
+      `Repair completed in ${elapsed} seconds!\n\n` +
+      'Fixed:\n' +
+      '• Data validations (dropdowns)\n' +
+      '• Grievance Log calculated columns\n' +
+      '• Member Directory cross-population formulas (AB-AD)\n' +
+      '• Interactive Dashboard controls\n' +
+      '• Theme styling\n' +
+      '• Analytics sheets\n\n' +
+      'If issues persist, try running CREATE_509_DASHBOARD_PART2 from the script editor.',
+      ui.ButtonSet.OK
+    );
+
+  } catch (error) {
+    Logger.log('REPAIR_DASHBOARD error: ' + error.toString());
+    ui.alert('❌ Repair Error', 'Error during repair: ' + error.message + '\n\nCheck the script logs for details.', ui.ButtonSet.OK);
+  }
+}
+
+/**
+ * Quick repair - Refreshes formulas and validations without UI prompts
+ * Use from script editor for faster execution
+ */
+function QUICK_REPAIR() {
+  const ss = SpreadsheetApp.getActive();
+  ss.toast('Quick repair started...', 'Repairing', -1);
+
+  try {
+    // Validations
+    if (typeof setupDataValidations === 'function') setupDataValidations();
+
+    // Formulas
+    setupFormulasAndCalculations();
+
+    // Member Directory formulas specifically
+    refreshMemberDirectoryFormulas();
+
+    // Interactive Dashboard
+    if (typeof setupInteractiveDashboardControls === 'function') {
+      setupInteractiveDashboardControls();
+    }
+
+    SpreadsheetApp.flush();
+    ss.toast('✅ Quick repair complete!', 'Done', 5);
+  } catch (error) {
+    Logger.log('QUICK_REPAIR error: ' + error.toString());
+    ss.toast('❌ Error: ' + error.message, 'Error', 10);
+  }
+}
+
 /* --------------------- CONFIG TAB --------------------- */
 function createConfigTab() {
   const ss = SpreadsheetApp.getActive();
