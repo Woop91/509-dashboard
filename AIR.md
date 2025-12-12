@@ -1,6 +1,6 @@
 # 509 Dashboard - Complete Feature Reference
 
-**Version:** 3.39
+**Version:** 3.40
 **Last Updated:** 2025-12-12
 **Purpose:** Union grievance tracking and member engagement system for SEIU Local 509
 
@@ -276,9 +276,9 @@ const MEMBER_COLS = {
   CONTACT_STEWARD: 26,             // Z
   CONTACT_NOTES: 27,               // AA
   // Section 8: Grievance Management (AB-AE)
-  HAS_OPEN_GRIEVANCE: 28,          // AB - Formula-populated
-  GRIEVANCE_STATUS: 29,            // AC - Formula-populated
-  NEXT_DEADLINE: 30,               // AD - Formula-populated
+  HAS_OPEN_GRIEVANCE: 28,          // AB - Script-calculated (static value)
+  GRIEVANCE_STATUS: 29,            // AC - Script-calculated (static value)
+  NEXT_DEADLINE: 30,               // AD - Script-calculated (static value)
   START_GRIEVANCE: 31,             // AE - Checkbox to start grievance
 
   // ALIAS - For backward compatibility
@@ -598,9 +598,9 @@ Z (26): Steward Who Contacted Member (DROPDOWN from Config col H - Stewards)
 AA (27): Notes from Steward Contact
 
 Section 8: Grievance Management (AB-AE)
-AB (28): Has Open Grievance? (Formula)
-AC (29): Grievance Status Snapshot (Formula)
-AD (30): Next Grievance Deadline (Formula)
+AB (28): Has Open Grievance? (Script-calculated static value)
+AC (29): Grievance Status Snapshot (Script-calculated static value)
+AD (30): Next Grievance Deadline (Script-calculated static value)
 AE (31): Start Grievance (CHECKBOX ONLY - triggers grievance creation)
 ```
 
@@ -778,6 +778,30 @@ Applied via `setupDataValidations()`:
 - Menu: Dashboard → Grievance Tools → Refresh Grievance Formulas
 - Or run: `recalcAllGrievancesBatched()` from Apps Script
 
+### Member Directory - Code-Calculated Values (No Sheet Formulas)
+
+**IMPORTANT (v3.40):** Member Directory columns AB-AD have NO formulas in the sheet. All values are computed by `refreshMemberDirectoryFormulas()` in Code.gs and written as static values.
+
+**Calculated Columns (script-populated):**
+
+| Column | Name | Data Source | Shows |
+|--------|------|-------------|-------|
+| AB (28) | Has Open Grievance? | Grievance Log Column E (Status) | "Yes" if active grievance exists, "No" otherwise |
+| AC (29) | Grievance Status Snapshot | Grievance Log Column E (Status) | Status text from active grievance |
+| AD (30) | Next Grievance Deadline | Grievance Log Column T (Next Action Due) | Next deadline date from active grievance |
+
+**Active Grievance Statuses:** Open, Pending Info, Appealed, In Arbitration
+
+**Logic:**
+- Member ID in Member Directory Column A is matched against Grievance Log Column B
+- Active grievances take priority over closed ones
+- First active grievance found determines the status and deadline shown
+
+**To Recalculate:**
+- Menu: Dashboard → Grievance Tools → Refresh Member Directory Data
+- Or run: `refreshMemberDirectoryFormulas()` from Apps Script
+- Or run: `refreshAllFormulas()` to recalculate both Grievance Log and Member Directory
+
 ---
 
 ## Seed Data Functions
@@ -856,7 +880,39 @@ const COLORS = {
 
 ## Appendix: Changelog
 
-### Version 3.33 (2025-12-12) - LATEST
+### Version 3.40 (2025-12-12) - LATEST
+
+**FIX: Member Directory Grievance Columns Now Use Static Values (No Formulas)**
+
+Changed Member Directory columns AB-AD from formula-based to script-calculated static values, consistent with the "no formulas in visible sheets" architecture.
+
+**Changes:**
+- `refreshMemberDirectoryFormulas()` now writes STATIC VALUES instead of formulas
+- Reads all Grievance Log data once, builds lookup map by Member ID
+- Calculates Has Open Grievance?, Status Snapshot, Next Deadline for each member
+- Writes values as static data to columns AB, AC, AD
+- `setupFormulasAndCalculations()` now calls `refreshMemberDirectoryFormulas()` instead of setting formulas
+
+**Why This Change:**
+- Consistent with Grievance Log architecture (no formulas in visible sheets)
+- Prevents formula errors when sheets are renamed or columns reordered
+- Faster performance (batch write vs formula recalculation)
+- Cleaner data (no formula dependencies across sheets)
+
+**To Recalculate Member Directory Grievance Data:**
+- Menu: Dashboard → Grievance Tools → Refresh Member Directory Data
+- Or run: `refreshMemberDirectoryFormulas()` from Apps Script
+- Or run: `refreshAllFormulas()` to recalculate both sheets
+
+**Files Changed:**
+- Code.gs: Rewrote `refreshMemberDirectoryFormulas()` to write static values
+- Code.gs: Updated `setupFormulasAndCalculations()` to call batch function
+- Code.gs: Updated `refreshAllFormulas()` messaging
+- AIR.md: Updated documentation
+
+---
+
+### Version 3.33 (2025-12-12)
 
 **FIX: Missing Chart Builders & Dashboard Metrics**
 
@@ -1359,8 +1415,8 @@ See git history for complete changelog. Key milestones:
 
 ---
 
-**Document Version:** 3.33
-**Last Updated:** 2025-12-09
+**Document Version:** 3.40
+**Last Updated:** 2025-12-12
 **Maintained By:** Claude (AI Assistant)
 
 ---
