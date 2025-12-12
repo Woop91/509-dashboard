@@ -4970,13 +4970,13 @@ function generateSingleGrievanceRow(index, startingRow, memberID, memberData, co
     else if (step === "Arbitration") nextActionDue = new Date(Date.now() + Math.random() * 60 * DAY_MS);
   }
 
-  // Calculate days to deadline - blank if past due (appeals can't be filed after deadline)
+  // Calculate days to deadline - blank if past due (not negative)
+  // Keep nextActionDue so dashboards can identify overdue cases
   let daysToDeadline = "";
   if (nextActionDue) {
     const daysDiff = Math.floor((nextActionDue - Date.now()) / DAY_MS);
     if (daysDiff < 0) {
-      // Past due - clear both fields since window for action has closed
-      nextActionDue = "";
+      // Past due - Days to Deadline is blank, but KEEP Next Action Due for tracking
       daysToDeadline = "";
     } else {
       daysToDeadline = daysDiff;
