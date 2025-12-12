@@ -199,9 +199,11 @@ function createDashboardMetricCards(sheet) {
   sheet.getRange("K14:O16").merge()
     .setFormula(`=IFERROR(TEXT(COUNTIF('Grievance Log'!${statusCol}:${statusCol},"Settled")/(COUNTIF('Grievance Log'!${statusCol}:${statusCol},"Settled")+COUNTIF('Grievance Log'!${statusCol}:${statusCol},"Denied")),"0%"),"0%")`);
 
-  // Card 4: Needs Attention (Overdue) - with comma formatting, MAX to avoid negatives
+  // Card 4: Needs Attention (Overdue) - count Open grievances where Next Action Due is past
+  // Since Days to Deadline is blank when past due, we compare Next Action Due directly to TODAY
+  const nextActionDueCol = getColumnLetter(GRIEVANCE_COLS.NEXT_ACTION_DUE);
   sheet.getRange("P14:T16").merge()
-    .setFormula(`=TEXT(MAX(0,COUNTIFS('Grievance Log'!${statusCol}:${statusCol},"Open",'Grievance Log'!${daysToDeadlineCol}:${daysToDeadlineCol},"<0")),"#,##0")`);
+    .setFormula(`=TEXT(COUNTIFS('Grievance Log'!${statusCol}:${statusCol},"Open",'Grievance Log'!${nextActionDueCol}:${nextActionDueCol},"<"&TODAY(),'Grievance Log'!${nextActionDueCol}:${nextActionDueCol},"<>"),"#,##0")`);
 
   // Update subtitles with context
   sheet.getRange("A17:E18").merge().setValue("Union members strong together");

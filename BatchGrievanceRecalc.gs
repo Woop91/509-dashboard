@@ -239,19 +239,18 @@ function calculateGrievanceTimeline(row, today) {
   }
 
   // Calculate days to deadline
-  // RULE: If deadline has passed, both Next Action Due and Days to Deadline are blank
-  // Appeals cannot be filed after the due date, so past deadlines are not actionable
+  // RULE: Days to Deadline is blank when past due (not negative)
+  // Next Action Due KEEPS the date so we can identify overdue grievances
+  // Appeals cannot be filed after the due date, but we still want to track overdue cases
   let daysToDeadline = '';
-  let validNextActionDue = nextActionDue;
 
   if (nextActionDue && nextActionDue !== '') {
     const deadline = new Date(nextActionDue);
     const daysDiff = Math.floor((deadline - today) / (1000 * 60 * 60 * 24));
 
     if (daysDiff < 0) {
-      // Past due - deadline has passed, no longer actionable
-      // Clear both fields since the window for action has closed
-      validNextActionDue = '';
+      // Past due - show blank in Days to Deadline (not negative)
+      // Keep Next Action Due so dashboards can identify overdue cases
       daysToDeadline = '';
     } else {
       // Due today (0) or in the future (positive)
@@ -261,7 +260,7 @@ function calculateGrievanceTimeline(row, today) {
 
   return {
     daysOpen: daysOpen,
-    nextActionDue: validNextActionDue,
+    nextActionDue: nextActionDue,  // Keep the date for overdue tracking
     daysToDeadline: daysToDeadline
   };
 }

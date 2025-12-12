@@ -1,6 +1,6 @@
 # 509 Dashboard - Complete Feature Reference
 
-**Version:** 3.32
+**Version:** 3.33
 **Last Updated:** 2025-12-09
 **Purpose:** Union grievance tracking and member engagement system for SEIU Local 509
 
@@ -769,9 +769,10 @@ Applied via `setupDataValidations()`:
 - If deadline is TODAY: Shows 0
 - If deadline has PASSED: **Blank** (not negative)
 
-**IMPORTANT:** Appeals cannot be filed after the due date. Once a deadline passes, the window for action closes. Therefore:
-- Past-due deadlines show **blank** in both Next Action Due (T) and Days to Deadline (U)
-- This prevents confusion about deadlines that are no longer actionable
+**IMPORTANT:** Appeals cannot be filed after the due date. Once a deadline passes:
+- **Days to Deadline (U)** shows **blank** (not negative numbers)
+- **Next Action Due (T)** KEEPS the date so dashboards can identify overdue grievances
+- This allows tracking of overdue cases while avoiding confusing negative numbers
 
 **To Recalculate:**
 - Menu: Dashboard → Grievance Tools → Refresh Grievance Formulas
@@ -855,7 +856,38 @@ const COLORS = {
 
 ## Appendix: Changelog
 
-### Version 3.32 (2025-12-09) - LATEST
+### Version 3.33 (2025-12-12) - LATEST
+
+**FIX: Missing Chart Builders & Dashboard Metrics**
+
+Fixed critical issues with charts not populating and metrics showing nothing.
+
+**Charts Fixed:**
+- Added `buildInteractiveDashboardCharts()` - Location & Status charts
+- Added `buildTrendsCharts()` - Monthly trend line chart
+- Added `buildLocationCharts()` - Location pie chart
+- Added `buildTypeAnalysisCharts()` - Issue category bar chart
+- All chart builders now work with Operations Analytics (fallback to deprecated sheets)
+
+**Dashboard Metrics Fixed:**
+- Fixed "Needs Attention" metric to use Next Action Due date comparison
+- Updated overdue detection to work with new Days to Deadline logic
+
+**Deadline Logic Clarified:**
+- Days to Deadline (U): Blank when past due (not negative)
+- Next Action Due (T): KEEPS the date so dashboards can identify overdue cases
+- This allows tracking overdue cases while avoiding confusing negative numbers
+
+**Files Changed:**
+- LazyLoadCharts.gs: Added 4 missing chart builder functions + helper functions
+- InteractiveDashboard.gs: Fixed overdue metric formula
+- BatchGrievanceRecalc.gs: Keep Next Action Due for overdue tracking
+- Code.gs: Updated seed function to match
+- AIR.md: Updated documentation
+
+---
+
+### Version 3.32 (2025-12-09)
 
 **FIX: Days to Deadline Cannot Show Negative (Past Due)**
 
@@ -864,7 +896,7 @@ Fixed logic in BatchGrievanceRecalc.gs so that past-due deadlines show blank ins
 **Rule Applied:**
 - Appeals cannot be filed after the due date has passed
 - Once a deadline passes, the window for action is closed
-- Therefore, both Next Action Due (T) and Days to Deadline (U) show **blank** for past-due deadlines
+- Days to Deadline shows **blank** for past-due deadlines
 
 **Days to Deadline (Column U) now shows:**
 - Positive number: Days remaining until deadline
@@ -1154,7 +1186,7 @@ See git history for complete changelog. Key milestones:
 
 ---
 
-**Document Version:** 3.32
+**Document Version:** 3.33
 **Last Updated:** 2025-12-09
 **Maintained By:** Claude (AI Assistant)
 
