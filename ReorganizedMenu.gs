@@ -268,6 +268,8 @@ function createReorganizedMenus(ui) {
       .addItem("⚡ Install Admin Message Trigger", "installAdminMessageTrigger")
       .addSeparator()
       .addItem("🔄 Refresh Grievance Formulas", "refreshGrievanceFormulas")
+      .addItem("🔄 Refresh Member Directory Formulas", "refreshMemberDirectoryFormulas")
+      .addItem("🔄 Refresh All Formulas", "refreshAllFormulas")
       .addItem("🔄 Refresh Dashboard Deadlines", "refreshDashboardDeadlines")
       .addItem("🧹 Cleanup Extra Member Columns", "cleanupMemberDirectoryColumns")
       .addSeparator()
