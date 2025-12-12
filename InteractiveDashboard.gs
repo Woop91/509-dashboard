@@ -1427,3 +1427,149 @@ function openInteractiveDashboard() {
     '4️⃣ Choose a theme that makes you smile!\n\n' +
     '💪 Your data is ready to tell its story!');
 }
+
+/**
+ * Handles Quick Action dropdown selections from the Interactive Dashboard
+ * Called by onEdit when cell I7 is changed
+ * @param {string} action - The selected action from the dropdown
+ */
+function handleInteractiveDashboardQuickAction(action) {
+  try {
+    switch (action) {
+      case "Refresh Charts":
+        rebuildInteractiveDashboard();
+        break;
+      case "Reset All Filters":
+        resetInteractiveDashboardFilters();
+        break;
+      case "Show All Data":
+        showAllInteractiveDashboardData();
+        break;
+      case "Export Summary":
+        exportInteractiveDashboardSummary();
+        break;
+      default:
+        Logger.log('Unknown Quick Action: ' + action);
+    }
+  } catch (error) {
+    Logger.log('Error in handleInteractiveDashboardQuickAction: ' + error.message);
+    SpreadsheetApp.getActive().toast('Error: ' + error.message, 'Quick Action Failed', 5);
+  }
+}
+
+/**
+ * Resets all Interactive Dashboard filters to default values
+ */
+function resetInteractiveDashboardFilters() {
+  const ss = SpreadsheetApp.getActiveSpreadsheet();
+  const sheet = ss.getSheetByName(SHEETS.INTERACTIVE_DASHBOARD);
+
+  if (!sheet) {
+    SpreadsheetApp.getActive().toast('Interactive Dashboard not found', 'Error', 3);
+    return;
+  }
+
+  // Reset all dropdowns to default values
+  sheet.getRange("A7").setValue("Total Members");
+  sheet.getRange("B7").setValue("Donut Chart");
+  sheet.getRange("C7").setValue("Active Grievances");
+  sheet.getRange("D7").setValue("Bar Chart");
+  sheet.getRange("E7").setValue("Union Blue");
+  sheet.getRange("G7").setValue("Yes");
+  sheet.getRange("I7").setValue("Select Action...");
+
+  SpreadsheetApp.getActive().toast('✅ All filters reset to defaults!', 'Reset Complete', 3);
+}
+
+/**
+ * Shows all data in the Interactive Dashboard (removes any filters)
+ */
+function showAllInteractiveDashboardData() {
+  const ss = SpreadsheetApp.getActiveSpreadsheet();
+  const sheet = ss.getSheetByName(SHEETS.INTERACTIVE_DASHBOARD);
+
+  if (!sheet) {
+    SpreadsheetApp.getActive().toast('Interactive Dashboard not found', 'Error', 3);
+    return;
+  }
+
+  // Ensure comparison mode is on to show all charts
+  sheet.getRange("G7").setValue("Yes");
+
+  // Rebuild dashboard with all data
+  rebuildInteractiveDashboard();
+
+  SpreadsheetApp.getActive().toast('✅ Showing all data!', 'Complete', 3);
+}
+
+/**
+ * Exports Interactive Dashboard summary to a new sheet or downloads as PDF
+ */
+function exportInteractiveDashboardSummary() {
+  const ui = SpreadsheetApp.getUi();
+  const response = ui.alert(
+    '📊 Export Summary',
+    'This will create a snapshot of your current dashboard metrics.\n\n' +
+    'Would you like to proceed?',
+    ui.ButtonSet.YES_NO
+  );
+
+  if (response !== ui.Button.YES) {
+    return;
+  }
+
+  const ss = SpreadsheetApp.getActiveSpreadsheet();
+  const sheet = ss.getSheetByName(SHEETS.INTERACTIVE_DASHBOARD);
+  const memberSheet = ss.getSheetByName(SHEETS.MEMBER_DIR);
+  const grievanceSheet = ss.getSheetByName(SHEETS.GRIEVANCE_LOG);
+
+  if (!sheet || !memberSheet || !grievanceSheet) {
+    ui.alert('Error', 'Required sheets not found.', ui.ButtonSet.OK);
+    return;
+  }
+
+  // Calculate current metrics
+  const memberData = memberSheet.getDataRange().getValues();
+  const grievanceData = grievanceSheet.getDataRange().getValues();
+  const metrics = calculateAllMetrics(memberData, grievanceData);
+
+  // Create summary sheet
+  const timestamp = Utilities.formatDate(new Date(), Session.getScriptTimeZone(), "yyyy-MM-dd_HH-mm");
+  const summarySheetName = "Dashboard Export " + timestamp;
+
+  let summarySheet = ss.getSheetByName(summarySheetName);
+  if (summarySheet) {
+    ss.deleteSheet(summarySheet);
+  }
+  summarySheet = ss.insertSheet(summarySheetName);
+
+  // Write summary data
+  const summaryData = [
+    ["📊 DASHBOARD SUMMARY EXPORT"],
+    ["Generated: " + new Date().toLocaleString()],
+    [""],
+    ["METRIC", "VALUE"],
+    ["Total Members", metrics.totalMembers],
+    ["Active Members", metrics.activeMembers],
+    ["Total Stewards", metrics.totalStewards],
+    ["Total Grievances", metrics.totalGrievances],
+    ["Active Grievances", metrics.activeGrievances],
+    ["Resolved Grievances", metrics.resolvedGrievances],
+    ["Grievances Won", metrics.grievancesWon],
+    ["Grievances Lost", metrics.grievancesLost],
+    ["Win Rate %", metrics.winRate + "%"],
+    ["Overdue Grievances", metrics.overdueGrievances],
+    ["In Mediation", metrics.inMediation],
+    ["In Arbitration", metrics.inArbitration]
+  ];
+
+  summarySheet.getRange(1, 1, summaryData.length, 2).setValues(summaryData);
+
+  // Format
+  summarySheet.getRange("A1:B1").merge().setFontSize(16).setFontWeight("bold").setBackground(COLORS.PRIMARY_BLUE).setFontColor("white");
+  summarySheet.getRange("A4:B4").setFontWeight("bold").setBackground(COLORS.LIGHT_GRAY);
+  summarySheet.setColumnWidth(1, 200);
+  summarySheet.setColumnWidth(2, 150);
+
+  ui.alert('✅ Export Complete!', 'Your dashboard summary has been exported to:\n"' + summarySheetName + '"', ui.ButtonSet.OK);
+}

@@ -1,7 +1,7 @@
 # 509 Dashboard - Complete Feature Reference
 
-**Version:** 3.33
-**Last Updated:** 2025-12-09
+**Version:** 3.39
+**Last Updated:** 2025-12-12
 **Purpose:** Union grievance tracking and member engagement system for SEIU Local 509
 
 ---
@@ -884,6 +884,179 @@ Fixed critical issues with charts not populating and metrics showing nothing.
 - BatchGrievanceRecalc.gs: Keep Next Action Due for overdue tracking
 - Code.gs: Updated seed function to match
 - AIR.md: Updated documentation
+### Version 3.39 (2025-12-11) - LATEST
+
+**FIX: DESIGN-001 Mixed column constants/raw numeric indexes**
+
+Code review identified raw numeric indexes in searchGrievances() function that should use GRIEVANCE_COLS constants for maintainability.
+
+**Changes:**
+- Replaced `row[0]`, `row[2]`, `row[3]`, `row[4]` with proper GRIEVANCE_COLS constants
+- Updated switch statement for searchCol to use constants
+- Now uses: `GRIEVANCE_COLS.GRIEVANCE_ID`, `GRIEVANCE_COLS.FIRST_NAME`, `GRIEVANCE_COLS.LAST_NAME`, `GRIEVANCE_COLS.STATUS`
+
+**Files Changed:**
+- UIFeatures.gs:363-408: Fixed searchGrievances() to use GRIEVANCE_COLS constants
+- ConsolidatedDashboard.gs:49079-49125: Same fix in consolidated build
+
+**Other Code Review Items Investigated:**
+- MD-001/MD-002 (Contact sidebar, Engagement report): Functions not found in codebase
+- DB-001 (Duplicate calculateAllMetrics): Two functions exist but serve different purposes (InteractiveDashboard vs OptimizedDashboard)
+- TP-001/TP-003 (Diagnostics performance): runDiagnosticsBatch function not found
+- CFG-001 (Placeholder URLs): Intentional design - NOTE says to update when videos recorded
+
+---
+
+### Version 3.38 (2025-12-11)
+
+**FIX: Tests timeout with 10K+ member datasets**
+
+Tests were timing out when running against sheets with 5,000+ rows.
+
+**Solution:**
+- Added `isLargeDataset()` function to detect >5,000 rows
+- Tests now auto-detect large datasets and skip slow integration tests
+- Fast unit tests and medium tests still run (no sheet reads)
+- Shows clear message: "Large Dataset Mode - slow tests skipped"
+
+**Files Changed:**
+- TestFramework.gs:356-376: Added TEST_LARGE_DATASET_THRESHOLD and isLargeDataset()
+- TestFramework.gs:382-403: Modified runAllTests() to detect large datasets
+- TestFramework.gs:489-503: Skip slow tests array when large dataset detected
+
+---
+
+### Version 3.37 (2025-12-10)
+
+**NEW: CREATE_509_DASHBOARD_LITE and PART2**
+
+Split dashboard creation into two functions to avoid Google Apps Script timeout on slow connections.
+
+**Changes:**
+- `CREATE_509_DASHBOARD_LITE()` - Creates only essential sheets (Config, Member Directory, Grievance Log, Dashboard)
+- `CREATE_509_DASHBOARD_PART2()` - Creates analytics and extra sheets (Interactive Dashboard, Executive Dashboard, etc.)
+- Run LITE first, then PART2 for full setup
+
+**FIX: buildDataCache timeout with large datasets**
+
+The `buildDataCache` function was timing out when trying to read 20K+ rows.
+
+**Solution:**
+- Check row count before reading entire sheet
+- For datasets >5000 rows, use "summary mode" (only reads headers and stores count)
+- Dashboard formulas handle detailed calculations instead
+
+**Files Changed:**
+- Code.gs:211-301: Added CREATE_509_DASHBOARD_LITE and CREATE_509_DASHBOARD_PART2
+- OptimizedDashboardRebuild.gs:71-128: Modified buildDataCache for large dataset handling
+- OptimizedDashboardRebuild.gs:135-171: Modified calculateAllMetricsOptimized for large dataset mode
+
+---
+
+### Version 3.36 (2025-12-10)
+
+**NEW: SEED_MEMBERS_10K Function**
+
+Added optimized 10K member seeding function that avoids timeout issues.
+
+**Changes:**
+- New `SEED_MEMBERS_10K()` function seeds 10,000 members in 2 batches of 5,000
+- Includes `SpreadsheetApp.flush()` and 2-second pause between batches
+- Added to menu: 🎭 Demo > 🌱 Seed Demo Data > 👥 Seed Members > ⭐ Seed 10K Members (Recommended)
+
+**Files Changed:**
+- Code.gs:4239-4279: Added SEED_MEMBERS_10K function
+- ReorganizedMenu.gs:232: Added menu item
+
+---
+
+### Version 3.35 (2025-12-10)
+
+**FIX: CREATE_509_DASHBOARD "starts but nothing happens"**
+
+The script appeared to hang with no visible progress because:
+1. Toast notification with `-1` duration (indefinite) was blocking subsequent toasts
+2. No `SpreadsheetApp.flush()` calls to force UI updates
+3. No detailed logging to identify where script might be stalling
+
+**Solution:** Enhanced CREATE_509_DASHBOARD with comprehensive debugging:
+- Added elapsed time logging for each step (visible in View > Logs)
+- Changed initial toast from `-1` to `5` seconds duration
+- Added `SpreadsheetApp.flush()` after each major step to force UI refresh
+- Added stack trace logging on errors
+- Each toast now shows for 3 seconds instead of 2
+
+**Files Changed:**
+- Code.gs:17-202: Rewrote CREATE_509_DASHBOARD with logging and flush
+
+**How to Debug:**
+1. Run CREATE_509_DASHBOARD from menu
+2. Watch toast notifications - they should appear sequentially
+3. After script completes (or fails), go to View > Logs to see detailed timing
+4. Log format: `[X.Xs] Step description` shows elapsed seconds
+
+---
+
+### Version 3.34 (2025-12-10)
+
+**FIX: Menu Disappearing on Page Refresh**
+
+The menus were disappearing on page refresh because `onOpen()` was calling `logUserAccess()` and `validateConfigurationOnOpen()` before creating menus. If these functions failed or timed out, menus wouldn't appear.
+
+**Solution:** Reordered `onOpen()` to create menus FIRST before any other operations.
+
+**Changes:**
+- Menu creation now happens immediately when onOpen runs
+- Wrapped menu creation in its own try-catch block
+- Moved non-critical operations (logging, validation) AFTER menus
+- These won't block menu creation if they fail
+
+**Files Changed:**
+- Code.gs:2468-2568: Reordered onOpen() function
+
+---
+
+### Version 3.33 (2025-12-10)
+
+**FIX: Operations Analytics Sheet Deletion Bug**
+
+Fixed bug where `deleteStandaloneMergedTabs()` was deleting the Operations Analytics sheet right after it was created, causing `populateOperationsAnalytics()` to fail with "sheet not found".
+
+**Root Cause:** Operations Analytics IS the merged dashboard - it should NOT be deleted. Only KPI Performance Dashboard should be deleted.
+
+**Files Changed:**
+- Code.gs:1538-1545: Removed "📊 Operations Analytics" from tabsToDelete array
+
+---
+
+**FIX: Interactive Dashboard Quick Action Dropdown Not Working**
+
+The Quick Action dropdown at cell I7 had no onEdit handler to respond to selections.
+
+**Added:**
+- `handleInteractiveDashboardQuickAction()` - Main handler for Quick Action selections
+- `resetInteractiveDashboardFilters()` - Resets all dropdowns to defaults
+- `showAllInteractiveDashboardData()` - Shows all data with comparison mode
+- `exportInteractiveDashboardSummary()` - Exports metrics to new sheet
+
+**Files Changed:**
+- DataIntegrityEnhancements.gs:325-337: Added onEdit check for Interactive Dashboard I7
+- InteractiveDashboard.gs:1434-1573: Added handler functions
+
+---
+
+**FIX: Steward Workload Showing 0 Stewards**
+
+`populateStewardWorkload()` was finding 0 matches because grievance seed used `config.stewards` from Config sheet (empty by design), while Member Directory had stewards with randomly generated names.
+
+**Solution:** Grievance seed now uses actual steward names from Member Directory.
+
+**Added:**
+- `getActualStewardNamesFromMemberDirectory()` - Collects real steward names
+- Modified `getGrievanceSeedConfig()` to prefer actual stewards over config
+
+**Files Changed:**
+- Code.gs:4613-4701: Added function and modified seed config
 
 ---
 

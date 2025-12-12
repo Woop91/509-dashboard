@@ -16,122 +16,155 @@
 /* --------------------- ONE-CLICK SETUP --------------------- */
 function CREATE_509_DASHBOARD() {
   const ss = SpreadsheetApp.getActive();
+  const startTime = new Date().getTime();
 
-  SpreadsheetApp.getActive().toast("🚀 Creating 509 Dashboard...", "Starting", -1);
+  // Helper function for timed logging
+  function logStep(step) {
+    const elapsed = ((new Date().getTime() - startTime) / 1000).toFixed(1);
+    Logger.log(`[${elapsed}s] ${step}`);
+  }
+
+  logStep("Starting CREATE_509_DASHBOARD");
+  ss.toast("🚀 Creating 509 Dashboard...", "Starting", 5);
+  SpreadsheetApp.flush();
 
   try {
+    logStep("Creating Config tab...");
     createConfigTab();
-    SpreadsheetApp.getActive().toast("✅ Config created", "10%", 2);
+    ss.toast("✅ Config created", "10%", 3);
+    SpreadsheetApp.flush();
 
+    logStep("Creating Member Directory...");
     createMemberDirectory();
-    SpreadsheetApp.getActive().toast("✅ Member Directory created", "20%", 2);
+    ss.toast("✅ Member Directory created", "20%", 3);
+    SpreadsheetApp.flush();
 
+    logStep("Creating Grievance Log...");
     createGrievanceLog();
-    SpreadsheetApp.getActive().toast("✅ Grievance Log created", "30%", 2);
+    ss.toast("✅ Grievance Log created", "30%", 3);
+    SpreadsheetApp.flush();
 
+    logStep("Creating Main Dashboard...");
     createMainDashboard();
-    SpreadsheetApp.getActive().toast("✅ Main Dashboard created", "40%", 2);
+    ss.toast("✅ Main Dashboard created", "40%", 3);
+    SpreadsheetApp.flush();
 
+    logStep("Creating Analytics/Satisfaction/Feedback sheets...");
     createAnalyticsDataSheet();
     createMemberSatisfactionSheet();
     createFeedbackSheet();
-    SpreadsheetApp.getActive().toast("✅ Data sheets created", "50%", 2);
+    ss.toast("✅ Data sheets created", "50%", 3);
+    SpreadsheetApp.flush();
 
-    // Create Interactive Dashboard
+    logStep("Creating Interactive Dashboard...");
     createInteractiveDashboardSheet(ss);
-    SpreadsheetApp.getActive().toast("✅ Interactive Dashboard created", "60%", 2);
+    ss.toast("✅ Interactive Dashboard created", "60%", 3);
+    SpreadsheetApp.flush();
 
-    // Create Getting Started and FAQ sheets
+    logStep("Creating Getting Started sheet...");
     createGettingStartedSheet(ss);
 
+    logStep("Creating FAQ sheet...");
     createFAQSheet(ss);
-    SpreadsheetApp.getActive().toast("✅ Help sheets created", "70%", 2);
+    ss.toast("✅ Help sheets created", "70%", 3);
+    SpreadsheetApp.flush();
 
-    // Create User Settings sheet
+    logStep("Creating User Settings sheet...");
     createUserSettingsSheet();
-    SpreadsheetApp.getActive().toast("✅ Settings sheet created", "70%", 2);
+    ss.toast("✅ Settings sheet created", "72%", 3);
+    SpreadsheetApp.flush();
 
-    // Create all analytics and test sheets
+    logStep("Creating Steward Workload sheet...");
     createStewardWorkloadSheet();
 
-    // Create Operations Analytics sheet (merged: Trends & Timeline, Location Analytics, Type Analysis, Member Engagement, Cost Impact)
+    logStep("Creating Operations Analytics sheet...");
     if (typeof createOperationsAnalyticsSheet === 'function') {
       createOperationsAnalyticsSheet();
     }
-    SpreadsheetApp.getActive().toast("✅ Operations Analytics created", "75%", 2);
+    ss.toast("✅ Operations Analytics created", "75%", 3);
+    SpreadsheetApp.flush();
 
-    // Create comprehensive Executive Dashboard (includes Quick Stats, KPI Performance)
+    logStep("Creating Executive Dashboard...");
     createExecutiveDashboard();
-    SpreadsheetApp.getActive().toast("✅ Executive Dashboard created (merged analytics)", "80%", 2);
+    ss.toast("✅ Executive Dashboard created", "80%", 3);
+    SpreadsheetApp.flush();
 
-    // Delete standalone tabs that are now merged into Executive Dashboard
-    Logger.log("Deleting standalone tabs merged into Executive Dashboard...");
+    logStep("Deleting standalone merged tabs...");
     deleteStandaloneMergedTabs();
 
-    // Hide Member Satisfaction tab (to be wired later by user)
-    Logger.log("Hiding Member Satisfaction tab...");
+    logStep("Hiding Member Satisfaction tab...");
     hideMemberSatisfactionTab();
 
-    // Create utility sheets
+    logStep("Creating Archive sheet...");
     createArchiveSheet();
 
+    logStep("Creating Diagnostics sheet...");
     createDiagnosticsSheet();
-    SpreadsheetApp.getActive().toast("✅ Utility sheets created", "85%", 2);
+    ss.toast("✅ Utility sheets created", "85%", 3);
+    SpreadsheetApp.flush();
 
-    // Create Audit Log sheet
+    logStep("Creating Audit Log sheet...");
     createAuditLogSheet();
-    SpreadsheetApp.getActive().toast("✅ Audit Log created", "90%", 2);
+    ss.toast("✅ Audit Log created", "87%", 3);
+    SpreadsheetApp.flush();
 
+    logStep("Setting up data validations...");
     setupDataValidations();
 
+    logStep("Setting up formulas and calculations...");
     setupFormulasAndCalculations();
 
+    logStep("Setting up Interactive Dashboard controls...");
     setupInteractiveDashboardControls();
-    SpreadsheetApp.getActive().toast("✅ Validations & formulas ready", "90%", 2);
+    ss.toast("✅ Validations & formulas ready", "90%", 3);
+    SpreadsheetApp.flush();
 
-    // CRITICAL: Setup all dropdowns for Member Directory and Grievance Log
+    logStep("Setting up all dropdowns...");
     setupAllDropdowns();
-    SpreadsheetApp.getActive().toast("✅ Dropdowns configured", "95%", 2);
+    ss.toast("✅ Dropdowns configured", "93%", 3);
+    SpreadsheetApp.flush();
 
-    // Populate all analytics sheets with formulas
+    logStep("Populating analytics sheets...");
     populateAllAnalyticsSheetsOnCreate();
-    SpreadsheetApp.getActive().toast("✅ Analytics populated", "97%", 2);
+    ss.toast("✅ Analytics populated", "95%", 3);
+    SpreadsheetApp.flush();
 
-    // Fix Interactive Dashboard dropdown styling
+    logStep("Fixing Interactive Dashboard dropdown styling...");
     if (typeof fixInteractiveDropdownHighlighting === 'function') {
       fixInteractiveDropdownHighlighting();
     }
 
-    // Move admin tabs to end and hide them by default
+    logStep("Moving admin tabs to end...");
     if (typeof moveAdminTabsToEnd === 'function') {
       moveAdminTabsToEnd();
     }
     if (typeof hideAdminTabs === 'function') {
       hideAdminTabs(true); // Silent mode - no UI alerts during creation
     }
-    SpreadsheetApp.getActive().toast("✅ Tabs organized", "98%", 2);
+    ss.toast("✅ Tabs organized", "96%", 3);
+    SpreadsheetApp.flush();
 
-    // Install essential triggers (auto-recalculation on edit)
+    logStep("Installing essential triggers...");
     if (typeof installEssentialTriggers === 'function') {
       installEssentialTriggers();
     }
 
-    // Install Config sync trigger (auto-add new values to Config)
+    logStep("Installing Config sync trigger...");
     if (typeof installConfigSyncTrigger === 'function') {
       installConfigSyncTrigger();
     }
 
-    // Install onOpen trigger for reliable menus on page refresh
+    logStep("Installing onOpen trigger...");
     if (typeof installOnOpenTrigger === 'function') {
       installOnOpenTrigger();
     }
 
-    // Enable daily deadline notifications by default
+    logStep("Setting up daily deadline notifications...");
     if (typeof setupDailyDeadlineNotifications === 'function') {
       setupDailyDeadlineNotifications();
     }
 
-    // Enable automated reports by default
+    logStep("Setting up automated reports...");
     if (typeof setupMonthlyReports === 'function') {
       setupMonthlyReports();
     }
@@ -139,16 +172,20 @@ function CREATE_509_DASHBOARD() {
       setupQuarterlyReports();
     }
 
-    // Install grievance auto-sort trigger (sends Closed/Settled/Withdrawn to bottom)
+    logStep("Installing grievance auto-sort trigger...");
     if (typeof installGrievanceAutoSortTrigger === 'function') {
       installGrievanceAutoSortTrigger();
     }
 
-    SpreadsheetApp.getActive().toast("✅ Triggers installed", "99%", 2);
+    ss.toast("✅ Triggers installed", "98%", 3);
+    SpreadsheetApp.flush();
 
+    logStep("Running onOpen to create menus...");
     onOpen();
 
-    SpreadsheetApp.getActive().toast("✅ Dashboard ready! Use menu to seed data.", "Complete!", 5);
+    logStep("CREATE_509_DASHBOARD completed successfully!");
+    ss.toast("✅ Dashboard ready! Use menu to seed data.", "Complete!", 10);
+    SpreadsheetApp.flush();
 
     // Safely activate dashboard sheet if it exists
     const dashboard = ss.getSheetByName(SHEETS.DASHBOARD);
@@ -157,8 +194,109 @@ function CREATE_509_DASHBOARD() {
     }
 
   } catch (error) {
-    SpreadsheetApp.getActive().toast("❌ Error: " + error.toString(), "Error", 10);
-    Logger.log("Error in CREATE_509_DASHBOARD: " + error.toString());
+    const elapsed = ((new Date().getTime() - startTime) / 1000).toFixed(1);
+    Logger.log(`[${elapsed}s] ERROR in CREATE_509_DASHBOARD: ${error.toString()}`);
+    Logger.log(`Stack trace: ${error.stack || 'N/A'}`);
+    ss.toast("❌ Error: " + error.toString(), "Error", 15);
+    SpreadsheetApp.flush();
+  }
+}
+
+/* --------------------- CONFIG TAB --------------------- */
+
+/**
+ * LITE version - Creates only essential sheets to avoid timeout
+ * Run this first, then run CREATE_509_DASHBOARD_PART2 for remaining sheets
+ */
+function CREATE_509_DASHBOARD_LITE() {
+  const ss = SpreadsheetApp.getActive();
+
+  ss.toast("🚀 Creating 509 Dashboard (LITE)...", "Starting", 5);
+  Logger.log("Starting CREATE_509_DASHBOARD_LITE");
+
+  try {
+    // Essential sheets only
+    createConfigTab();
+    ss.toast("✅ Config created", "25%", 2);
+    SpreadsheetApp.flush();
+
+    createMemberDirectory();
+    ss.toast("✅ Member Directory created", "50%", 2);
+    SpreadsheetApp.flush();
+
+    createGrievanceLog();
+    ss.toast("✅ Grievance Log created", "75%", 2);
+    SpreadsheetApp.flush();
+
+    createMainDashboard();
+    ss.toast("✅ Dashboard created", "90%", 2);
+    SpreadsheetApp.flush();
+
+    // Essential setup
+    setupDataValidations();
+    setupAllDropdowns();
+    ss.toast("✅ Dropdowns configured", "95%", 2);
+    SpreadsheetApp.flush();
+
+    onOpen();
+
+    ss.toast("✅ LITE setup complete! Run PART2 for analytics sheets.", "Done!", 10);
+    Logger.log("CREATE_509_DASHBOARD_LITE completed successfully");
+
+  } catch (error) {
+    Logger.log("Error in CREATE_509_DASHBOARD_LITE: " + error.toString());
+    ss.toast("❌ Error: " + error.toString(), "Error", 15);
+  }
+}
+
+/**
+ * PART 2 - Creates analytics and extra sheets (run after LITE)
+ */
+function CREATE_509_DASHBOARD_PART2() {
+  const ss = SpreadsheetApp.getActive();
+
+  ss.toast("🚀 Creating analytics sheets (Part 2)...", "Starting", 5);
+  Logger.log("Starting CREATE_509_DASHBOARD_PART2");
+
+  try {
+    createAnalyticsDataSheet();
+    createFeedbackSheet();
+    ss.toast("✅ Data sheets created", "20%", 2);
+    SpreadsheetApp.flush();
+
+    createInteractiveDashboardSheet(ss);
+    ss.toast("✅ Interactive Dashboard created", "40%", 2);
+    SpreadsheetApp.flush();
+
+    createStewardWorkloadSheet();
+    if (typeof createOperationsAnalyticsSheet === 'function') {
+      createOperationsAnalyticsSheet();
+    }
+    ss.toast("✅ Analytics sheets created", "60%", 2);
+    SpreadsheetApp.flush();
+
+    createExecutiveDashboard();
+    ss.toast("✅ Executive Dashboard created", "80%", 2);
+    SpreadsheetApp.flush();
+
+    // Cleanup
+    deleteStandaloneMergedTabs();
+
+    setupFormulasAndCalculations();
+    setupInteractiveDashboardControls();
+    ss.toast("✅ Formulas configured", "90%", 2);
+    SpreadsheetApp.flush();
+
+    populateAllAnalyticsSheetsOnCreate();
+
+    onOpen();
+
+    ss.toast("✅ Part 2 complete! Dashboard fully configured.", "Done!", 10);
+    Logger.log("CREATE_509_DASHBOARD_PART2 completed successfully");
+
+  } catch (error) {
+    Logger.log("Error in CREATE_509_DASHBOARD_PART2: " + error.toString());
+    ss.toast("❌ Error: " + error.toString(), "Error", 15);
   }
 }
 
@@ -1533,12 +1671,14 @@ function createKPIPerformanceDashboard() {
 
 /**
  * Delete standalone tabs that are now merged into Executive Dashboard
- * Tabs deleted: Operations Analytics, KPI Performance Dashboard
+ * Note: Operations Analytics is the merged dashboard - do NOT delete it
+ * Tabs deleted: KPI Performance Dashboard (superseded by Executive Dashboard)
  */
 function deleteStandaloneMergedTabs() {
   const ss = SpreadsheetApp.getActive();
   const tabsToDelete = [
-    "📊 Operations Analytics",
+    // NOTE: "📊 Operations Analytics" should NOT be deleted - it IS the merged analytics dashboard
+    // Only delete KPI Performance Dashboard which is now part of Executive Dashboard
     "📊 KPI Performance Dashboard"
   ];
 
@@ -2464,17 +2604,6 @@ function cleanupGrievanceLog() {
  * Runs when spreadsheet opens - creates menu and validates configuration
  */
 function onOpen() {
-  // Log user access for audit trail
-  try {
-    logUserAccess();
-  } catch (e) {
-    // Don't let audit logging break the app
-    Logger.log('onOpen: Failed to log user access: ' + e.message);
-  }
-
-  // Validate configuration on startup
-  const configValid = validateConfigurationOnOpen();
-
   // Wrap UI operations in try-catch to handle contexts where UI isn't available
   // (e.g., when called from time-driven triggers or CREATE_509_DASHBOARD)
   let ui;
@@ -2486,13 +2615,15 @@ function onOpen() {
     return;
   }
 
-  // ============ CREATE ALL MAIN MENUS ============
-  // Use the comprehensive reorganized menu system with all 43+ features
-  // This calls the reorganized menu from ReorganizedMenu.gs
-  createReorganizedMenus(ui);
+  // ============ CREATE MENUS FIRST (before any other operations) ============
+  // This ensures menus always appear even if other operations fail
+  try {
+    // Use the comprehensive reorganized menu system with all 43+ features
+    // This calls the reorganized menu from ReorganizedMenu.gs
+    createReorganizedMenus(ui);
 
-  // ============ 🧪 TESTING MENU ============
-  ui.createMenu("🧪 Tests")
+    // ============ 🧪 TESTING MENU ============
+    ui.createMenu("🧪 Tests")
     .addItem("⚡ Run Quick Tests", "runQuickTests")
     .addItem("🧪 Run All Tests", "runAllTests")
     .addItem("📊 View Test Results", "showTestResults")
@@ -2550,6 +2681,28 @@ function onOpen() {
     .addItem("⚙️ Shortcuts Configuration", "showKeyboardShortcutsConfig")
     .addItem("F1 Context Help", "showContextHelp")
     .addToUi();
+  } catch (menuError) {
+    // Log menu creation error but don't fail
+    Logger.log('onOpen: Error creating menus: ' + menuError.message);
+  }
+
+  // ============ NON-CRITICAL OPERATIONS (after menus are created) ============
+  // These run after menus so menu always appears even if these fail
+
+  // Log user access for audit trail
+  try {
+    logUserAccess();
+  } catch (e) {
+    // Don't let audit logging break the app
+    Logger.log('onOpen: Failed to log user access: ' + e.message);
+  }
+
+  // Validate configuration on startup (non-blocking)
+  try {
+    validateConfigurationOnOpen();
+  } catch (e) {
+    Logger.log('onOpen: Failed to validate config: ' + e.message);
+  }
 }
 
 /**
@@ -4179,6 +4332,51 @@ function SEED_MEMBERS_TOGGLE_3() { seedMembersWithCount(5000, "Toggle 3"); }
 function SEED_MEMBERS_TOGGLE_4() { seedMembersWithCount(5000, "Toggle 4"); }
 
 /**
+ * Seeds 10,000 members in two batches to avoid timeout
+ */
+function SEED_MEMBERS_10K() {
+  const ui = SpreadsheetApp.getUi();
+  const response = ui.alert(
+    'Seed 10,000 Members',
+    'This will add 10,000 member records in 2 batches of 5,000.\nThis may take 2-3 minutes. Continue?',
+    ui.ButtonSet.YES_NO
+  );
+  if (response !== ui.Button.YES) return;
+
+  const ss = SpreadsheetApp.getActive();
+  const memberDir = ss.getSheetByName(SHEETS.MEMBER_DIR);
+  const config = ss.getSheetByName(SHEETS.CONFIG);
+
+  if (!validateSeedSheets(memberDir, config)) return;
+
+  const seedConfig = getMemberSeedConfig();
+  if (!seedConfig) return;
+
+  // Batch 1: First 5,000
+  ss.toast("🚀 Seeding batch 1 of 2 (5,000 members)...", "Processing", -1);
+  clearMemberValidationsForSeed(memberDir, 5000);
+  let startingRow = memberDir.getLastRow();
+  generateAndWriteMemberData(memberDir, 5000, startingRow, "Batch 1", seedConfig);
+  SpreadsheetApp.flush();
+
+  ss.toast("✅ Batch 1 complete. Starting batch 2...", "Progress", 3);
+  Utilities.sleep(2000); // Brief pause between batches
+
+  // Batch 2: Next 5,000
+  ss.toast("🚀 Seeding batch 2 of 2 (5,000 members)...", "Processing", -1);
+  clearMemberValidationsForSeed(memberDir, 5000);
+  startingRow = memberDir.getLastRow();
+  generateAndWriteMemberData(memberDir, 5000, startingRow, "Batch 2", seedConfig);
+
+  // Restore sheet state
+  restoreMemberSheetAfterSeed(memberDir, startingRow, 5000);
+  SpreadsheetApp.flush();
+
+  const finalRow = memberDir.getLastRow();
+  ss.toast(`✅ 10,000 members added! Sheet now has ${finalRow - 1} total members.`, "Complete", 10);
+}
+
+/**
  * Seeds member directory with test data
  * Refactored to use helper functions for maintainability
  */
@@ -4611,12 +4809,16 @@ function clearGrievanceValidationsForSeed(grievanceLog, count) {
 function getGrievanceSeedConfig() {
   const grievanceDropdowns = getGrievanceLogDropdownValues();
 
+  // Get actual steward names from Member Directory (critical for steward workload matching)
+  const actualStewards = getActualStewardNamesFromMemberDirectory();
+
   const seedConfig = {
     statuses: grievanceDropdowns.statuses,
     steps: grievanceDropdowns.steps,
     categories: grievanceDropdowns.categories,
     articles: grievanceDropdowns.articles,
-    stewards: grievanceDropdowns.stewards,
+    // Use actual steward names from Member Directory if available, otherwise fall back to config
+    stewards: actualStewards.length > 0 ? actualStewards : grievanceDropdowns.stewards,
     deadlineConfig: getAllDeadlineConfig(),
     resolutions: ["Won - Resolved favorably", "Won - Full remedy granted", "Lost - No violation found", "Lost - Withdrawn by member", "Settled - Partial remedy", "Settled - Compromise reached"]
   };
@@ -4644,7 +4846,9 @@ function getGrievanceSeedConfig() {
         seedConfig.steps = newDropdowns.steps;
         seedConfig.categories = newDropdowns.categories;
         seedConfig.articles = newDropdowns.articles;
-        seedConfig.stewards = newDropdowns.stewards;
+        // Still prefer actual stewards from Member Directory
+        const updatedStewards = getActualStewardNamesFromMemberDirectory();
+        seedConfig.stewards = updatedStewards.length > 0 ? updatedStewards : newDropdowns.stewards;
       } else {
         ui.alert('Error', 'populateConfigDefaults function not found. Please run it manually from Demo menu.', ui.ButtonSet.OK);
         return null;
@@ -4655,6 +4859,42 @@ function getGrievanceSeedConfig() {
   }
 
   return seedConfig;
+}
+
+/**
+ * Gets actual steward names from Member Directory
+ * Used by grievance seed to ensure steward assignments match real stewards
+ * @returns {string[]} Array of steward full names
+ */
+function getActualStewardNamesFromMemberDirectory() {
+  const ss = SpreadsheetApp.getActiveSpreadsheet();
+  const memberSheet = ss.getSheetByName(SHEETS.MEMBER_DIR);
+
+  if (!memberSheet) {
+    return [];
+  }
+
+  const data = memberSheet.getDataRange().getValues();
+  const stewardNames = [];
+
+  // Start from row 2 (skip header)
+  for (let i = 1; i < data.length; i++) {
+    const row = data[i];
+    const isSteward = row[MEMBER_COLS.IS_STEWARD - 1];
+
+    if (isSteward === 'Yes') {
+      const firstName = row[MEMBER_COLS.FIRST_NAME - 1] || '';
+      const lastName = row[MEMBER_COLS.LAST_NAME - 1] || '';
+      const fullName = `${firstName} ${lastName}`.trim();
+
+      if (fullName) {
+        stewardNames.push(fullName);
+      }
+    }
+  }
+
+  Logger.log(`Found ${stewardNames.length} actual stewards in Member Directory`);
+  return stewardNames;
 }
 
 /**

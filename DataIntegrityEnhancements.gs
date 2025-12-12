@@ -322,6 +322,20 @@ function onEdit(e) {
     }
   }
 
+  // Handle Interactive Dashboard Quick Action dropdown
+  if (sheetName === SHEETS.INTERACTIVE_DASHBOARD) {
+    // Check if Quick Action dropdown was changed (cell I7)
+    if (row === 7 && col === 9) { // Column I = 9
+      const action = e.value;
+      if (action && action !== "Select Action...") {
+        handleInteractiveDashboardQuickAction(action);
+        // Reset dropdown to default
+        e.range.setValue("Select Action...");
+      }
+    }
+    return;
+  }
+
   // Only track changes to core data sheets
   if (sheetName !== SHEETS.MEMBER_DIR && sheetName !== SHEETS.GRIEVANCE_LOG) {
     return;
