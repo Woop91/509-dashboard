@@ -15,7 +15,7 @@
  * - Version: 2.1.0 (Security Enhanced + Code Review Improvements)
  * - Build ID: 20251202-improvements
  * - Build Date: 2025-12-11T23:21:19.021Z
- * - Build Type: DEVELOPMENT
+ * - Build Type: PRODUCTION
  * - Modules: 79 files
  * - Tests Included: Yes
  *
@@ -490,21 +490,25 @@ const CONFIG_COLS = {
 /**
  * Default organization settings
  * These are fallback values when Config sheet doesn't have the value set.
+ *
+ * ⚠️ IMPORTANT: These are EXAMPLE/FALLBACK values only!
+ * The Config sheet is the single source of truth and takes precedence.
+ *
  * To customize for your organization:
- *   1. Edit these defaults here, OR
- *   2. Set values in the Config sheet (takes precedence)
+ *   1. Set values in the Config sheet (RECOMMENDED - takes precedence)
+ *   2. Or edit these defaults here as a last resort
  *
  * @const {Object}
  */
 const ORG_DEFAULTS = {
-  // Organization Identity
+  // Organization Identity (EXAMPLE VALUES - customize in Config sheet)
   ORG_NAME: 'SEIU Local 509',
   LOCAL_NUMBER: '509',
   UNION_PARENT: 'SEIU',
   STATE_REGION: 'Massachusetts',
   ORG_WEBSITE: 'https://www.seiu509.org/',
 
-  // Union Headquarters Contact Info
+  // Union Headquarters Contact Info (EXAMPLE VALUES - customize in Config sheet)
   MAIN_ADDRESS: '293 Boston Post Road West, 4th Floor, Marlborough, MA 01752',
   MAIN_PHONE: '774-843-7509',
   MAIN_FAX: '508-485-8529',
@@ -726,15 +730,20 @@ const ERROR_MESSAGES = {
 
 /**
  * Admin email configuration
- * Note: For security, admin emails should also be configured in the Config sheet.
- * These are fallback defaults if Config sheet is not set up yet.
+ *
+ * ⚠️ SECURITY NOTE: Admin emails should be configured in the Config sheet.
+ * The FALLBACK_ADMINS below are EXAMPLE values only and should be replaced
+ * with your organization's actual admin emails in the Config sheet.
+ *
+ * These fallback defaults are ONLY used if Config sheet is not set up yet.
  * @const {Object}
  */
 const ADMIN_CONFIG = {
   // Column position in Config sheet for admin emails
   CONFIG_COLUMN: 19, // Column S - Admin Emails
 
-  // Fallback admin emails (used only if Config sheet not available)
+  // ⚠️ EXAMPLE FALLBACK admin emails (used only if Config sheet not available)
+  // Replace with your organization's admin emails in the Config sheet!
   FALLBACK_ADMINS: [
     'admin@seiu509.org',
     'president@seiu509.org',
@@ -3458,8 +3467,13 @@ function setupTestEnvironment() {
  * NOTE: As of v3.11, dropdown fields (Job Title, Location, Unit, Supervisor, Manager, Steward)
  * are left empty because Config tab no longer has sample data. Tests requiring these values
  * should first populate the Config tab or use empty values to avoid validation errors.
+ *
+ * ⚠️ PRODUCTION SAFETY: Blocked in production environments.
  */
 function seedTestData() {
+  // PRODUCTION GUARD: Block test data seeding in production
+  requireNonProductionEnvironment('seedTestData');
+
   const testSpreadsheet = getTestSpreadsheet();
   const memberSheet = testSpreadsheet.getSheetByName(SHEETS.MEMBER_DIR);
   const grievanceSheet = testSpreadsheet.getSheetByName(SHEETS.GRIEVANCE_LOG);
@@ -3562,8 +3576,13 @@ function seedTestData() {
 
 /**
  * Clears all test data
+ *
+ * ⚠️ PRODUCTION SAFETY: Blocked in production environments.
  */
 function clearTestData() {
+  // PRODUCTION GUARD: Block test data clearing in production
+  requireNonProductionEnvironment('clearTestData');
+
   const testSpreadsheet = getTestSpreadsheet();
 
   const sheets = [
@@ -5003,9 +5022,11 @@ function createStewardWorkloadSheet() {
 /**
  * @deprecated Use createOperationsAnalyticsSheet() instead
  * Trends & Timeline is now part of the merged Operations Analytics dashboard
+ * This function will be removed in a future version.
  */
 function createTrendsSheet() {
-  Logger.log('createTrendsSheet() is deprecated - redirecting to Operations Analytics');
+  Logger.log('⚠️ DEPRECATED: createTrendsSheet() is deprecated - use createOperationsAnalyticsSheet() instead');
+  SpreadsheetApp.getActive().toast('⚠️ createTrendsSheet() is deprecated. Please use createOperationsAnalyticsSheet()', 'Deprecation Warning', 5);
   if (typeof createOperationsAnalyticsSheet === 'function') {
     createOperationsAnalyticsSheet();
   }
@@ -5015,9 +5036,11 @@ function createTrendsSheet() {
 /**
  * @deprecated Use createOperationsAnalyticsSheet() instead
  * Location Analytics is now part of the merged Operations Analytics dashboard
+ * This function will be removed in a future version.
  */
 function createLocationSheet() {
-  Logger.log('createLocationSheet() is deprecated - redirecting to Operations Analytics');
+  Logger.log('⚠️ DEPRECATED: createLocationSheet() is deprecated - use createOperationsAnalyticsSheet() instead');
+  SpreadsheetApp.getActive().toast('⚠️ createLocationSheet() is deprecated. Please use createOperationsAnalyticsSheet()', 'Deprecation Warning', 5);
   if (typeof createOperationsAnalyticsSheet === 'function') {
     createOperationsAnalyticsSheet();
   }
@@ -5026,9 +5049,11 @@ function createLocationSheet() {
 /**
  * @deprecated Use createOperationsAnalyticsSheet() instead
  * Type Analysis is now part of the merged Operations Analytics dashboard
+ * This function will be removed in a future version.
  */
 function createTypeAnalysisSheet() {
-  Logger.log('createTypeAnalysisSheet() is deprecated - redirecting to Operations Analytics');
+  Logger.log('⚠️ DEPRECATED: createTypeAnalysisSheet() is deprecated - use createOperationsAnalyticsSheet() instead');
+  SpreadsheetApp.getActive().toast('⚠️ createTypeAnalysisSheet() is deprecated. Please use createOperationsAnalyticsSheet()', 'Deprecation Warning', 5);
   if (typeof createOperationsAnalyticsSheet === 'function') {
     createOperationsAnalyticsSheet();
   }
@@ -5414,9 +5439,11 @@ function showMemberSatisfactionTab() {
 /**
  * @deprecated Use createOperationsAnalyticsSheet() instead
  * Member Engagement is now part of the merged Operations Analytics dashboard
+ * This function will be removed in a future version.
  */
 function createMemberEngagementSheet() {
-  Logger.log('createMemberEngagementSheet() is deprecated - redirecting to Operations Analytics');
+  Logger.log('⚠️ DEPRECATED: createMemberEngagementSheet() is deprecated - use createOperationsAnalyticsSheet() instead');
+  SpreadsheetApp.getActive().toast('⚠️ createMemberEngagementSheet() is deprecated. Please use createOperationsAnalyticsSheet()', 'Deprecation Warning', 5);
   if (typeof createOperationsAnalyticsSheet === 'function') {
     createOperationsAnalyticsSheet();
   }
@@ -5425,9 +5452,11 @@ function createMemberEngagementSheet() {
 /**
  * @deprecated Use createOperationsAnalyticsSheet() instead
  * Cost Impact is now part of the merged Operations Analytics dashboard
+ * This function will be removed in a future version.
  */
 function createCostImpactSheet() {
-  Logger.log('createCostImpactSheet() is deprecated - redirecting to Operations Analytics');
+  Logger.log('⚠️ DEPRECATED: createCostImpactSheet() is deprecated - use createOperationsAnalyticsSheet() instead');
+  SpreadsheetApp.getActive().toast('⚠️ createCostImpactSheet() is deprecated. Please use createOperationsAnalyticsSheet()', 'Deprecation Warning', 5);
   if (typeof createOperationsAnalyticsSheet === 'function') {
     createOperationsAnalyticsSheet();
   }
@@ -6742,8 +6771,10 @@ function getAllDeadlineConfig() {
  * @returns {Object} Organization configuration
  * @deprecated Use getAllOrgConfig() from UtilityService.gs for full config
  *             or getOrgConfig(key) for individual values
+ * This function will be removed in a future version.
  */
 function getOrgConfigBasic() {
+  Logger.log('⚠️ DEPRECATED: getOrgConfigBasic() is deprecated - use getAllOrgConfig() or getOrgConfig(key) instead');
   // Legacy wrapper - uses new centralized config
   return {
     name: getOrgConfig('ORG_NAME'),
@@ -11035,8 +11066,17 @@ function getVisualizationBuilderScripts() {
         .saveChartToSheet(document.getElementById('dataSource').value, document.getElementById('chartType').value);
     }
 
+    /**
+     * Client-side HTML escaping for XSS prevention
+     */
+    function escapeHtml(text) {
+      const div = document.createElement('div');
+      div.textContent = text;
+      return div.innerHTML;
+    }
+
     function handleError(error) {
-      document.getElementById('chartContainer').innerHTML = '<div class="loading">❌ Error: ' + error.message + '</div>';
+      document.getElementById('chartContainer').innerHTML = '<div class="loading">❌ Error: ' + escapeHtml(error.message) + '</div>';
     }
   `;
 }
@@ -22084,9 +22124,14 @@ function createPaginatedViewerHTML() {
     }
 
     function handleError(error) {
-      document.getElementById('tableContainer').innerHTML = '<div class="no-data">❌ Error loading data: ' + error.message + '</div>';
+      document.getElementById('tableContainer').innerHTML = '<div class="no-data">❌ Error loading data: ' + escapeHtml(error.message) + '</div>';
     }
 
+    /**
+     * Client-side HTML escaping function
+     * Note: This is separate from the server-side escapeHtml() in the main codebase
+     * because client-side JavaScript runs in the browser, not in Apps Script.
+     */
     function escapeHtml(text) {
       const div = document.createElement('div');
       div.textContent = text;
@@ -51750,6 +51795,15 @@ function getUnifiedOpsScripts() {
             }).join('');
         }
 
+        /**
+         * Client-side HTML escaping for XSS prevention
+         */
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
         function initDashboard() {
             updateTime();
             setInterval(updateTime, 1000);
@@ -51757,7 +51811,7 @@ function getUnifiedOpsScripts() {
                 google.script.run
                     .withSuccessHandler(renderDashboard)
                     .withFailureHandler(function(error) {
-                        document.getElementById('loading-overlay').innerHTML = '<div class="text-red-term">CONNECTION ERROR: ' + error.message + '<br>ENSURE WEB APP IS DEPLOYED.</div>';
+                        document.getElementById('loading-overlay').innerHTML = '<div class="text-red-term">CONNECTION ERROR: ' + escapeHtml(error.message) + '<br>ENSURE WEB APP IS DEPLOYED.</div>';
                     })
                     .getUnifiedDashboardData();
             } else {
@@ -53727,6 +53781,32 @@ function resetCoverage() {
 }
 
 /**
+ * Check if the environment is production
+ * Tests should NOT run in production to prevent accidental data modification
+ * @returns {boolean} True if in production mode
+ */
+function isProductionEnvironment() {
+  const props = PropertiesService.getScriptProperties();
+  const env = props.getProperty('ENV');
+  // Consider production if ENV is explicitly set to 'production' or 'prod'
+  return env === 'production' || env === 'prod';
+}
+
+/**
+ * Guard function to prevent test execution in production
+ * @throws {Error} If trying to run tests in production
+ */
+function requireNonProductionEnvironment(functionName) {
+  if (isProductionEnvironment()) {
+    throw new Error(
+      `⛔ BLOCKED: ${functionName} cannot run in production environment.\n` +
+      'Tests are disabled in production to prevent accidental data modification.\n' +
+      'To run tests, set Script Properties ENV to "development" or "test".'
+    );
+  }
+}
+
+/**
  * Assertion library
  */
 const Assert = {
@@ -53918,8 +53998,15 @@ function isLargeDataset() {
 /**
  * Test runner - discovers and runs all test functions
  * Includes timeout protection to avoid exceeding Apps Script limits
+ *
+ * ⚠️ PRODUCTION SAFETY: Tests are blocked in production environments
+ * to prevent accidental data modification. Set ENV script property
+ * to 'development' or 'test' to enable test execution.
  */
 function runAllTests() {
+  // PRODUCTION GUARD: Block tests in production
+  requireNonProductionEnvironment('runAllTests');
+
   const ui = SpreadsheetApp.getUi();
   const largeDataset = isLargeDataset();
 
@@ -54123,8 +54210,13 @@ function runAllTests() {
 /**
  * Run quick tests - only fast unit tests, skips slow integration tests
  * Use this for rapid feedback during development
+ *
+ * ⚠️ PRODUCTION SAFETY: Blocked in production environments.
  */
 function runQuickTests() {
+  // PRODUCTION GUARD: Block tests in production
+  requireNonProductionEnvironment('runQuickTests');
+
   const ui = SpreadsheetApp.getUi();
 
   SpreadsheetApp.getActive().toast('⚡ Running quick tests...', 'Testing', -1);
@@ -55920,18 +56012,23 @@ function runInputValidationTests() {
 /**
  * Run column and validation tests only (subset of all tests)
  * Note: The main runAllTests() function is defined in TestFramework.gs
- * This function is kept for running a quick subset of tests
+ *
+ * ⚠️ RENAMED: This was a duplicate runQuickTests(). Now renamed to avoid conflicts.
+ * ⚠️ PRODUCTION SAFETY: Blocked in production environments.
  */
-function runQuickTests() {
+function runColumnValidationTests() {
+  // PRODUCTION GUARD: Block tests in production
+  requireNonProductionEnvironment('runColumnValidationTests');
+
   Logger.log('========================================');
-  Logger.log('  RUNNING QUICK TESTS (Column + Input Validation)');
+  Logger.log('  RUNNING COLUMN + INPUT VALIDATION TESTS');
   Logger.log('========================================');
 
   runColumnConstantTests();
   runInputValidationTests();
 
   Logger.log('========================================');
-  Logger.log('  QUICK TESTS COMPLETE');
+  Logger.log('  COLUMN VALIDATION TESTS COMPLETE');
   Logger.log('========================================');
 }
 
