@@ -4840,6 +4840,92 @@ function refreshGrievanceFormulas() {
   }
 }
 
+/**
+ * Refresh Member Directory cross-population formulas
+ * Re-applies the formulas that link Grievance Log data to Member Directory columns:
+ * - HAS_OPEN_GRIEVANCE (Column AB) - Shows "Yes" if member has active grievances
+ * - GRIEVANCE_STATUS (Column AC) - Shows the status of active grievances
+ * - NEXT_DEADLINE (Column AD) - Shows the next deadline from active grievances
+ *
+ * Run this if grievance data is not showing in Member Directory.
+ */
+function refreshMemberDirectoryFormulas() {
+  const ss = SpreadsheetApp.getActive();
+  const memberDir = ss.getSheetByName(SHEETS.MEMBER_DIR);
+  const grievanceLog = ss.getSheetByName(SHEETS.GRIEVANCE_LOG);
+
+  if (!memberDir) {
+    SpreadsheetApp.getUi().alert('Member Directory sheet not found!');
+    return;
+  }
+  if (!grievanceLog) {
+    SpreadsheetApp.getUi().alert('Grievance Log sheet not found!');
+    return;
+  }
+
+  SpreadsheetApp.getActive().toast('Refreshing Member Directory formulas...', 'Please wait', -1);
+
+  try {
+    // Dynamic column references for Grievance Log
+    const gMemberIdCol = getColumnLetter(GRIEVANCE_COLS.MEMBER_ID);
+    const gStatusCol = getColumnLetter(GRIEVANCE_COLS.STATUS);
+    const gNextActionCol = getColumnLetter(GRIEVANCE_COLS.NEXT_ACTION_DUE);
+
+    // Has Open Grievance? - Column AB (28)
+    const hasGrievanceCol = getColumnLetter(MEMBER_COLS.HAS_OPEN_GRIEVANCE);
+    memberDir.getRange(hasGrievanceCol + "2").setFormula(
+      `=MAP(A2:A21000,LAMBDA(m,IF(m="","",IF(SUM(COUNTIFS('Grievance Log'!${gMemberIdCol}:${gMemberIdCol},m,'Grievance Log'!${gStatusCol}:${gStatusCol},{"Open","Pending Info","Appealed","In Arbitration"}))>0,"Yes","No"))))`
+    );
+
+    // Grievance Status Snapshot - Column AC (29)
+    const statusSnapshotCol = getColumnLetter(MEMBER_COLS.GRIEVANCE_STATUS);
+    memberDir.getRange(statusSnapshotCol + "2").setFormula(
+      `=MAP(A2:A21000,LAMBDA(m,IF(m="","",LET(activeStatus,FILTER('Grievance Log'!${gStatusCol}:${gStatusCol},('Grievance Log'!${gMemberIdCol}:${gMemberIdCol}=m)*REGEXMATCH('Grievance Log'!${gStatusCol}:${gStatusCol},"^(Open|Pending Info|Appealed|In Arbitration)$")),IFERROR(INDEX(activeStatus,1),IFERROR(INDEX('Grievance Log'!${gStatusCol}:${gStatusCol},MATCH(m,'Grievance Log'!${gMemberIdCol}:${gMemberIdCol},0)),""))))))`
+    );
+
+    // Next Grievance Deadline - Column AD (30)
+    const nextDeadlineCol = getColumnLetter(MEMBER_COLS.NEXT_DEADLINE);
+    memberDir.getRange(nextDeadlineCol + "2").setFormula(
+      `=MAP(A2:A21000,LAMBDA(m,IF(m="","",LET(activeDeadline,FILTER('Grievance Log'!${gNextActionCol}:${gNextActionCol},('Grievance Log'!${gMemberIdCol}:${gMemberIdCol}=m)*REGEXMATCH('Grievance Log'!${gStatusCol}:${gStatusCol},"^(Open|Pending Info|Appealed|In Arbitration)$")),IFERROR(INDEX(activeDeadline,1),IFERROR(INDEX('Grievance Log'!${gNextActionCol}:${gNextActionCol},MATCH(m,'Grievance Log'!${gMemberIdCol}:${gMemberIdCol},0)),""))))))`
+    );
+
+    SpreadsheetApp.flush();
+    SpreadsheetApp.getActive().toast('✅ Member Directory formulas refreshed successfully!', 'Complete', 5);
+    Logger.log('refreshMemberDirectoryFormulas completed successfully');
+  } catch (error) {
+    Logger.log('Error in refreshMemberDirectoryFormulas: ' + error.message);
+    SpreadsheetApp.getUi().alert('Error refreshing formulas: ' + error.message);
+  }
+}
+
+/**
+ * Refresh all cross-population formulas (Grievance Log + Member Directory)
+ * Combines refreshGrievanceFormulas() and refreshMemberDirectoryFormulas()
+ */
+function refreshAllFormulas() {
+  const ui = SpreadsheetApp.getUi();
+  SpreadsheetApp.getActive().toast('Refreshing all formulas...', 'Please wait', -1);
+
+  try {
+    // Refresh Grievance Log calculated values
+    const grievanceResult = recalcAllGrievancesBatched();
+
+    // Refresh Member Directory cross-population formulas
+    refreshMemberDirectoryFormulas();
+
+    ui.alert(
+      '✅ Formulas Refreshed',
+      `Grievance Log: ${grievanceResult.processed} rows recalculated\n` +
+      'Member Directory: Cross-population formulas applied\n\n' +
+      'Grievance data should now appear in Member Directory columns AB-AD.',
+      ui.ButtonSet.OK
+    );
+  } catch (error) {
+    Logger.log('Error in refreshAllFormulas: ' + error.message);
+    ui.alert('Error: ' + error.message);
+  }
+}
+
 /* --------------------- ANALYTICS DATA SHEET --------------------- */
 function createAnalyticsDataSheet() {
   const ss = SpreadsheetApp.getActive();

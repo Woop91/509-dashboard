@@ -6,7 +6,7 @@
  * Comprehensive menu system with 43+ features organized into four categories:
  * 1. 👤 Dashboard - Daily operations, search, grievance tools, communications
  * 2. 📊 Sheet Manager - Data, performance, integrity, automations, analytics
- * 3. 🎭 Demo - Seed demo data, data management (nuke/clear)
+ * 3. 🎭 Demo - Config defaults, data management
  * 4. ⚙️ Administrator - System health, workflow, column toggles, RBAC
  *
  * This file defines createReorganizedMenus(ui) which is called from Code.gs onOpen()
@@ -227,28 +227,11 @@ function createReorganizedMenus(ui) {
   ui.createMenu("🎭 Demo")
     .addItem("⚙️ Populate Config Defaults (Run First!)", "populateConfigDefaults")
     .addSeparator()
-    .addSubMenu(ui.createMenu("🌱 Seed Demo Data")
-      .addSubMenu(ui.createMenu("👥 Seed Members")
-        .addItem("⭐ Seed 10K Members (Recommended)", "SEED_MEMBERS_10K")
-        .addSeparator()
-        .addItem("Seed Members - Toggle 1 (5,000)", "SEED_MEMBERS_TOGGLE_1")
-        .addItem("Seed Members - Toggle 2 (5,000)", "SEED_MEMBERS_TOGGLE_2")
-        .addItem("Seed Members - Toggle 3 (5,000)", "SEED_MEMBERS_TOGGLE_3")
-        .addItem("Seed Members - Toggle 4 (5,000)", "SEED_MEMBERS_TOGGLE_4")
-        .addSeparator()
-        .addItem("Seed All 20k Members (Legacy)", "SEED_20K_MEMBERS"))
-      .addSubMenu(ui.createMenu("📋 Seed Grievances")
-        .addItem("Seed Grievances - Toggle 1 (2,500)", "SEED_GRIEVANCES_TOGGLE_1")
-        .addItem("Seed Grievances - Toggle 2 (2,500)", "SEED_GRIEVANCES_TOGGLE_2")
-        .addSeparator()
-        .addItem("Seed All 5k Grievances (Legacy)", "SEED_5K_GRIEVANCES"))
-      .addSeparator()
-      .addItem("📝 Add Sample Feedback Entries", "addSampleFeedbackEntries")
-      .addItem("📋 Populate Pending TODOs", "populatePendingTodos"))
+    .addItem("📝 Add Sample Feedback Entries", "addSampleFeedbackEntries")
+    .addItem("📋 Populate Pending TODOs", "populatePendingTodos")
     .addSeparator()
     .addSubMenu(ui.createMenu("🗑️ Data Management")
-      .addItem("🚨 Nuke All Data (Production Reset)", "nukeSeedData")
-      .addItem("🗑️ Nuke ALL Sheet Data (Comprehensive)", "nukeAllSheetData")
+      .addItem("🗑️ Clear ALL Sheet Data", "nukeAllSheetData")
       .addItem("⚠️ Clear Core Data Only", "clearAllData"))
     .addToUi();
 
@@ -285,6 +268,8 @@ function createReorganizedMenus(ui) {
       .addItem("⚡ Install Admin Message Trigger", "installAdminMessageTrigger")
       .addSeparator()
       .addItem("🔄 Refresh Grievance Formulas", "refreshGrievanceFormulas")
+      .addItem("🔄 Refresh Member Directory Formulas", "refreshMemberDirectoryFormulas")
+      .addItem("🔄 Refresh All Formulas", "refreshAllFormulas")
       .addItem("🔄 Refresh Dashboard Deadlines", "refreshDashboardDeadlines")
       .addItem("🧹 Cleanup Extra Member Columns", "cleanupMemberDirectoryColumns")
       .addSeparator()
