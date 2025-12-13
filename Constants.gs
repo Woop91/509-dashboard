@@ -51,6 +51,11 @@ const SHEETS = {
   MEMBER_LOOKUP: "_Member_Lookup",    // Hidden sheet with auto-update formulas for Grievance Log
   STEWARD_CONTACT_CALC: "_Steward_Contact_Calc",  // Hidden sheet for steward contact tracking (Y-AA)
   ENGAGEMENT_CALC: "_Engagement_Calc",  // Hidden sheet for engagement metrics (Q-T)
+
+  // Engagement source sheets
+  MEETING_ATTENDANCE: "📅 Meeting Attendance",  // Source sheet for engagement metrics Q-R
+  VOLUNTEER_HOURS: "🤝 Volunteer Hours",  // Source sheet for engagement metric T
+
   USER_ROLES: "User Roles",
   AUDIT_LOG: "Audit_Log",
   CHANGE_LOG: "📝 Change Log",
@@ -322,6 +327,36 @@ const PERF_LOG_COLS = {
   MEMORY_USED: 4,    // D - Memory used (if tracked)
   SUCCESS: 5,        // E - Whether function succeeded
   ERROR_MSG: 6       // F - Error message (if failed)
+};
+
+/**
+ * Column positions for Meeting Attendance sheet (1-indexed)
+ * Source data for engagement metrics Q-R in Member Directory
+ * @const {Object}
+ */
+const MEETING_COLS = {
+  MEETING_DATE: 1,    // A - Date of the meeting
+  MEETING_TYPE: 2,    // B - Type: Virtual, In-Person, Hybrid
+  MEETING_NAME: 3,    // C - Name/title of meeting
+  MEMBER_ID: 4,       // D - Member ID (links to Member Directory)
+  MEMBER_NAME: 5,     // E - Member name (for reference)
+  ATTENDED: 6,        // F - Yes/No attendance
+  NOTES: 7            // G - Optional notes
+};
+
+/**
+ * Column positions for Volunteer Hours sheet (1-indexed)
+ * Source data for engagement metric T in Member Directory
+ * @const {Object}
+ */
+const VOLUNTEER_COLS = {
+  DATE: 1,            // A - Date of volunteer activity
+  MEMBER_ID: 2,       // B - Member ID (links to Member Directory)
+  MEMBER_NAME: 3,     // C - Member name (for reference)
+  ACTIVITY: 4,        // D - Type of volunteer activity
+  HOURS: 5,           // E - Number of hours
+  VERIFIED_BY: 6,     // F - Who verified/approved the hours
+  NOTES: 7            // G - Optional notes
 };
 
 /* --------------------= GRIEVANCE TIMELINE CONSTANTS --------------------= */

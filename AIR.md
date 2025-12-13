@@ -888,29 +888,66 @@ Applied via `setupDataValidations()`:
 - Run: `syncStewardContactToMemberDirectory()` from Apps Script
 - Or run: `refreshAllFormulas()` to recalculate all cross-population data
 
-### Engagement Metrics - Placeholder System (v3.42+)
+### Engagement Metrics - Full System (v3.43+)
 
-**IMPORTANT (v3.42):** Member Directory columns Q-T are set up for engagement metrics from future source sheets.
+**IMPORTANT (v3.43):** Member Directory columns Q-T are auto-populated from engagement source sheets.
 
 **Architecture:**
-1. **Hidden Sheet:** `_Engagement_Calc` contains placeholder formulas (ready for source data)
-2. **Static Values:** Member Directory columns Q-T contain static values (no visible formulas)
+1. **Hidden Sheet:** `_Engagement_Calc` contains formulas that reference source sheets
+2. **Source Sheets:** `📅 Meeting Attendance` and `🤝 Volunteer Hours`
+3. **Static Values:** Member Directory columns Q-T contain static values (no visible formulas)
 
-**Columns (awaiting source data):**
+**Auto-Updated Columns:**
 
-| Column | Name | Required Source |
-|--------|------|-----------------|
-| Q (17) | Last Virtual Meeting | Meeting Attendance Log |
-| R (18) | Last In-Person Meeting | Meeting Attendance Log |
-| S (19) | Open Rate (%) | Email Analytics |
-| T (20) | Volunteer Hours | Volunteer Hours Tracking |
+| Column | Name | Source Sheet | Formula |
+|--------|------|--------------|---------|
+| Q (17) | Last Virtual Meeting | Meeting Attendance | MAXIFS where Type="Virtual" and Attended="Yes" |
+| R (18) | Last In-Person Meeting | Meeting Attendance | MAXIFS where Type="In-Person" and Attended="Yes" |
+| S (19) | Open Rate (%) | (Not implemented) | Placeholder for email analytics |
+| T (20) | Volunteer Hours | Volunteer Hours | SUMIF total hours per member |
 
-**To Enable:**
-When source data sheets are created, update `setupEngagementCalcSheet()` to add formulas that reference the new sheets.
+**Source Sheet: Meeting Attendance (📅)**
+| Column | Name | Description |
+|--------|------|-------------|
+| A | Meeting Date | Date of the meeting |
+| B | Meeting Type | Virtual, In-Person, or Hybrid |
+| C | Meeting Name | Title/description of meeting |
+| D | Member ID | Links to Member Directory |
+| E | Member Name | For reference |
+| F | Attended | Yes/No |
+| G | Notes | Optional notes |
+
+**Source Sheet: Volunteer Hours (🤝)**
+| Column | Name | Description |
+|--------|------|-------------|
+| A | Date | Date of activity |
+| B | Member ID | Links to Member Directory |
+| C | Member Name | For reference |
+| D | Activity | Type (Phone Banking, Door Knocking, etc.) |
+| E | Hours | Number of hours |
+| F | Verified By | Who approved |
+| G | Notes | Optional notes |
 
 **Self-Healing:**
-- `setupEngagementCalcSheet()` - Creates/repairs the hidden sheet structure
-- `REPAIR_DASHBOARD()` - Calls function to restore sheet
+- `setupEngagementCalcSheet()` - Creates/repairs hidden sheet, auto-detects source sheets
+- `createMeetingAttendanceSheet()` - Creates Meeting Attendance source sheet
+- `createVolunteerHoursSheet()` - Creates Volunteer Hours source sheet
+- `REPAIR_DASHBOARD()` - Restores full functionality
+
+---
+
+## Verification Function
+
+**VERIFY_HIDDEN_SHEETS()** - Diagnoses the hidden sheet architecture
+
+Checks:
+- All 4 hidden sheets exist and are hidden
+- All 3 auto-sync triggers are installed
+- Formulas are present in hidden sheets
+- Data is synced to visible sheets
+- Source sheets exist (optional sheets show warnings)
+
+Run this function to diagnose any cross-population issues.
 
 ---
 
@@ -1557,6 +1594,36 @@ User-populated columns now use `.setAllowInvalid(true)` to allow blank/custom va
 
 ---
 
+### Version 3.43 (2025-12-13)
+
+**ENGAGEMENT SOURCE SHEETS & VERIFICATION SYSTEM**
+
+**New Source Sheets for Engagement Metrics:**
+- `📅 Meeting Attendance` - Tracks member meeting participation
+  - Columns: Date, Type (Virtual/In-Person/Hybrid), Name, Member ID, Member Name, Attended, Notes
+  - Data validations for Meeting Type and Attended fields
+- `🤝 Volunteer Hours` - Tracks member volunteer activities
+  - Columns: Date, Member ID, Member Name, Activity, Hours, Verified By, Notes
+  - Activity dropdown with common volunteer types
+
+**Updated _Engagement_Calc Sheet:**
+- Now uses real MAXIFS/SUMIF formulas when source sheets exist
+- Auto-detects source sheets and uses placeholder formulas if missing
+- Status notes show which sources are connected
+
+**New VERIFY_HIDDEN_SHEETS() Function:**
+- Comprehensive diagnostic for hidden sheet architecture
+- Checks all 4 hidden sheets exist and are hidden
+- Verifies all 3 auto-sync triggers are installed
+- Confirms formulas are present in hidden sheets
+- Reports data sync status for all cross-population flows
+
+**New Constants:**
+- SHEETS.MEETING_ATTENDANCE, SHEETS.VOLUNTEER_HOURS
+- MEETING_COLS, VOLUNTEER_COLS column definitions
+
+---
+
 ### Version 3.42 (2025-12-13)
 
 **EXPANDED HIDDEN SHEET ARCHITECTURE FOR FULL MEMBER DIRECTORY AUTO-POPULATION**
@@ -1572,7 +1639,7 @@ User-populated columns now use `.setAllowInvalid(true)` to allow blank/custom va
 - Contact Notes auto-populated from Communications Log subject line
 - Uses email address to join member records to communications
 
-**New _Engagement_Calc Sheet (Q-T placeholder):**
+**New _Engagement_Calc Sheet (Q-T):**
 - Infrastructure ready for engagement metrics
 - Placeholder formulas await Meeting Attendance Log, Email Analytics, Volunteer Tracking source sheets
 - Self-healing via REPAIR_DASHBOARD()
@@ -1603,7 +1670,7 @@ See git history for complete changelog. Key milestones:
 
 ---
 
-**Document Version:** 3.42
+**Document Version:** 3.43
 **Last Updated:** 2025-12-13
 **Maintained By:** Claude (AI Assistant)
 

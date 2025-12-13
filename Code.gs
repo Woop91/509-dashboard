@@ -2284,31 +2284,71 @@ function setupEngagementCalcSheet() {
   const mMemberIdCol = getColumnLetter(MEMBER_COLS.MEMBER_ID);
   const mSheetName = SHEETS.MEMBER_DIR;
 
+  // Check if source sheets exist
+  const meetingSheet = ss.getSheetByName(SHEETS.MEETING_ATTENDANCE);
+  const volunteerSheet = ss.getSheetByName(SHEETS.VOLUNTEER_HOURS);
+
+  // Dynamic column references for Meeting Attendance (if exists)
+  const mtgDateCol = getColumnLetter(MEETING_COLS.MEETING_DATE);
+  const mtgTypeCol = getColumnLetter(MEETING_COLS.MEETING_TYPE);
+  const mtgMemberIdCol = getColumnLetter(MEETING_COLS.MEMBER_ID);
+  const mtgAttendedCol = getColumnLetter(MEETING_COLS.ATTENDED);
+  const mtgSheetName = SHEETS.MEETING_ATTENDANCE;
+
+  // Dynamic column references for Volunteer Hours (if exists)
+  const volMemberIdCol = getColumnLetter(VOLUNTEER_COLS.MEMBER_ID);
+  const volHoursCol = getColumnLetter(VOLUNTEER_COLS.HOURS);
+  const volSheetName = SHEETS.VOLUNTEER_HOURS;
+
   // Column A: Member IDs from Member Directory
   calcSheet.getRange('A2').setFormula(
     `=FILTER('${mSheetName}'!${mMemberIdCol}:${mMemberIdCol}, '${mSheetName}'!${mMemberIdCol}:${mMemberIdCol}<>"", '${mSheetName}'!${mMemberIdCol}:${mMemberIdCol}<>"Member ID")`
   );
 
-  // Columns B-E: Placeholder values until source sheets are created
-  // When source sheets are available, replace these with actual formulas
-  calcSheet.getRange('B2').setFormula(
-    `=MAP(A2:A,LAMBDA(m,IF(m="","","")))`
-  );
-  calcSheet.getRange('C2').setFormula(
-    `=MAP(A2:A,LAMBDA(m,IF(m="","","")))`
-  );
-  calcSheet.getRange('D2').setFormula(
-    `=MAP(A2:A,LAMBDA(m,IF(m="","","")))`
-  );
-  calcSheet.getRange('E2').setFormula(
-    `=MAP(A2:A,LAMBDA(m,IF(m="","","")))`
-  );
+  // Column B: Last Virtual Meeting Date
+  if (meetingSheet) {
+    // Real formula: Get max date where meeting type is Virtual and member attended
+    calcSheet.getRange('B2').setFormula(
+      `=MAP(A2:A,LAMBDA(m,IF(m="","",IFERROR(MAXIFS('${mtgSheetName}'!${mtgDateCol}:${mtgDateCol},'${mtgSheetName}'!${mtgMemberIdCol}:${mtgMemberIdCol},m,'${mtgSheetName}'!${mtgTypeCol}:${mtgTypeCol},"Virtual",'${mtgSheetName}'!${mtgAttendedCol}:${mtgAttendedCol},"Yes"),""))))`
+    );
+  } else {
+    calcSheet.getRange('B2').setFormula(`=MAP(A2:A,LAMBDA(m,IF(m="","","")))`);
+  }
 
-  // Add note about required source sheets
-  calcSheet.getRange('G1').setValue('NOTE: Engagement metrics require source data sheets');
-  calcSheet.getRange('G2').setValue('- Meeting Attendance Log for Virtual/In-Person meetings');
-  calcSheet.getRange('G3').setValue('- Email Analytics for Open Rate');
-  calcSheet.getRange('G4').setValue('- Volunteer Hours Tracking for hours');
+  // Column C: Last In-Person Meeting Date
+  if (meetingSheet) {
+    // Real formula: Get max date where meeting type is In-Person and member attended
+    calcSheet.getRange('C2').setFormula(
+      `=MAP(A2:A,LAMBDA(m,IF(m="","",IFERROR(MAXIFS('${mtgSheetName}'!${mtgDateCol}:${mtgDateCol},'${mtgSheetName}'!${mtgMemberIdCol}:${mtgMemberIdCol},m,'${mtgSheetName}'!${mtgTypeCol}:${mtgTypeCol},"In-Person",'${mtgSheetName}'!${mtgAttendedCol}:${mtgAttendedCol},"Yes"),""))))`
+    );
+  } else {
+    calcSheet.getRange('C2').setFormula(`=MAP(A2:A,LAMBDA(m,IF(m="","","")))`);
+  }
+
+  // Column D: Open Rate (%) - Placeholder until email analytics sheet exists
+  calcSheet.getRange('D2').setFormula(`=MAP(A2:A,LAMBDA(m,IF(m="","","")))`);
+
+  // Column E: Volunteer Hours (total for member)
+  if (volunteerSheet) {
+    // Real formula: Sum all hours for each member
+    calcSheet.getRange('E2').setFormula(
+      `=MAP(A2:A,LAMBDA(m,IF(m="","",IFERROR(SUMIF('${volSheetName}'!${volMemberIdCol}:${volMemberIdCol},m,'${volSheetName}'!${volHoursCol}:${volHoursCol}),0))))`
+    );
+  } else {
+    calcSheet.getRange('E2').setFormula(`=MAP(A2:A,LAMBDA(m,IF(m="","","")))`);
+  }
+
+  // Add status notes
+  const notes = [];
+  notes.push('STATUS:');
+  notes.push(meetingSheet ? '✅ Meeting Attendance connected (B, C)' : '⚠️ Run createMeetingAttendanceSheet()');
+  notes.push('⚠️ Email Analytics not implemented (D)');
+  notes.push(volunteerSheet ? '✅ Volunteer Hours connected (E)' : '⚠️ Run createVolunteerHoursSheet()');
+
+  calcSheet.getRange('G1').setValue(notes[0]);
+  calcSheet.getRange('G2').setValue(notes[1]);
+  calcSheet.getRange('G3').setValue(notes[2]);
+  calcSheet.getRange('G4').setValue(notes[3]);
   calcSheet.getRange('G1:G4').setFontStyle('italic').setFontColor('#6B7280');
 
   // Format the sheet
@@ -2319,7 +2359,8 @@ function setupEngagementCalcSheet() {
   calcSheet.setColumnWidth(5, 120);
   calcSheet.setColumnWidth(7, 350);
 
-  Logger.log('setupEngagementCalcSheet: Hidden calculation sheet configured (placeholder - awaiting source data)');
+  const connectedSources = (meetingSheet ? 2 : 0) + (volunteerSheet ? 1 : 0);
+  Logger.log('setupEngagementCalcSheet: Hidden calculation sheet configured (' + connectedSources + '/3 sources connected)');
 }
 
 /**
@@ -5698,4 +5739,317 @@ function updateMemberDirectorySnapshots() {
     // Note: HAS_OPEN_GRIEVANCE, GRIEVANCE_STATUS, NEXT_DEADLINE (AB-AD) are formula-populated
     memberDir.getRange(2, MEMBER_COLS.RECENT_CONTACT_DATE, updateData.length, 3).setValues(updateData);
   }
+}
+
+// ============================================================================
+// VERIFICATION FUNCTION - Test Hidden Sheet Architecture
+// ============================================================================
+
+/**
+ * Verifies all hidden sheets and auto-sync triggers are working correctly.
+ * Run this to diagnose issues with cross-population.
+ */
+function VERIFY_HIDDEN_SHEETS() {
+  const ui = SpreadsheetApp.getUi();
+  const ss = SpreadsheetApp.getActive();
+  const results = [];
+  let allPassed = true;
+
+  results.push('🔍 HIDDEN SHEET ARCHITECTURE VERIFICATION');
+  results.push('='.repeat(50));
+  results.push('');
+
+  // 1. Check hidden sheets exist
+  results.push('📋 HIDDEN SHEETS:');
+  const hiddenSheets = [
+    { name: SHEETS.GRIEVANCE_CALC, purpose: 'Grievance metrics → Member Directory AB-AD' },
+    { name: SHEETS.MEMBER_LOOKUP, purpose: 'Member data → Grievance Log C,D,X-AA' },
+    { name: SHEETS.STEWARD_CONTACT_CALC, purpose: 'Contact data → Member Directory Y-AA' },
+    { name: SHEETS.ENGAGEMENT_CALC, purpose: 'Engagement metrics → Member Directory Q-T' }
+  ];
+
+  for (const sheet of hiddenSheets) {
+    const exists = ss.getSheetByName(sheet.name);
+    const status = exists ? '✅' : '❌';
+    if (!exists) allPassed = false;
+    results.push('  ' + status + ' ' + sheet.name);
+    results.push('      Purpose: ' + sheet.purpose);
+    if (exists) {
+      const lastRow = exists.getLastRow();
+      const isHidden = exists.isSheetHidden();
+      results.push('      Rows: ' + lastRow + ', Hidden: ' + (isHidden ? 'Yes' : 'No (should be hidden!)'));
+      if (!isHidden) allPassed = false;
+    }
+  }
+  results.push('');
+
+  // 2. Check source sheets exist
+  results.push('📊 SOURCE SHEETS:');
+  const sourceSheets = [
+    { name: SHEETS.GRIEVANCE_LOG, required: true },
+    { name: SHEETS.MEMBER_DIR, required: true },
+    { name: SHEETS.COMMUNICATIONS_LOG, required: true },
+    { name: SHEETS.MEETING_ATTENDANCE, required: false },
+    { name: SHEETS.VOLUNTEER_HOURS, required: false }
+  ];
+
+  for (const sheet of sourceSheets) {
+    const exists = ss.getSheetByName(sheet.name);
+    const status = exists ? '✅' : (sheet.required ? '❌' : '⚠️');
+    if (!exists && sheet.required) allPassed = false;
+    const note = !exists && !sheet.required ? ' (optional - run createMeetingAttendanceSheet/createVolunteerHoursSheet)' : '';
+    results.push('  ' + status + ' ' + sheet.name + note);
+  }
+  results.push('');
+
+  // 3. Check triggers
+  results.push('⚡ AUTO-SYNC TRIGGERS:');
+  const triggers = ScriptApp.getUserTriggers(ss);
+  const expectedTriggers = [
+    'onEditSyncGrievanceData',
+    'onEditSyncMemberData',
+    'onEditSyncStewardContact'
+  ];
+
+  for (const triggerName of expectedTriggers) {
+    const found = triggers.some(function(t) { return t.getHandlerFunction() === triggerName; });
+    const status = found ? '✅' : '❌';
+    if (!found) allPassed = false;
+    results.push('  ' + status + ' ' + triggerName);
+  }
+  results.push('');
+
+  // 4. Verify formulas in hidden sheets
+  results.push('📐 FORMULA VERIFICATION:');
+
+  // Check _Grievance_Calc
+  const grievanceCalc = ss.getSheetByName(SHEETS.GRIEVANCE_CALC);
+  if (grievanceCalc) {
+    const formula = grievanceCalc.getRange('A2').getFormula();
+    const hasFormula = formula && formula.length > 0;
+    results.push('  ' + (hasFormula ? '✅' : '❌') + ' _Grievance_Calc has formulas');
+    if (!hasFormula) allPassed = false;
+  }
+
+  // Check _Member_Lookup
+  const memberLookup = ss.getSheetByName(SHEETS.MEMBER_LOOKUP);
+  if (memberLookup) {
+    const formula = memberLookup.getRange('A2').getFormula();
+    const hasFormula = formula && formula.length > 0;
+    results.push('  ' + (hasFormula ? '✅' : '❌') + ' _Member_Lookup has formulas');
+    if (!hasFormula) allPassed = false;
+  }
+
+  // Check _Steward_Contact_Calc
+  const stewardCalc = ss.getSheetByName(SHEETS.STEWARD_CONTACT_CALC);
+  if (stewardCalc) {
+    const formula = stewardCalc.getRange('A2').getFormula();
+    const hasFormula = formula && formula.length > 0;
+    results.push('  ' + (hasFormula ? '✅' : '❌') + ' _Steward_Contact_Calc has formulas');
+    if (!hasFormula) allPassed = false;
+  }
+
+  // Check _Engagement_Calc
+  const engagementCalc = ss.getSheetByName(SHEETS.ENGAGEMENT_CALC);
+  if (engagementCalc) {
+    const formula = engagementCalc.getRange('A2').getFormula();
+    const hasFormula = formula && formula.length > 0;
+    results.push('  ' + (hasFormula ? '✅' : '❌') + ' _Engagement_Calc has formulas');
+    if (!hasFormula) allPassed = false;
+  }
+  results.push('');
+
+  // 5. Data sync check
+  results.push('🔄 DATA SYNC STATUS:');
+  const memberDir = ss.getSheetByName(SHEETS.MEMBER_DIR);
+  const grievanceLog = ss.getSheetByName(SHEETS.GRIEVANCE_LOG);
+
+  if (memberDir && memberDir.getLastRow() > 1) {
+    // Check if grievance columns have data
+    const abValue = memberDir.getRange(2, MEMBER_COLS.HAS_OPEN_GRIEVANCE).getValue();
+    const hasGrievanceData = abValue === 'Yes' || abValue === 'No';
+    results.push('  ' + (hasGrievanceData ? '✅' : '⚠️') + ' Member Directory grievance columns (AB-AD) ' + (hasGrievanceData ? 'populated' : 'may need sync'));
+
+    // Check steward contact columns
+    const yValue = memberDir.getRange(2, MEMBER_COLS.RECENT_CONTACT_DATE).getValue();
+    const hasContactData = yValue !== '';
+    results.push('  ' + (hasContactData ? '✅' : '⚠️') + ' Member Directory contact columns (Y-AA) ' + (hasContactData ? 'populated' : 'may need sync'));
+  }
+
+  if (grievanceLog && grievanceLog.getLastRow() > 1) {
+    // Check if member columns have data
+    const cValue = grievanceLog.getRange(2, GRIEVANCE_COLS.FIRST_NAME).getValue();
+    const hasMemberData = cValue !== '';
+    results.push('  ' + (hasMemberData ? '✅' : '⚠️') + ' Grievance Log member columns (C,D,X-AA) ' + (hasMemberData ? 'populated' : 'may need sync'));
+  }
+  results.push('');
+
+  // Summary
+  results.push('='.repeat(50));
+  if (allPassed) {
+    results.push('✅ ALL CHECKS PASSED');
+    results.push('');
+    results.push('The hidden sheet architecture is working correctly.');
+  } else {
+    results.push('❌ SOME CHECKS FAILED');
+    results.push('');
+    results.push('To fix issues, run: REPAIR_DASHBOARD()');
+    results.push('Or run individual setup functions:');
+    results.push('  - setupGrievanceCalcSheet()');
+    results.push('  - setupMemberLookupSheet()');
+    results.push('  - setupStewardContactCalcSheet()');
+    results.push('  - setupEngagementCalcSheet()');
+  }
+
+  ui.alert('Hidden Sheet Verification', results.join('\n'), ui.ButtonSet.OK);
+  Logger.log(results.join('\n'));
+
+  return { passed: allPassed, results: results };
+}
+
+// ============================================================================
+// ENGAGEMENT SOURCE SHEETS - Meeting Attendance & Volunteer Hours
+// ============================================================================
+
+/**
+ * Creates the Meeting Attendance sheet for tracking member participation
+ * This is the source data for Member Directory columns Q (Last Virtual Mtg) and R (Last In-Person Mtg)
+ */
+function createMeetingAttendanceSheet() {
+  const ss = SpreadsheetApp.getActive();
+
+  // Check if sheet already exists
+  let sheet = ss.getSheetByName(SHEETS.MEETING_ATTENDANCE);
+  if (sheet) {
+    SpreadsheetApp.getUi().alert('Meeting Attendance sheet already exists.');
+    return sheet;
+  }
+
+  // Create the sheet
+  sheet = ss.insertSheet(SHEETS.MEETING_ATTENDANCE);
+
+  // Set up headers
+  const headers = [
+    'Meeting Date',      // A - MEETING_COLS.MEETING_DATE
+    'Meeting Type',      // B - MEETING_COLS.MEETING_TYPE
+    'Meeting Name',      // C - MEETING_COLS.MEETING_NAME
+    'Member ID',         // D - MEETING_COLS.MEMBER_ID
+    'Member Name',       // E - MEETING_COLS.MEMBER_NAME
+    'Attended',          // F - MEETING_COLS.ATTENDED
+    'Notes'              // G - MEETING_COLS.NOTES
+  ];
+
+  sheet.getRange(1, 1, 1, headers.length).setValues([headers]);
+  sheet.getRange(1, 1, 1, headers.length)
+    .setFontWeight('bold')
+    .setBackground(COLORS.PRIMARY_PURPLE)
+    .setFontColor(COLORS.WHITE);
+
+  // Set column widths
+  sheet.setColumnWidth(1, 110);  // Meeting Date
+  sheet.setColumnWidth(2, 100);  // Meeting Type
+  sheet.setColumnWidth(3, 200);  // Meeting Name
+  sheet.setColumnWidth(4, 100);  // Member ID
+  sheet.setColumnWidth(5, 150);  // Member Name
+  sheet.setColumnWidth(6, 80);   // Attended
+  sheet.setColumnWidth(7, 200);  // Notes
+
+  // Add data validation for Meeting Type
+  const typeValidation = SpreadsheetApp.newDataValidation()
+    .requireValueInList(['Virtual', 'In-Person', 'Hybrid'], true)
+    .setAllowInvalid(false)
+    .build();
+  sheet.getRange(2, MEETING_COLS.MEETING_TYPE, 1000, 1).setDataValidation(typeValidation);
+
+  // Add data validation for Attended
+  const attendedValidation = SpreadsheetApp.newDataValidation()
+    .requireValueInList(['Yes', 'No'], true)
+    .setAllowInvalid(false)
+    .build();
+  sheet.getRange(2, MEETING_COLS.ATTENDED, 1000, 1).setDataValidation(attendedValidation);
+
+  // Format date column
+  sheet.getRange(2, MEETING_COLS.MEETING_DATE, 1000, 1).setNumberFormat('yyyy-mm-dd');
+
+  // Freeze header row
+  sheet.setFrozenRows(1);
+
+  Logger.log('createMeetingAttendanceSheet: Created Meeting Attendance sheet');
+  SpreadsheetApp.getActive().toast('Meeting Attendance sheet created!', 'Success', 5);
+
+  return sheet;
+}
+
+/**
+ * Creates the Volunteer Hours sheet for tracking member volunteer activities
+ * This is the source data for Member Directory column T (Volunteer Hours)
+ */
+function createVolunteerHoursSheet() {
+  const ss = SpreadsheetApp.getActive();
+
+  // Check if sheet already exists
+  let sheet = ss.getSheetByName(SHEETS.VOLUNTEER_HOURS);
+  if (sheet) {
+    SpreadsheetApp.getUi().alert('Volunteer Hours sheet already exists.');
+    return sheet;
+  }
+
+  // Create the sheet
+  sheet = ss.insertSheet(SHEETS.VOLUNTEER_HOURS);
+
+  // Set up headers
+  const headers = [
+    'Date',              // A - VOLUNTEER_COLS.DATE
+    'Member ID',         // B - VOLUNTEER_COLS.MEMBER_ID
+    'Member Name',       // C - VOLUNTEER_COLS.MEMBER_NAME
+    'Activity',          // D - VOLUNTEER_COLS.ACTIVITY
+    'Hours',             // E - VOLUNTEER_COLS.HOURS
+    'Verified By',       // F - VOLUNTEER_COLS.VERIFIED_BY
+    'Notes'              // G - VOLUNTEER_COLS.NOTES
+  ];
+
+  sheet.getRange(1, 1, 1, headers.length).setValues([headers]);
+  sheet.getRange(1, 1, 1, headers.length)
+    .setFontWeight('bold')
+    .setBackground(COLORS.UNION_GREEN)
+    .setFontColor(COLORS.WHITE);
+
+  // Set column widths
+  sheet.setColumnWidth(1, 110);  // Date
+  sheet.setColumnWidth(2, 100);  // Member ID
+  sheet.setColumnWidth(3, 150);  // Member Name
+  sheet.setColumnWidth(4, 200);  // Activity
+  sheet.setColumnWidth(5, 80);   // Hours
+  sheet.setColumnWidth(6, 150);  // Verified By
+  sheet.setColumnWidth(7, 200);  // Notes
+
+  // Add data validation for Activity
+  const activityValidation = SpreadsheetApp.newDataValidation()
+    .requireValueInList([
+      'Phone Banking',
+      'Door Knocking',
+      'Event Setup',
+      'Meeting Facilitation',
+      'Training',
+      'Outreach',
+      'Administrative',
+      'Other'
+    ], true)
+    .setAllowInvalid(true)  // Allow custom activities
+    .build();
+  sheet.getRange(2, VOLUNTEER_COLS.ACTIVITY, 1000, 1).setDataValidation(activityValidation);
+
+  // Format date column
+  sheet.getRange(2, VOLUNTEER_COLS.DATE, 1000, 1).setNumberFormat('yyyy-mm-dd');
+
+  // Format hours column as number
+  sheet.getRange(2, VOLUNTEER_COLS.HOURS, 1000, 1).setNumberFormat('0.0');
+
+  // Freeze header row
+  sheet.setFrozenRows(1);
+
+  Logger.log('createVolunteerHoursSheet: Created Volunteer Hours sheet');
+  SpreadsheetApp.getActive().toast('Volunteer Hours sheet created!', 'Success', 5);
+
+  return sheet;
 }
