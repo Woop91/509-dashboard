@@ -2572,31 +2572,36 @@ function refreshStewardContactAndEngagement() {
 }
 
 /**
- * Refresh all calculated data (Grievance Log + Member Directory)
- * Recalculates static values for both sheets - NO formulas in visible sheets.
+ * Refresh all calculated data using hidden sheet architecture (v3.47)
+ * Syncs all 6 hidden sheets to their visible destinations.
  *
- * Cross-population flows:
+ * Cross-population flows (all 6 hidden sheets):
  * 1. Grievance Log timeline columns (H, J, L, N, P, S, T, U) - batch calculated
- * 2. Member Directory grievance columns (AB, AC, AD) - from hidden _Grievance_Calc
- * 3. Grievance Log member columns (C, D, X, Y, Z, AA) - from hidden _Member_Lookup
- * 4. Member Directory steward contact columns (Y, Z, AA) - from hidden _Steward_Contact_Calc
+ * 2. Member Directory grievance columns (AB-AD, AF-AH) - from hidden _Grievance_Calc
+ * 3. Grievance Log member columns (C, D, X-AA) - from hidden _Member_Lookup
+ * 4. Member Directory steward contact columns (Y-AA) - from hidden _Steward_Contact_Calc
  * 5. Member Directory engagement columns (Q-T) - from hidden _Engagement_Calc
+ * 6. Steward Workload sheet - from hidden _Steward_Workload_Calc (v3.45)
+ * 7. Interactive Dashboard metrics - from hidden _Interactive_Dashboard_Calc (v3.46)
+ *
+ * NOTE: All data auto-syncs via onEdit triggers. This function is for manual full refresh.
+ * @since v3.47 - Updated to sync all 6 hidden sheets
  */
 function refreshAllFormulas() {
   const ui = SpreadsheetApp.getUi();
-  SpreadsheetApp.getActive().toast('Recalculating all data...', 'Please wait', -1);
+  SpreadsheetApp.getActive().toast('Syncing all 6 hidden sheets...', 'Please wait', -1);
 
   try {
     // 1. Recalculate Grievance Log timeline columns (H, J, L, N, P, S, T, U)
     const grievanceResult = recalcAllGrievancesBatched();
 
-    // 2. Recalculate Member Directory grievance columns (AB, AC, AD)
+    // 2. Recalculate Member Directory grievance columns (AB-AD, AF-AH)
     const memberDirResult = refreshMemberDirectoryFormulas();
 
-    // 3. Recalculate Grievance Log member columns (C, D, X, Y, Z, AA)
+    // 3. Recalculate Grievance Log member columns (C, D, X-AA)
     const grievanceMemberResult = refreshGrievanceLogMemberData();
 
-    // 4. Recalculate Member Directory steward contact columns (Y, Z, AA)
+    // 4. Recalculate Member Directory steward contact columns (Y-AA)
     setupStewardContactCalcSheet();
     const contactResult = syncStewardContactToMemberDirectory();
 
@@ -2604,14 +2609,28 @@ function refreshAllFormulas() {
     setupEngagementCalcSheet();
     const engagementResult = syncEngagementToMemberDirectory();
 
+    // 6. Sync Steward Workload sheet (v3.45 hidden sheet architecture)
+    setupStewardWorkloadCalcSheet();
+    const workloadResult = syncStewardWorkloadCalcToSheet();
+
+    // 7. Sync Interactive Dashboard metrics (v3.46 hidden sheet architecture)
+    if (typeof setupInteractiveDashboardCalcSheet === 'function') {
+      setupInteractiveDashboardCalcSheet();
+    }
+    if (typeof syncInteractiveDashboardFromCalc === 'function') {
+      syncInteractiveDashboardFromCalc();
+    }
+
     ui.alert(
-      '✅ All Data Refreshed',
+      '✅ All Data Refreshed (v3.47)',
       `Grievance Log timelines: ${grievanceResult.processed} rows\n` +
       `Member Directory grievance data: ${memberDirResult.processed} members\n` +
       `Grievance Log member data: ${grievanceMemberResult.processed} grievances\n` +
       `Steward contact data: ${contactResult.processed} members\n` +
-      `Engagement data: ${engagementResult.processed} members\n\n` +
-      'All cross-population uses hidden sheets with auto-sync triggers.',
+      `Engagement data: ${engagementResult.processed} members\n` +
+      `Steward Workload: ${workloadResult.processed} stewards\n` +
+      `Interactive Dashboard: synced\n\n` +
+      'All 6 hidden sheets synced. Data auto-updates via onEdit triggers.',
       ui.ButtonSet.OK
     );
   } catch (error) {
@@ -5144,159 +5163,44 @@ function populatePendingTodos() {
 }
 
 /**
- * Populate Steward Workload sheet with live data from Grievance Log
+ * Populate Steward Workload sheet using hidden sheet architecture (v3.47)
+ *
+ * DEPRECATED: This function now uses the live-wire hidden sheet architecture.
+ * Instead of calculating metrics in JavaScript, it ensures the hidden
+ * _Steward_Workload_Calc sheet exists and syncs its formula-calculated values.
+ *
+ * Benefits:
+ * - Metrics auto-update when Grievance Log or Member Directory changes
+ * - Self-healing: hidden sheet recreated if missing
+ * - No script execution needed after initial setup
+ *
+ * @since v3.47 - Converted to hidden sheet architecture
  */
 function populateStewardWorkload() {
   const ss = SpreadsheetApp.getActiveSpreadsheet();
-  const workloadSheet = ss.getSheetByName(SHEETS.STEWARD_WORKLOAD);
-  const grievanceSheet = ss.getSheetByName(SHEETS.GRIEVANCE_LOG);
-  const memberSheet = ss.getSheetByName(SHEETS.MEMBER_DIR);
 
-  if (!workloadSheet || !grievanceSheet || !memberSheet) {
-    SpreadsheetApp.getUi().alert('❌ Required sheets not found!');
-    return;
-  }
-
-  // Get all grievance data
-  const grievanceData = grievanceSheet.getDataRange().getValues();
-  const memberData = memberSheet.getDataRange().getValues();
-
-  // Build steward lookup map (Steward Name -> Steward info)
-  // Note: Grievance Log uses steward NAMES, not member IDs, so we key by name
-  const stewards = {};
-  for (let i = 1; i < memberData.length; i++) {
-    const row = memberData[i];
-    const isSteward = row[MEMBER_COLS.IS_STEWARD - 1];
-    if (isSteward === 'Yes') {
-      const memberId = row[MEMBER_COLS.MEMBER_ID - 1];
-      const name = `${row[MEMBER_COLS.FIRST_NAME - 1]} ${row[MEMBER_COLS.LAST_NAME - 1]}`.trim();
-      const email = row[MEMBER_COLS.EMAIL - 1];
-      const phone = row[MEMBER_COLS.PHONE - 1];
-      // Use name as key since Grievance Log references stewards by name
-      stewards[name] = {
-        memberId: memberId,
-        name: name,
-        email: email,
-        phone: phone,
-        totalCases: 0,
-        activeCases: 0,
-        resolvedCases: 0,
-        wonCases: 0,
-        resolutionDays: [],
-        overdueCases: 0,
-        dueThisWeek: 0
-      };
-    }
-  }
-
-  // Process grievances
-  const today = new Date();
-  const sevenDaysFromNow = new Date(today.getTime() + 7 * 24 * 60 * 60 * 1000);
-
-  for (let i = 1; i < grievanceData.length; i++) {
-    const row = grievanceData[i];
-    const stewardName = row[GRIEVANCE_COLS.STEWARD - 1]; // Assigned Steward (Name)
-    const status = row[GRIEVANCE_COLS.STATUS - 1];
-    const outcome = row[GRIEVANCE_COLS.RESOLUTION - 1]; // Resolution/Outcome
-    const daysOpen = row[GRIEVANCE_COLS.DAYS_OPEN - 1];
-    const daysToDeadline = row[GRIEVANCE_COLS.DAYS_TO_DEADLINE - 1]; // Days to Deadline
-    const nextActionDue = row[GRIEVANCE_COLS.NEXT_ACTION_DUE - 1]; // Next Action Due
-
-    // Match steward by name (trim whitespace for consistent matching)
-    const normalizedName = stewardName ? stewardName.toString().trim() : '';
-    if (normalizedName && stewards[normalizedName]) {
-      stewards[normalizedName].totalCases++;
-
-      if (status === 'Open' || status === 'Pending Info') {
-        stewards[normalizedName].activeCases++;
-
-        // Check for overdue cases (Days to Deadline < 0 or contains "OVERDUE")
-        if (daysToDeadline !== undefined && daysToDeadline !== '') {
-          const daysStr = daysToDeadline.toString().toUpperCase();
-          if (daysStr.includes('OVERDUE') || (typeof daysToDeadline === 'number' && daysToDeadline < 0)) {
-            stewards[normalizedName].overdueCases++;
-          } else if (typeof daysToDeadline === 'number' && daysToDeadline >= 0 && daysToDeadline <= 7) {
-            // Due within 7 days
-            stewards[normalizedName].dueThisWeek++;
-          }
-        }
-
-        // Also check Next Action Due date
-        if (nextActionDue instanceof Date && !isNaN(nextActionDue.getTime())) {
-          if (nextActionDue < today) {
-            // Already counted in overdue above via daysToDeadline, skip double count
-          } else if (nextActionDue <= sevenDaysFromNow) {
-            // Due this week (but not already counted)
-            if (!(typeof daysToDeadline === 'number' && daysToDeadline >= 0 && daysToDeadline <= 7)) {
-              stewards[normalizedName].dueThisWeek++;
-            }
-          }
-        }
-      } else if (status === 'Settled' || status === 'Resolved' || status === 'Closed') {
-        stewards[normalizedName].resolvedCases++;
-
-        if (outcome === 'Won' || outcome === 'Partially Won') {
-          stewards[normalizedName].wonCases++;
-        }
-
-        if (daysOpen && !isNaN(daysOpen)) {
-          stewards[normalizedName].resolutionDays.push(parseFloat(daysOpen));
-        }
-      }
-    }
-  }
-
-  // Build output data
-  const outputData = [];
-  for (const stewardId in stewards) {
-    const s = stewards[stewardId];
-    const winRate = s.resolvedCases > 0 ? (s.wonCases / s.resolvedCases * 100) : 0;
-    const avgDays = s.resolutionDays.length > 0
-      ? s.resolutionDays.reduce(function(a, b) { return a + b; }, 0) / s.resolutionDays.length
-      : 0;
-
-    // Capacity status based on active cases
-    let capacityStatus;
-    if (s.activeCases === 0) {
-      capacityStatus = 'Available';
-    } else if (s.activeCases <= 5) {
-      capacityStatus = 'Normal';
-    } else if (s.activeCases <= 10) {
-      capacityStatus = 'Busy';
+  // Ensure visible Steward Workload sheet exists
+  let workloadSheet = ss.getSheetByName(SHEETS.STEWARD_WORKLOAD);
+  if (!workloadSheet) {
+    if (typeof createStewardWorkloadSheet === 'function') {
+      createStewardWorkloadSheet();
     } else {
-      capacityStatus = 'Overloaded';
+      SpreadsheetApp.getUi().alert('❌ Steward Workload sheet not found!');
+      return;
     }
-
-    outputData.push([
-      s.name,
-      s.totalCases,
-      s.activeCases,
-      s.resolvedCases,
-      Math.round(winRate),
-      Math.round(avgDays),
-      s.overdueCases,
-      s.dueThisWeek,
-      capacityStatus,
-      s.email || '',
-      s.phone || ''
-    ]);
   }
 
-  // Sort by active cases (descending)
-  outputData.sort(function(a, b) { return b[2] - a[2]; });
-
-  // Clear existing data (keep headers)
-  const lastRow = workloadSheet.getLastRow();
-  if (lastRow > 3) {
-    workloadSheet.getRange(4, 1, lastRow - 3, 11).clear();
+  // Ensure hidden calculation sheet exists (self-healing)
+  let calcSheet = ss.getSheetByName(SHEETS.STEWARD_WORKLOAD_CALC);
+  if (!calcSheet) {
+    Logger.log('populateStewardWorkload: Hidden calc sheet missing, creating...');
+    setupStewardWorkloadCalcSheet();
   }
 
-  // Write new data
-  if (outputData.length > 0) {
-    workloadSheet.getRange(4, 1, outputData.length, 11).setValues(outputData);
-  }
+  // Sync values from hidden sheet to visible sheet
+  const result = syncStewardWorkloadCalcToSheet();
 
-  Logger.log(`✅ Populated Steward Workload with ${outputData.length} stewards`);
+  Logger.log(`✅ Populated Steward Workload via hidden sheet architecture (${result.processed} stewards)`);
 }
 
 /**

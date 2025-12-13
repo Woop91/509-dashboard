@@ -1,6 +1,6 @@
 # 509 Dashboard - Complete Feature Reference
 
-**Version:** 3.46
+**Version:** 3.47
 **Last Updated:** 2025-12-13
 **Purpose:** Union grievance tracking and member engagement system for SEIU Local 509
 
@@ -1174,7 +1174,49 @@ const COLORS = {
 
 ## Appendix: Changelog
 
-### Version 3.46 (2025-12-13) - LATEST
+### Version 3.47 (2025-12-13) - LATEST
+
+**FEATURE: Reduced Script Dependency - Full Live-Wire Architecture**
+
+Converted remaining script-dependent functions to use the hidden sheet architecture, reducing manual refresh dependency.
+
+**Converted Functions:**
+
+1. **populateStewardWorkload()** - Now uses hidden sheet sync
+   - Previously: Calculated all metrics in JavaScript, wrote static values
+   - Now: Calls `syncStewardWorkloadCalcToSheet()` to sync from `_Steward_Workload_Calc`
+   - Benefit: Steward Workload auto-updates via onEdit trigger
+
+2. **rebuildInteractiveDashboard()** - Now uses hidden sheet sync
+   - Previously: Calculated all metrics in JavaScript
+   - Now: Calls `syncInteractiveDashboardFromCalc()` for metrics
+   - Note: Charts still require script (Google Sheets limitation)
+   - Benefit: Metric cards auto-update within 3 seconds
+
+3. **refreshAllFormulas()** - Now syncs all 6 hidden sheets
+   - Previously: Only synced 5 hidden sheets
+   - Now: Includes Steward Workload and Interactive Dashboard
+   - Shows complete sync report for all 6 hidden sheets
+
+**Script Dependency Reduction:**
+- Steward Workload: No longer needs manual "Refresh" - auto-updates
+- Interactive Dashboard metrics: Auto-update within 3 seconds
+- Manual refresh only needed for: Charts, theme changes, initial setup
+
+**Functions Now Using Hidden Sheet Architecture:**
+| Function | Hidden Sheet | Auto-Updates |
+|----------|--------------|--------------|
+| `populateStewardWorkload()` | `_Steward_Workload_Calc` | Yes (2s debounce) |
+| `rebuildInteractiveDashboard()` | `_Interactive_Dashboard_Calc` | Yes (3s debounce) |
+| `refreshAllFormulas()` | All 6 sheets | Manual trigger |
+
+**Files Changed:**
+- Code.gs: Converted `populateStewardWorkload()`, updated `refreshAllFormulas()`
+- InteractiveDashboard.gs: Converted `rebuildInteractiveDashboard()`
+
+---
+
+### Version 3.46 (2025-12-13)
 
 **FEATURE: Interactive Dashboard Live-Wire with Hidden Sheet Architecture**
 
@@ -1971,7 +2013,7 @@ See git history for complete changelog. Key milestones:
 
 ---
 
-**Document Version:** 3.46
+**Document Version:** 3.47
 **Last Updated:** 2025-12-13
 **Maintained By:** Claude (AI Assistant)
 
