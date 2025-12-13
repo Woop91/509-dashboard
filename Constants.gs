@@ -52,6 +52,7 @@ const SHEETS = {
   STEWARD_CONTACT_CALC: "_Steward_Contact_Calc",  // Hidden sheet for steward contact tracking (Y-AA)
   ENGAGEMENT_CALC: "_Engagement_Calc",  // Hidden sheet for engagement metrics (Q-T)
   STEWARD_WORKLOAD_CALC: "_Steward_Workload_Calc",  // Hidden sheet for steward workload auto-calculations (v3.45)
+  INTERACTIVE_DASHBOARD_CALC: "_Interactive_Dashboard_Calc",  // Hidden sheet for dashboard metrics (v3.46)
 
   // Engagement source sheets
   MEETING_ATTENDANCE: "📅 Meeting Attendance",  // Source sheet for engagement metrics Q-R

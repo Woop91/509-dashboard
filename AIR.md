@@ -1,6 +1,6 @@
 # 509 Dashboard - Complete Feature Reference
 
-**Version:** 3.44
+**Version:** 3.46
 **Last Updated:** 2025-12-13
 **Purpose:** Union grievance tracking and member engagement system for SEIU Local 509
 
@@ -945,11 +945,11 @@ Administrator → Setup & Triggers → Setup Engagement Tracking
 
 ---
 
-## Hidden Sheet Architecture (v3.40+, Extended v3.45)
+## Hidden Sheet Architecture (v3.40+, Extended v3.46)
 
 The dashboard uses a sophisticated hidden sheet architecture for cross-sheet auto-population. This keeps complex formulas invisible to users while enabling automatic data synchronization.
 
-**v3.45 Updates:** Added extended Member Directory columns (AF-AH: Total Grievance Count, Win Rate, Last Date) and Steward Workload auto-sync with 5th hidden sheet.
+**v3.46 Updates:** Added Interactive Dashboard live-wire with 6th hidden sheet (`_Interactive_Dashboard_Calc`) containing 20 metric formulas, auto-sync trigger, and self-healing dropdowns.
 
 ### Architecture Overview
 
@@ -986,10 +986,15 @@ The dashboard uses a sophisticated hidden sheet architecture for cross-sheet aut
 │   (Steward assignments)      (COUNTIFS/SUMPRODUCT       (All steward        │
 │                               formulas)                  metrics)           │
 │                                                                             │
+│   Member Directory ──────►   _Interactive_     ──────►  Interactive         │
+│   Grievance Log              Dashboard_Calc             Dashboard           │
+│   (Counts, metrics,          (v3.46)                    (Metric cards,      │
+│    statuses)                 (20 metric formulas)        charts)            │
+│                                                                             │
 └─────────────────────────────────────────────────────────────────────────────┘
 ```
 
-### The 5 Hidden Calculation Sheets
+### The 6 Hidden Calculation Sheets
 
 | Hidden Sheet | Source | Destination | Columns Updated |
 |--------------|--------|-------------|-----------------|
@@ -998,8 +1003,9 @@ The dashboard uses a sophisticated hidden sheet architecture for cross-sheet aut
 | `_Steward_Contact_Calc` | Communications Log | Member Directory | Y (Contact Date), Z (Contact Steward), AA (Contact Notes) |
 | `_Engagement_Calc` | Meeting Attendance, Volunteer Hours | Member Directory | Q (Last Virtual), R (Last In-Person), S (Open Rate), T (Vol Hours) |
 | `_Steward_Workload_Calc` (v3.45) | Grievance Log, Member Directory | Steward Workload | All 11 steward metric columns |
+| `_Interactive_Dashboard_Calc` (v3.46) | Member Directory, Grievance Log | Interactive Dashboard | 20 metrics: Total Members, Active Grievances, Win Rate, etc. |
 
-### The 5 Auto-Sync Triggers
+### The 6 Auto-Sync Triggers
 
 | Trigger Function | Watches | Updates | Debounce |
 |-----------------|---------|---------|----------|
@@ -1008,6 +1014,7 @@ The dashboard uses a sophisticated hidden sheet architecture for cross-sheet aut
 | `onEditSyncStewardContact` | Communications Log | Member Directory Y-AA | 2 seconds |
 | `onEditSyncEngagementData` | Meeting Attendance, Volunteer Hours | Member Directory Q-T | 2 seconds |
 | `onEditSyncStewardWorkload` (v3.45) | Grievance Log (Steward, Status), Member Directory (Is Steward) | Steward Workload sheet | 2 seconds |
+| `onEditSyncInteractiveDashboard` (v3.46) | Member Directory, Grievance Log | Interactive Dashboard metric cards | 3 seconds |
 
 ### How Auto-Sync Works
 
@@ -1027,7 +1034,9 @@ The dashboard uses a sophisticated hidden sheet architecture for cross-sheet aut
 | `setupStewardContactCalcSheet()` | Creates/repairs `_Steward_Contact_Calc` hidden sheet |
 | `setupEngagementCalcSheet()` | Creates/repairs `_Engagement_Calc` hidden sheet |
 | `setupStewardWorkloadCalcSheet()` (v3.45) | Creates/repairs `_Steward_Workload_Calc` hidden sheet |
-| `REPAIR_DASHBOARD()` | Repairs ALL 5 hidden sheets + installs ALL 5 triggers |
+| `setupInteractiveDashboardCalcSheet()` (v3.46) | Creates/repairs `_Interactive_Dashboard_Calc` hidden sheet |
+| `wireDashboardDropdownsToConfig()` (v3.46) | Self-healing dropdowns for Interactive Dashboard |
+| `REPAIR_DASHBOARD()` | Repairs ALL 6 hidden sheets + installs ALL 6 triggers |
 | `VERIFY_HIDDEN_SHEETS()` | Diagnoses all hidden sheets and triggers |
 
 ### Source Sheets for Engagement (Optional)
@@ -1045,6 +1054,7 @@ The dashboard uses a sophisticated hidden sheet architecture for cross-sheet aut
 | `createMeetingAttendanceSheet()` | Creates Meeting Attendance source sheet with validations |
 | `createVolunteerHoursSheet()` | Creates Volunteer Hours source sheet with validations |
 | `setupStewardWorkloadAutoSync()` (v3.45) | One-click setup: creates _Steward_Workload_Calc, Steward Workload sheet, and trigger |
+| `setupInteractiveDashboardLiveSync()` (v3.46) | One-click setup: creates _Interactive_Dashboard_Calc, wires dropdowns, installs trigger |
 
 ### Menu Access
 
@@ -1054,6 +1064,7 @@ The dashboard uses a sophisticated hidden sheet architecture for cross-sheet aut
 - 📅 Create Meeting Attendance Sheet
 - 🤝 Create Volunteer Hours Sheet
 - 👨‍⚖️ Setup Steward Workload Auto-Sync (v3.45)
+- 🎯 Setup Interactive Dashboard Live-Wire (v3.46)
 
 ### Troubleshooting Hidden Sheets
 
@@ -1063,6 +1074,7 @@ The dashboard uses a sophisticated hidden sheet architecture for cross-sheet aut
 | Grievance Log names/email stale | Run `REPAIR_DASHBOARD()` or `setupMemberLookupSheet()` + `installMemberSyncTrigger()` |
 | Contact tracking not working | Run `setupStewardContactCalcSheet()` + `installStewardContactSyncTrigger()` |
 | Engagement columns blank | Run `setupEngagementTracking()` to create source sheets + hidden sheet + trigger |
+| Interactive Dashboard stale | Run `setupInteractiveDashboardLiveSync()` to create hidden sheet + dropdowns + trigger |
 | Everything broken | Run `REPAIR_DASHBOARD()` - the nuclear option |
 | Need to diagnose | Run `VERIFY_HIDDEN_SHEETS()` for comprehensive report |
 
@@ -1073,11 +1085,12 @@ The dashboard uses a sophisticated hidden sheet architecture for cross-sheet aut
 **VERIFY_HIDDEN_SHEETS()** - Diagnoses the hidden sheet architecture
 
 Checks:
-- All 5 hidden sheets exist and are hidden
-- All 5 auto-sync triggers are installed
+- All 6 hidden sheets exist and are hidden
+- All 6 auto-sync triggers are installed
 - Formulas are present in hidden sheets
 - Data is synced to visible sheets
 - Source sheets exist (optional sheets show warnings)
+- Interactive Dashboard dropdowns are configured
 
 Run this function to diagnose any cross-population issues.
 
@@ -1161,7 +1174,95 @@ const COLORS = {
 
 ## Appendix: Changelog
 
-### Version 3.41 (2025-12-13) - LATEST
+### Version 3.46 (2025-12-13) - LATEST
+
+**FEATURE: Interactive Dashboard Live-Wire with Hidden Sheet Architecture**
+
+Converted the Interactive Dashboard (Your Custom View) from batch-script refresh to live-wire auto-sync using the hidden sheet architecture.
+
+**Problem Solved:**
+- Interactive Dashboard previously required manual refresh (Dashboard → Refresh Dashboard → Load Interactive Dashboard Metrics)
+- Metrics were stale until user manually triggered a refresh
+- No auto-sync when Member Directory or Grievance Log changed
+
+**Solution - Live-Wire Architecture:**
+1. Hidden `_Interactive_Dashboard_Calc` sheet contains 20 metric formulas
+2. Formulas auto-calculate when source data changes (Google Sheets native behavior)
+3. `onEditSyncInteractiveDashboard` trigger syncs values to visible dashboard
+4. Dashboard metric cards auto-update within 3 seconds of source edits
+5. Self-healing dropdowns auto-configure with valid options
+
+**New Functions:**
+- `setupInteractiveDashboardCalcSheet()` - Creates hidden sheet with 20 metric formulas
+- `syncInteractiveDashboardFromCalc()` - Syncs calculated values to visible dashboard
+- `onEditSyncInteractiveDashboard()` - onEdit trigger with 3-second debounce
+- `installInteractiveDashboardSyncTrigger()` - Installs the auto-sync trigger
+- `wireDashboardDropdownsToConfig()` - Self-healing dropdowns for all dashboard controls
+- `setupInteractiveDashboardLiveSync()` - One-click setup: hidden sheet + dropdowns + trigger
+
+**20 Metrics in Hidden Sheet:**
+- Total Members, Active Members, Total Stewards
+- Total Grievances, Active Grievances, Pending Info, Settled This Month
+- Won, Lost, Win Rate %
+- Avg Days Open, Overdue Count, Due This Week
+- Avg Open Rate, Total Volunteer Hours
+- Last Virtual Mtg (most recent), Last In-Person Mtg (most recent)
+- Local Interest Count, Chapter Interest Count
+- Total Contacts This Month
+
+**Updated VERIFY_HIDDEN_SHEETS:**
+- Now checks for 6 hidden sheets (was 5)
+- Now verifies 6 triggers (was 5)
+- Includes Interactive Dashboard in comprehensive report
+
+**Updated REPAIR_DASHBOARD:**
+- Step 4 now includes Interactive Dashboard setup
+- Calls setupInteractiveDashboardCalcSheet(), wireDashboardDropdownsToConfig(), installInteractiveDashboardSyncTrigger()
+
+**Files Changed:**
+- Constants.gs: Added SHEETS.INTERACTIVE_DASHBOARD_CALC
+- Code.gs: Added 6 new functions for Interactive Dashboard live-wire
+- Code.gs: Updated VERIFY_HIDDEN_SHEETS and REPAIR_DASHBOARD
+- ReorganizedMenu.gs: Added menu item "🎯 Setup Interactive Dashboard Live-Wire"
+- AIR.md: Updated hidden sheet architecture section (5 → 6 sheets/triggers)
+
+---
+
+### Version 3.45 (2025-12-13)
+
+**FEATURE: Extended Hidden Sheet Architecture**
+
+Added 3 new Member Directory columns (AF-AH) and Steward Workload auto-sync.
+
+**Member Directory Extended Columns (AF-AH):**
+- AF: Total Grievance Count - auto-populated from _Grievance_Calc
+- AG: Win Rate (%) - auto-populated from _Grievance_Calc
+- AH: Last Grievance Date - auto-populated from _Grievance_Calc
+
+**Steward Workload Auto-Sync:**
+- New hidden sheet: `_Steward_Workload_Calc` with 10 metric columns
+- Auto-calculates: Total Cases, Active Cases, Resolved, Won, Win Rate %, Overdue, Due This Week
+- New trigger: `onEditSyncStewardWorkload` with 2-second debounce
+- Menu item: Administrator → Setup & Triggers → Setup Steward Workload Auto-Sync
+
+**Files Changed:**
+- Constants.gs: Added MEMBER_COLS for AF-AH, SHEETS.STEWARD_WORKLOAD_CALC
+- Code.gs: Extended syncGrievanceCalcToMemberDirectory(), added steward workload functions
+- ConsolidatedDashboard.gs: Updated createMemberDirectory headers
+- ReorganizedMenu.gs: Added menu item for steward workload auto-sync
+- AIR.md: Updated hidden sheet architecture section (4 → 5 sheets/triggers)
+
+---
+
+### Version 3.44 (2025-12-13)
+
+**DOCUMENTATION: Hidden Sheet Architecture FAQ & Reference**
+
+Added comprehensive documentation for the hidden sheet architecture to FAQ and AIR.md.
+
+---
+
+### Version 3.41 (2025-12-13)
 
 **FEATURE: Auto-Updating Member Data in Grievance Log (Hidden Sheet + Trigger)**
 
@@ -1870,7 +1971,7 @@ See git history for complete changelog. Key milestones:
 
 ---
 
-**Document Version:** 3.44
+**Document Version:** 3.46
 **Last Updated:** 2025-12-13
 **Maintained By:** Claude (AI Assistant)
 
