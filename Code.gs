@@ -6829,13 +6829,62 @@ function syncDashboardCharts(dashboard, statusData, locationData) {
     dashboard.removeChart(existingCharts[i]);
   }
 
+  // Read dropdown selections (v3.49 - live-wire dropdowns)
+  const metric1 = dashboard.getRange('A7').getValue() || 'Grievances by Status';
+  const chartType1 = dashboard.getRange('B7').getValue() || 'Donut Chart';
+  const metric2 = dashboard.getRange('C7').getValue() || 'Grievances by Location';
+  const chartType2 = dashboard.getRange('D7').getValue() || 'Pie Chart';
+  const theme = dashboard.getRange('E7').getValue() || 'Union Blue';
+  const showComparison = dashboard.getRange('G7').getValue() || 'Yes';
+
+  // Theme colors based on selection
+  const themeColors = getThemeColors(theme);
+
   // Only create charts if we have data
   if (statusData.length === 0 && locationData.length === 0) {
     Logger.log('syncDashboardCharts: No chart data available');
     return;
   }
 
-  // Create Status Donut Chart (row 48, col 1)
+  // Chart 1: Primary chart based on metric1 selection (row 22, col 1)
+  const chart1Data = getChartDataForMetric(metric1, statusData, locationData, dashboard);
+  if (chart1Data.data.length > 0) {
+    const chart1Type = getChartTypeEnum(chartType1);
+    const chart1 = dashboard.newChart()
+      .setChartType(chart1Type)
+      .addRange(chart1Data.range)
+      .setPosition(22, 1, 0, 0)
+      .setOption('title', '📊 ' + metric1)
+      .setOption('pieHole', chartType1 === 'Donut Chart' ? 0.4 : 0)
+      .setOption('width', 500)
+      .setOption('height', 300)
+      .setOption('legend', {position: 'right'})
+      .setOption('colors', themeColors)
+      .build();
+    dashboard.insertChart(chart1);
+  }
+
+  // Chart 2: Comparison chart based on metric2 selection (row 22, col 11)
+  if (showComparison === 'Yes') {
+    const chart2Data = getChartDataForMetric(metric2, statusData, locationData, dashboard);
+    if (chart2Data.data.length > 0) {
+      const chart2Type = getChartTypeEnum(chartType2);
+      const chart2 = dashboard.newChart()
+        .setChartType(chart2Type)
+        .addRange(chart2Data.range)
+        .setPosition(22, 11, 0, 0)
+        .setOption('title', '📊 ' + metric2)
+        .setOption('pieHole', chartType2 === 'Donut Chart' ? 0.4 : 0)
+        .setOption('width', 500)
+        .setOption('height', 300)
+        .setOption('legend', {position: 'right'})
+        .setOption('colors', themeColors)
+        .build();
+      dashboard.insertChart(chart2);
+    }
+  }
+
+  // Chart 3: Status Donut (always show - row 48, col 1)
   if (statusData.length > 0) {
     const statusRange = dashboard.getRange(100, 1, statusData.length + 1, 2);
     const statusChart = dashboard.newChart()
@@ -6847,12 +6896,12 @@ function syncDashboardCharts(dashboard, statusData, locationData) {
       .setOption('width', 500)
       .setOption('height', 280)
       .setOption('legend', {position: 'right'})
-      .setOption('colors', ['#7EC8E3', '#059669', '#F97316', '#DC2626', '#7C3AED', '#0EA5E9', '#FBBF24', '#6B7280'])
+      .setOption('colors', themeColors)
       .build();
     dashboard.insertChart(statusChart);
   }
 
-  // Create Location Pie Chart (row 48, col 11)
+  // Chart 4: Location Pie (always show - row 48, col 11)
   if (locationData.length > 0) {
     const locationRange = dashboard.getRange(115, 1, locationData.length + 1, 2);
     const locationChart = dashboard.newChart()
@@ -6863,12 +6912,12 @@ function syncDashboardCharts(dashboard, statusData, locationData) {
       .setOption('width', 500)
       .setOption('height', 280)
       .setOption('legend', {position: 'right'})
-      .setOption('colors', ['#7EC8E3', '#059669', '#F97316', '#DC2626', '#7C3AED', '#0EA5E9', '#FBBF24', '#6B7280', '#10B981', '#EF4444'])
+      .setOption('colors', themeColors)
       .build();
     dashboard.insertChart(locationChart);
   }
 
-  // Create Location Bar Chart (row 71, col 1)
+  // Chart 5: Location Bar (always show - row 71, col 1)
   if (locationData.length > 0) {
     const barLocationRange = dashboard.getRange(115, 1, locationData.length + 1, 2);
     const barChart = dashboard.newChart()
@@ -6879,15 +6928,84 @@ function syncDashboardCharts(dashboard, statusData, locationData) {
       .setOption('width', 1000)
       .setOption('height', 260)
       .setOption('legend', {position: 'none'})
-      .setOption('colors', ['#7C3AED'])
+      .setOption('colors', [themeColors[0]])
       .setOption('hAxis', {title: 'Number of Grievances'})
       .setOption('vAxis', {title: ''})
       .build();
     dashboard.insertChart(barChart);
   }
 
-  Logger.log('syncDashboardCharts: Created ' + (statusData.length > 0 ? 1 : 0) + ' status chart, ' +
-             (locationData.length > 0 ? 2 : 0) + ' location charts');
+  Logger.log('syncDashboardCharts: Created charts with theme=' + theme + ', metric1=' + metric1 + ', metric2=' + metric2);
+}
+
+/**
+ * Gets theme colors based on theme selection
+ * @param {string} theme - Theme name from dropdown
+ * @returns {Array} Array of hex color codes
+ * @since v3.49
+ */
+function getThemeColors(theme) {
+  const themes = {
+    'Union Blue': ['#1E40AF', '#3B82F6', '#60A5FA', '#93C5FD', '#DBEAFE', '#7EC8E3', '#059669', '#F97316'],
+    'Solidarity Red': ['#DC2626', '#EF4444', '#F87171', '#FCA5A5', '#FEE2E2', '#B91C1C', '#991B1B', '#7F1D1D'],
+    'Success Green': ['#059669', '#10B981', '#34D399', '#6EE7B7', '#D1FAE5', '#047857', '#065F46', '#064E3B'],
+    'Professional Purple': ['#7C3AED', '#8B5CF6', '#A78BFA', '#C4B5FD', '#EDE9FE', '#6D28D9', '#5B21B6', '#4C1D95'],
+    'Modern Dark': ['#374151', '#4B5563', '#6B7280', '#9CA3AF', '#D1D5DB', '#1F2937', '#111827', '#030712'],
+    'Light & Clean': ['#0EA5E9', '#38BDF8', '#7DD3FC', '#BAE6FD', '#E0F2FE', '#0284C7', '#0369A1', '#075985']
+  };
+  return themes[theme] || themes['Union Blue'];
+}
+
+/**
+ * Converts chart type dropdown value to Charts.ChartType enum
+ * @param {string} chartType - Chart type from dropdown
+ * @returns {Charts.ChartType} Chart type enum
+ * @since v3.49
+ */
+function getChartTypeEnum(chartType) {
+  const types = {
+    'Donut Chart': Charts.ChartType.PIE,
+    'Pie Chart': Charts.ChartType.PIE,
+    'Bar Chart': Charts.ChartType.BAR,
+    'Column Chart': Charts.ChartType.COLUMN,
+    'Line Chart': Charts.ChartType.LINE,
+    'Area Chart': Charts.ChartType.AREA,
+    'Table': Charts.ChartType.TABLE
+  };
+  return types[chartType] || Charts.ChartType.PIE;
+}
+
+/**
+ * Gets chart data range based on metric selection
+ * @param {string} metric - Metric name from dropdown
+ * @param {Array} statusData - Status breakdown data
+ * @param {Array} locationData - Location breakdown data
+ * @param {Sheet} dashboard - Dashboard sheet
+ * @returns {Object} { data: Array, range: Range }
+ * @since v3.49
+ */
+function getChartDataForMetric(metric, statusData, locationData, dashboard) {
+  // Map metrics to their data sources
+  const statusMetrics = ['Grievances by Status', 'Active Grievances', 'Resolved Grievances', 'Total Grievances'];
+  const locationMetrics = ['Grievances by Location', 'Location Hotspots', 'Top Locations'];
+
+  if (statusMetrics.some(m => metric.includes('Status') || metric.includes(m))) {
+    return {
+      data: statusData,
+      range: dashboard.getRange(100, 1, statusData.length + 1, 2)
+    };
+  } else if (locationMetrics.some(m => metric.includes('Location') || metric.includes(m))) {
+    return {
+      data: locationData,
+      range: dashboard.getRange(115, 1, locationData.length + 1, 2)
+    };
+  } else {
+    // Default to status data for other metrics
+    return {
+      data: statusData,
+      range: dashboard.getRange(100, 1, statusData.length + 1, 2)
+    };
+  }
 }
 
 /**
@@ -7011,25 +7129,44 @@ function onEditSyncInteractiveDashboard(e) {
   try {
     const sheet = e.source.getActiveSheet();
     const sheetName = sheet.getName();
+    const editedRow = e.range.getRow();
+    const editedCol = e.range.getColumn();
 
-    // Only sync when Member Directory or Grievance Log is edited
-    if (sheetName !== SHEETS.MEMBER_DIR && sheetName !== SHEETS.GRIEVANCE_LOG) {
+    // Check if this is a dropdown change on Interactive Dashboard (v3.49)
+    // Dropdowns are in row 7: A7, B7, C7, D7, E7, G7
+    const isDropdownChange = sheetName === SHEETS.INTERACTIVE_DASHBOARD &&
+                             editedRow === 7 &&
+                             (editedCol === 1 || editedCol === 2 || editedCol === 3 ||
+                              editedCol === 4 || editedCol === 5 || editedCol === 7);
+
+    // Check if this is a data change on source sheets
+    const isDataChange = sheetName === SHEETS.MEMBER_DIR || sheetName === SHEETS.GRIEVANCE_LOG;
+
+    // Only sync for relevant edits
+    if (!isDropdownChange && !isDataChange) {
       return;
     }
 
-    // Simple debounce using cache
+    // Simple debounce using cache (different keys for dropdown vs data changes)
     const cache = CacheService.getScriptCache();
-    const lastSync = cache.get('interactiveDashboardLastSync');
+    const cacheKey = isDropdownChange ? 'dashboardDropdownLastSync' : 'interactiveDashboardLastSync';
+    const lastSync = cache.get(cacheKey);
     const now = Date.now();
 
-    if (lastSync && (now - parseInt(lastSync)) < 3000) {
-      return; // Skip if synced within last 3 seconds
+    // Faster response for dropdown changes (1 second), standard for data (3 seconds)
+    const debounceTime = isDropdownChange ? 1000 : 3000;
+
+    if (lastSync && (now - parseInt(lastSync)) < debounceTime) {
+      return; // Skip if synced within debounce window
     }
 
-    cache.put('interactiveDashboardLastSync', now.toString(), 60);
+    cache.put(cacheKey, now.toString(), 60);
 
-    // Run sync
+    // Run sync (includes chart rebuild based on dropdown selections)
     syncInteractiveDashboardFromCalc();
+
+    Logger.log('onEditSyncInteractiveDashboard: Synced due to ' +
+               (isDropdownChange ? 'dropdown change (col ' + editedCol + ')' : 'data change on ' + sheetName));
 
   } catch (error) {
     Logger.log('onEditSyncInteractiveDashboard error: ' + error.message);

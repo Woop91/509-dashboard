@@ -1,6 +1,6 @@
 # 509 Dashboard - Complete Feature Reference
 
-**Version:** 3.48
+**Version:** 3.49
 **Last Updated:** 2025-12-13
 **Purpose:** Union grievance tracking and member engagement system for SEIU Local 509
 
@@ -1174,7 +1174,56 @@ const COLORS = {
 
 ## Appendix: Changelog
 
-### Version 3.48 (2025-12-13) - LATEST
+### Version 3.49 (2025-12-13) - LATEST
+
+**FEATURE: Full Dropdown Live-Wire - Charts Auto-Update on Selection Change**
+
+All Interactive Dashboard dropdowns are now fully live-wired. Changing any dropdown automatically rebuilds charts within 1 second.
+
+**Dropdowns Now Live-Wired:**
+| Dropdown | Location | Effect |
+|----------|----------|--------|
+| Metric 1 | A7 | Changes primary chart data source |
+| Chart Type 1 | B7 | Changes primary chart type (Donut, Pie, Bar, etc.) |
+| Metric 2 | C7 | Changes comparison chart data source |
+| Chart Type 2 | D7 | Changes comparison chart type |
+| Theme | E7 | Changes all chart colors instantly |
+| Show Comparison | G7 | Shows/hides the comparison chart |
+
+**How It Works:**
+1. User changes a dropdown value (e.g., Theme: "Union Blue" → "Solidarity Red")
+2. `onEditSyncInteractiveDashboard` trigger fires (watches row 7)
+3. 1-second debounce prevents rapid rebuilds
+4. `syncDashboardCharts()` reads all dropdown values
+5. Charts are rebuilt with new settings
+
+**New Functions:**
+- `getThemeColors(theme)` - Returns color palette for theme
+- `getChartTypeEnum(chartType)` - Converts dropdown value to Charts.ChartType
+- `getChartDataForMetric(metric, ...)` - Gets appropriate data range for metric
+
+**Theme Colors:**
+- Union Blue: Blues and greens
+- Solidarity Red: Reds and crimson
+- Success Green: Greens and emerald
+- Professional Purple: Purples and violet
+- Modern Dark: Grays and slate
+- Light & Clean: Sky blues and cyan
+
+**Updated Trigger:**
+- `onEditSyncInteractiveDashboard` now watches:
+  - Member Directory (data changes - 3s debounce)
+  - Grievance Log (data changes - 3s debounce)
+  - Interactive Dashboard row 7 (dropdown changes - 1s debounce)
+
+**Files Changed:**
+- Code.gs: Updated `onEditSyncInteractiveDashboard()` to watch dropdown changes
+- Code.gs: Updated `syncDashboardCharts()` to use dropdown selections
+- Code.gs: Added `getThemeColors()`, `getChartTypeEnum()`, `getChartDataForMetric()`
+
+---
+
+### Version 3.48 (2025-12-13)
 
 **FEATURE: Interactive Dashboard Charts Now Live-Wired**
 
@@ -2064,7 +2113,7 @@ See git history for complete changelog. Key milestones:
 
 ---
 
-**Document Version:** 3.48
+**Document Version:** 3.49
 **Last Updated:** 2025-12-13
 **Maintained By:** Claude (AI Assistant)
 
