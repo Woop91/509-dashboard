@@ -225,13 +225,25 @@ function createReorganizedMenus(ui) {
 
   // ------------ DEMO MENU ------------
   ui.createMenu("🎭 Demo")
-    .addItem("⚙️ Populate Config Defaults (Run First!)", "populateConfigDefaults")
+    .addItem("🚀 Seed All Sample Data", "SEED_SAMPLE_DATA")
+    .addSeparator()
+    .addSubMenu(ui.createMenu("🌱 Seed Data")
+      .addItem("⚙️ Seed Config Dropdowns Only", "seedConfigData")
+      .addSeparator()
+      .addItem("👥 Seed Members (Custom Count)", "SEED_MEMBERS_DIALOG")
+      .addItem("📋 Seed Grievances (Custom Count)", "SEED_GRIEVANCES_DIALOG")
+      .addSeparator()
+      .addItem("👥 Seed 50 Members", "SEED_MEMBERS")
+      .addItem("📋 Seed 25 Grievances", "SEED_GRIEVANCES"))
     .addSeparator()
     .addItem("📝 Add Sample Feedback Entries", "addSampleFeedbackEntries")
     .addItem("📋 Populate Pending TODOs", "populatePendingTodos")
     .addSeparator()
-    .addSubMenu(ui.createMenu("🗑️ Data Management")
-      .addItem("🗑️ Clear ALL Sheet Data", "nukeAllSheetData")
+    .addSubMenu(ui.createMenu("🗑️ Nuke Data")
+      .addItem("☢️ NUKE ALL DATA", "NUKE_ALL_DATA")
+      .addItem("🧹 Clear Config Dropdowns Only", "NUKE_CONFIG_DROPDOWNS")
+      .addSeparator()
+      .addItem("🗑️ Clear ALL Sheet Data (Legacy)", "nukeAllSheetData")
       .addItem("⚠️ Clear Core Data Only", "clearAllData"))
     .addToUi();
 
