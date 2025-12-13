@@ -778,26 +778,37 @@ Applied via `setupDataValidations()`:
 - Menu: Dashboard → Grievance Tools → Refresh Grievance Formulas
 - Or run: `recalcAllGrievancesBatched()` from Apps Script
 
-### Member Directory - Code-Calculated Values (No Sheet Formulas)
+### Member Directory - Auto-Updating from Hidden Calculation Sheet
 
-**IMPORTANT (v3.40):** Member Directory columns AB-AD have NO formulas in the sheet. All values are computed by `refreshMemberDirectoryFormulas()` in Code.gs and written as static values.
+**IMPORTANT (v3.40):** Member Directory columns AB-AD display grievance data that auto-updates when the Grievance Log changes.
 
-**Calculated Columns (script-populated):**
+**Architecture:**
+1. **Hidden Sheet:** `_Grievance_Calc` contains self-healing formulas (hidden from users)
+2. **Auto-Sync Trigger:** `onEditSyncGrievanceData` syncs values when Grievance Log is edited
+3. **Static Values:** Member Directory columns AB-AD contain static values (no visible formulas)
+
+**Calculated Columns:**
 
 | Column | Name | Data Source | Shows |
 |--------|------|-------------|-------|
-| AB (28) | Has Open Grievance? | Grievance Log Column E (Status) | "Yes" if active grievance exists, "No" otherwise |
-| AC (29) | Grievance Status Snapshot | Grievance Log Column E (Status) | Status text from active grievance |
-| AD (30) | Next Grievance Deadline | Grievance Log Column T (Next Action Due) | Next deadline date from active grievance |
+| AB (28) | Has Open Grievance? | Hidden Sheet Column B | "Yes" if active grievance exists, "No" otherwise |
+| AC (29) | Grievance Status Snapshot | Hidden Sheet Column C | Status text from active grievance |
+| AD (30) | Next Grievance Deadline | Hidden Sheet Column D | Next deadline date from active grievance |
 
 **Active Grievance Statuses:** Open, Pending Info, Appealed, In Arbitration
 
-**Logic:**
-- Member ID in Member Directory Column A is matched against Grievance Log Column B
-- Active grievances take priority over closed ones
-- First active grievance found determines the status and deadline shown
+**Self-Healing:**
+- `setupGrievanceCalcSheet()` - Creates/repairs the hidden sheet with formulas
+- `installGrievanceSyncTrigger()` - Installs the auto-sync trigger
+- `REPAIR_DASHBOARD()` - Calls both functions to restore full functionality
 
-**To Recalculate:**
+**How Auto-Update Works:**
+1. User edits Grievance Log (Status, Member ID, or Next Action Due columns)
+2. `onEditSyncGrievanceData` trigger fires
+3. Trigger reads calculated values from hidden `_Grievance_Calc` sheet
+4. Values are written to Member Directory columns AB-AD
+
+**To Manual Sync:**
 - Menu: Dashboard → Grievance Tools → Refresh Member Directory Data
 - Or run: `refreshMemberDirectoryFormulas()` from Apps Script
 - Or run: `refreshAllFormulas()` to recalculate both Grievance Log and Member Directory
@@ -882,32 +893,38 @@ const COLORS = {
 
 ### Version 3.40 (2025-12-12) - LATEST
 
-**FIX: Member Directory Grievance Columns Now Use Static Values (No Formulas)**
+**FEATURE: Auto-Updating Grievance Data in Member Directory (Hidden Sheet + Trigger)**
 
-Changed Member Directory columns AB-AD from formula-based to script-calculated static values, consistent with the "no formulas in visible sheets" architecture.
+Implemented auto-updating grievance data for Member Directory columns AB-AD using a hidden calculation sheet with self-healing formulas and an onEdit trigger.
 
-**Changes:**
-- `refreshMemberDirectoryFormulas()` now writes STATIC VALUES instead of formulas
-- Reads all Grievance Log data once, builds lookup map by Member ID
-- Calculates Has Open Grievance?, Status Snapshot, Next Deadline for each member
-- Writes values as static data to columns AB, AC, AD
-- `setupFormulasAndCalculations()` now calls `refreshMemberDirectoryFormulas()` instead of setting formulas
+**Architecture:**
+1. Hidden `_Grievance_Calc` sheet contains MAP/LAMBDA formulas
+2. Formulas auto-calculate when Grievance Log data changes
+3. `onEditSyncGrievanceData` trigger syncs values to Member Directory
+4. Member Directory shows static values (no visible formulas)
 
-**Why This Change:**
-- Consistent with Grievance Log architecture (no formulas in visible sheets)
-- Prevents formula errors when sheets are renamed or columns reordered
-- Faster performance (batch write vs formula recalculation)
-- Cleaner data (no formula dependencies across sheets)
+**New Functions:**
+- `setupGrievanceCalcSheet()` - Creates/repairs hidden sheet with formulas (self-healing)
+- `syncGrievanceCalcToMemberDirectory()` - Syncs calculated values to Member Directory
+- `onEditSyncGrievanceData()` - onEdit trigger for auto-sync
+- `installGrievanceSyncTrigger()` - Installs the auto-sync trigger
+- `removeGrievanceSyncTrigger()` - Removes the trigger
 
-**To Recalculate Member Directory Grievance Data:**
-- Menu: Dashboard → Grievance Tools → Refresh Member Directory Data
-- Or run: `refreshMemberDirectoryFormulas()` from Apps Script
-- Or run: `refreshAllFormulas()` to recalculate both sheets
+**Self-Healing:**
+- `REPAIR_DASHBOARD()` now installs the sync trigger
+- Hidden sheet is recreated if missing
+- Formulas are re-applied if corrupted
+
+**Why This Architecture:**
+- Formulas are in a HIDDEN sheet (not visible to users)
+- Auto-updates when Grievance Log is edited
+- Self-healing - REPAIR_DASHBOARD restores everything
+- No formulas in visible sheets
 
 **Files Changed:**
-- Code.gs: Rewrote `refreshMemberDirectoryFormulas()` to write static values
-- Code.gs: Updated `setupFormulasAndCalculations()` to call batch function
-- Code.gs: Updated `refreshAllFormulas()` messaging
+- Constants.gs: Added `SHEETS.GRIEVANCE_CALC` constant
+- Code.gs: Added 5 new functions for hidden sheet + trigger
+- Code.gs: Updated `REPAIR_DASHBOARD` to install sync trigger
 - AIR.md: Updated documentation
 
 ---

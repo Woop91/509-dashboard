@@ -46,7 +46,8 @@ const SHEETS = {
   FAQ: "❓ FAQ & Help",
   USER_SETTINGS: "⚙️ User Settings",
 
-  // Internal system sheets
+  // Internal system sheets (hidden)
+  GRIEVANCE_CALC: "_Grievance_Calc",  // Hidden sheet with auto-update formulas for Member Directory
   USER_ROLES: "User Roles",
   AUDIT_LOG: "Audit_Log",
   CHANGE_LOG: "📝 Change Log",
