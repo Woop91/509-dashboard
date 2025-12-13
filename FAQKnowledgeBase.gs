@@ -174,6 +174,55 @@ function seedInitialFAQs() {
       question: 'How can I improve dashboard performance?',
       answer: 'Performance tips: 1) Use caching - enable via ⚡ Performance → 🔥 Warm Up All Caches, 2) Close unused sheets/tabs, 3) Use filters instead of scrolling through all data, 4) For large datasets (20k+ members), use Search instead of browsing, 5) Batch operations instead of individual updates, 6) Keep browser updated.',
       tags: 'performance, slow, speed, fast, optimize, cache'
+    },
+    // Hidden Sheet Architecture FAQs
+    {
+      category: FAQ_CATEGORIES.AUTOMATION,
+      question: 'What are hidden sheets and why does the dashboard use them?',
+      answer: 'Hidden sheets (prefixed with "_") contain self-healing formulas that auto-calculate data. This architecture keeps complex formulas invisible to users while allowing auto-updates. There are 4 hidden sheets: _Grievance_Calc (grievance metrics for Member Directory), _Member_Lookup (member data for Grievance Log), _Steward_Contact_Calc (contact data from Communications Log), and _Engagement_Calc (engagement metrics). Run VERIFY_HIDDEN_SHEETS() to check their status.',
+      tags: 'hidden sheets, formulas, auto-update, architecture, _Grievance_Calc, _Member_Lookup'
+    },
+    {
+      category: FAQ_CATEGORIES.AUTOMATION,
+      question: 'How does cross-sheet auto-population work?',
+      answer: 'The dashboard uses hidden sheets + triggers for auto-population: 1) Hidden sheets contain MAP/LAMBDA formulas that calculate data, 2) onEdit triggers detect changes to source sheets, 3) Calculated values are synced to visible sheets as static values (no visible formulas). This means when you edit the Grievance Log, Member Directory columns AB-AD auto-update. When you edit Member Directory, Grievance Log columns C, D, X-AA auto-update.',
+      tags: 'auto-populate, cross-sheet, triggers, sync, formulas'
+    },
+    {
+      category: FAQ_CATEGORIES.TROUBLESHOOTING,
+      question: 'Member Directory grievance columns (AB-AD) are not updating',
+      answer: 'These columns auto-update from the hidden _Grievance_Calc sheet. To fix: 1) Run Administrator → Setup & Triggers → Verify Hidden Sheets to diagnose, 2) If hidden sheet is missing, run REPAIR_DASHBOARD() from Apps Script, 3) If trigger is missing, run installGrievanceSyncTrigger(). The trigger watches Grievance Log edits and syncs calculated values.',
+      tags: 'grievance, not updating, AB, AC, AD, hidden sheet, trigger'
+    },
+    {
+      category: FAQ_CATEGORIES.TROUBLESHOOTING,
+      question: 'Grievance Log member data (names, email, steward) is not updating',
+      answer: 'Columns C, D, X-AA auto-update from the hidden _Member_Lookup sheet. To fix: 1) Run VERIFY_HIDDEN_SHEETS() to diagnose, 2) Run REPAIR_DASHBOARD() to recreate hidden sheets and triggers, 3) Run refreshGrievanceLogMemberData() for immediate sync. The onEditSyncMemberData trigger watches Member Directory changes.',
+      tags: 'grievance log, member data, not updating, names, email, steward'
+    },
+    {
+      category: FAQ_CATEGORIES.AUTOMATION,
+      question: 'How do I set up engagement tracking (Q-T columns)?',
+      answer: 'Engagement metrics require source sheets: 1) Run Administrator → Setup & Triggers → Setup Engagement Tracking (creates all sheets + trigger), OR 2) Manually create: Create Meeting Attendance sheet, Create Volunteer Hours sheet, then run setupEngagementCalcSheet(). The _Engagement_Calc hidden sheet uses MAXIFS/SUMIF formulas to calculate Last Virtual Mtg, Last In-Person Mtg, and Volunteer Hours.',
+      tags: 'engagement, meeting attendance, volunteer hours, Q, R, S, T, setup'
+    },
+    {
+      category: FAQ_CATEGORIES.TROUBLESHOOTING,
+      question: 'How do I verify all hidden sheets are working?',
+      answer: 'Run Administrator → Setup & Triggers → Verify Hidden Sheets (or VERIFY_HIDDEN_SHEETS() from Apps Script). This checks: 1) All 4 hidden sheets exist and are hidden, 2) All 4 auto-sync triggers are installed, 3) Formulas are present in hidden sheets, 4) Data is synced to visible sheets. Any issues will be reported with specific fixes.',
+      tags: 'verify, diagnose, hidden sheets, triggers, check, troubleshoot'
+    },
+    {
+      category: FAQ_CATEGORIES.TROUBLESHOOTING,
+      question: 'How do I repair the hidden sheet architecture?',
+      answer: 'Run REPAIR_DASHBOARD() from Apps Script (or use the menu). This function: 1) Recreates all 4 hidden calculation sheets with fresh formulas, 2) Installs all 4 auto-sync triggers, 3) Syncs data to visible sheets. This is the "nuclear option" that fixes most cross-population issues. Individual repairs: setupGrievanceCalcSheet(), setupMemberLookupSheet(), setupStewardContactCalcSheet(), setupEngagementCalcSheet().',
+      tags: 'repair, fix, hidden sheets, REPAIR_DASHBOARD, recreate, self-healing'
+    },
+    {
+      category: FAQ_CATEGORIES.AUTOMATION,
+      question: 'What are the 4 auto-sync triggers and what do they do?',
+      answer: 'The dashboard uses 4 onEdit triggers: 1) onEditSyncGrievanceData - Grievance Log edits → Member Directory AB-AD, 2) onEditSyncMemberData - Member Directory edits → Grievance Log C, D, X-AA, 3) onEditSyncStewardContact - Communications Log edits → Member Directory Y-AA, 4) onEditSyncEngagementData - Meeting/Volunteer sheet edits → Member Directory Q-T. Each trigger includes debouncing to prevent excessive syncs.',
+      tags: 'triggers, onEdit, sync, auto-update, debounce'
     }
   ];
 
