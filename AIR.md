@@ -1,7 +1,7 @@
 # 509 Dashboard - Complete Feature Reference
 
-**Version:** 3.39
-**Last Updated:** 2025-12-12
+**Version:** 3.41
+**Last Updated:** 2025-12-13
 **Purpose:** Union grievance tracking and member engagement system for SEIU Local 509
 
 ---
@@ -276,9 +276,9 @@ const MEMBER_COLS = {
   CONTACT_STEWARD: 26,             // Z
   CONTACT_NOTES: 27,               // AA
   // Section 8: Grievance Management (AB-AE)
-  HAS_OPEN_GRIEVANCE: 28,          // AB - Formula-populated
-  GRIEVANCE_STATUS: 29,            // AC - Formula-populated
-  NEXT_DEADLINE: 30,               // AD - Formula-populated
+  HAS_OPEN_GRIEVANCE: 28,          // AB - Script-calculated (static value)
+  GRIEVANCE_STATUS: 29,            // AC - Script-calculated (static value)
+  NEXT_DEADLINE: 30,               // AD - Script-calculated (static value)
   START_GRIEVANCE: 31,             // AE - Checkbox to start grievance
 
   // ALIAS - For backward compatibility
@@ -598,9 +598,9 @@ Z (26): Steward Who Contacted Member (DROPDOWN from Config col H - Stewards)
 AA (27): Notes from Steward Contact
 
 Section 8: Grievance Management (AB-AE)
-AB (28): Has Open Grievance? (Formula)
-AC (29): Grievance Status Snapshot (Formula)
-AD (30): Next Grievance Deadline (Formula)
+AB (28): Has Open Grievance? (Script-calculated static value)
+AC (29): Grievance Status Snapshot (Script-calculated static value)
+AD (30): Next Grievance Deadline (Script-calculated static value)
 AE (31): Start Grievance (CHECKBOX ONLY - triggers grievance creation)
 ```
 
@@ -778,6 +778,77 @@ Applied via `setupDataValidations()`:
 - Menu: Dashboard → Grievance Tools → Refresh Grievance Formulas
 - Or run: `recalcAllGrievancesBatched()` from Apps Script
 
+### Member Directory - Auto-Updating from Hidden Calculation Sheet
+
+**IMPORTANT (v3.40):** Member Directory columns AB-AD display grievance data that auto-updates when the Grievance Log changes.
+
+**Architecture:**
+1. **Hidden Sheet:** `_Grievance_Calc` contains self-healing formulas (hidden from users)
+2. **Auto-Sync Trigger:** `onEditSyncGrievanceData` syncs values when Grievance Log is edited
+3. **Static Values:** Member Directory columns AB-AD contain static values (no visible formulas)
+
+**Calculated Columns:**
+
+| Column | Name | Data Source | Shows |
+|--------|------|-------------|-------|
+| AB (28) | Has Open Grievance? | Hidden Sheet Column B | "Yes" if active grievance exists, "No" otherwise |
+| AC (29) | Grievance Status Snapshot | Hidden Sheet Column C | Status text from active grievance |
+| AD (30) | Next Grievance Deadline | Hidden Sheet Column D | Next deadline date from active grievance |
+
+**Active Grievance Statuses:** Open, Pending Info, Appealed, In Arbitration
+
+**Self-Healing:**
+- `setupGrievanceCalcSheet()` - Creates/repairs the hidden sheet with formulas
+- `installGrievanceSyncTrigger()` - Installs the auto-sync trigger
+- `REPAIR_DASHBOARD()` - Calls both functions to restore full functionality
+
+**How Auto-Update Works:**
+1. User edits Grievance Log (Status, Member ID, or Next Action Due columns)
+2. `onEditSyncGrievanceData` trigger fires
+3. Trigger reads calculated values from hidden `_Grievance_Calc` sheet
+4. Values are written to Member Directory columns AB-AD
+
+**To Manual Sync:**
+- Menu: Dashboard → Grievance Tools → Refresh Member Directory Data
+- Or run: `refreshMemberDirectoryFormulas()` from Apps Script
+- Or run: `refreshAllFormulas()` to recalculate all cross-population data
+
+### Grievance Log - Auto-Updating from Hidden Member Lookup Sheet
+
+**IMPORTANT (v3.41):** Grievance Log columns C, D, X, Y, Z, AA display member data that auto-updates when Member Directory changes.
+
+**Architecture:**
+1. **Hidden Sheet:** `_Member_Lookup` contains self-healing formulas (hidden from users)
+2. **Auto-Sync Trigger:** `onEditSyncMemberData` syncs values when Member Directory is edited
+3. **Static Values:** Grievance Log member columns contain static values (no visible formulas)
+
+**Auto-Updated Columns:**
+
+| Column | Name | Data Source | Updates When |
+|--------|------|-------------|--------------|
+| C (3) | First Name | Member Directory Col B | Member name changes |
+| D (4) | Last Name | Member Directory Col C | Member name changes |
+| X (24) | Member Email | Member Directory Col H | Email changes |
+| Y (25) | Unit | Member Directory Col F | Unit assignment changes |
+| Z (26) | Work Location | Member Directory Col E | Location changes |
+| AA (27) | Assigned Steward | Member Directory Col P | Steward assignment changes |
+
+**Self-Healing:**
+- `setupMemberLookupSheet()` - Creates/repairs the hidden sheet with formulas
+- `installMemberSyncTrigger()` - Installs the auto-sync trigger
+- `REPAIR_DASHBOARD()` - Calls both functions to restore full functionality
+
+**How Auto-Update Works:**
+1. User edits Member Directory (Name, Email, Unit, Location, or Steward columns)
+2. `onEditSyncMemberData` trigger fires
+3. Trigger reads calculated values from hidden `_Member_Lookup` sheet
+4. Values are written to ALL grievances for that member
+
+**To Manual Sync:**
+- Menu: Dashboard → Grievance Tools → Refresh Grievance Log Member Data
+- Or run: `refreshGrievanceLogMemberData()` from Apps Script
+- Or run: `refreshAllFormulas()` to recalculate all cross-population data
+
 ---
 
 ## Seed Data Functions
@@ -856,7 +927,90 @@ const COLORS = {
 
 ## Appendix: Changelog
 
-### Version 3.33 (2025-12-12) - LATEST
+### Version 3.41 (2025-12-13) - LATEST
+
+**FEATURE: Auto-Updating Member Data in Grievance Log (Hidden Sheet + Trigger)**
+
+Implemented auto-updating member data for Grievance Log columns C, D, X, Y, Z, AA using a hidden lookup sheet with self-healing formulas and an onEdit trigger.
+
+**Problem Solved:**
+When a member's info changes (email, unit, steward, name), their grievance records were stale. Now they auto-update.
+
+**Architecture:**
+1. Hidden `_Member_Lookup` sheet contains VLOOKUP/INDEX-MATCH formulas
+2. Formulas auto-calculate when Member Directory data changes
+3. `onEditSyncMemberData` trigger syncs values to Grievance Log
+4. Grievance Log shows static values (no visible formulas)
+
+**New Functions:**
+- `setupMemberLookupSheet()` - Creates/repairs hidden sheet with formulas (self-healing)
+- `syncMemberLookupToGrievanceLog()` - Syncs calculated values to Grievance Log
+- `refreshGrievanceLogMemberData()` - Full refresh function
+- `onEditSyncMemberData()` - onEdit trigger for auto-sync
+- `installMemberSyncTrigger()` - Installs the auto-sync trigger
+- `removeMemberSyncTrigger()` - Removes the trigger
+
+**Auto-Updated Columns:**
+- C (3): First Name
+- D (4): Last Name
+- X (24): Member Email
+- Y (25): Unit
+- Z (26): Work Location
+- AA (27): Assigned Steward
+
+**Self-Healing:**
+- `REPAIR_DASHBOARD()` now installs both sync triggers
+- Hidden sheets are recreated if missing
+- Formulas are re-applied if corrupted
+
+**Files Changed:**
+- Constants.gs: Added `SHEETS.MEMBER_LOOKUP` constant
+- Code.gs: Added 6 new functions for hidden sheet + trigger
+- Code.gs: Updated `REPAIR_DASHBOARD` to install member sync trigger
+- Code.gs: Updated `refreshAllFormulas()` to include member data sync
+- AIR.md: Updated documentation
+
+---
+
+### Version 3.40 (2025-12-12)
+
+**FEATURE: Auto-Updating Grievance Data in Member Directory (Hidden Sheet + Trigger)**
+
+Implemented auto-updating grievance data for Member Directory columns AB-AD using a hidden calculation sheet with self-healing formulas and an onEdit trigger.
+
+**Architecture:**
+1. Hidden `_Grievance_Calc` sheet contains MAP/LAMBDA formulas
+2. Formulas auto-calculate when Grievance Log data changes
+3. `onEditSyncGrievanceData` trigger syncs values to Member Directory
+4. Member Directory shows static values (no visible formulas)
+
+**New Functions:**
+- `setupGrievanceCalcSheet()` - Creates/repairs hidden sheet with formulas (self-healing)
+- `syncGrievanceCalcToMemberDirectory()` - Syncs calculated values to Member Directory
+- `onEditSyncGrievanceData()` - onEdit trigger for auto-sync
+- `installGrievanceSyncTrigger()` - Installs the auto-sync trigger
+- `removeGrievanceSyncTrigger()` - Removes the trigger
+
+**Self-Healing:**
+- `REPAIR_DASHBOARD()` now installs the sync trigger
+- Hidden sheet is recreated if missing
+- Formulas are re-applied if corrupted
+
+**Why This Architecture:**
+- Formulas are in a HIDDEN sheet (not visible to users)
+- Auto-updates when Grievance Log is edited
+- Self-healing - REPAIR_DASHBOARD restores everything
+- No formulas in visible sheets
+
+**Files Changed:**
+- Constants.gs: Added `SHEETS.GRIEVANCE_CALC` constant
+- Code.gs: Added 5 new functions for hidden sheet + trigger
+- Code.gs: Updated `REPAIR_DASHBOARD` to install sync trigger
+- AIR.md: Updated documentation
+
+---
+
+### Version 3.33 (2025-12-12)
 
 **FIX: Missing Chart Builders & Dashboard Metrics**
 
@@ -1359,8 +1513,8 @@ See git history for complete changelog. Key milestones:
 
 ---
 
-**Document Version:** 3.33
-**Last Updated:** 2025-12-09
+**Document Version:** 3.41
+**Last Updated:** 2025-12-13
 **Maintained By:** Claude (AI Assistant)
 
 ---

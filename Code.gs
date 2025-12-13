@@ -369,10 +369,38 @@ function REPAIR_DASHBOARD() {
     }
     SpreadsheetApp.flush();
 
-    // Step 3: Set up Member Directory cross-population formulas
-    logStep('Setting up Member Directory cross-population formulas...');
-    ss.toast('3/6: Setting up cross-population formulas...', 'Repairing', -1);
+    // Step 3: Set up cross-population (hidden calc sheets + triggers)
+    logStep('Setting up cross-population with hidden sheets...');
+    ss.toast('3/6: Setting up cross-population...', 'Repairing', -1);
     setupFormulasAndCalculations();
+
+    // Install auto-sync trigger for grievance data → Member Directory
+    if (typeof installGrievanceSyncTrigger === 'function') {
+      try {
+        installGrievanceSyncTrigger();
+        logStep('Installed grievance → Member Directory auto-sync trigger');
+      } catch (e) {
+        Logger.log('installGrievanceSyncTrigger error: ' + e.message);
+      }
+    }
+
+    // Set up Member Lookup hidden sheet and trigger for member data → Grievance Log
+    if (typeof setupMemberLookupSheet === 'function') {
+      try {
+        setupMemberLookupSheet();
+        logStep('Set up Member Lookup hidden sheet');
+      } catch (e) {
+        Logger.log('setupMemberLookupSheet error: ' + e.message);
+      }
+    }
+    if (typeof installMemberSyncTrigger === 'function') {
+      try {
+        installMemberSyncTrigger();
+        logStep('Installed member → Grievance Log auto-sync trigger');
+      } catch (e) {
+        Logger.log('installMemberSyncTrigger error: ' + e.message);
+      }
+    }
     SpreadsheetApp.flush();
 
     // Step 4: Set up Interactive Dashboard
@@ -1329,83 +1357,632 @@ function refreshGrievanceFormulas() {
 }
 
 /**
- * Refresh Member Directory cross-population formulas
- * Re-applies the formulas that link Grievance Log data to Member Directory columns:
- * - HAS_OPEN_GRIEVANCE (Column AB) - Shows "Yes" if member has active grievances
- * - GRIEVANCE_STATUS (Column AC) - Shows the status of active grievances
- * - NEXT_DEADLINE (Column AD) - Shows the next deadline from active grievances
+ * Refresh Member Directory grievance columns from hidden calculation sheet
  *
- * Run this if grievance data is not showing in Member Directory.
+ * Architecture:
+ * 1. Creates/updates hidden "_Grievance_Calc" sheet with self-healing formulas
+ * 2. Formulas auto-calculate: Has Open Grievance?, Status Snapshot, Next Deadline
+ * 3. Syncs calculated values to Member Directory columns AB-AD as static values
+ *
+ * The hidden sheet formulas auto-update when Grievance Log changes.
+ * Call this function to sync the latest values to Member Directory.
+ *
+ * @returns {Object} Statistics about the sync
  */
 function refreshMemberDirectoryFormulas() {
+  const startTime = new Date();
   const ss = SpreadsheetApp.getActive();
-  const memberDir = ss.getSheetByName(SHEETS.MEMBER_DIR);
-  const grievanceLog = ss.getSheetByName(SHEETS.GRIEVANCE_LOG);
 
-  if (!memberDir) {
-    SpreadsheetApp.getUi().alert('Member Directory sheet not found!');
-    return;
-  }
-  if (!grievanceLog) {
-    SpreadsheetApp.getUi().alert('Grievance Log sheet not found!');
-    return;
-  }
-
-  SpreadsheetApp.getActive().toast('Refreshing Member Directory formulas...', 'Please wait', -1);
+  SpreadsheetApp.getActive().toast('Setting up grievance calculations...', 'Please wait', -1);
 
   try {
-    // Dynamic column references for Grievance Log
-    const gMemberIdCol = getColumnLetter(GRIEVANCE_COLS.MEMBER_ID);
-    const gStatusCol = getColumnLetter(GRIEVANCE_COLS.STATUS);
-    const gNextActionCol = getColumnLetter(GRIEVANCE_COLS.NEXT_ACTION_DUE);
+    // Step 1: Setup/repair the hidden calculation sheet with formulas
+    setupGrievanceCalcSheet();
 
-    // Has Open Grievance? - Column AB (28)
-    const hasGrievanceCol = getColumnLetter(MEMBER_COLS.HAS_OPEN_GRIEVANCE);
-    memberDir.getRange(hasGrievanceCol + "2").setFormula(
-      `=MAP(A2:A21000,LAMBDA(m,IF(m="","",IF(SUM(COUNTIFS('Grievance Log'!${gMemberIdCol}:${gMemberIdCol},m,'Grievance Log'!${gStatusCol}:${gStatusCol},{"Open","Pending Info","Appealed","In Arbitration"}))>0,"Yes","No"))))`
+    // Step 2: Sync calculated values to Member Directory
+    const result = syncGrievanceCalcToMemberDirectory();
+
+    const duration = new Date() - startTime;
+    SpreadsheetApp.getActive().toast(
+      `✅ Synced ${result.processed} members in ${(duration / 1000).toFixed(1)}s`,
+      'Complete',
+      5
     );
 
-    // Grievance Status Snapshot - Column AC (29)
-    const statusSnapshotCol = getColumnLetter(MEMBER_COLS.GRIEVANCE_STATUS);
-    memberDir.getRange(statusSnapshotCol + "2").setFormula(
-      `=MAP(A2:A21000,LAMBDA(m,IF(m="","",LET(activeStatus,FILTER('Grievance Log'!${gStatusCol}:${gStatusCol},('Grievance Log'!${gMemberIdCol}:${gMemberIdCol}=m)*REGEXMATCH('Grievance Log'!${gStatusCol}:${gStatusCol},"^(Open|Pending Info|Appealed|In Arbitration)$")),IFERROR(INDEX(activeStatus,1),IFERROR(INDEX('Grievance Log'!${gStatusCol}:${gStatusCol},MATCH(m,'Grievance Log'!${gMemberIdCol}:${gMemberIdCol},0)),""))))))`
-    );
-
-    // Next Grievance Deadline - Column AD (30)
-    const nextDeadlineCol = getColumnLetter(MEMBER_COLS.NEXT_DEADLINE);
-    memberDir.getRange(nextDeadlineCol + "2").setFormula(
-      `=MAP(A2:A21000,LAMBDA(m,IF(m="","",LET(activeDeadline,FILTER('Grievance Log'!${gNextActionCol}:${gNextActionCol},('Grievance Log'!${gMemberIdCol}:${gMemberIdCol}=m)*REGEXMATCH('Grievance Log'!${gStatusCol}:${gStatusCol},"^(Open|Pending Info|Appealed|In Arbitration)$")),IFERROR(INDEX(activeDeadline,1),IFERROR(INDEX('Grievance Log'!${gNextActionCol}:${gNextActionCol},MATCH(m,'Grievance Log'!${gMemberIdCol}:${gMemberIdCol},0)),""))))))`
-    );
-
-    SpreadsheetApp.flush();
-    SpreadsheetApp.getActive().toast('✅ Member Directory formulas refreshed successfully!', 'Complete', 5);
-    Logger.log('refreshMemberDirectoryFormulas completed successfully');
+    return {
+      processed: result.processed,
+      duration: duration,
+      message: `Synced ${result.processed} members in ${duration}ms`
+    };
   } catch (error) {
     Logger.log('Error in refreshMemberDirectoryFormulas: ' + error.message);
-    SpreadsheetApp.getUi().alert('Error refreshing formulas: ' + error.message);
+    SpreadsheetApp.getUi().alert('Error: ' + error.message);
+    return { processed: 0, error: error.message };
   }
 }
 
 /**
- * Refresh all cross-population formulas (Grievance Log + Member Directory)
- * Combines refreshGrievanceFormulas() and refreshMemberDirectoryFormulas()
+ * Creates/repairs the hidden _Grievance_Calc sheet with auto-updating formulas
+ * This sheet is the source of truth for Member Directory grievance columns.
+ * Formulas are SELF-HEALING - this function re-applies them if missing/broken.
+ */
+function setupGrievanceCalcSheet() {
+  const ss = SpreadsheetApp.getActive();
+
+  // Get or create the hidden calculation sheet
+  let calcSheet = ss.getSheetByName(SHEETS.GRIEVANCE_CALC);
+  if (!calcSheet) {
+    calcSheet = ss.insertSheet(SHEETS.GRIEVANCE_CALC);
+    Logger.log('Created hidden calculation sheet: ' + SHEETS.GRIEVANCE_CALC);
+  }
+
+  // Hide the sheet (self-healing - re-hide if someone unhid it)
+  calcSheet.hideSheet();
+
+  // Clear and rebuild (self-healing)
+  calcSheet.clear();
+
+  // Set up headers
+  calcSheet.getRange('A1:D1').setValues([['Member ID', 'Has Open Grievance?', 'Grievance Status', 'Next Deadline']]);
+  calcSheet.getRange('A1:D1').setFontWeight('bold').setBackground('#E5E7EB');
+
+  // Dynamic column references for Grievance Log
+  const gMemberIdCol = getColumnLetter(GRIEVANCE_COLS.MEMBER_ID);
+  const gStatusCol = getColumnLetter(GRIEVANCE_COLS.STATUS);
+  const gNextActionCol = getColumnLetter(GRIEVANCE_COLS.NEXT_ACTION_DUE);
+  const gSheetName = SHEETS.GRIEVANCE_LOG;
+
+  // Dynamic column references for Member Directory
+  const mMemberIdCol = getColumnLetter(MEMBER_COLS.MEMBER_ID);
+  const mSheetName = SHEETS.MEMBER_DIR;
+
+  // Column A: Mirror Member Directory Member IDs (auto-updates when members added/removed)
+  // FULLY DYNAMIC: Uses MEMBER_COLS.MEMBER_ID for column reference
+  calcSheet.getRange('A2').setFormula(
+    `=FILTER('${mSheetName}'!${mMemberIdCol}:${mMemberIdCol}, '${mSheetName}'!${mMemberIdCol}:${mMemberIdCol}<>"", '${mSheetName}'!${mMemberIdCol}:${mMemberIdCol}<>"Member ID")`
+  );
+
+  // Column B: Has Open Grievance? - MAP/LAMBDA formula
+  // FULLY DYNAMIC: Uses GRIEVANCE_COLS for all Grievance Log column references
+  calcSheet.getRange('B2').setFormula(
+    `=MAP(A2:A,LAMBDA(m,IF(m="","",IF(SUM(COUNTIFS('${gSheetName}'!${gMemberIdCol}:${gMemberIdCol},m,'${gSheetName}'!${gStatusCol}:${gStatusCol},{"Open","Pending Info","Appealed","In Arbitration"}))>0,"Yes","No"))))`
+  );
+
+  // Column C: Grievance Status Snapshot - prioritizes active grievances
+  // FULLY DYNAMIC: Uses GRIEVANCE_COLS for all column references
+  calcSheet.getRange('C2').setFormula(
+    `=MAP(A2:A,LAMBDA(m,IF(m="","",LET(activeStatus,FILTER('${gSheetName}'!${gStatusCol}:${gStatusCol},('${gSheetName}'!${gMemberIdCol}:${gMemberIdCol}=m)*REGEXMATCH('${gSheetName}'!${gStatusCol}:${gStatusCol},"^(Open|Pending Info|Appealed|In Arbitration)$")),IFERROR(INDEX(activeStatus,1),IFERROR(INDEX('${gSheetName}'!${gStatusCol}:${gStatusCol},MATCH(m,'${gSheetName}'!${gMemberIdCol}:${gMemberIdCol},0)),""))))))`
+  );
+
+  // Column D: Next Grievance Deadline - prioritizes active grievances
+  // FULLY DYNAMIC: Uses GRIEVANCE_COLS for all column references
+  calcSheet.getRange('D2').setFormula(
+    `=MAP(A2:A,LAMBDA(m,IF(m="","",LET(activeDeadline,FILTER('${gSheetName}'!${gNextActionCol}:${gNextActionCol},('${gSheetName}'!${gMemberIdCol}:${gMemberIdCol}=m)*REGEXMATCH('${gSheetName}'!${gStatusCol}:${gStatusCol},"^(Open|Pending Info|Appealed|In Arbitration)$")),IFERROR(INDEX(activeDeadline,1),IFERROR(INDEX('${gSheetName}'!${gNextActionCol}:${gNextActionCol},MATCH(m,'${gSheetName}'!${gMemberIdCol}:${gMemberIdCol},0)),""))))))`
+  );
+
+  // Format the sheet
+  calcSheet.setColumnWidth(1, 120);
+  calcSheet.setColumnWidth(2, 150);
+  calcSheet.setColumnWidth(3, 150);
+  calcSheet.setColumnWidth(4, 150);
+
+  Logger.log('setupGrievanceCalcSheet: Hidden calculation sheet configured with self-healing formulas');
+}
+
+/**
+ * Syncs calculated values from hidden _Grievance_Calc sheet to Member Directory
+ * Reads the formula-calculated values and writes them as static values to Member Directory.
+ *
+ * @returns {Object} { processed: number }
+ */
+function syncGrievanceCalcToMemberDirectory() {
+  const ss = SpreadsheetApp.getActive();
+  const calcSheet = ss.getSheetByName(SHEETS.GRIEVANCE_CALC);
+  const memberDir = ss.getSheetByName(SHEETS.MEMBER_DIR);
+
+  if (!calcSheet) {
+    throw new Error('Calculation sheet not found. Run setupGrievanceCalcSheet() first.');
+  }
+  if (!memberDir) {
+    throw new Error('Member Directory not found.');
+  }
+
+  // Force formulas to recalculate
+  SpreadsheetApp.flush();
+
+  // Read calculated values from hidden sheet (columns A-D, skip header)
+  const calcLastRow = calcSheet.getLastRow();
+  if (calcLastRow < 2) {
+    return { processed: 0 };
+  }
+
+  const calcData = calcSheet.getRange(2, 1, calcLastRow - 1, 4).getValues();
+
+  // Build lookup map: memberId -> { hasOpen, status, deadline }
+  const calcMap = {};
+  for (let i = 0; i < calcData.length; i++) {
+    const memberId = String(calcData[i][0] || '');
+    if (memberId) {
+      calcMap[memberId] = {
+        hasOpen: calcData[i][1] || 'No',
+        status: calcData[i][2] || '',
+        deadline: calcData[i][3] || ''
+      };
+    }
+  }
+
+  // Read Member Directory member IDs
+  const memberLastRow = memberDir.getLastRow();
+  if (memberLastRow < 2) {
+    return { processed: 0 };
+  }
+
+  const memberIds = memberDir.getRange(2, MEMBER_COLS.MEMBER_ID, memberLastRow - 1, 1).getValues();
+
+  // Build output arrays matching Member Directory row order
+  const hasOpenArr = [];
+  const statusArr = [];
+  const deadlineArr = [];
+
+  for (let i = 0; i < memberIds.length; i++) {
+    const memberId = String(memberIds[i][0] || '');
+    const calc = calcMap[memberId];
+
+    if (calc) {
+      hasOpenArr.push([calc.hasOpen]);
+      statusArr.push([calc.status]);
+      deadlineArr.push([calc.deadline]);
+    } else {
+      hasOpenArr.push(['No']);
+      statusArr.push(['']);
+      deadlineArr.push(['']);
+    }
+  }
+
+  // Write to Member Directory columns AB, AC, AD
+  const numRows = hasOpenArr.length;
+  if (numRows > 0) {
+    memberDir.getRange(2, MEMBER_COLS.HAS_OPEN_GRIEVANCE, numRows, 1).setValues(hasOpenArr);
+    memberDir.getRange(2, MEMBER_COLS.GRIEVANCE_STATUS, numRows, 1).setValues(statusArr);
+    memberDir.getRange(2, MEMBER_COLS.NEXT_DEADLINE, numRows, 1).setValues(deadlineArr);
+  }
+
+  Logger.log(`syncGrievanceCalcToMemberDirectory: Synced ${numRows} members`);
+  return { processed: numRows };
+}
+
+/**
+ * onEdit trigger handler for auto-syncing grievance data to Member Directory
+ * Called when any cell is edited. Only acts on Grievance Log changes.
+ *
+ * @param {Object} e - Edit event object
+ */
+function onEditSyncGrievanceData(e) {
+  try {
+    const sheet = e.source.getActiveSheet();
+    const sheetName = sheet.getName();
+
+    // Only sync when Grievance Log is edited
+    if (sheetName !== SHEETS.GRIEVANCE_LOG) {
+      return;
+    }
+
+    // Check if edit was in relevant columns (Status, Member ID, Next Action Due)
+    const editCol = e.range.getColumn();
+    const relevantCols = [
+      GRIEVANCE_COLS.MEMBER_ID,
+      GRIEVANCE_COLS.STATUS,
+      GRIEVANCE_COLS.NEXT_ACTION_DUE
+    ];
+
+    if (relevantCols.includes(editCol)) {
+      // Debounce: Only sync if more than 2 seconds since last sync
+      const cache = CacheService.getScriptCache();
+      const lastSync = cache.get('lastGrievanceSync');
+      const now = new Date().getTime();
+
+      if (!lastSync || (now - parseInt(lastSync)) > 2000) {
+        cache.put('lastGrievanceSync', now.toString(), 60);
+
+        // Sync after a brief delay to allow formula recalculation
+        Utilities.sleep(500);
+        syncGrievanceCalcToMemberDirectory();
+      }
+    }
+  } catch (error) {
+    // Silent fail for onEdit - don't interrupt user
+    Logger.log('onEditSyncGrievanceData error: ' + error.message);
+  }
+}
+
+/**
+ * Installs the auto-sync trigger for grievance data
+ * Call this once during setup or repair.
+ */
+function installGrievanceSyncTrigger() {
+  const ss = SpreadsheetApp.getActive();
+
+  // Remove existing triggers for this function
+  const triggers = ScriptApp.getUserTriggers(ss);
+  for (const trigger of triggers) {
+    if (trigger.getHandlerFunction() === 'onEditSyncGrievanceData') {
+      ScriptApp.deleteTrigger(trigger);
+    }
+  }
+
+  // Install new trigger
+  ScriptApp.newTrigger('onEditSyncGrievanceData')
+    .forSpreadsheet(ss)
+    .onEdit()
+    .create();
+
+  Logger.log('installGrievanceSyncTrigger: Auto-sync trigger installed');
+}
+
+/**
+ * Removes the auto-sync trigger for grievance data
+ */
+function removeGrievanceSyncTrigger() {
+  const ss = SpreadsheetApp.getActive();
+  const triggers = ScriptApp.getUserTriggers(ss);
+
+  for (const trigger of triggers) {
+    if (trigger.getHandlerFunction() === 'onEditSyncGrievanceData') {
+      ScriptApp.deleteTrigger(trigger);
+      Logger.log('removeGrievanceSyncTrigger: Trigger removed');
+    }
+  }
+}
+
+// ============================================================================
+// MEMBER LOOKUP - Auto-update Grievance Log with Member Directory data
+// ============================================================================
+
+/**
+ * Creates/repairs the hidden _Member_Lookup sheet with auto-updating formulas
+ * This sheet provides member data to Grievance Log columns C, D, X, Y, Z, AA.
+ * Formulas are SELF-HEALING - this function re-applies them if missing/broken.
+ */
+function setupMemberLookupSheet() {
+  const ss = SpreadsheetApp.getActive();
+
+  // Get or create the hidden lookup sheet
+  let lookupSheet = ss.getSheetByName(SHEETS.MEMBER_LOOKUP);
+  if (!lookupSheet) {
+    lookupSheet = ss.insertSheet(SHEETS.MEMBER_LOOKUP);
+    Logger.log('Created hidden lookup sheet: ' + SHEETS.MEMBER_LOOKUP);
+  }
+
+  // Hide the sheet (self-healing - re-hide if someone unhid it)
+  lookupSheet.hideSheet();
+
+  // Clear and rebuild (self-healing)
+  lookupSheet.clear();
+
+  // Set up headers
+  lookupSheet.getRange('A1:H1').setValues([[
+    'Grievance ID', 'Member ID', 'First Name', 'Last Name',
+    'Email', 'Unit', 'Location', 'Steward'
+  ]]);
+  lookupSheet.getRange('A1:H1').setFontWeight('bold').setBackground('#E5E7EB');
+
+  // Dynamic column references for Grievance Log
+  const gGrievanceIdCol = getColumnLetter(GRIEVANCE_COLS.GRIEVANCE_ID);
+  const gMemberIdCol = getColumnLetter(GRIEVANCE_COLS.MEMBER_ID);
+  const gSheetName = SHEETS.GRIEVANCE_LOG;
+
+  // Dynamic column references for Member Directory
+  const mMemberIdCol = getColumnLetter(MEMBER_COLS.MEMBER_ID);
+  const mFirstNameCol = getColumnLetter(MEMBER_COLS.FIRST_NAME);
+  const mLastNameCol = getColumnLetter(MEMBER_COLS.LAST_NAME);
+  const mEmailCol = getColumnLetter(MEMBER_COLS.EMAIL);
+  const mUnitCol = getColumnLetter(MEMBER_COLS.UNIT);
+  const mLocationCol = getColumnLetter(MEMBER_COLS.WORK_LOCATION);
+  const mStewardCol = getColumnLetter(MEMBER_COLS.ASSIGNED_STEWARD);
+  const mSheetName = SHEETS.MEMBER_DIR;
+
+  // Column A: Grievance IDs from Grievance Log
+  lookupSheet.getRange('A2').setFormula(
+    `=FILTER('${gSheetName}'!${gGrievanceIdCol}:${gGrievanceIdCol}, '${gSheetName}'!${gGrievanceIdCol}:${gGrievanceIdCol}<>"", '${gSheetName}'!${gGrievanceIdCol}:${gGrievanceIdCol}<>"Grievance ID")`
+  );
+
+  // Column B: Member IDs from Grievance Log (for reference)
+  lookupSheet.getRange('B2').setFormula(
+    `=FILTER('${gSheetName}'!${gMemberIdCol}:${gMemberIdCol}, '${gSheetName}'!${gGrievanceIdCol}:${gGrievanceIdCol}<>"", '${gSheetName}'!${gGrievanceIdCol}:${gGrievanceIdCol}<>"Grievance ID")`
+  );
+
+  // Column C: First Name - VLOOKUP from Member Directory
+  lookupSheet.getRange('C2').setFormula(
+    `=MAP(B2:B,LAMBDA(m,IF(m="","",IFERROR(VLOOKUP(m,'${mSheetName}'!${mMemberIdCol}:${mFirstNameCol},${MEMBER_COLS.FIRST_NAME},FALSE),""))))`
+  );
+
+  // Column D: Last Name - VLOOKUP from Member Directory
+  lookupSheet.getRange('D2').setFormula(
+    `=MAP(B2:B,LAMBDA(m,IF(m="","",IFERROR(VLOOKUP(m,'${mSheetName}'!${mMemberIdCol}:${mLastNameCol},${MEMBER_COLS.LAST_NAME},FALSE),""))))`
+  );
+
+  // Column E: Email - INDEX/MATCH from Member Directory
+  lookupSheet.getRange('E2').setFormula(
+    `=MAP(B2:B,LAMBDA(m,IF(m="","",IFERROR(INDEX('${mSheetName}'!${mEmailCol}:${mEmailCol},MATCH(m,'${mSheetName}'!${mMemberIdCol}:${mMemberIdCol},0)),""))))`
+  );
+
+  // Column F: Unit - INDEX/MATCH from Member Directory
+  lookupSheet.getRange('F2').setFormula(
+    `=MAP(B2:B,LAMBDA(m,IF(m="","",IFERROR(INDEX('${mSheetName}'!${mUnitCol}:${mUnitCol},MATCH(m,'${mSheetName}'!${mMemberIdCol}:${mMemberIdCol},0)),""))))`
+  );
+
+  // Column G: Location - INDEX/MATCH from Member Directory
+  lookupSheet.getRange('G2').setFormula(
+    `=MAP(B2:B,LAMBDA(m,IF(m="","",IFERROR(INDEX('${mSheetName}'!${mLocationCol}:${mLocationCol},MATCH(m,'${mSheetName}'!${mMemberIdCol}:${mMemberIdCol},0)),""))))`
+  );
+
+  // Column H: Assigned Steward - INDEX/MATCH from Member Directory
+  lookupSheet.getRange('H2').setFormula(
+    `=MAP(B2:B,LAMBDA(m,IF(m="","",IFERROR(INDEX('${mSheetName}'!${mStewardCol}:${mStewardCol},MATCH(m,'${mSheetName}'!${mMemberIdCol}:${mMemberIdCol},0)),""))))`
+  );
+
+  // Format the sheet
+  lookupSheet.setColumnWidth(1, 120);
+  lookupSheet.setColumnWidth(2, 100);
+  lookupSheet.setColumnWidth(3, 100);
+  lookupSheet.setColumnWidth(4, 100);
+  lookupSheet.setColumnWidth(5, 180);
+  lookupSheet.setColumnWidth(6, 100);
+  lookupSheet.setColumnWidth(7, 120);
+  lookupSheet.setColumnWidth(8, 150);
+
+  Logger.log('setupMemberLookupSheet: Hidden lookup sheet configured with self-healing formulas');
+}
+
+/**
+ * Syncs member data from hidden _Member_Lookup sheet to Grievance Log
+ * Updates columns C, D, X, Y, Z, AA with current member info.
+ *
+ * @returns {Object} { processed: number }
+ */
+function syncMemberLookupToGrievanceLog() {
+  const ss = SpreadsheetApp.getActive();
+  const lookupSheet = ss.getSheetByName(SHEETS.MEMBER_LOOKUP);
+  const grievanceLog = ss.getSheetByName(SHEETS.GRIEVANCE_LOG);
+
+  if (!lookupSheet) {
+    throw new Error('Member Lookup sheet not found. Run setupMemberLookupSheet() first.');
+  }
+  if (!grievanceLog) {
+    throw new Error('Grievance Log not found.');
+  }
+
+  // Force formulas to recalculate
+  SpreadsheetApp.flush();
+
+  // Read calculated values from hidden sheet (columns A-H, skip header)
+  const lookupLastRow = lookupSheet.getLastRow();
+  if (lookupLastRow < 2) {
+    return { processed: 0 };
+  }
+
+  const lookupData = lookupSheet.getRange(2, 1, lookupLastRow - 1, 8).getValues();
+
+  // Build lookup map: grievanceId -> { firstName, lastName, email, unit, location, steward }
+  const lookupMap = {};
+  for (let i = 0; i < lookupData.length; i++) {
+    const grievanceId = String(lookupData[i][0] || '');
+    if (grievanceId) {
+      lookupMap[grievanceId] = {
+        firstName: lookupData[i][2] || '',
+        lastName: lookupData[i][3] || '',
+        email: lookupData[i][4] || '',
+        unit: lookupData[i][5] || '',
+        location: lookupData[i][6] || '',
+        steward: lookupData[i][7] || ''
+      };
+    }
+  }
+
+  // Read Grievance Log grievance IDs
+  const grievanceLastRow = grievanceLog.getLastRow();
+  if (grievanceLastRow < 2) {
+    return { processed: 0 };
+  }
+
+  const grievanceIds = grievanceLog.getRange(2, GRIEVANCE_COLS.GRIEVANCE_ID, grievanceLastRow - 1, 1).getValues();
+
+  // Build output arrays matching Grievance Log row order
+  const firstNameArr = [];
+  const lastNameArr = [];
+  const emailArr = [];
+  const unitArr = [];
+  const locationArr = [];
+  const stewardArr = [];
+
+  for (let i = 0; i < grievanceIds.length; i++) {
+    const grievanceId = String(grievanceIds[i][0] || '');
+    const lookup = lookupMap[grievanceId];
+
+    if (lookup) {
+      firstNameArr.push([lookup.firstName]);
+      lastNameArr.push([lookup.lastName]);
+      emailArr.push([lookup.email]);
+      unitArr.push([lookup.unit]);
+      locationArr.push([lookup.location]);
+      stewardArr.push([lookup.steward]);
+    } else {
+      firstNameArr.push(['']);
+      lastNameArr.push(['']);
+      emailArr.push(['']);
+      unitArr.push(['']);
+      locationArr.push(['']);
+      stewardArr.push(['']);
+    }
+  }
+
+  // Write to Grievance Log columns C, D, X, Y, Z, AA
+  const numRows = firstNameArr.length;
+  if (numRows > 0) {
+    grievanceLog.getRange(2, GRIEVANCE_COLS.FIRST_NAME, numRows, 1).setValues(firstNameArr);      // C
+    grievanceLog.getRange(2, GRIEVANCE_COLS.LAST_NAME, numRows, 1).setValues(lastNameArr);        // D
+    grievanceLog.getRange(2, GRIEVANCE_COLS.MEMBER_EMAIL, numRows, 1).setValues(emailArr);        // X
+    grievanceLog.getRange(2, GRIEVANCE_COLS.UNIT, numRows, 1).setValues(unitArr);                 // Y
+    grievanceLog.getRange(2, GRIEVANCE_COLS.LOCATION, numRows, 1).setValues(locationArr);         // Z
+    grievanceLog.getRange(2, GRIEVANCE_COLS.STEWARD, numRows, 1).setValues(stewardArr);           // AA
+  }
+
+  Logger.log(`syncMemberLookupToGrievanceLog: Synced ${numRows} grievances`);
+  return { processed: numRows };
+}
+
+/**
+ * Refreshes member data in Grievance Log from hidden calculation sheet
+ *
+ * @returns {Object} Statistics about the sync
+ */
+function refreshGrievanceLogMemberData() {
+  const startTime = new Date();
+
+  SpreadsheetApp.getActive().toast('Syncing member data to Grievance Log...', 'Please wait', -1);
+
+  try {
+    // Step 1: Setup/repair the hidden lookup sheet
+    setupMemberLookupSheet();
+
+    // Step 2: Sync to Grievance Log
+    const result = syncMemberLookupToGrievanceLog();
+
+    const duration = new Date() - startTime;
+    SpreadsheetApp.getActive().toast(
+      `✅ Synced ${result.processed} grievances in ${(duration / 1000).toFixed(1)}s`,
+      'Complete',
+      5
+    );
+
+    return {
+      processed: result.processed,
+      duration: duration,
+      message: `Synced ${result.processed} grievances in ${duration}ms`
+    };
+  } catch (error) {
+    Logger.log('Error in refreshGrievanceLogMemberData: ' + error.message);
+    SpreadsheetApp.getUi().alert('Error: ' + error.message);
+    return { processed: 0, error: error.message };
+  }
+}
+
+/**
+ * onEdit trigger handler for auto-syncing member data to Grievance Log
+ * Called when any cell is edited. Only acts on Member Directory changes.
+ *
+ * @param {Object} e - Edit event object
+ */
+function onEditSyncMemberData(e) {
+  try {
+    const sheet = e.source.getActiveSheet();
+    const sheetName = sheet.getName();
+
+    // Only sync when Member Directory is edited
+    if (sheetName !== SHEETS.MEMBER_DIR) {
+      return;
+    }
+
+    // Check if edit was in relevant columns
+    const editCol = e.range.getColumn();
+    const relevantCols = [
+      MEMBER_COLS.MEMBER_ID,
+      MEMBER_COLS.FIRST_NAME,
+      MEMBER_COLS.LAST_NAME,
+      MEMBER_COLS.EMAIL,
+      MEMBER_COLS.UNIT,
+      MEMBER_COLS.WORK_LOCATION,
+      MEMBER_COLS.ASSIGNED_STEWARD
+    ];
+
+    if (relevantCols.includes(editCol)) {
+      // Debounce: Only sync if more than 2 seconds since last sync
+      const cache = CacheService.getScriptCache();
+      const lastSync = cache.get('lastMemberSync');
+      const now = new Date().getTime();
+
+      if (!lastSync || (now - parseInt(lastSync)) > 2000) {
+        cache.put('lastMemberSync', now.toString(), 60);
+
+        // Sync after a brief delay to allow formula recalculation
+        Utilities.sleep(500);
+        syncMemberLookupToGrievanceLog();
+      }
+    }
+  } catch (error) {
+    // Silent fail for onEdit - don't interrupt user
+    Logger.log('onEditSyncMemberData error: ' + error.message);
+  }
+}
+
+/**
+ * Installs the auto-sync trigger for member data
+ * Call this once during setup or repair.
+ */
+function installMemberSyncTrigger() {
+  const ss = SpreadsheetApp.getActive();
+
+  // Remove existing triggers for this function
+  const triggers = ScriptApp.getUserTriggers(ss);
+  for (const trigger of triggers) {
+    if (trigger.getHandlerFunction() === 'onEditSyncMemberData') {
+      ScriptApp.deleteTrigger(trigger);
+    }
+  }
+
+  // Install new trigger
+  ScriptApp.newTrigger('onEditSyncMemberData')
+    .forSpreadsheet(ss)
+    .onEdit()
+    .create();
+
+  Logger.log('installMemberSyncTrigger: Auto-sync trigger installed');
+}
+
+/**
+ * Removes the auto-sync trigger for member data
+ */
+function removeMemberSyncTrigger() {
+  const ss = SpreadsheetApp.getActive();
+  const triggers = ScriptApp.getUserTriggers(ss);
+
+  for (const trigger of triggers) {
+    if (trigger.getHandlerFunction() === 'onEditSyncMemberData') {
+      ScriptApp.deleteTrigger(trigger);
+      Logger.log('removeMemberSyncTrigger: Trigger removed');
+    }
+  }
+}
+
+/**
+ * Refresh all calculated data (Grievance Log + Member Directory)
+ * Recalculates static values for both sheets - NO formulas in visible sheets.
+ *
+ * Cross-population flows:
+ * 1. Grievance Log timeline columns (H, J, L, N, P, S, T, U) - batch calculated
+ * 2. Member Directory grievance columns (AB, AC, AD) - from hidden _Grievance_Calc
+ * 3. Grievance Log member columns (C, D, X, Y, Z, AA) - from hidden _Member_Lookup
  */
 function refreshAllFormulas() {
   const ui = SpreadsheetApp.getUi();
-  SpreadsheetApp.getActive().toast('Refreshing all formulas...', 'Please wait', -1);
+  SpreadsheetApp.getActive().toast('Recalculating all data...', 'Please wait', -1);
 
   try {
-    // Refresh Grievance Log calculated values
+    // 1. Recalculate Grievance Log timeline columns (H, J, L, N, P, S, T, U)
     const grievanceResult = recalcAllGrievancesBatched();
 
-    // Refresh Member Directory cross-population formulas
-    refreshMemberDirectoryFormulas();
+    // 2. Recalculate Member Directory grievance columns (AB, AC, AD)
+    const memberDirResult = refreshMemberDirectoryFormulas();
+
+    // 3. Recalculate Grievance Log member columns (C, D, X, Y, Z, AA)
+    const grievanceMemberResult = refreshGrievanceLogMemberData();
 
     ui.alert(
-      '✅ Formulas Refreshed',
-      `Grievance Log: ${grievanceResult.processed} rows recalculated\n` +
-      'Member Directory: Cross-population formulas applied\n\n' +
-      'Grievance data should now appear in Member Directory columns AB-AD.',
+      '✅ All Data Refreshed',
+      `Grievance Log timelines: ${grievanceResult.processed} rows recalculated\n` +
+      `Member Directory grievance data: ${memberDirResult.processed} members updated\n` +
+      `Grievance Log member data: ${grievanceMemberResult.processed} grievances updated\n\n` +
+      'All cross-population now uses hidden sheets with auto-sync triggers.',
       ui.ButtonSet.OK
     );
   } catch (error) {
@@ -2436,32 +3013,23 @@ function setupFormulasAndCalculations() {
   const existingRules = grievanceLog.getConditionalFormatRules();
   grievanceLog.setConditionalFormatRules([overdueRule, dueTodayRule, dueSoonRule, onTrackRule, ...existingRules]);
 
-  // ----- MEMBER DIRECTORY FORMULAS -----
-  // IMPORTANT: Using 21000 rows to support large datasets (20k members + 1k buffer)
+  // ----- MEMBER DIRECTORY GRIEVANCE DATA -----
+  // ============================================================================
+  // CALCULATED COLUMNS - NO FORMULAS IN SHEET
+  // ============================================================================
+  // Member Directory columns AB-AD are populated with STATIC VALUES by
+  // refreshMemberDirectoryFormulas() - NO formulas in visible sheets.
+  //
+  // Column AB: Has Open Grievance? ("Yes"/"No")
+  // Column AC: Grievance Status Snapshot (status text)
+  // Column AD: Next Grievance Deadline (date)
+  //
+  // Data is calculated by reading Grievance Log and matching Member IDs.
+  // To recalculate: Menu → Dashboard → Grievance Tools → Refresh Member Directory Data
+  // ============================================================================
 
-  // Has Open Grievance? - Column AB (28)
-  // Uses MAP/LAMBDA to check each member for active grievances
-  // Counts grievances with ANY active status: Open, Pending Info, Appealed, In Arbitration
-  const hasGrievanceCol = getColumnLetter(MEMBER_COLS.HAS_OPEN_GRIEVANCE);
-  memberDir.getRange(hasGrievanceCol + "2").setFormula(
-    `=MAP(A2:A21000,LAMBDA(m,IF(m="","",IF(SUM(COUNTIFS('Grievance Log'!${gMemberIdCol}:${gMemberIdCol},m,'Grievance Log'!${gStatusCol}:${gStatusCol},{"Open","Pending Info","Appealed","In Arbitration"}))>0,"Yes","No"))))`
-  );
-
-  // Grievance Status Snapshot - Column AC (29)
-  // Uses MAP/LAMBDA with LET/FILTER to prioritize ACTIVE grievances over closed ones
-  // This ensures consistency with HAS_OPEN_GRIEVANCE column
-  const statusSnapshotCol = getColumnLetter(MEMBER_COLS.GRIEVANCE_STATUS);
-  memberDir.getRange(statusSnapshotCol + "2").setFormula(
-    `=MAP(A2:A21000,LAMBDA(m,IF(m="","",LET(activeStatus,FILTER('Grievance Log'!${gStatusCol}:${gStatusCol},('Grievance Log'!${gMemberIdCol}:${gMemberIdCol}=m)*REGEXMATCH('Grievance Log'!${gStatusCol}:${gStatusCol},"^(Open|Pending Info|Appealed|In Arbitration)$")),IFERROR(INDEX(activeStatus,1),IFERROR(INDEX('Grievance Log'!${gStatusCol}:${gStatusCol},MATCH(m,'Grievance Log'!${gMemberIdCol}:${gMemberIdCol},0)),""))))))`
-  );
-
-  // Next Grievance Deadline - Column AD (30)
-  // Uses MAP/LAMBDA with LET/FILTER to prioritize deadlines from ACTIVE grievances
-  // This ensures the deadline shown corresponds to an active case, not a closed one
-  const nextDeadlineCol = getColumnLetter(MEMBER_COLS.NEXT_DEADLINE);
-  memberDir.getRange(nextDeadlineCol + "2").setFormula(
-    `=MAP(A2:A21000,LAMBDA(m,IF(m="","",LET(activeDeadline,FILTER('Grievance Log'!${gNextActionCol}:${gNextActionCol},('Grievance Log'!${gMemberIdCol}:${gMemberIdCol}=m)*REGEXMATCH('Grievance Log'!${gStatusCol}:${gStatusCol},"^(Open|Pending Info|Appealed|In Arbitration)$")),IFERROR(INDEX(activeDeadline,1),IFERROR(INDEX('Grievance Log'!${gNextActionCol}:${gNextActionCol},MATCH(m,'Grievance Log'!${gMemberIdCol}:${gMemberIdCol},0)),""))))))`
-  );
+  // Populate Member Directory grievance columns with static values
+  refreshMemberDirectoryFormulas();
 
   // Apply progress bar formatting
   setupGrievanceProgressBar();
