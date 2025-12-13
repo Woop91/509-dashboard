@@ -175,6 +175,85 @@ Set up automated tasks to save time.
 3. Configure settings
 4. Test before deploying
     `
+  },
+  {
+    id: 'hidden-sheets',
+    category: 'Automation',
+    title: 'Hidden Sheet Architecture',
+    keywords: 'hidden sheets auto-populate sync triggers formulas cross-sheet',
+    content: `
+# Hidden Sheet Architecture
+
+The dashboard uses hidden calculation sheets for automatic cross-sheet data synchronization.
+
+## What Are Hidden Sheets?
+Hidden sheets (prefixed with "_") contain self-healing formulas that calculate data. When you edit a source sheet, triggers automatically sync the calculated values to destination sheets.
+
+## The 4 Hidden Sheets
+
+| Hidden Sheet | Source → Destination |
+|--------------|---------------------|
+| _Grievance_Calc | Grievance Log → Member Directory (AB-AD) |
+| _Member_Lookup | Member Directory → Grievance Log (C, D, X-AA) |
+| _Steward_Contact_Calc | Communications Log → Member Directory (Y-AA) |
+| _Engagement_Calc | Meeting/Volunteer → Member Directory (Q-T) |
+
+## How Auto-Sync Works
+1. You edit a source sheet (e.g., Grievance Log)
+2. An onEdit trigger fires automatically
+3. The hidden sheet recalculates its formulas
+4. Calculated values are written to the destination sheet
+
+## Troubleshooting
+- **Columns not updating?** Run Administrator → Setup & Triggers → Verify Hidden Sheets
+- **Need full repair?** Run REPAIR_DASHBOARD() from Apps Script
+- **Check status:** Run VERIFY_HIDDEN_SHEETS() for diagnosis
+
+## Self-Healing
+The architecture is designed to self-repair:
+- REPAIR_DASHBOARD() recreates all hidden sheets
+- Missing triggers are reinstalled automatically
+- Corrupted formulas are replaced
+    `
+  },
+  {
+    id: 'engagement-tracking',
+    category: 'Automation',
+    title: 'Engagement Tracking Setup',
+    keywords: 'engagement meetings volunteer hours Q R S T columns',
+    content: `
+# Engagement Tracking
+
+Track member engagement with meetings and volunteer activities.
+
+## What Gets Tracked
+Member Directory columns Q-T auto-populate from source sheets:
+- **Q - Last Virtual Meeting**: Most recent virtual meeting attended
+- **R - Last In-Person Meeting**: Most recent in-person meeting attended
+- **S - Open Rate**: Email engagement (requires Email Analytics)
+- **T - Volunteer Hours**: Total hours from Volunteer Hours sheet
+
+## Setup Steps
+1. Go to Administrator → Setup & Triggers → Setup Engagement Tracking
+2. This creates:
+   - 📅 Meeting Attendance sheet
+   - 🤝 Volunteer Hours sheet
+   - _Engagement_Calc hidden sheet
+   - Auto-sync trigger
+
+## Meeting Attendance Sheet
+Enter meeting data with columns:
+- Date, Type (Virtual/In-Person/Hybrid), Meeting Name
+- Member ID, Member Name, Attended (Yes/No), Notes
+
+## Volunteer Hours Sheet
+Track volunteer activities:
+- Date, Member ID, Member Name
+- Activity Type, Hours, Verified By, Notes
+
+## How It Works
+When you add entries to Meeting Attendance or Volunteer Hours, the _Engagement_Calc hidden sheet calculates totals per member, and the trigger syncs values to Member Directory.
+    `
   }
 ];
 

@@ -29,18 +29,25 @@ const SHEET_HELP = {
       { task: 'Add New Member', steps: 'Enter data in the next empty row. Member ID auto-generates.' },
       { task: 'Start Grievance', steps: 'Check the "Start Grievance" checkbox (column AE) for the member.' },
       { task: 'Search Members', steps: 'Use Ctrl+F or Dashboard menu → Search & Lookup → Search Members.' },
-      { task: 'Contact Member', steps: 'Click their email to compose, or use Quick Actions menu.' }
+      { task: 'Contact Member', steps: 'Click their email to compose, or use Quick Actions menu.' },
+      { task: 'Verify Auto-Population', steps: 'Run Administrator → Setup & Triggers → Verify Hidden Sheets to check AB-AD, Y-AA, Q-T.' }
     ],
     columns: [
       { name: 'Member ID (A)', desc: 'Unique identifier, format M000001' },
       { name: 'Name (B-C)', desc: 'First and last name' },
       { name: 'Email/Phone (H-I)', desc: 'Primary contact information' },
       { name: 'Assigned Steward (P)', desc: 'Union steward responsible for this member' },
+      { name: 'Engagement (Q-T)', desc: 'Auto-populated from Meeting Attendance & Volunteer Hours sheets' },
+      { name: 'Steward Contact (Y-AA)', desc: 'Auto-populated from Communications Log' },
+      { name: 'Grievance Data (AB-AD)', desc: 'Auto-populated from Grievance Log (Has Open, Status, Deadline)' },
       { name: 'Start Grievance (AE)', desc: 'Checkbox to initiate new grievance' }
     ],
     tips: [
       'Columns Q-X are hidden by default. Use Column Toggles to show engagement metrics.',
-      'The last three columns (AB-AD) auto-calculate grievance status from the Grievance Log.',
+      'Columns AB-AD auto-update from hidden _Grievance_Calc sheet when Grievance Log changes.',
+      'Columns Y-AA auto-update from Communications Log via hidden _Steward_Contact_Calc sheet.',
+      'Columns Q-T auto-update from Meeting Attendance and Volunteer Hours sheets.',
+      'Run VERIFY_HIDDEN_SHEETS() to diagnose any auto-population issues.',
       'Use the Quick Actions menu (Dashboard → Grievance Tools) for common operations.'
     ]
   },
@@ -52,20 +59,26 @@ const SHEET_HELP = {
       { task: 'Update Status', steps: 'Change the Status column (E) to reflect current state.' },
       { task: 'Record Decision', steps: 'Enter date in the appropriate "Decision Rcvd" column.' },
       { task: 'Close Grievance', steps: 'Set Status to Settled/Closed and enter Date Closed (R).' },
-      { task: 'View Deadline', steps: 'Check "Next Action Due" (T) or "Days to Deadline" (U).' }
+      { task: 'View Deadline', steps: 'Check "Next Action Due" (T) or "Days to Deadline" (U).' },
+      { task: 'Fix Stale Member Data', steps: 'Run REPAIR_DASHBOARD() if C-D or X-AA stop updating from Member Directory.' }
     ],
     columns: [
       { name: 'Grievance ID (A)', desc: 'Unique identifier, format G-000001-A' },
+      { name: 'Member Info (C-D)', desc: 'Names auto-updated from Member Directory via hidden sheet' },
       { name: 'Status (E)', desc: 'Open, Pending Info, Settled, Withdrawn, Closed, Appealed' },
       { name: 'Current Step (F)', desc: 'Informal, Step I, Step II, Step III, Mediation, Arbitration' },
       { name: 'Filing Deadline (H)', desc: 'Auto-calculated: Incident Date + 21 days' },
-      { name: 'Next Action Due (T)', desc: 'Auto-calculated next deadline based on current step' }
+      { name: 'Next Action Due (T)', desc: 'Auto-calculated next deadline based on current step' },
+      { name: 'Member Details (X-AA)', desc: 'Email, Unit, Location, Steward - auto-updated from Member Directory' }
     ],
     tips: [
       'Yellow cells indicate approaching deadlines (< 7 days). Red cells are overdue.',
       'All deadline columns auto-calculate based on contract rules.',
+      'Columns C-D (names) and X-AA (email, unit, location, steward) auto-update from Member Directory.',
+      'When you edit Member Directory, the hidden _Member_Lookup sheet syncs changes here.',
       'Use the Grievance Float Toggle to highlight priority cases.',
-      'Sync deadlines to Google Calendar with the Calendar Integration menu.'
+      'Sync deadlines to Google Calendar with the Calendar Integration menu.',
+      'Run VERIFY_HIDDEN_SHEETS() if member data stops updating.'
     ]
   },
   'Dashboard': {
