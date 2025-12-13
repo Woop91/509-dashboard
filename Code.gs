@@ -6647,15 +6647,56 @@ function setupInteractiveDashboardCalcSheet() {
   calcSheet.setColumnWidth(2, 120);
   calcSheet.setColumnWidth(3, 100);
 
-  Logger.log('setupInteractiveDashboardCalcSheet: Hidden calculation sheet configured with ' + metrics.length + ' metrics');
+  // ============================================
+  // CHART DATA SECTION (v3.48) - Self-healing formulas for chart data
+  // ============================================
+
+  // Status Chart Data (starting at row 25)
+  const statusStartRow = 25;
+  calcSheet.getRange(statusStartRow, 1, 1, 2).setValues([['STATUS CHART DATA', 'Count']]);
+  calcSheet.getRange(statusStartRow, 1, 1, 2).setFontWeight('bold').setBackground('#DBEAFE');
+
+  const statuses = ['Open', 'Pending Info', 'Appealed', 'In Arbitration', 'Settled', 'Closed', 'Withdrawn', 'Denied'];
+  for (let i = 0; i < statuses.length; i++) {
+    calcSheet.getRange(statusStartRow + 1 + i, 1).setValue(statuses[i]);
+    calcSheet.getRange(statusStartRow + 1 + i, 2).setFormula(
+      `=COUNTIF('${gSheetName}'!${gStatusCol}:${gStatusCol},"${statuses[i]}")`
+    );
+  }
+
+  // Location Chart Data (starting at row 35)
+  const locationStartRow = 35;
+  const gLocationCol = getColumnLetter(GRIEVANCE_COLS.LOCATION);
+  calcSheet.getRange(locationStartRow, 1, 1, 2).setValues([['LOCATION CHART DATA', 'Count']]);
+  calcSheet.getRange(locationStartRow, 1, 1, 2).setFontWeight('bold').setBackground('#DCFCE7');
+
+  // Use QUERY to get top 15 locations by grievance count
+  calcSheet.getRange(locationStartRow + 1, 1).setFormula(
+    `=IFERROR(QUERY({'${gSheetName}'!${gLocationCol}2:${gLocationCol}},"SELECT Col1, COUNT(Col1) WHERE Col1 IS NOT NULL GROUP BY Col1 ORDER BY COUNT(Col1) DESC LIMIT 15 LABEL COUNT(Col1) ''"),{"No Data",0})`
+  );
+
+  // Top Items Data (starting at row 55) - for the data table
+  const topItemsStartRow = 55;
+  calcSheet.getRange(topItemsStartRow, 1, 1, 4).setValues([['TOP ITEMS DATA', 'Value', 'Details', 'Status']]);
+  calcSheet.getRange(topItemsStartRow, 1, 1, 4).setFontWeight('bold').setBackground('#FEF3C7');
+
+  // Top 10 upcoming deadlines (grievances with nearest Next Action Due)
+  const gNextActionDueCol = getColumnLetter(GRIEVANCE_COLS.NEXT_ACTION_DUE);
+  const gFirstNameCol = getColumnLetter(GRIEVANCE_COLS.FIRST_NAME);
+  const gLastNameCol = getColumnLetter(GRIEVANCE_COLS.LAST_NAME);
+  calcSheet.getRange(topItemsStartRow + 1, 1).setFormula(
+    `=IFERROR(QUERY({'${gSheetName}'!${gGrievanceIdCol}2:${gGrievanceIdCol},'${gSheetName}'!${gFirstNameCol}2:${gFirstNameCol}&" "&'${gSheetName}'!${gLastNameCol}2:${gLastNameCol},'${gSheetName}'!${gNextActionDueCol}2:${gNextActionDueCol},'${gSheetName}'!${gStatusCol}2:${gStatusCol}},"SELECT Col1, Col2, Col3, Col4 WHERE Col3 IS NOT NULL AND Col4 MATCHES 'Open|Pending Info|Appealed|In Arbitration' ORDER BY Col3 LIMIT 10"),{"","","",""})`
+  );
+
+  Logger.log('setupInteractiveDashboardCalcSheet: Hidden calculation sheet configured with ' + metrics.length + ' metrics + chart data (v3.48)');
 }
 
 /**
  * Syncs calculated values from hidden _Interactive_Dashboard_Calc sheet to Interactive Dashboard
- * Updates the metric cards with live data
+ * Updates metric cards, chart data, and rebuilds charts with live data (v3.48)
  *
  * @returns {Object} { processed: number }
- * @since v3.46
+ * @since v3.46, updated v3.48 for chart data
  */
 function syncInteractiveDashboardFromCalc() {
   const ss = SpreadsheetApp.getActive();
@@ -6674,19 +6715,15 @@ function syncInteractiveDashboardFromCalc() {
   // Force formulas to recalculate
   SpreadsheetApp.flush();
 
-  // Read calculated values from hidden sheet
-  const calcLastRow = calcSheet.getLastRow();
-  if (calcLastRow < 2) {
-    return { processed: 0 };
-  }
-
-  const calcData = calcSheet.getRange(2, 1, calcLastRow - 1, 2).getValues();
+  // Read calculated values from hidden sheet (metrics in rows 2-21)
+  const metricsData = calcSheet.getRange(2, 1, 20, 2).getValues();
 
   // Build metrics object
   const metrics = {};
-  for (let i = 0; i < calcData.length; i++) {
-    const metricName = calcData[i][0];
-    const value = calcData[i][1];
+  for (let i = 0; i < metricsData.length; i++) {
+    const metricName = metricsData[i][0];
+    const value = metricsData[i][1];
+    if (!metricName) continue;
     // Convert metric name to camelCase key
     const key = metricName.replace(/[^a-zA-Z0-9 ]/g, '').replace(/\s+(.)/g, function(m, c) { return c.toUpperCase(); }).replace(/\s/g, '').replace(/^(.)/, function(m, c) { return c.toLowerCase(); });
     metrics[key] = value;
@@ -6720,8 +6757,170 @@ function syncInteractiveDashboardFromCalc() {
   // Update celebration messages
   updateDashboardCelebrationMessages(dashboard, metrics);
 
-  Logger.log('syncInteractiveDashboardFromCalc: Updated dashboard with ' + Object.keys(metrics).length + ' metrics');
+  // ============================================
+  // CHART DATA SYNC (v3.48)
+  // ============================================
+
+  // Read status chart data from hidden sheet (row 26-33: 8 statuses)
+  const statusData = calcSheet.getRange(26, 1, 8, 2).getValues();
+  // Filter to only rows with data
+  const validStatusData = statusData.filter(row => row[0] && row[1] > 0);
+
+  // Read location chart data from hidden sheet (row 36+: up to 15 locations)
+  const locationData = calcSheet.getRange(36, 1, 15, 2).getValues();
+  // Filter to only rows with data
+  const validLocationData = locationData.filter(row => row[0] && row[0] !== '' && row[1] > 0);
+
+  // Read top items data from hidden sheet (row 56+: up to 10 items)
+  const topItemsData = calcSheet.getRange(56, 1, 10, 4).getValues();
+  // Filter to only rows with data
+  const validTopItemsData = topItemsData.filter(row => row[0] && row[0] !== '');
+
+  // Write chart data to hidden areas on the dashboard (row 100+)
+  // These ranges will be used by charts
+
+  // Status data (row 100-110)
+  const statusDataRange = dashboard.getRange(100, 1, 10, 2);
+  statusDataRange.clear();
+  dashboard.getRange(100, 1).setValue('Status');
+  dashboard.getRange(100, 2).setValue('Count');
+  if (validStatusData.length > 0) {
+    dashboard.getRange(101, 1, validStatusData.length, 2).setValues(validStatusData);
+  }
+
+  // Location data (row 115-130)
+  const locationDataRange = dashboard.getRange(115, 1, 17, 2);
+  locationDataRange.clear();
+  dashboard.getRange(115, 1).setValue('Location');
+  dashboard.getRange(115, 2).setValue('Count');
+  if (validLocationData.length > 0) {
+    dashboard.getRange(116, 1, validLocationData.length, 2).setValues(validLocationData);
+  }
+
+  // Top items data (row 135-150)
+  const topItemsRange = dashboard.getRange(135, 1, 12, 4);
+  topItemsRange.clear();
+  dashboard.getRange(135, 1, 1, 4).setValues([['Grievance ID', 'Member Name', 'Next Deadline', 'Status']]);
+  if (validTopItemsData.length > 0) {
+    dashboard.getRange(136, 1, validTopItemsData.length, 4).setValues(validTopItemsData);
+  }
+
+  // Build/rebuild charts using the data ranges
+  syncDashboardCharts(dashboard, validStatusData, validLocationData);
+
+  // Update the data table in the visible area
+  syncDashboardDataTable(dashboard, validTopItemsData);
+
+  Logger.log('syncInteractiveDashboardFromCalc: Updated dashboard with ' + Object.keys(metrics).length + ' metrics + chart data (v3.48)');
   return { processed: Object.keys(metrics).length };
+}
+
+/**
+ * Syncs/rebuilds charts on the Interactive Dashboard using data from hidden areas
+ * @param {Sheet} dashboard - The dashboard sheet
+ * @param {Array} statusData - Status chart data [status, count]
+ * @param {Array} locationData - Location chart data [location, count]
+ * @since v3.48
+ */
+function syncDashboardCharts(dashboard, statusData, locationData) {
+  // Remove existing charts to rebuild them
+  const existingCharts = dashboard.getCharts();
+  for (let i = 0; i < existingCharts.length; i++) {
+    dashboard.removeChart(existingCharts[i]);
+  }
+
+  // Only create charts if we have data
+  if (statusData.length === 0 && locationData.length === 0) {
+    Logger.log('syncDashboardCharts: No chart data available');
+    return;
+  }
+
+  // Create Status Donut Chart (row 48, col 1)
+  if (statusData.length > 0) {
+    const statusRange = dashboard.getRange(100, 1, statusData.length + 1, 2);
+    const statusChart = dashboard.newChart()
+      .setChartType(Charts.ChartType.PIE)
+      .addRange(statusRange)
+      .setPosition(48, 1, 0, 0)
+      .setOption('title', '🎯 Grievances by Status')
+      .setOption('pieHole', 0.4)
+      .setOption('width', 500)
+      .setOption('height', 280)
+      .setOption('legend', {position: 'right'})
+      .setOption('colors', ['#7EC8E3', '#059669', '#F97316', '#DC2626', '#7C3AED', '#0EA5E9', '#FBBF24', '#6B7280'])
+      .build();
+    dashboard.insertChart(statusChart);
+  }
+
+  // Create Location Pie Chart (row 48, col 11)
+  if (locationData.length > 0) {
+    const locationRange = dashboard.getRange(115, 1, locationData.length + 1, 2);
+    const locationChart = dashboard.newChart()
+      .setChartType(Charts.ChartType.PIE)
+      .addRange(locationRange)
+      .setPosition(48, 11, 0, 0)
+      .setOption('title', '🗺️ Top Locations by Grievances')
+      .setOption('width', 500)
+      .setOption('height', 280)
+      .setOption('legend', {position: 'right'})
+      .setOption('colors', ['#7EC8E3', '#059669', '#F97316', '#DC2626', '#7C3AED', '#0EA5E9', '#FBBF24', '#6B7280', '#10B981', '#EF4444'])
+      .build();
+    dashboard.insertChart(locationChart);
+  }
+
+  // Create Location Bar Chart (row 71, col 1)
+  if (locationData.length > 0) {
+    const barLocationRange = dashboard.getRange(115, 1, locationData.length + 1, 2);
+    const barChart = dashboard.newChart()
+      .setChartType(Charts.ChartType.BAR)
+      .addRange(barLocationRange)
+      .setPosition(71, 1, 0, 0)
+      .setOption('title', '💪 Grievances by City/Location')
+      .setOption('width', 1000)
+      .setOption('height', 260)
+      .setOption('legend', {position: 'none'})
+      .setOption('colors', ['#7C3AED'])
+      .setOption('hAxis', {title: 'Number of Grievances'})
+      .setOption('vAxis', {title: ''})
+      .build();
+    dashboard.insertChart(barChart);
+  }
+
+  Logger.log('syncDashboardCharts: Created ' + (statusData.length > 0 ? 1 : 0) + ' status chart, ' +
+             (locationData.length > 0 ? 2 : 0) + ' location charts');
+}
+
+/**
+ * Updates the data table on the Interactive Dashboard with top items
+ * @param {Sheet} dashboard - The dashboard sheet
+ * @param {Array} topItemsData - Top items data [id, name, deadline, status]
+ * @since v3.48
+ */
+function syncDashboardDataTable(dashboard, topItemsData) {
+  // The data table is typically at row 90+ on the dashboard
+  // Clear the table area and write new data
+  const tableStartRow = 90;
+  const tableRange = dashboard.getRange(tableStartRow, 1, 12, 4);
+  tableRange.clear();
+
+  // Write header
+  dashboard.getRange(tableStartRow, 1, 1, 4)
+    .setValues([['📋 Grievance ID', '👤 Member', '📅 Next Deadline', '📊 Status']])
+    .setFontWeight('bold')
+    .setBackground('#E5E7EB');
+
+  // Write data
+  if (topItemsData.length > 0) {
+    const dataRows = Math.min(topItemsData.length, 10);
+    dashboard.getRange(tableStartRow + 1, 1, dataRows, 4).setValues(topItemsData.slice(0, dataRows));
+
+    // Format the date column
+    dashboard.getRange(tableStartRow + 1, 3, dataRows, 1).setNumberFormat('MM/DD/YYYY');
+  } else {
+    dashboard.getRange(tableStartRow + 1, 1, 1, 4)
+      .setValues([['No upcoming deadlines', '-', '-', '-']])
+      .setFontStyle('italic');
+  }
 }
 
 /**
