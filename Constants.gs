@@ -51,6 +51,8 @@ const SHEETS = {
   MEMBER_LOOKUP: "_Member_Lookup",    // Hidden sheet with auto-update formulas for Grievance Log
   STEWARD_CONTACT_CALC: "_Steward_Contact_Calc",  // Hidden sheet for steward contact tracking (Y-AA)
   ENGAGEMENT_CALC: "_Engagement_Calc",  // Hidden sheet for engagement metrics (Q-T)
+  STEWARD_WORKLOAD_CALC: "_Steward_Workload_Calc",  // Hidden sheet for steward workload auto-calculations (v3.45)
+  INTERACTIVE_DASHBOARD_CALC: "_Interactive_Dashboard_Calc",  // Hidden sheet for dashboard metrics (v3.46)
 
   // Engagement source sheets
   MEETING_ATTENDANCE: "📅 Meeting Attendance",  // Source sheet for engagement metrics Q-R
@@ -124,7 +126,7 @@ const COLORS = {
  * @const {Object}
  */
 const MEMBER_COLS = {
-  // 31 columns total - Reorganized for logical grouping
+  // 34 columns total - Reorganized for logical grouping
   // Section 1: Identity & Core Info (A-D)
   MEMBER_ID: 1,                    // A
   FIRST_NAME: 2,                   // B
@@ -159,11 +161,14 @@ const MEMBER_COLS = {
   RECENT_CONTACT_DATE: 25,         // Y
   CONTACT_STEWARD: 26,             // Z
   CONTACT_NOTES: 27,               // AA
-  // Section 8: Grievance Management (AB-AE)
-  HAS_OPEN_GRIEVANCE: 28,          // AB
-  GRIEVANCE_STATUS: 29,            // AC
-  NEXT_DEADLINE: 30,               // AD
+  // Section 8: Grievance Management (AB-AH) - Extended in v3.45
+  HAS_OPEN_GRIEVANCE: 28,          // AB - Auto-populated from _Grievance_Calc
+  GRIEVANCE_STATUS: 29,            // AC - Auto-populated from _Grievance_Calc
+  NEXT_DEADLINE: 30,               // AD - Auto-populated from _Grievance_Calc
   START_GRIEVANCE: 31,             // AE - Checkbox to start grievance with prepopulated member info
+  TOTAL_GRIEVANCE_COUNT: 32,       // AF - Auto-populated from _Grievance_Calc (v3.45)
+  GRIEVANCE_WIN_RATE: 33,          // AG - Auto-populated from _Grievance_Calc (v3.45)
+  LAST_GRIEVANCE_DATE: 34,         // AH - Auto-populated from _Grievance_Calc (v3.45)
 
   // ALIAS - For backward compatibility
   LOCATION: 5                      // Alias for WORK_LOCATION
@@ -994,7 +999,12 @@ function mapMemberRow(row) {
     // Grievance Status
     hasOpenGrievance: row[MEMBER_COLS.HAS_OPEN_GRIEVANCE - 1] || '',
     grievanceStatus: row[MEMBER_COLS.GRIEVANCE_STATUS - 1] || '',
-    nextDeadline: row[MEMBER_COLS.NEXT_DEADLINE - 1] || ''
+    nextDeadline: row[MEMBER_COLS.NEXT_DEADLINE - 1] || '',
+
+    // Grievance Stats (v3.45)
+    totalGrievanceCount: row[MEMBER_COLS.TOTAL_GRIEVANCE_COUNT - 1] || 0,
+    grievanceWinRate: row[MEMBER_COLS.GRIEVANCE_WIN_RATE - 1] || 0,
+    lastGrievanceDate: row[MEMBER_COLS.LAST_GRIEVANCE_DATE - 1] || ''
   };
 }
 

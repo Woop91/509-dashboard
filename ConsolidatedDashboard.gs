@@ -4491,7 +4491,7 @@ function createMemberDirectory() {
     memberDir = ss.insertSheet(SHEETS.MEMBER_DIR);
   }
 
-  // Member Directory columns (31 total) - Reorganized for logical grouping
+  // Member Directory columns (34 total) - Reorganized for logical grouping
   const headers = [
     // Section 1: Identity & Core Info (A-D)
     "Member ID",                       // A - 1
@@ -4527,11 +4527,14 @@ function createMemberDirectory() {
     "Most Recent Steward Contact Date",// Y - 25
     "Steward Who Contacted Member",    // Z - 26
     "Notes from Steward Contact",      // AA - 27
-    // Section 8: Grievance Management (AB-AE)
-    "Has Open Grievance?",             // AB - 28
-    "Grievance Status Snapshot",       // AC - 29
-    "Next Grievance Deadline",         // AD - 30
-    "Start Grievance"                  // AE - 31
+    // Section 8: Grievance Management (AB-AH) - Extended in v3.45
+    "Has Open Grievance?",             // AB - 28 (auto-populated)
+    "Grievance Status Snapshot",       // AC - 29 (auto-populated)
+    "Next Grievance Deadline",         // AD - 30 (auto-populated)
+    "Start Grievance",                 // AE - 31 (checkbox)
+    "Total Grievance Count",           // AF - 32 (auto-populated v3.45)
+    "Win Rate (%)",                    // AG - 33 (auto-populated v3.45)
+    "Last Grievance Date"              // AH - 34 (auto-populated v3.45)
   ];
 
   // Update headers (row 1 only - preserves data in rows 2+)

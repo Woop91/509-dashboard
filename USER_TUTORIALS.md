@@ -1,6 +1,6 @@
 # 509 Dashboard - User Tutorials
 
-**Version:** 3.44
+**Version:** 3.45
 **Last Updated:** 2025-12-13
 
 Quick, practical tutorials for common tasks in the 509 Dashboard.
@@ -344,9 +344,9 @@ After entering, these columns auto-populate:
 
 ### What Are Hidden Sheets?
 
-The dashboard uses 4 "hidden" calculation sheets (prefixed with "_") to automatically synchronize data between sheets. You don't see these sheets, but they power the auto-updating columns.
+The dashboard uses 5 "hidden" calculation sheets (prefixed with "_") to automatically synchronize data between sheets. You don't see these sheets, but they power the auto-updating columns.
 
-### The 4 Hidden Sheets
+### The 5 Hidden Sheets
 
 | Hidden Sheet | What It Does |
 |--------------|--------------|
@@ -354,6 +354,7 @@ The dashboard uses 4 "hidden" calculation sheets (prefixed with "_") to automati
 | `_Member_Lookup` | Looks up member data for Grievance Log |
 | `_Steward_Contact_Calc` | Tracks steward contact data from Communications Log |
 | `_Engagement_Calc` | Calculates engagement metrics from Meeting/Volunteer sheets |
+| `_Steward_Workload_Calc` (v3.45) | Calculates steward workload metrics for Steward Workload sheet |
 
 ### Auto-Populated Columns
 
@@ -363,6 +364,7 @@ The dashboard uses 4 "hidden" calculation sheets (prefixed with "_") to automati
 | Q-T | Engagement (Last Virtual Mtg, Last In-Person, Open Rate, Vol Hours) | Meeting Attendance + Volunteer Hours |
 | Y-AA | Steward Contact (Date, Who, Notes) | Communications Log |
 | AB-AD | Grievance (Has Open?, Status, Deadline) | Grievance Log |
+| AF-AH (v3.45) | Grievance Stats (Total Count, Win Rate, Last Date) | Grievance Log |
 
 **Grievance Log** (these columns update automatically):
 | Columns | Data | Source |
@@ -391,7 +393,8 @@ The dashboard uses 4 "hidden" calculation sheets (prefixed with "_") to automati
 ✅ _Member_Lookup: EXISTS, hidden, formulas present
 ✅ _Steward_Contact_Calc: EXISTS, hidden, formulas present
 ✅ _Engagement_Calc: EXISTS, hidden, formulas present
-✅ All 4 triggers installed
+✅ _Steward_Workload_Calc: EXISTS, hidden, formulas present
+✅ All 5 triggers installed
 ```
 
 ### Troubleshooting: Columns Not Updating?
@@ -478,13 +481,13 @@ If something goes wrong, use these repair functions:
 
 ### Column Reference
 
-**Member Directory (31 columns A-AE)**
+**Member Directory (34 columns A-AH)**
 - A: Member ID
 - B-C: Name
 - D-F: Work info
 - H-I: Contact
 - J: Is Steward
-- Z-AD: Auto-calculated (don't edit)
+- AB-AD, AF-AH: Auto-calculated (don't edit)
 
 **Grievance Log (34 columns A-AH)**
 - A: Grievance ID
@@ -515,5 +518,5 @@ If something goes wrong, use these repair functions:
 
 ---
 
-**Version:** 3.44
+**Version:** 3.45
 **Last Updated:** 2025-12-13
