@@ -401,6 +401,34 @@ function REPAIR_DASHBOARD() {
         Logger.log('installMemberSyncTrigger error: ' + e.message);
       }
     }
+
+    // Set up Steward Contact Calc hidden sheet and trigger for contact data → Member Directory
+    if (typeof setupStewardContactCalcSheet === 'function') {
+      try {
+        setupStewardContactCalcSheet();
+        logStep('Set up Steward Contact Calc hidden sheet');
+      } catch (e) {
+        Logger.log('setupStewardContactCalcSheet error: ' + e.message);
+      }
+    }
+    if (typeof installStewardContactSyncTrigger === 'function') {
+      try {
+        installStewardContactSyncTrigger();
+        logStep('Installed steward contact → Member Directory auto-sync trigger');
+      } catch (e) {
+        Logger.log('installStewardContactSyncTrigger error: ' + e.message);
+      }
+    }
+
+    // Set up Engagement Calc hidden sheet for engagement metrics → Member Directory
+    if (typeof setupEngagementCalcSheet === 'function') {
+      try {
+        setupEngagementCalcSheet();
+        logStep('Set up Engagement Calc hidden sheet (placeholder)');
+      } catch (e) {
+        Logger.log('setupEngagementCalcSheet error: ' + e.message);
+      }
+    }
     SpreadsheetApp.flush();
 
     // Step 4: Set up Interactive Dashboard
@@ -451,7 +479,10 @@ function REPAIR_DASHBOARD() {
       'Fixed:\n' +
       '• Data validations (dropdowns)\n' +
       '• Grievance Log calculated columns\n' +
-      '• Member Directory cross-population formulas (AB-AD)\n' +
+      '• Member Directory grievance columns (AB-AD)\n' +
+      '• Grievance Log member columns (C, D, X-AA)\n' +
+      '• Steward contact tracking (Y-AA from Comms Log)\n' +
+      '• Engagement metrics placeholder (Q-T)\n' +
       '• Interactive Dashboard controls\n' +
       '• Theme styling\n' +
       '• Analytics sheets\n\n' +
@@ -1422,14 +1453,18 @@ function setupGrievanceCalcSheet() {
   // Clear and rebuild (self-healing)
   calcSheet.clear();
 
-  // Set up headers
-  calcSheet.getRange('A1:D1').setValues([['Member ID', 'Has Open Grievance?', 'Grievance Status', 'Next Deadline']]);
-  calcSheet.getRange('A1:D1').setFontWeight('bold').setBackground('#E5E7EB');
+  // Set up headers - Enhanced with additional metrics
+  calcSheet.getRange('A1:G1').setValues([[
+    'Member ID', 'Has Open Grievance?', 'Grievance Status', 'Next Deadline',
+    'Total Count', 'Win Rate (%)', 'Last Grievance Date'
+  ]]);
+  calcSheet.getRange('A1:G1').setFontWeight('bold').setBackground('#E5E7EB');
 
   // Dynamic column references for Grievance Log
   const gMemberIdCol = getColumnLetter(GRIEVANCE_COLS.MEMBER_ID);
   const gStatusCol = getColumnLetter(GRIEVANCE_COLS.STATUS);
   const gNextActionCol = getColumnLetter(GRIEVANCE_COLS.NEXT_ACTION_DUE);
+  const gDateFiledCol = getColumnLetter(GRIEVANCE_COLS.DATE_FILED);
   const gSheetName = SHEETS.GRIEVANCE_LOG;
 
   // Dynamic column references for Member Directory
@@ -1460,13 +1495,34 @@ function setupGrievanceCalcSheet() {
     `=MAP(A2:A,LAMBDA(m,IF(m="","",LET(activeDeadline,FILTER('${gSheetName}'!${gNextActionCol}:${gNextActionCol},('${gSheetName}'!${gMemberIdCol}:${gMemberIdCol}=m)*REGEXMATCH('${gSheetName}'!${gStatusCol}:${gStatusCol},"^(Open|Pending Info|Appealed|In Arbitration)$")),IFERROR(INDEX(activeDeadline,1),IFERROR(INDEX('${gSheetName}'!${gNextActionCol}:${gNextActionCol},MATCH(m,'${gSheetName}'!${gMemberIdCol}:${gMemberIdCol},0)),""))))))`
   );
 
+  // Column E: Total Grievance Count per member
+  // FULLY DYNAMIC: Counts all grievances (any status) for each member
+  calcSheet.getRange('E2').setFormula(
+    `=MAP(A2:A,LAMBDA(m,IF(m="","",COUNTIF('${gSheetName}'!${gMemberIdCol}:${gMemberIdCol},m))))`
+  );
+
+  // Column F: Win Rate (%) - Percentage of grievances won or settled
+  // FULLY DYNAMIC: Counts Settled/Withdrawn as wins, calculates percentage
+  calcSheet.getRange('F2').setFormula(
+    `=MAP(A2:A,LAMBDA(m,IF(m="","",LET(total,COUNTIF('${gSheetName}'!${gMemberIdCol}:${gMemberIdCol},m),wins,SUMPRODUCT(('${gSheetName}'!${gMemberIdCol}:${gMemberIdCol}=m)*REGEXMATCH('${gSheetName}'!${gStatusCol}:${gStatusCol},"^(Settled|Won)$")),IF(total=0,"",ROUND(wins/total*100,0))))))`
+  );
+
+  // Column G: Last Grievance Date (most recent filing date)
+  // FULLY DYNAMIC: Gets the most recent Date Filed for each member
+  calcSheet.getRange('G2').setFormula(
+    `=MAP(A2:A,LAMBDA(m,IF(m="","",IFERROR(MAXIFS('${gSheetName}'!${gDateFiledCol}:${gDateFiledCol},'${gSheetName}'!${gMemberIdCol}:${gMemberIdCol},m),""))))`
+  );
+
   // Format the sheet
   calcSheet.setColumnWidth(1, 120);
   calcSheet.setColumnWidth(2, 150);
   calcSheet.setColumnWidth(3, 150);
-  calcSheet.setColumnWidth(4, 150);
+  calcSheet.setColumnWidth(4, 130);
+  calcSheet.setColumnWidth(5, 100);
+  calcSheet.setColumnWidth(6, 100);
+  calcSheet.setColumnWidth(7, 140);
 
-  Logger.log('setupGrievanceCalcSheet: Hidden calculation sheet configured with self-healing formulas');
+  Logger.log('setupGrievanceCalcSheet: Hidden calculation sheet configured with 7 metrics columns');
 }
 
 /**
@@ -1954,6 +2010,442 @@ function removeMemberSyncTrigger() {
   }
 }
 
+// ============================================================================
+// STEWARD CONTACT CALC - Auto-update Member Directory contact columns Y-AA
+// ============================================================================
+
+/**
+ * Creates/repairs the hidden _Steward_Contact_Calc sheet with auto-updating formulas
+ * This sheet provides contact data to Member Directory columns Y-AA.
+ * Uses Communications Log data to track steward-member interactions.
+ * Formulas are SELF-HEALING - this function re-applies them if missing/broken.
+ */
+function setupStewardContactCalcSheet() {
+  const ss = SpreadsheetApp.getActive();
+
+  // Get or create the hidden calculation sheet
+  let calcSheet = ss.getSheetByName(SHEETS.STEWARD_CONTACT_CALC);
+  if (!calcSheet) {
+    calcSheet = ss.insertSheet(SHEETS.STEWARD_CONTACT_CALC);
+    Logger.log('Created hidden calculation sheet: ' + SHEETS.STEWARD_CONTACT_CALC);
+  }
+
+  // Hide the sheet (self-healing - re-hide if someone unhid it)
+  calcSheet.hideSheet();
+
+  // Clear and rebuild (self-healing)
+  calcSheet.clear();
+
+  // Set up headers
+  calcSheet.getRange('A1:E1').setValues([[
+    'Member ID', 'Member Email', 'Recent Contact Date', 'Contact Steward', 'Contact Notes'
+  ]]);
+  calcSheet.getRange('A1:E1').setFontWeight('bold').setBackground('#E5E7EB');
+
+  // Dynamic column references for Member Directory
+  const mMemberIdCol = getColumnLetter(MEMBER_COLS.MEMBER_ID);
+  const mEmailCol = getColumnLetter(MEMBER_COLS.EMAIL);
+  const mSheetName = SHEETS.MEMBER_DIR;
+
+  // Dynamic column references for Communications Log
+  const cTimestampCol = getColumnLetter(COMM_LOG_COLS.TIMESTAMP);
+  const cRecipientCol = getColumnLetter(COMM_LOG_COLS.RECIPIENT);
+  const cSubjectCol = getColumnLetter(COMM_LOG_COLS.SUBJECT);
+  const cSentByCol = getColumnLetter(COMM_LOG_COLS.SENT_BY);
+  const cSheetName = SHEETS.COMMUNICATIONS_LOG;
+
+  // Column A: Member IDs from Member Directory
+  calcSheet.getRange('A2').setFormula(
+    `=FILTER('${mSheetName}'!${mMemberIdCol}:${mMemberIdCol}, '${mSheetName}'!${mMemberIdCol}:${mMemberIdCol}<>"", '${mSheetName}'!${mMemberIdCol}:${mMemberIdCol}<>"Member ID")`
+  );
+
+  // Column B: Member Emails from Member Directory (for joining with Communications Log)
+  calcSheet.getRange('B2').setFormula(
+    `=MAP(A2:A,LAMBDA(m,IF(m="","",IFERROR(INDEX('${mSheetName}'!${mEmailCol}:${mEmailCol},MATCH(m,'${mSheetName}'!${mMemberIdCol}:${mMemberIdCol},0)),""))))`
+  );
+
+  // Column C: Recent Contact Date - Most recent timestamp from Communications Log for this email
+  calcSheet.getRange('C2').setFormula(
+    `=MAP(B2:B,LAMBDA(email,IF(email="","",IFERROR(MAXIFS('${cSheetName}'!${cTimestampCol}:${cTimestampCol},'${cSheetName}'!${cRecipientCol}:${cRecipientCol},email),""))))`
+  );
+
+  // Column D: Contact Steward - Who sent the most recent communication
+  // Uses INDEX/MATCH with the max timestamp to get the sender
+  calcSheet.getRange('D2').setFormula(
+    `=MAP(B2:B,LAMBDA(email,IF(email="","",LET(maxDate,MAXIFS('${cSheetName}'!${cTimestampCol}:${cTimestampCol},'${cSheetName}'!${cRecipientCol}:${cRecipientCol},email),IFERROR(INDEX('${cSheetName}'!${cSentByCol}:${cSentByCol},MATCH(1,(('${cSheetName}'!${cRecipientCol}:${cRecipientCol}=email)*('${cSheetName}'!${cTimestampCol}:${cTimestampCol}=maxDate)),0)),"")))))`
+  );
+
+  // Column E: Contact Notes - Subject line from the most recent communication
+  calcSheet.getRange('E2').setFormula(
+    `=MAP(B2:B,LAMBDA(email,IF(email="","",LET(maxDate,MAXIFS('${cSheetName}'!${cTimestampCol}:${cTimestampCol},'${cSheetName}'!${cRecipientCol}:${cRecipientCol},email),IFERROR(INDEX('${cSheetName}'!${cSubjectCol}:${cSubjectCol},MATCH(1,(('${cSheetName}'!${cRecipientCol}:${cRecipientCol}=email)*('${cSheetName}'!${cTimestampCol}:${cTimestampCol}=maxDate)),0)),"")))))`
+  );
+
+  // Format the sheet
+  calcSheet.setColumnWidth(1, 120);
+  calcSheet.setColumnWidth(2, 180);
+  calcSheet.setColumnWidth(3, 140);
+  calcSheet.setColumnWidth(4, 150);
+  calcSheet.setColumnWidth(5, 200);
+
+  Logger.log('setupStewardContactCalcSheet: Hidden calculation sheet configured with self-healing formulas');
+}
+
+/**
+ * Syncs calculated values from hidden _Steward_Contact_Calc sheet to Member Directory
+ * Reads the formula-calculated values and writes them as static values to Member Directory columns Y-AA.
+ *
+ * @returns {Object} { processed: number }
+ */
+function syncStewardContactToMemberDirectory() {
+  const ss = SpreadsheetApp.getActive();
+  const calcSheet = ss.getSheetByName(SHEETS.STEWARD_CONTACT_CALC);
+  const memberDir = ss.getSheetByName(SHEETS.MEMBER_DIR);
+
+  if (!calcSheet) {
+    throw new Error('Steward Contact Calc sheet not found. Run setupStewardContactCalcSheet() first.');
+  }
+  if (!memberDir) {
+    throw new Error('Member Directory not found.');
+  }
+
+  // Force formulas to recalculate
+  SpreadsheetApp.flush();
+
+  // Read calculated values from hidden sheet (columns A, C, D, E - skip B which is just email for joining)
+  const calcLastRow = calcSheet.getLastRow();
+  if (calcLastRow < 2) {
+    return { processed: 0 };
+  }
+
+  const calcData = calcSheet.getRange(2, 1, calcLastRow - 1, 5).getValues();
+
+  // Build lookup map: memberId -> { contactDate, contactSteward, contactNotes }
+  const calcMap = {};
+  for (let i = 0; i < calcData.length; i++) {
+    const memberId = String(calcData[i][0] || '');
+    if (memberId) {
+      calcMap[memberId] = {
+        contactDate: calcData[i][2] || '',
+        contactSteward: calcData[i][3] || '',
+        contactNotes: calcData[i][4] || ''
+      };
+    }
+  }
+
+  // Read Member Directory member IDs
+  const memberLastRow = memberDir.getLastRow();
+  if (memberLastRow < 2) {
+    return { processed: 0 };
+  }
+
+  const memberIds = memberDir.getRange(2, MEMBER_COLS.MEMBER_ID, memberLastRow - 1, 1).getValues();
+
+  // Build output arrays matching Member Directory row order
+  const contactDateArr = [];
+  const contactStewardArr = [];
+  const contactNotesArr = [];
+
+  for (let i = 0; i < memberIds.length; i++) {
+    const memberId = String(memberIds[i][0] || '');
+    const calc = calcMap[memberId];
+
+    if (calc) {
+      contactDateArr.push([calc.contactDate]);
+      contactStewardArr.push([calc.contactSteward]);
+      contactNotesArr.push([calc.contactNotes]);
+    } else {
+      contactDateArr.push(['']);
+      contactStewardArr.push(['']);
+      contactNotesArr.push(['']);
+    }
+  }
+
+  // Write to Member Directory columns Y, Z, AA
+  const numRows = contactDateArr.length;
+  if (numRows > 0) {
+    memberDir.getRange(2, MEMBER_COLS.RECENT_CONTACT_DATE, numRows, 1).setValues(contactDateArr);
+    memberDir.getRange(2, MEMBER_COLS.CONTACT_STEWARD, numRows, 1).setValues(contactStewardArr);
+    memberDir.getRange(2, MEMBER_COLS.CONTACT_NOTES, numRows, 1).setValues(contactNotesArr);
+  }
+
+  Logger.log(`syncStewardContactToMemberDirectory: Synced ${numRows} members`);
+  return { processed: numRows };
+}
+
+/**
+ * onEdit trigger handler for auto-syncing steward contact data to Member Directory
+ * Called when any cell is edited. Only acts on Communications Log changes.
+ *
+ * @param {Object} e - Edit event object
+ */
+function onEditSyncStewardContact(e) {
+  try {
+    const sheet = e.source.getActiveSheet();
+    const sheetName = sheet.getName();
+
+    // Only sync when Communications Log is edited
+    if (sheetName !== SHEETS.COMMUNICATIONS_LOG) {
+      return;
+    }
+
+    // Debounce: Only sync if more than 2 seconds since last sync
+    const cache = CacheService.getScriptCache();
+    const lastSync = cache.get('lastStewardContactSync');
+    const now = new Date().getTime();
+
+    if (!lastSync || (now - parseInt(lastSync)) > 2000) {
+      cache.put('lastStewardContactSync', now.toString(), 60);
+
+      // Sync after a brief delay to allow formula recalculation
+      Utilities.sleep(500);
+      syncStewardContactToMemberDirectory();
+    }
+  } catch (error) {
+    // Silent fail for onEdit - don't interrupt user
+    Logger.log('onEditSyncStewardContact error: ' + error.message);
+  }
+}
+
+/**
+ * Installs the auto-sync trigger for steward contact data
+ * Call this once during setup or repair.
+ */
+function installStewardContactSyncTrigger() {
+  const ss = SpreadsheetApp.getActive();
+
+  // Remove existing triggers for this function
+  const triggers = ScriptApp.getUserTriggers(ss);
+  for (const trigger of triggers) {
+    if (trigger.getHandlerFunction() === 'onEditSyncStewardContact') {
+      ScriptApp.deleteTrigger(trigger);
+    }
+  }
+
+  // Install new trigger
+  ScriptApp.newTrigger('onEditSyncStewardContact')
+    .forSpreadsheet(ss)
+    .onEdit()
+    .create();
+
+  Logger.log('installStewardContactSyncTrigger: Auto-sync trigger installed');
+}
+
+/**
+ * Removes the auto-sync trigger for steward contact data
+ */
+function removeStewardContactSyncTrigger() {
+  const ss = SpreadsheetApp.getActive();
+  const triggers = ScriptApp.getUserTriggers(ss);
+
+  for (const trigger of triggers) {
+    if (trigger.getHandlerFunction() === 'onEditSyncStewardContact') {
+      ScriptApp.deleteTrigger(trigger);
+      Logger.log('removeStewardContactSyncTrigger: Trigger removed');
+    }
+  }
+}
+
+// ============================================================================
+// ENGAGEMENT CALC - Auto-update Member Directory engagement columns Q-T
+// ============================================================================
+
+/**
+ * Creates/repairs the hidden _Engagement_Calc sheet with auto-updating formulas
+ * This sheet provides engagement metrics to Member Directory columns Q-T.
+ * NOTE: Currently placeholder - requires source data sheets for:
+ * - Meeting attendance log (for Last Virtual/In-Person Meeting)
+ * - Email analytics (for Open Rate)
+ * - Volunteer tracking (for Volunteer Hours)
+ * Formulas are SELF-HEALING - this function re-applies them if missing/broken.
+ */
+function setupEngagementCalcSheet() {
+  const ss = SpreadsheetApp.getActive();
+
+  // Get or create the hidden calculation sheet
+  let calcSheet = ss.getSheetByName(SHEETS.ENGAGEMENT_CALC);
+  if (!calcSheet) {
+    calcSheet = ss.insertSheet(SHEETS.ENGAGEMENT_CALC);
+    Logger.log('Created hidden calculation sheet: ' + SHEETS.ENGAGEMENT_CALC);
+  }
+
+  // Hide the sheet (self-healing - re-hide if someone unhid it)
+  calcSheet.hideSheet();
+
+  // Clear and rebuild (self-healing)
+  calcSheet.clear();
+
+  // Set up headers
+  calcSheet.getRange('A1:E1').setValues([[
+    'Member ID', 'Last Virtual Mtg', 'Last In-Person Mtg', 'Open Rate (%)', 'Volunteer Hours'
+  ]]);
+  calcSheet.getRange('A1:E1').setFontWeight('bold').setBackground('#E5E7EB');
+
+  // Dynamic column references for Member Directory
+  const mMemberIdCol = getColumnLetter(MEMBER_COLS.MEMBER_ID);
+  const mSheetName = SHEETS.MEMBER_DIR;
+
+  // Column A: Member IDs from Member Directory
+  calcSheet.getRange('A2').setFormula(
+    `=FILTER('${mSheetName}'!${mMemberIdCol}:${mMemberIdCol}, '${mSheetName}'!${mMemberIdCol}:${mMemberIdCol}<>"", '${mSheetName}'!${mMemberIdCol}:${mMemberIdCol}<>"Member ID")`
+  );
+
+  // Columns B-E: Placeholder values until source sheets are created
+  // When source sheets are available, replace these with actual formulas
+  calcSheet.getRange('B2').setFormula(
+    `=MAP(A2:A,LAMBDA(m,IF(m="","","")))`
+  );
+  calcSheet.getRange('C2').setFormula(
+    `=MAP(A2:A,LAMBDA(m,IF(m="","","")))`
+  );
+  calcSheet.getRange('D2').setFormula(
+    `=MAP(A2:A,LAMBDA(m,IF(m="","","")))`
+  );
+  calcSheet.getRange('E2').setFormula(
+    `=MAP(A2:A,LAMBDA(m,IF(m="","","")))`
+  );
+
+  // Add note about required source sheets
+  calcSheet.getRange('G1').setValue('NOTE: Engagement metrics require source data sheets');
+  calcSheet.getRange('G2').setValue('- Meeting Attendance Log for Virtual/In-Person meetings');
+  calcSheet.getRange('G3').setValue('- Email Analytics for Open Rate');
+  calcSheet.getRange('G4').setValue('- Volunteer Hours Tracking for hours');
+  calcSheet.getRange('G1:G4').setFontStyle('italic').setFontColor('#6B7280');
+
+  // Format the sheet
+  calcSheet.setColumnWidth(1, 120);
+  calcSheet.setColumnWidth(2, 140);
+  calcSheet.setColumnWidth(3, 150);
+  calcSheet.setColumnWidth(4, 100);
+  calcSheet.setColumnWidth(5, 120);
+  calcSheet.setColumnWidth(7, 350);
+
+  Logger.log('setupEngagementCalcSheet: Hidden calculation sheet configured (placeholder - awaiting source data)');
+}
+
+/**
+ * Syncs calculated values from hidden _Engagement_Calc sheet to Member Directory
+ * Reads the formula-calculated values and writes them as static values to Member Directory columns Q-T.
+ *
+ * @returns {Object} { processed: number }
+ */
+function syncEngagementToMemberDirectory() {
+  const ss = SpreadsheetApp.getActive();
+  const calcSheet = ss.getSheetByName(SHEETS.ENGAGEMENT_CALC);
+  const memberDir = ss.getSheetByName(SHEETS.MEMBER_DIR);
+
+  if (!calcSheet) {
+    throw new Error('Engagement Calc sheet not found. Run setupEngagementCalcSheet() first.');
+  }
+  if (!memberDir) {
+    throw new Error('Member Directory not found.');
+  }
+
+  // Force formulas to recalculate
+  SpreadsheetApp.flush();
+
+  // Read calculated values from hidden sheet (columns A-E)
+  const calcLastRow = calcSheet.getLastRow();
+  if (calcLastRow < 2) {
+    return { processed: 0 };
+  }
+
+  const calcData = calcSheet.getRange(2, 1, calcLastRow - 1, 5).getValues();
+
+  // Build lookup map: memberId -> { virtualMtg, inPersonMtg, openRate, volunteerHours }
+  const calcMap = {};
+  for (let i = 0; i < calcData.length; i++) {
+    const memberId = String(calcData[i][0] || '');
+    if (memberId) {
+      calcMap[memberId] = {
+        virtualMtg: calcData[i][1] || '',
+        inPersonMtg: calcData[i][2] || '',
+        openRate: calcData[i][3] || '',
+        volunteerHours: calcData[i][4] || ''
+      };
+    }
+  }
+
+  // Read Member Directory member IDs
+  const memberLastRow = memberDir.getLastRow();
+  if (memberLastRow < 2) {
+    return { processed: 0 };
+  }
+
+  const memberIds = memberDir.getRange(2, MEMBER_COLS.MEMBER_ID, memberLastRow - 1, 1).getValues();
+
+  // Build output arrays matching Member Directory row order
+  const virtualMtgArr = [];
+  const inPersonMtgArr = [];
+  const openRateArr = [];
+  const volunteerHoursArr = [];
+
+  for (let i = 0; i < memberIds.length; i++) {
+    const memberId = String(memberIds[i][0] || '');
+    const calc = calcMap[memberId];
+
+    if (calc) {
+      virtualMtgArr.push([calc.virtualMtg]);
+      inPersonMtgArr.push([calc.inPersonMtg]);
+      openRateArr.push([calc.openRate]);
+      volunteerHoursArr.push([calc.volunteerHours]);
+    } else {
+      virtualMtgArr.push(['']);
+      inPersonMtgArr.push(['']);
+      openRateArr.push(['']);
+      volunteerHoursArr.push(['']);
+    }
+  }
+
+  // Write to Member Directory columns Q, R, S, T
+  const numRows = virtualMtgArr.length;
+  if (numRows > 0) {
+    memberDir.getRange(2, MEMBER_COLS.LAST_VIRTUAL_MTG, numRows, 1).setValues(virtualMtgArr);
+    memberDir.getRange(2, MEMBER_COLS.LAST_INPERSON_MTG, numRows, 1).setValues(inPersonMtgArr);
+    memberDir.getRange(2, MEMBER_COLS.OPEN_RATE, numRows, 1).setValues(openRateArr);
+    memberDir.getRange(2, MEMBER_COLS.VOLUNTEER_HOURS, numRows, 1).setValues(volunteerHoursArr);
+  }
+
+  Logger.log(`syncEngagementToMemberDirectory: Synced ${numRows} members`);
+  return { processed: numRows };
+}
+
+/**
+ * Refresh all steward contact and engagement data
+ * @returns {Object} Statistics about the sync
+ */
+function refreshStewardContactAndEngagement() {
+  const startTime = new Date();
+
+  SpreadsheetApp.getActive().toast('Syncing contact and engagement data...', 'Please wait', -1);
+
+  try {
+    // Setup/repair the hidden sheets
+    setupStewardContactCalcSheet();
+    setupEngagementCalcSheet();
+
+    // Sync to Member Directory
+    const contactResult = syncStewardContactToMemberDirectory();
+    const engagementResult = syncEngagementToMemberDirectory();
+
+    const duration = new Date() - startTime;
+    SpreadsheetApp.getActive().toast(
+      `Synced contact and engagement data in ${(duration / 1000).toFixed(1)}s`,
+      'Complete',
+      5
+    );
+
+    return {
+      contactProcessed: contactResult.processed,
+      engagementProcessed: engagementResult.processed,
+      duration: duration
+    };
+  } catch (error) {
+    Logger.log('Error in refreshStewardContactAndEngagement: ' + error.message);
+    SpreadsheetApp.getUi().alert('Error: ' + error.message);
+    return { error: error.message };
+  }
+}
+
 /**
  * Refresh all calculated data (Grievance Log + Member Directory)
  * Recalculates static values for both sheets - NO formulas in visible sheets.
@@ -1962,6 +2454,8 @@ function removeMemberSyncTrigger() {
  * 1. Grievance Log timeline columns (H, J, L, N, P, S, T, U) - batch calculated
  * 2. Member Directory grievance columns (AB, AC, AD) - from hidden _Grievance_Calc
  * 3. Grievance Log member columns (C, D, X, Y, Z, AA) - from hidden _Member_Lookup
+ * 4. Member Directory steward contact columns (Y, Z, AA) - from hidden _Steward_Contact_Calc
+ * 5. Member Directory engagement columns (Q-T) - from hidden _Engagement_Calc
  */
 function refreshAllFormulas() {
   const ui = SpreadsheetApp.getUi();
@@ -1977,12 +2471,22 @@ function refreshAllFormulas() {
     // 3. Recalculate Grievance Log member columns (C, D, X, Y, Z, AA)
     const grievanceMemberResult = refreshGrievanceLogMemberData();
 
+    // 4. Recalculate Member Directory steward contact columns (Y, Z, AA)
+    setupStewardContactCalcSheet();
+    const contactResult = syncStewardContactToMemberDirectory();
+
+    // 5. Recalculate Member Directory engagement columns (Q-T)
+    setupEngagementCalcSheet();
+    const engagementResult = syncEngagementToMemberDirectory();
+
     ui.alert(
       '✅ All Data Refreshed',
-      `Grievance Log timelines: ${grievanceResult.processed} rows recalculated\n` +
-      `Member Directory grievance data: ${memberDirResult.processed} members updated\n` +
-      `Grievance Log member data: ${grievanceMemberResult.processed} grievances updated\n\n` +
-      'All cross-population now uses hidden sheets with auto-sync triggers.',
+      `Grievance Log timelines: ${grievanceResult.processed} rows\n` +
+      `Member Directory grievance data: ${memberDirResult.processed} members\n` +
+      `Grievance Log member data: ${grievanceMemberResult.processed} grievances\n` +
+      `Steward contact data: ${contactResult.processed} members\n` +
+      `Engagement data: ${engagementResult.processed} members\n\n` +
+      'All cross-population uses hidden sheets with auto-sync triggers.',
       ui.ButtonSet.OK
     );
   } catch (error) {

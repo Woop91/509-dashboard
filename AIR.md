@@ -780,20 +780,28 @@ Applied via `setupDataValidations()`:
 
 ### Member Directory - Auto-Updating from Hidden Calculation Sheet
 
-**IMPORTANT (v3.40):** Member Directory columns AB-AD display grievance data that auto-updates when the Grievance Log changes.
+**IMPORTANT (v3.40+):** Member Directory columns AB-AD display grievance data that auto-updates when the Grievance Log changes.
 
 **Architecture:**
 1. **Hidden Sheet:** `_Grievance_Calc` contains self-healing formulas (hidden from users)
 2. **Auto-Sync Trigger:** `onEditSyncGrievanceData` syncs values when Grievance Log is edited
 3. **Static Values:** Member Directory columns AB-AD contain static values (no visible formulas)
 
-**Calculated Columns:**
+**Synced Columns (to Member Directory):**
 
 | Column | Name | Data Source | Shows |
 |--------|------|-------------|-------|
 | AB (28) | Has Open Grievance? | Hidden Sheet Column B | "Yes" if active grievance exists, "No" otherwise |
 | AC (29) | Grievance Status Snapshot | Hidden Sheet Column C | Status text from active grievance |
 | AD (30) | Next Grievance Deadline | Hidden Sheet Column D | Next deadline date from active grievance |
+
+**Additional Metrics Available (in hidden sheet only, v3.42+):**
+
+| Hidden Col | Name | Description |
+|------------|------|-------------|
+| E | Total Count | Total grievances filed by member (any status) |
+| F | Win Rate (%) | Percentage of grievances Won or Settled |
+| G | Last Grievance Date | Most recent Date Filed for the member |
 
 **Active Grievance Statuses:** Open, Pending Info, Appealed, In Arbitration
 
@@ -848,6 +856,61 @@ Applied via `setupDataValidations()`:
 - Menu: Dashboard → Grievance Tools → Refresh Grievance Log Member Data
 - Or run: `refreshGrievanceLogMemberData()` from Apps Script
 - Or run: `refreshAllFormulas()` to recalculate all cross-population data
+
+### Steward Contact Tracking - Auto-Updating from Communications Log (v3.42+)
+
+**IMPORTANT (v3.42):** Member Directory columns Y-AA display steward contact data that auto-updates when the Communications Log changes.
+
+**Architecture:**
+1. **Hidden Sheet:** `_Steward_Contact_Calc` contains self-healing formulas (hidden from users)
+2. **Auto-Sync Trigger:** `onEditSyncStewardContact` syncs values when Communications Log is edited
+3. **Static Values:** Member Directory columns Y-AA contain static values (no visible formulas)
+
+**Auto-Updated Columns:**
+
+| Column | Name | Data Source | Updates When |
+|--------|------|-------------|--------------|
+| Y (25) | Recent Contact Date | Communications Log Timestamp | New communication logged |
+| Z (26) | Contact Steward | Communications Log Sent By | New communication logged |
+| AA (27) | Contact Notes | Communications Log Subject | New communication logged |
+
+**How It Works:**
+- Joins Communications Log to Member Directory via member email address
+- Finds the most recent communication to each member
+- Extracts timestamp, sender (steward), and subject line
+
+**Self-Healing:**
+- `setupStewardContactCalcSheet()` - Creates/repairs the hidden sheet with formulas
+- `installStewardContactSyncTrigger()` - Installs the auto-sync trigger
+- `REPAIR_DASHBOARD()` - Calls both functions to restore full functionality
+
+**To Manual Sync:**
+- Run: `syncStewardContactToMemberDirectory()` from Apps Script
+- Or run: `refreshAllFormulas()` to recalculate all cross-population data
+
+### Engagement Metrics - Placeholder System (v3.42+)
+
+**IMPORTANT (v3.42):** Member Directory columns Q-T are set up for engagement metrics from future source sheets.
+
+**Architecture:**
+1. **Hidden Sheet:** `_Engagement_Calc` contains placeholder formulas (ready for source data)
+2. **Static Values:** Member Directory columns Q-T contain static values (no visible formulas)
+
+**Columns (awaiting source data):**
+
+| Column | Name | Required Source |
+|--------|------|-----------------|
+| Q (17) | Last Virtual Meeting | Meeting Attendance Log |
+| R (18) | Last In-Person Meeting | Meeting Attendance Log |
+| S (19) | Open Rate (%) | Email Analytics |
+| T (20) | Volunteer Hours | Volunteer Hours Tracking |
+
+**To Enable:**
+When source data sheets are created, update `setupEngagementCalcSheet()` to add formulas that reference the new sheets.
+
+**Self-Healing:**
+- `setupEngagementCalcSheet()` - Creates/repairs the hidden sheet structure
+- `REPAIR_DASHBOARD()` - Calls function to restore sheet
 
 ---
 
@@ -1494,6 +1557,33 @@ User-populated columns now use `.setAllowInvalid(true)` to allow blank/custom va
 
 ---
 
+### Version 3.42 (2025-12-13)
+
+**EXPANDED HIDDEN SHEET ARCHITECTURE FOR FULL MEMBER DIRECTORY AUTO-POPULATION**
+
+**Enhanced _Grievance_Calc Sheet:**
+- Added Total Grievance Count per member (Column E)
+- Added Win Rate percentage (Column F)
+- Added Last Grievance Date (Column G)
+
+**New _Steward_Contact_Calc Sheet (Y-AA from Communications Log):**
+- Recent Contact Date auto-populated from Communications Log timestamp
+- Contact Steward auto-populated from Communications Log sender
+- Contact Notes auto-populated from Communications Log subject line
+- Uses email address to join member records to communications
+
+**New _Engagement_Calc Sheet (Q-T placeholder):**
+- Infrastructure ready for engagement metrics
+- Placeholder formulas await Meeting Attendance Log, Email Analytics, Volunteer Tracking source sheets
+- Self-healing via REPAIR_DASHBOARD()
+
+**Updated REPAIR_DASHBOARD():**
+- Now repairs all 4 hidden calculation sheets
+- Installs all auto-sync triggers
+- Comprehensive cross-population restoration
+
+---
+
 ### Version 3.11 (2025-12-08)
 
 **REMOVED SAMPLE DATA FROM CONFIG TAB**
@@ -1513,7 +1603,7 @@ See git history for complete changelog. Key milestones:
 
 ---
 
-**Document Version:** 3.41
+**Document Version:** 3.42
 **Last Updated:** 2025-12-13
 **Maintained By:** Claude (AI Assistant)
 
