@@ -424,9 +424,17 @@ function REPAIR_DASHBOARD() {
     if (typeof setupEngagementCalcSheet === 'function') {
       try {
         setupEngagementCalcSheet();
-        logStep('Set up Engagement Calc hidden sheet (placeholder)');
+        logStep('Set up Engagement Calc hidden sheet');
       } catch (e) {
         Logger.log('setupEngagementCalcSheet error: ' + e.message);
+      }
+    }
+    if (typeof installEngagementSyncTrigger === 'function') {
+      try {
+        installEngagementSyncTrigger();
+        logStep('Installed engagement → Member Directory auto-sync trigger');
+      } catch (e) {
+        Logger.log('installEngagementSyncTrigger error: ' + e.message);
       }
     }
     SpreadsheetApp.flush();
@@ -482,10 +490,11 @@ function REPAIR_DASHBOARD() {
       '• Member Directory grievance columns (AB-AD)\n' +
       '• Grievance Log member columns (C, D, X-AA)\n' +
       '• Steward contact tracking (Y-AA from Comms Log)\n' +
-      '• Engagement metrics placeholder (Q-T)\n' +
+      '• Engagement metrics (Q-T) with auto-sync\n' +
       '• Interactive Dashboard controls\n' +
       '• Theme styling\n' +
       '• Analytics sheets\n\n' +
+      'All 4 auto-sync triggers installed.\n' +
       'If issues persist, try running CREATE_509_DASHBOARD_PART2 from the script editor.',
       ui.ButtonSet.OK
     );
@@ -5808,7 +5817,8 @@ function VERIFY_HIDDEN_SHEETS() {
   const expectedTriggers = [
     'onEditSyncGrievanceData',
     'onEditSyncMemberData',
-    'onEditSyncStewardContact'
+    'onEditSyncStewardContact',
+    'onEditSyncEngagementData'
   ];
 
   for (const triggerName of expectedTriggers) {
@@ -6052,4 +6062,117 @@ function createVolunteerHoursSheet() {
   SpreadsheetApp.getActive().toast('Volunteer Hours sheet created!', 'Success', 5);
 
   return sheet;
+}
+
+/**
+ * onEdit trigger handler for auto-syncing engagement data to Member Directory
+ * Called when any cell is edited. Only acts on Meeting Attendance or Volunteer Hours changes.
+ *
+ * @param {Object} e - Edit event object
+ */
+function onEditSyncEngagementData(e) {
+  try {
+    const sheet = e.source.getActiveSheet();
+    const sheetName = sheet.getName();
+
+    // Only sync when Meeting Attendance or Volunteer Hours is edited
+    if (sheetName !== SHEETS.MEETING_ATTENDANCE && sheetName !== SHEETS.VOLUNTEER_HOURS) {
+      return;
+    }
+
+    // Debounce: Only sync if more than 2 seconds since last sync
+    const cache = CacheService.getScriptCache();
+    const lastSync = cache.get('lastEngagementSync');
+    const now = new Date().getTime();
+
+    if (!lastSync || (now - parseInt(lastSync)) > 2000) {
+      cache.put('lastEngagementSync', now.toString(), 60);
+
+      // Rebuild the engagement calc sheet to pick up new data
+      Utilities.sleep(500);
+      setupEngagementCalcSheet();
+      syncEngagementToMemberDirectory();
+    }
+  } catch (error) {
+    // Silent fail for onEdit - don't interrupt user
+    Logger.log('onEditSyncEngagementData error: ' + error.message);
+  }
+}
+
+/**
+ * Installs the auto-sync trigger for engagement data
+ * Call this once during setup or repair.
+ */
+function installEngagementSyncTrigger() {
+  const ss = SpreadsheetApp.getActive();
+
+  // Remove existing triggers for this function
+  const triggers = ScriptApp.getUserTriggers(ss);
+  for (const trigger of triggers) {
+    if (trigger.getHandlerFunction() === 'onEditSyncEngagementData') {
+      ScriptApp.deleteTrigger(trigger);
+    }
+  }
+
+  // Install new trigger
+  ScriptApp.newTrigger('onEditSyncEngagementData')
+    .forSpreadsheet(ss)
+    .onEdit()
+    .create();
+
+  Logger.log('installEngagementSyncTrigger: Auto-sync trigger installed');
+}
+
+/**
+ * Removes the auto-sync trigger for engagement data
+ */
+function removeEngagementSyncTrigger() {
+  const ss = SpreadsheetApp.getActive();
+  const triggers = ScriptApp.getUserTriggers(ss);
+
+  for (const trigger of triggers) {
+    if (trigger.getHandlerFunction() === 'onEditSyncEngagementData') {
+      ScriptApp.deleteTrigger(trigger);
+      Logger.log('removeEngagementSyncTrigger: Trigger removed');
+    }
+  }
+}
+
+/**
+ * Creates both engagement source sheets and sets up the engagement calc
+ * Convenience function for quick setup.
+ */
+function setupEngagementTracking() {
+  const ui = SpreadsheetApp.getUi();
+
+  SpreadsheetApp.getActive().toast('Setting up engagement tracking...', 'Please wait', -1);
+
+  try {
+    // Create source sheets if they don't exist
+    createMeetingAttendanceSheet();
+    createVolunteerHoursSheet();
+
+    // Setup/repair the engagement calc sheet
+    setupEngagementCalcSheet();
+
+    // Install the auto-sync trigger
+    installEngagementSyncTrigger();
+
+    // Sync initial data
+    syncEngagementToMemberDirectory();
+
+    ui.alert(
+      '✅ Engagement Tracking Setup Complete',
+      'Created/verified:\n\n' +
+      '• 📅 Meeting Attendance sheet\n' +
+      '• 🤝 Volunteer Hours sheet\n' +
+      '• _Engagement_Calc hidden sheet\n' +
+      '• Auto-sync trigger installed\n\n' +
+      'Member Directory columns Q-T will now auto-update when you add attendance or volunteer data.',
+      ui.ButtonSet.OK
+    );
+  } catch (error) {
+    Logger.log('setupEngagementTracking error: ' + error.message);
+    ui.alert('Error', 'Setup failed: ' + error.message, ui.ButtonSet.OK);
+  }
 }

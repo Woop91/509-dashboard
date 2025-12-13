@@ -928,11 +928,19 @@ Applied via `setupDataValidations()`:
 | F | Verified By | Who approved |
 | G | Notes | Optional notes |
 
+**Auto-Sync Trigger:**
+- `onEditSyncEngagementData` - Syncs when Meeting Attendance or Volunteer Hours is edited
+
 **Self-Healing:**
 - `setupEngagementCalcSheet()` - Creates/repairs hidden sheet, auto-detects source sheets
 - `createMeetingAttendanceSheet()` - Creates Meeting Attendance source sheet
 - `createVolunteerHoursSheet()` - Creates Volunteer Hours source sheet
+- `setupEngagementTracking()` - Convenience function: creates all sheets + trigger
+- `installEngagementSyncTrigger()` - Installs auto-sync trigger
 - `REPAIR_DASHBOARD()` - Restores full functionality
+
+**Menu Location:**
+Administrator → Setup & Triggers → Setup Engagement Tracking
 
 ---
 
@@ -942,12 +950,14 @@ Applied via `setupDataValidations()`:
 
 Checks:
 - All 4 hidden sheets exist and are hidden
-- All 3 auto-sync triggers are installed
+- All 4 auto-sync triggers are installed
 - Formulas are present in hidden sheets
 - Data is synced to visible sheets
 - Source sheets exist (optional sheets show warnings)
 
 Run this function to diagnose any cross-population issues.
+
+**Menu Location:** Administrator → Setup & Triggers → Verify Hidden Sheets
 
 ---
 
@@ -1611,12 +1621,23 @@ User-populated columns now use `.setAllowInvalid(true)` to allow blank/custom va
 - Auto-detects source sheets and uses placeholder formulas if missing
 - Status notes show which sources are connected
 
+**New Auto-Sync Trigger:**
+- `onEditSyncEngagementData` - Auto-syncs when Meeting Attendance or Volunteer Hours edited
+- `installEngagementSyncTrigger()` / `removeEngagementSyncTrigger()`
+- `setupEngagementTracking()` - Convenience function: creates all sheets + trigger
+
 **New VERIFY_HIDDEN_SHEETS() Function:**
 - Comprehensive diagnostic for hidden sheet architecture
 - Checks all 4 hidden sheets exist and are hidden
-- Verifies all 3 auto-sync triggers are installed
+- Verifies all 4 auto-sync triggers are installed
 - Confirms formulas are present in hidden sheets
 - Reports data sync status for all cross-population flows
+
+**New Menu Items (Administrator → Setup & Triggers):**
+- 🔍 Verify Hidden Sheets
+- 📅 Setup Engagement Tracking
+- 📅 Create Meeting Attendance Sheet
+- 🤝 Create Volunteer Hours Sheet
 
 **New Constants:**
 - SHEETS.MEETING_ATTENDANCE, SHEETS.VOLUNTEER_HOURS
