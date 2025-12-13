@@ -103,6 +103,14 @@ const TUTORIAL_STEPS = [
     icon: '⌨️'
   },
   {
+    id: 'hidden_sheets',
+    title: 'Auto-Updating Data',
+    content: 'The dashboard uses hidden sheets to keep data synchronized:\n\n✅ Member Directory columns AB-AD auto-update from Grievance Log\n✅ Grievance Log columns C-D, X-AA auto-update from Member Directory\n✅ Engagement columns Q-T update from Meeting/Volunteer sheets\n\n🔧 If data stops syncing, run:\nAdministrator → Setup & Triggers → Verify Hidden Sheets',
+    sheet: null,
+    position: 'center',
+    icon: '🔄'
+  },
+  {
     id: 'complete',
     title: 'You\'re Ready!',
     content: 'You\'ve completed the basic tour. Here are some next steps:\n\n📚 Explore the FAQ & Help sections\n🎥 Watch video tutorials for detailed guidance\n📧 Contact support if you need help\n\nGood luck with your union work!',
@@ -200,6 +208,16 @@ const VIDEO_TUTORIALS = [
     url: 'https://example.com/tutorials/steward',
     thumbnail: '👨‍⚖️',
     scriptRef: 'VIDEO_SCRIPTS.md#video-8-steward-quick-guide'
+  },
+  {
+    id: 'hidden_sheets',
+    title: 'Hidden Sheet Architecture',
+    description: 'Understand auto-updating columns: how grievance data syncs to Member Directory, how member data syncs to Grievance Log, troubleshooting sync issues',
+    duration: '5-6 min',
+    category: 'Advanced',
+    url: 'https://example.com/tutorials/hidden-sheets',
+    thumbnail: '🔄',
+    scriptRef: 'VIDEO_SCRIPTS.md#video-9-hidden-sheet-architecture'
   }
 ];
 

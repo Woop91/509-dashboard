@@ -1,8 +1,30 @@
-# 509 Dashboard - Google Apps Script v3.27
+# 509 Dashboard - Google Apps Script v3.44
 
 Complete union member database and grievance tracking system for Local 509.
 
-## 🆕 What's New in v3.27
+## 🆕 What's New in v3.44
+
+### Latest Updates (v3.40-3.44 - December 2025)
+
+**Hidden Sheet Architecture** ⭐ NEW:
+- **4 Hidden Calculation Sheets** - Auto-synchronize data between sheets invisibly
+- **Auto-Population** - Member Directory columns AB-AD auto-update from Grievance Log
+- **Cross-Sheet Sync** - Grievance Log columns C-D, X-AA auto-update from Member Directory
+- **Engagement Tracking** - Columns Q-T auto-update from Meeting Attendance + Volunteer Hours
+- **Self-Healing** - REPAIR_DASHBOARD() recreates all hidden sheets and triggers
+- **Verification** - VERIFY_HIDDEN_SHEETS() diagnoses sync issues
+
+**New Sheets:**
+- 📅 Meeting Attendance - Track member meeting participation
+- 🤝 Volunteer Hours - Track member volunteer activities
+
+**New Menu Items:**
+- Administrator → Setup & Triggers → 🔍 Verify Hidden Sheets
+- Administrator → Setup & Triggers → 📅 Setup Engagement Tracking
+
+---
+
+## 🔧 What's in v3.27
 
 ### Latest Updates (v3.27 - December 2025)
 
@@ -473,7 +495,35 @@ Features include:
 - 20k members: ~2-3 minutes
 - 5k grievances: ~1-2 minutes
 
-### 6. Member Satisfaction Tracking
+### 6. Hidden Sheet Architecture (v3.40+)
+
+**Purpose**: Automatic cross-sheet data synchronization using hidden calculation sheets
+
+**The 4 Hidden Sheets**:
+
+| Hidden Sheet | Source | Destination | Columns Updated |
+|--------------|--------|-------------|-----------------|
+| `_Grievance_Calc` | Grievance Log | Member Directory | AB-AD (Has Open Grievance, Status, Deadline) |
+| `_Member_Lookup` | Member Directory | Grievance Log | C-D (Names), X-AA (Email, Unit, Location, Steward) |
+| `_Steward_Contact_Calc` | Communications Log | Member Directory | Y-AA (Contact Date, Steward, Notes) |
+| `_Engagement_Calc` | Meeting Attendance + Volunteer Hours | Member Directory | Q-T (Last Meetings, Vol Hours) |
+
+**How It Works**:
+1. User edits a source sheet (e.g., changes member email in Member Directory)
+2. onEdit trigger fires automatically
+3. Hidden sheet recalculates formulas (MAP/LAMBDA)
+4. Calculated values sync to destination sheet as static values
+
+**Key Functions**:
+- `REPAIR_DASHBOARD()` - Recreates all 4 hidden sheets + installs all 4 triggers
+- `VERIFY_HIDDEN_SHEETS()` - Diagnoses sync issues without changing anything
+- `setupEngagementTracking()` - Creates Meeting Attendance + Volunteer Hours + _Engagement_Calc
+
+**Menu Access**: Administrator → Setup & Triggers → Verify Hidden Sheets
+
+---
+
+### 7. Member Satisfaction Tracking
 
 **Purpose**: Track and analyze member satisfaction surveys
 
@@ -806,14 +856,30 @@ Generate realistic test data using the toggle-based approach:
 
 ### Issue: Member Directory grievance snapshot not updating
 
-**Cause**: Formulas in columns Z, AA, AB not present or broken
+**Cause**: Hidden sheets or triggers not installed (v3.40+ architecture)
 
 **Solution**:
-1. Check row 2 of Member Directory, columns Z-AB
-2. Should have formulas like:
-   - Column Z: `=IF(COUNTIFS('Grievance Log'!B:B,A2,'Grievance Log'!E:E,"Open")>0,"Yes","No")`
-3. If missing, run `setupFormulasAndCalculations()` from script editor
-4. Or copy formula from row 2 down to all member rows
+1. Run **Administrator → Setup & Triggers → 🔍 Verify Hidden Sheets**
+2. If issues found, run `REPAIR_DASHBOARD()` from Apps Script
+3. This recreates the `_Grievance_Calc` hidden sheet and installs the sync trigger
+
+### Issue: Grievance Log member data (C-D, X-AA) not updating
+
+**Cause**: Hidden `_Member_Lookup` sheet or trigger missing
+
+**Solution**:
+1. Run `VERIFY_HIDDEN_SHEETS()` to diagnose
+2. Run `REPAIR_DASHBOARD()` to recreate all hidden sheets and triggers
+3. Or run `setupMemberLookupSheet()` + `installMemberSyncTrigger()` individually
+
+### Issue: Engagement columns Q-T are blank
+
+**Cause**: Engagement source sheets or hidden sheet not created
+
+**Solution**:
+1. Run **Administrator → Setup & Triggers → 📅 Setup Engagement Tracking**
+2. This creates Meeting Attendance sheet, Volunteer Hours sheet, and `_Engagement_Calc` hidden sheet
+3. Enter data in the source sheets - Member Directory Q-T will auto-populate
 
 ### Issue: Dashboard showing #DIV/0! or #N/A errors
 
