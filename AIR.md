@@ -1,6 +1,6 @@
 # 509 Dashboard - Complete Feature Reference
 
-**Version:** 3.47
+**Version:** 3.48
 **Last Updated:** 2025-12-13
 **Purpose:** Union grievance tracking and member engagement system for SEIU Local 509
 
@@ -1174,7 +1174,58 @@ const COLORS = {
 
 ## Appendix: Changelog
 
-### Version 3.47 (2025-12-13) - LATEST
+### Version 3.48 (2025-12-13) - LATEST
+
+**FEATURE: Interactive Dashboard Charts Now Live-Wired**
+
+Fixed all chart sections on the Interactive Dashboard that were not populating. Charts now use the hidden sheet architecture with auto-calculated data.
+
+**Problem Solved:**
+- Charts were created without data ranges (empty charts)
+- "📊 YOUR STORY IN CHARTS" sections were blank
+- "🎯 Status Snapshot" and "🗺️ Location Hotspots" were empty
+- "💪 Every City, Every Worker" bar chart was blank
+- "📋 THE DETAILS THAT MATTER" data table was empty
+
+**Solution - Extended Hidden Sheet Architecture:**
+
+1. **Added Chart Data Formulas to `_Interactive_Dashboard_Calc`:**
+   - Row 25-33: Status breakdown (8 status types with COUNTIF formulas)
+   - Row 35-50: Location breakdown (QUERY to get top 15 locations)
+   - Row 55-65: Top items data (QUERY for upcoming deadlines)
+
+2. **Added Chart Data Sync:**
+   - Status data synced to dashboard row 100-110 (hidden area)
+   - Location data synced to dashboard row 115-130 (hidden area)
+   - Top items data synced to dashboard row 135-150 (hidden area)
+
+3. **New Functions:**
+   - `syncDashboardCharts()` - Builds/rebuilds charts using data ranges
+   - `syncDashboardDataTable()` - Updates the visible data table
+
+4. **Charts Now Created With Proper Data Ranges:**
+   - Status Donut Chart (position: row 48, col 1)
+   - Location Pie Chart (position: row 48, col 11)
+   - Location Bar Chart (position: row 71, col 1)
+   - All charts reference data ranges that auto-update
+
+**What's Now Live-Wired on Interactive Dashboard:**
+| Section | Data Source | Auto-Updates |
+|---------|-------------|--------------|
+| Metric Cards (4) | Hidden sheet rows 2-21 | Yes (3s debounce) |
+| Status Donut Chart | Hidden sheet rows 26-33 | Yes (on sync) |
+| Location Pie Chart | Hidden sheet rows 36-50 | Yes (on sync) |
+| Location Bar Chart | Hidden sheet rows 36-50 | Yes (on sync) |
+| Data Table | Hidden sheet rows 56-65 | Yes (on sync) |
+
+**Files Changed:**
+- Code.gs: Extended `setupInteractiveDashboardCalcSheet()` with chart data formulas
+- Code.gs: Extended `syncInteractiveDashboardFromCalc()` with chart sync
+- Code.gs: Added `syncDashboardCharts()` and `syncDashboardDataTable()`
+
+---
+
+### Version 3.47 (2025-12-13)
 
 **FEATURE: Reduced Script Dependency - Full Live-Wire Architecture**
 
@@ -2013,7 +2064,7 @@ See git history for complete changelog. Key milestones:
 
 ---
 
-**Document Version:** 3.47
+**Document Version:** 3.48
 **Last Updated:** 2025-12-13
 **Maintained By:** Claude (AI Assistant)
 
