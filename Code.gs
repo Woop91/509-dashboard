@@ -1412,25 +1412,31 @@ function setupGrievanceCalcSheet() {
   const gStatusCol = getColumnLetter(GRIEVANCE_COLS.STATUS);
   const gNextActionCol = getColumnLetter(GRIEVANCE_COLS.NEXT_ACTION_DUE);
   const gSheetName = SHEETS.GRIEVANCE_LOG;
+
+  // Dynamic column references for Member Directory
+  const mMemberIdCol = getColumnLetter(MEMBER_COLS.MEMBER_ID);
   const mSheetName = SHEETS.MEMBER_DIR;
 
   // Column A: Mirror Member Directory Member IDs (auto-updates when members added/removed)
+  // FULLY DYNAMIC: Uses MEMBER_COLS.MEMBER_ID for column reference
   calcSheet.getRange('A2').setFormula(
-    `=FILTER('${mSheetName}'!A:A, '${mSheetName}'!A:A<>"", '${mSheetName}'!A:A<>"Member ID")`
+    `=FILTER('${mSheetName}'!${mMemberIdCol}:${mMemberIdCol}, '${mSheetName}'!${mMemberIdCol}:${mMemberIdCol}<>"", '${mSheetName}'!${mMemberIdCol}:${mMemberIdCol}<>"Member ID")`
   );
 
   // Column B: Has Open Grievance? - MAP/LAMBDA formula
-  // Checks if member has ANY active grievances (Open, Pending Info, Appealed, In Arbitration)
+  // FULLY DYNAMIC: Uses GRIEVANCE_COLS for all Grievance Log column references
   calcSheet.getRange('B2').setFormula(
     `=MAP(A2:A,LAMBDA(m,IF(m="","",IF(SUM(COUNTIFS('${gSheetName}'!${gMemberIdCol}:${gMemberIdCol},m,'${gSheetName}'!${gStatusCol}:${gStatusCol},{"Open","Pending Info","Appealed","In Arbitration"}))>0,"Yes","No"))))`
   );
 
   // Column C: Grievance Status Snapshot - prioritizes active grievances
+  // FULLY DYNAMIC: Uses GRIEVANCE_COLS for all column references
   calcSheet.getRange('C2').setFormula(
     `=MAP(A2:A,LAMBDA(m,IF(m="","",LET(activeStatus,FILTER('${gSheetName}'!${gStatusCol}:${gStatusCol},('${gSheetName}'!${gMemberIdCol}:${gMemberIdCol}=m)*REGEXMATCH('${gSheetName}'!${gStatusCol}:${gStatusCol},"^(Open|Pending Info|Appealed|In Arbitration)$")),IFERROR(INDEX(activeStatus,1),IFERROR(INDEX('${gSheetName}'!${gStatusCol}:${gStatusCol},MATCH(m,'${gSheetName}'!${gMemberIdCol}:${gMemberIdCol},0)),""))))))`
   );
 
   // Column D: Next Grievance Deadline - prioritizes active grievances
+  // FULLY DYNAMIC: Uses GRIEVANCE_COLS for all column references
   calcSheet.getRange('D2').setFormula(
     `=MAP(A2:A,LAMBDA(m,IF(m="","",LET(activeDeadline,FILTER('${gSheetName}'!${gNextActionCol}:${gNextActionCol},('${gSheetName}'!${gMemberIdCol}:${gMemberIdCol}=m)*REGEXMATCH('${gSheetName}'!${gStatusCol}:${gStatusCol},"^(Open|Pending Info|Appealed|In Arbitration)$")),IFERROR(INDEX(activeDeadline,1),IFERROR(INDEX('${gSheetName}'!${gNextActionCol}:${gNextActionCol},MATCH(m,'${gSheetName}'!${gMemberIdCol}:${gMemberIdCol},0)),""))))))`
   );
