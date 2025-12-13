@@ -246,8 +246,8 @@ function seedAllWithRollback() {
     'Seed All Data with Rollback Protection?',
     'This will:\n' +
     '1. Take snapshots of Member Directory and Grievance Log\n' +
-    '2. Seed 20,000 members\n' +
-    '3. Seed 5,000 grievances\n' +
+    '2. Seed 500 members\n' +
+    '3. Seed 200 grievances\n' +
     '4. Recalculate all data\n\n' +
     'If any step fails, all changes will be automatically rolled back.\n\n' +
     'Continue?',
@@ -272,13 +272,13 @@ function seedAllWithRollback() {
 
     ui.alert('Snapshots created. Starting seeding operations...');
 
-    // Execute seeding operations
-    if (typeof SEED_20K_MEMBERS === 'function') {
-      SEED_20K_MEMBERS();
+    // Execute seeding operations (v3.51 - uses SeedNuke.gs functions)
+    if (typeof SEED_MEMBERS === 'function') {
+      SEED_MEMBERS(500); // Seed 500 members
     }
 
-    if (typeof SEED_5K_GRIEVANCES === 'function') {
-      SEED_5K_GRIEVANCES();
+    if (typeof SEED_GRIEVANCES === 'function') {
+      SEED_GRIEVANCES(200); // Seed 200 grievances
     }
 
     ui.alert('Data seeded. Recalculating...');

@@ -1,6 +1,6 @@
 # 509 Dashboard - Complete Feature Reference
 
-**Version:** 3.50
+**Version:** 3.51
 **Last Updated:** 2025-12-13
 **Purpose:** Union grievance tracking and member engagement system for SEIU Local 509
 
@@ -1174,7 +1174,68 @@ const COLORS = {
 
 ## Appendix: Changelog
 
-### Version 3.50 (2025-12-13) - LATEST
+### Version 3.51 (2025-12-13) - LATEST
+
+**FEATURE: Complete Seed & Nuke System**
+
+Added `SeedNuke.gs` with comprehensive data seeding and clearing functions. All functions now accessible from the Demo menu.
+
+**New Functions:**
+
+| Function | Menu Location | What It Does |
+|----------|--------------|--------------|
+| `SEED_SAMPLE_DATA()` | Demo > Seed All Sample Data | Seeds Config + 50 members + 25 grievances |
+| `seedConfigData()` | Demo > Seed Data > Seed Config Dropdowns Only | Seeds Job Titles, Locations, Units, etc. |
+| `SEED_MEMBERS(count)` | Demo > Seed Data > Seed Members | Seeds N sample members |
+| `SEED_GRIEVANCES(count)` | Demo > Seed Data > Seed Grievances | Seeds N sample grievances |
+| `SEED_MEMBERS_DIALOG()` | Demo > Seed Data > Seed Members (Custom Count) | Prompts for count |
+| `SEED_GRIEVANCES_DIALOG()` | Demo > Seed Data > Seed Grievances (Custom Count) | Prompts for count |
+| `NUKE_ALL_DATA()` | Demo > Nuke Data > NUKE ALL DATA | Clears all members, grievances, and Config dropdowns |
+| `NUKE_CONFIG_DROPDOWNS()` | Demo > Nuke Data > Clear Config Dropdowns Only | Clears only Config dropdown values |
+
+**Updated Demo Menu Structure:**
+```
+🎭 Demo
+├── 🚀 Seed All Sample Data
+├── ────────────────────
+├── 🌱 Seed Data
+│   ├── ⚙️ Seed Config Dropdowns Only
+│   ├── ────────────────────
+│   ├── 👥 Seed Members (Custom Count)
+│   ├── 📋 Seed Grievances (Custom Count)
+│   ├── ────────────────────
+│   ├── 👥 Seed 50 Members
+│   └── 📋 Seed 25 Grievances
+├── ────────────────────
+├── 📝 Add Sample Feedback Entries
+├── 📋 Populate Pending TODOs
+├── ────────────────────
+└── 🗑️ Nuke Data
+    ├── ☢️ NUKE ALL DATA
+    ├── 🧹 Clear Config Dropdowns Only
+    ├── ────────────────────
+    ├── 🗑️ Clear ALL Sheet Data (Legacy)
+    └── ⚠️ Clear Core Data Only
+```
+
+**Config Fields Seeded:**
+- Job Titles (20 values)
+- Office Locations (20 values)
+- Units (10 values)
+- Supervisors (12 values)
+- Managers (8 values)
+- Stewards (12 values)
+- Home Towns (19 values)
+
+**Files Added:**
+- SeedNuke.gs
+
+**Files Changed:**
+- ReorganizedMenu.gs: Updated Demo menu with seed/nuke functions
+
+---
+
+### Version 3.50 (2025-12-13)
 
 **AUDIT: Complete Live-Wire Architecture Verification**
 
