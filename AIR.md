@@ -1,6 +1,6 @@
 # 509 Dashboard - Complete Feature Reference
 
-**Version:** 3.41
+**Version:** 3.44
 **Last Updated:** 2025-12-13
 **Purpose:** Union grievance tracking and member engagement system for SEIU Local 509
 
@@ -194,12 +194,13 @@ node build.js --production
 11. [Menu System](#menu-system)
 12. [Data Validation Rules](#data-validation-rules)
 13. [Formula System](#formula-system)
-14. [Seed Data Functions](#seed-data-functions)
-15. [Color Scheme](#color-scheme)
-16. [Known Issues & Limitations](#known-issues--limitations)
-17. [Feature Implementation Status](#feature-implementation-status)
-18. [Code Quality & Known Issues](#code-quality--known-issues)
-19. [Appendix: Changelog](#appendix-changelog)
+14. [Hidden Sheet Architecture](#hidden-sheet-architecture-v340) ⭐ NEW
+15. [Seed Data Functions](#seed-data-functions)
+16. [Color Scheme](#color-scheme)
+17. [Known Issues & Limitations](#known-issues--limitations)
+18. [Feature Implementation Status](#feature-implementation-status)
+19. [Code Quality & Known Issues](#code-quality--known-issues)
+20. [Appendix: Changelog](#appendix-changelog)
 
 ---
 
@@ -928,11 +929,130 @@ Applied via `setupDataValidations()`:
 | F | Verified By | Who approved |
 | G | Notes | Optional notes |
 
+**Auto-Sync Trigger:**
+- `onEditSyncEngagementData` - Syncs when Meeting Attendance or Volunteer Hours is edited
+
 **Self-Healing:**
 - `setupEngagementCalcSheet()` - Creates/repairs hidden sheet, auto-detects source sheets
 - `createMeetingAttendanceSheet()` - Creates Meeting Attendance source sheet
 - `createVolunteerHoursSheet()` - Creates Volunteer Hours source sheet
+- `setupEngagementTracking()` - Convenience function: creates all sheets + trigger
+- `installEngagementSyncTrigger()` - Installs auto-sync trigger
 - `REPAIR_DASHBOARD()` - Restores full functionality
+
+**Menu Location:**
+Administrator → Setup & Triggers → Setup Engagement Tracking
+
+---
+
+## Hidden Sheet Architecture (v3.40+)
+
+The dashboard uses a sophisticated hidden sheet architecture for cross-sheet auto-population. This keeps complex formulas invisible to users while enabling automatic data synchronization.
+
+### Architecture Overview
+
+```
+┌─────────────────────────────────────────────────────────────────────────────┐
+│                        HIDDEN SHEET ARCHITECTURE                            │
+├─────────────────────────────────────────────────────────────────────────────┤
+│                                                                             │
+│   SOURCE SHEETS              HIDDEN SHEETS              DESTINATION         │
+│   ─────────────              ─────────────              ───────────         │
+│                                                                             │
+│   Grievance Log    ──────►   _Grievance_Calc   ──────►  Member Directory    │
+│   (Status, Member,           (MAP/LAMBDA                (AB-AD: Has Open    │
+│    Next Action)               formulas)                  Grievance, Status, │
+│                                                          Deadline)          │
+│                                                                             │
+│   Member Directory ──────►   _Member_Lookup    ──────►  Grievance Log       │
+│   (Name, Email,              (VLOOKUP/INDEX             (C-D: Name,         │
+│    Unit, Steward)             formulas)                  X-AA: Email, Unit, │
+│                                                          Location, Steward) │
+│                                                                             │
+│   Communications   ──────►   _Steward_Contact  ──────►  Member Directory    │
+│   Log                        _Calc                      (Y-AA: Contact      │
+│   (Timestamp,                (MAXIFS formulas)          Date, Steward,      │
+│    Sender, Subject)                                     Notes)              │
+│                                                                             │
+│   Meeting Attendance ────►   _Engagement_Calc  ──────►  Member Directory    │
+│   Volunteer Hours            (MAXIFS/SUMIF              (Q-T: Last Virtual, │
+│                               formulas)                  In-Person, Open    │
+│                                                          Rate, Vol Hours)   │
+│                                                                             │
+└─────────────────────────────────────────────────────────────────────────────┘
+```
+
+### The 4 Hidden Calculation Sheets
+
+| Hidden Sheet | Source | Destination | Columns Updated |
+|--------------|--------|-------------|-----------------|
+| `_Grievance_Calc` | Grievance Log | Member Directory | AB (Has Open Grievance), AC (Status), AD (Deadline), E-G (Count, Win Rate, Last Date) |
+| `_Member_Lookup` | Member Directory | Grievance Log | C (First Name), D (Last Name), X (Email), Y (Unit), Z (Location), AA (Steward) |
+| `_Steward_Contact_Calc` | Communications Log | Member Directory | Y (Contact Date), Z (Contact Steward), AA (Contact Notes) |
+| `_Engagement_Calc` | Meeting Attendance, Volunteer Hours | Member Directory | Q (Last Virtual), R (Last In-Person), S (Open Rate), T (Vol Hours) |
+
+### The 4 Auto-Sync Triggers
+
+| Trigger Function | Watches | Updates | Debounce |
+|-----------------|---------|---------|----------|
+| `onEditSyncGrievanceData` | Grievance Log (Status, Member ID, Next Action) | Member Directory AB-AD | 2 seconds |
+| `onEditSyncMemberData` | Member Directory (Name, Email, Unit, Location, Steward) | Grievance Log C, D, X-AA | 2 seconds |
+| `onEditSyncStewardContact` | Communications Log | Member Directory Y-AA | 2 seconds |
+| `onEditSyncEngagementData` | Meeting Attendance, Volunteer Hours | Member Directory Q-T | 2 seconds |
+
+### How Auto-Sync Works
+
+1. **User edits** a source sheet (e.g., changes a member's email in Member Directory)
+2. **onEdit trigger fires** (e.g., `onEditSyncMemberData`)
+3. **Debounce check** prevents excessive syncing (2-second cache)
+4. **Hidden sheet recalculates** formulas automatically (Google Sheets native behavior)
+5. **Trigger reads** calculated values from hidden sheet
+6. **Values written** to destination sheet as static values (no visible formulas)
+
+### Self-Healing Functions
+
+| Function | Purpose |
+|----------|---------|
+| `setupGrievanceCalcSheet()` | Creates/repairs `_Grievance_Calc` hidden sheet |
+| `setupMemberLookupSheet()` | Creates/repairs `_Member_Lookup` hidden sheet |
+| `setupStewardContactCalcSheet()` | Creates/repairs `_Steward_Contact_Calc` hidden sheet |
+| `setupEngagementCalcSheet()` | Creates/repairs `_Engagement_Calc` hidden sheet |
+| `REPAIR_DASHBOARD()` | Repairs ALL 4 hidden sheets + installs ALL 4 triggers |
+| `VERIFY_HIDDEN_SHEETS()` | Diagnoses all hidden sheets and triggers |
+
+### Source Sheets for Engagement (Optional)
+
+| Sheet | Purpose | Columns |
+|-------|---------|---------|
+| `📅 Meeting Attendance` | Track member meeting participation | Date, Type (Virtual/In-Person/Hybrid), Name, Member ID, Member Name, Attended, Notes |
+| `🤝 Volunteer Hours` | Track member volunteer activities | Date, Member ID, Member Name, Activity, Hours, Verified By, Notes |
+
+### Setup Functions
+
+| Function | Purpose |
+|----------|---------|
+| `setupEngagementTracking()` | One-click setup: creates Meeting Attendance, Volunteer Hours, _Engagement_Calc, and trigger |
+| `createMeetingAttendanceSheet()` | Creates Meeting Attendance source sheet with validations |
+| `createVolunteerHoursSheet()` | Creates Volunteer Hours source sheet with validations |
+
+### Menu Access
+
+**Administrator → Setup & Triggers:**
+- 🔍 Verify Hidden Sheets
+- 📅 Setup Engagement Tracking
+- 📅 Create Meeting Attendance Sheet
+- 🤝 Create Volunteer Hours Sheet
+
+### Troubleshooting Hidden Sheets
+
+| Problem | Solution |
+|---------|----------|
+| Columns AB-AD not updating | Run `REPAIR_DASHBOARD()` or `setupGrievanceCalcSheet()` + `installGrievanceSyncTrigger()` |
+| Grievance Log names/email stale | Run `REPAIR_DASHBOARD()` or `setupMemberLookupSheet()` + `installMemberSyncTrigger()` |
+| Contact tracking not working | Run `setupStewardContactCalcSheet()` + `installStewardContactSyncTrigger()` |
+| Engagement columns blank | Run `setupEngagementTracking()` to create source sheets + hidden sheet + trigger |
+| Everything broken | Run `REPAIR_DASHBOARD()` - the nuclear option |
+| Need to diagnose | Run `VERIFY_HIDDEN_SHEETS()` for comprehensive report |
 
 ---
 
@@ -942,12 +1062,14 @@ Applied via `setupDataValidations()`:
 
 Checks:
 - All 4 hidden sheets exist and are hidden
-- All 3 auto-sync triggers are installed
+- All 4 auto-sync triggers are installed
 - Formulas are present in hidden sheets
 - Data is synced to visible sheets
 - Source sheets exist (optional sheets show warnings)
 
 Run this function to diagnose any cross-population issues.
+
+**Menu Location:** Administrator → Setup & Triggers → Verify Hidden Sheets
 
 ---
 
@@ -1594,6 +1716,35 @@ User-populated columns now use `.setAllowInvalid(true)` to allow blank/custom va
 
 ---
 
+### Version 3.44 (2025-12-13) - LATEST
+
+**DOCUMENTATION: Hidden Sheet Architecture FAQ & Reference**
+
+Added comprehensive documentation for the hidden sheet architecture to FAQ and AIR.md.
+
+**FAQ Knowledge Base (FAQKnowledgeBase.gs):**
+- Added 8 new FAQs covering hidden sheets, auto-sync triggers, troubleshooting, and repair
+- Categories: Automation, Troubleshooting
+- Tags for searchability
+
+**FAQ Sheet (GettingStartedAndFAQ.gs):**
+- Added new "🔧 Hidden Sheet Architecture" section
+- 6 FAQs covering: What hidden sheets are, How auto-population works, Troubleshooting AB-AD columns, Verification, Repair, Engagement setup
+
+**AIR.md:**
+- Added comprehensive "Hidden Sheet Architecture (v3.40+)" section
+- ASCII diagram showing data flow between sheets
+- Tables for: 4 hidden sheets, 4 triggers, self-healing functions, source sheets, setup functions
+- Troubleshooting guide with solutions
+- Updated Table of Contents
+
+**Files Changed:**
+- FAQKnowledgeBase.gs: Added 8 hidden sheet FAQs to seedInitialFAQs()
+- GettingStartedAndFAQ.gs: Added Hidden Sheet Architecture FAQ section
+- AIR.md: Added Hidden Sheet Architecture section, updated TOC
+
+---
+
 ### Version 3.43 (2025-12-13)
 
 **ENGAGEMENT SOURCE SHEETS & VERIFICATION SYSTEM**
@@ -1611,12 +1762,23 @@ User-populated columns now use `.setAllowInvalid(true)` to allow blank/custom va
 - Auto-detects source sheets and uses placeholder formulas if missing
 - Status notes show which sources are connected
 
+**New Auto-Sync Trigger:**
+- `onEditSyncEngagementData` - Auto-syncs when Meeting Attendance or Volunteer Hours edited
+- `installEngagementSyncTrigger()` / `removeEngagementSyncTrigger()`
+- `setupEngagementTracking()` - Convenience function: creates all sheets + trigger
+
 **New VERIFY_HIDDEN_SHEETS() Function:**
 - Comprehensive diagnostic for hidden sheet architecture
 - Checks all 4 hidden sheets exist and are hidden
-- Verifies all 3 auto-sync triggers are installed
+- Verifies all 4 auto-sync triggers are installed
 - Confirms formulas are present in hidden sheets
 - Reports data sync status for all cross-population flows
+
+**New Menu Items (Administrator → Setup & Triggers):**
+- 🔍 Verify Hidden Sheets
+- 📅 Setup Engagement Tracking
+- 📅 Create Meeting Attendance Sheet
+- 🤝 Create Volunteer Hours Sheet
 
 **New Constants:**
 - SHEETS.MEETING_ATTENDANCE, SHEETS.VOLUNTEER_HOURS
@@ -1670,7 +1832,7 @@ See git history for complete changelog. Key milestones:
 
 ---
 
-**Document Version:** 3.43
+**Document Version:** 3.44
 **Last Updated:** 2025-12-13
 **Maintained By:** Claude (AI Assistant)
 

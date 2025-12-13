@@ -459,6 +459,29 @@ function createFAQSheet(ss) {
   row++;
   row = addFAQSection(sheet, row, githubFAQs);
 
+  // Hidden Sheet Architecture
+  row += 2;
+  sheet.getRange(row, 1, 1, 3).merge()
+    .setValue("🔧 Hidden Sheet Architecture")
+    .setFontSize(16)
+    .setFontWeight("bold")
+    .setBackground(COLORS.ACCENT_ORANGE)
+    .setFontColor("white")
+    .setVerticalAlignment("middle");
+  sheet.setRowHeight(row, 35);
+
+  const hiddenSheetFAQs = [
+    ["What are hidden sheets?", "Hidden sheets (prefixed with '_') contain self-healing formulas that auto-calculate data. The dashboard uses 4 hidden sheets: _Grievance_Calc (grievance metrics → Member Directory AB-AD), _Member_Lookup (member data → Grievance Log C, D, X-AA), _Steward_Contact_Calc (contact data → Member Directory Y-AA), and _Engagement_Calc (engagement metrics → Member Directory Q-T)."],
+    ["How does auto-population work?", "Hidden sheets contain MAP/LAMBDA formulas that calculate data. When you edit a source sheet (like Grievance Log), an onEdit trigger fires, reads the calculated values from the hidden sheet, and writes them to the destination sheet as static values. This keeps complex formulas invisible to users."],
+    ["Why are columns AB-AD not updating?", "These auto-update from the hidden _Grievance_Calc sheet. Fix: 1) Run Administrator → Setup & Triggers → Verify Hidden Sheets, 2) If missing, run REPAIR_DASHBOARD() from Apps Script. The onEditSyncGrievanceData trigger watches Grievance Log edits."],
+    ["How do I verify hidden sheets?", "Run Administrator → Setup & Triggers → Verify Hidden Sheets (or VERIFY_HIDDEN_SHEETS()). This checks all 4 hidden sheets exist, all 4 triggers are installed, formulas are present, and data is synced. Issues are reported with fixes."],
+    ["How do I repair everything?", "Run REPAIR_DASHBOARD() from Apps Script. This recreates all 4 hidden sheets with fresh formulas, installs all 4 auto-sync triggers, and syncs data to visible sheets. Individual functions: setupGrievanceCalcSheet(), setupMemberLookupSheet(), setupStewardContactCalcSheet(), setupEngagementCalcSheet()."],
+    ["How do I set up engagement tracking?", "Run Administrator → Setup & Triggers → Setup Engagement Tracking. This creates Meeting Attendance sheet, Volunteer Hours sheet, _Engagement_Calc hidden sheet, and the auto-sync trigger. Columns Q-T will then auto-populate from meeting and volunteer data."]
+  ];
+
+  row++;
+  row = addFAQSection(sheet, row, hiddenSheetFAQs);
+
   // Additional Help
   row += 2;
   sheet.getRange(row, 1, 1, 3).merge()
