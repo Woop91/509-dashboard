@@ -571,7 +571,17 @@ function setupInteractiveDashboardControls() {
 }
 
 /**
- * Rebuilds the Interactive Dashboard based on user selections
+ * Rebuilds the Interactive Dashboard using hidden sheet architecture (v3.47)
+ *
+ * CONVERTED: This function now uses the live-wire hidden sheet architecture.
+ * - Metric cards are synced from _Interactive_Dashboard_Calc (auto-updating formulas)
+ * - Charts still require script execution (Google Sheets limitation)
+ * - Theme and visual elements are applied
+ *
+ * NOTE: Metric cards auto-update within 3 seconds of source data changes.
+ * This function is for manual rebuilds (charts, theme) or initial setup.
+ *
+ * @since v3.47 - Converted to hidden sheet architecture for metrics
  */
 function rebuildInteractiveDashboard() {
   const ss = SpreadsheetApp.getActiveSpreadsheet();
@@ -587,7 +597,22 @@ function rebuildInteractiveDashboard() {
   try {
     SpreadsheetApp.getUi().alert('✨ Bringing your dashboard to life...\n\n🎨 Painting your data with insights!\n⏱️ Just a moment while we celebrate your work...');
 
-    // Get user selections
+    // Ensure hidden calculation sheet exists (self-healing)
+    let calcSheet = ss.getSheetByName(SHEETS.INTERACTIVE_DASHBOARD_CALC);
+    if (!calcSheet) {
+      Logger.log('rebuildInteractiveDashboard: Hidden calc sheet missing, creating...');
+      if (typeof setupInteractiveDashboardCalcSheet === 'function') {
+        setupInteractiveDashboardCalcSheet();
+      }
+    }
+
+    // Sync metrics from hidden sheet (live-wire architecture v3.46+)
+    if (typeof syncInteractiveDashboardFromCalc === 'function') {
+      syncInteractiveDashboardFromCalc();
+      Logger.log('rebuildInteractiveDashboard: Metrics synced from hidden sheet');
+    }
+
+    // Get user selections for charts
     const metric1 = sheet.getRange("A7").getValue() || "Total Members";
     const chartType1 = sheet.getRange("B7").getValue() || "Donut Chart";
     const metric2 = sheet.getRange("C7").getValue() || "Active Grievances";
@@ -595,15 +620,12 @@ function rebuildInteractiveDashboard() {
     const theme = sheet.getRange("E7").getValue() || "Union Blue";
     const enableComparison = sheet.getRange("G7").getValue() || "Yes";
 
-    // Get data
+    // Get data for charts (still needed - charts can't use hidden sheet formulas)
     const memberData = memberSheet.getDataRange().getValues();
     const grievanceData = grievanceSheet.getDataRange().getValues();
 
-    // Calculate metrics for cards
+    // Calculate metrics for chart building (charts need the metrics object)
     const metrics = calculateAllMetrics(memberData, grievanceData);
-
-    // Update metric cards
-    updateMetricCards(sheet, metrics);
 
     // Create primary chart - pass data to avoid refetch
     createDynamicChart(sheet, metric1, chartType1, metrics, "A22", 10, 20, grievanceData, memberData);
