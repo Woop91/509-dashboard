@@ -1,7 +1,7 @@
 # 509 Dashboard - User Tutorials
 
-**Version:** 3.28
-**Last Updated:** 2025-12-09
+**Version:** 3.44
+**Last Updated:** 2025-12-13
 
 Quick, practical tutorials for common tasks in the 509 Dashboard.
 
@@ -19,6 +19,7 @@ Quick, practical tutorials for common tasks in the 509 Dashboard.
 8. [Running System Diagnostics](#8-running-system-diagnostics)
 9. [Seeding Demo Data (for Training)](#9-seeding-demo-data-for-training)
 10. [Exiting Demo Mode](#10-exiting-demo-mode)
+11. [Understanding Hidden Sheet Architecture](#11-understanding-hidden-sheet-architecture) ⭐ NEW
 
 ---
 
@@ -339,6 +340,130 @@ After entering, these columns auto-populate:
 
 ---
 
+## 11. Understanding Hidden Sheet Architecture
+
+### What Are Hidden Sheets?
+
+The dashboard uses 4 "hidden" calculation sheets (prefixed with "_") to automatically synchronize data between sheets. You don't see these sheets, but they power the auto-updating columns.
+
+### The 4 Hidden Sheets
+
+| Hidden Sheet | What It Does |
+|--------------|--------------|
+| `_Grievance_Calc` | Calculates grievance data for Member Directory |
+| `_Member_Lookup` | Looks up member data for Grievance Log |
+| `_Steward_Contact_Calc` | Tracks steward contact data from Communications Log |
+| `_Engagement_Calc` | Calculates engagement metrics from Meeting/Volunteer sheets |
+
+### Auto-Populated Columns
+
+**Member Directory** (these columns update automatically):
+| Columns | Data | Source |
+|---------|------|--------|
+| Q-T | Engagement (Last Virtual Mtg, Last In-Person, Open Rate, Vol Hours) | Meeting Attendance + Volunteer Hours |
+| Y-AA | Steward Contact (Date, Who, Notes) | Communications Log |
+| AB-AD | Grievance (Has Open?, Status, Deadline) | Grievance Log |
+
+**Grievance Log** (these columns update automatically):
+| Columns | Data | Source |
+|---------|------|--------|
+| C-D | Member Name (First, Last) | Member Directory |
+| X-AA | Member Details (Email, Unit, Location, Steward) | Member Directory |
+
+### How Auto-Sync Works
+
+1. You edit a source sheet (e.g., change a member's email in Member Directory)
+2. An automatic trigger fires (runs in the background)
+3. The hidden sheet recalculates the values
+4. The new values appear in the destination sheet
+
+**⏱️ Updates happen within 2-3 seconds of your edit.**
+
+### Verifying Hidden Sheets Work
+
+**Step 1: Run Verification**
+1. Click **Administrator** → **Setup & Triggers** → **🔍 Verify Hidden Sheets**
+2. Review the report
+
+**Good Result:**
+```
+✅ _Grievance_Calc: EXISTS, hidden, formulas present
+✅ _Member_Lookup: EXISTS, hidden, formulas present
+✅ _Steward_Contact_Calc: EXISTS, hidden, formulas present
+✅ _Engagement_Calc: EXISTS, hidden, formulas present
+✅ All 4 triggers installed
+```
+
+### Troubleshooting: Columns Not Updating?
+
+**Problem**: Member Directory columns AB-AD aren't updating when I change Grievance Log
+
+**Solution**:
+1. Run **Administrator** → **Setup & Triggers** → **🔍 Verify Hidden Sheets**
+2. If it shows issues, run `REPAIR_DASHBOARD()` from Apps Script
+
+**Problem**: Grievance Log columns C-D or X-AA are stale
+
+**Solution**:
+1. Run `REPAIR_DASHBOARD()` from Apps Script
+2. This recreates all hidden sheets and reinstalls triggers
+
+### Setting Up Engagement Tracking
+
+If you want columns Q-T to auto-populate with engagement data:
+
+**Step 1: Create Source Sheets**
+1. Click **Administrator** → **Setup & Triggers** → **📅 Setup Engagement Tracking**
+2. This creates:
+   - 📅 Meeting Attendance sheet
+   - 🤝 Volunteer Hours sheet
+   - _Engagement_Calc hidden sheet
+   - Auto-sync trigger
+
+**Step 2: Enter Data in Source Sheets**
+
+**Meeting Attendance** (enter each meeting):
+| Column | Example |
+|--------|---------|
+| Date | 12/01/2025 |
+| Type | Virtual / In-Person / Hybrid |
+| Meeting Name | Monthly Chapter Meeting |
+| Member ID | M000001 |
+| Attended | Yes / No |
+
+**Volunteer Hours** (enter each activity):
+| Column | Example |
+|--------|---------|
+| Date | 12/01/2025 |
+| Member ID | M000001 |
+| Activity | Phone Banking |
+| Hours | 3 |
+
+**Step 3: Watch Auto-Population**
+- After adding entries, Member Directory columns Q-T auto-update
+- Q = Last Virtual Meeting date for that member
+- R = Last In-Person Meeting date for that member
+- T = Total Volunteer Hours for that member
+
+### Repair Functions
+
+If something goes wrong, use these repair functions:
+
+| Function | What It Fixes |
+|----------|---------------|
+| `REPAIR_DASHBOARD()` | Recreates ALL hidden sheets + ALL triggers (the nuclear option) |
+| `VERIFY_HIDDEN_SHEETS()` | Diagnoses what's broken without changing anything |
+| `setupGrievanceCalcSheet()` | Repairs only the grievance → member sync |
+| `setupMemberLookupSheet()` | Repairs only the member → grievance sync |
+| `setupEngagementTracking()` | Creates engagement source sheets + hidden sheet |
+
+**How to run these:**
+1. Open **Extensions** → **Apps Script**
+2. In the function dropdown, select the function name
+3. Click **Run**
+
+---
+
 ## Quick Reference Card
 
 ### Essential Menu Paths
@@ -390,5 +515,5 @@ After entering, these columns auto-populate:
 
 ---
 
-**Version:** 3.28
-**Last Updated:** 2025-12-09
+**Version:** 3.44
+**Last Updated:** 2025-12-13
