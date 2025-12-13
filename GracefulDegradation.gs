@@ -420,14 +420,14 @@ function seedDataSafe() {
       throw new Error('seedAllWithRollback not available');
     },
 
-    // Fallback: Seed without rollback protection
+    // Fallback: Seed without rollback protection (v3.51 - uses SeedNuke.gs)
     function() {
       Logger.log('Seeding without rollback protection...');
-      if (typeof SEED_20K_MEMBERS === 'function') {
-        SEED_20K_MEMBERS();
+      if (typeof SEED_MEMBERS === 'function') {
+        SEED_MEMBERS(500);
       }
-      if (typeof SEED_5K_GRIEVANCES === 'function') {
-        SEED_5K_GRIEVANCES();
+      if (typeof SEED_GRIEVANCES === 'function') {
+        SEED_GRIEVANCES(200);
       }
       return { mode: 'no-rollback', message: 'Seeded without rollback' };
     },

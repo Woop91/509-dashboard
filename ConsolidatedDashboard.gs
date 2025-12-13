@@ -14,7 +14,7 @@
  * Build Info:
  * - Version: 2.1.0 (Security Enhanced + Code Review Improvements)
  * - Build ID: 20251202-improvements
- * - Build Date: 2025-12-13T03:28:02.368Z
+ * - Build Date: 2025-12-13T03:32:45.755Z
  * - Build Type: DEVELOPMENT
  * - Modules: 79 files
  * - Tests Included: Yes
@@ -24890,13 +24890,13 @@ function seedDataThreadSafe() {
     if (typeof seedAllWithRollback === 'function') {
       return seedAllWithRollback();
     } else {
-      // Fallback to standard seeding
-      if (typeof SEED_20K_MEMBERS === 'function') {
-        SEED_20K_MEMBERS();
+      // Fallback to standard seeding (v3.51 - uses SeedNuke.gs)
+      if (typeof SEED_MEMBERS === 'function') {
+        SEED_MEMBERS(500);
       }
 
-      if (typeof SEED_5K_GRIEVANCES === 'function') {
-        SEED_5K_GRIEVANCES();
+      if (typeof SEED_GRIEVANCES === 'function') {
+        SEED_GRIEVANCES(200);
       }
     }
   });
@@ -30459,14 +30459,14 @@ function seedDataSafe() {
       throw new Error('seedAllWithRollback not available');
     },
 
-    // Fallback: Seed without rollback protection
+    // Fallback: Seed without rollback protection (v3.51 - uses SeedNuke.gs)
     function() {
       Logger.log('Seeding without rollback protection...');
-      if (typeof SEED_20K_MEMBERS === 'function') {
-        SEED_20K_MEMBERS();
+      if (typeof SEED_MEMBERS === 'function') {
+        SEED_MEMBERS(500);
       }
-      if (typeof SEED_5K_GRIEVANCES === 'function') {
-        SEED_5K_GRIEVANCES();
+      if (typeof SEED_GRIEVANCES === 'function') {
+        SEED_GRIEVANCES(200);
       }
       return { mode: 'no-rollback', message: 'Seeded without rollback' };
     },
@@ -46824,12 +46824,19 @@ function createReorganizedMenus(ui) {
     .addSeparator()
     .addSubMenu(ui.createMenu("🌱 Seed Data")
       .addItem("⚙️ Seed Config Dropdowns Only", "seedConfigData")
+      .addItem("⚙️ Populate Config Defaults (Full)", "populateConfigDefaults")
       .addSeparator()
       .addItem("👥 Seed Members (Custom Count)", "SEED_MEMBERS_DIALOG")
       .addItem("📋 Seed Grievances (Custom Count)", "SEED_GRIEVANCES_DIALOG")
       .addSeparator()
       .addItem("👥 Seed 50 Members", "SEED_MEMBERS")
-      .addItem("📋 Seed 25 Grievances", "SEED_GRIEVANCES"))
+      .addItem("📋 Seed 25 Grievances", "SEED_GRIEVANCES")
+      .addSeparator()
+      .addItem("📊 Populate Member Satisfaction", "populateMemberSatisfaction")
+      .addItem("❓ Seed Initial FAQs", "seedInitialFAQs")
+      .addSeparator()
+      .addItem("🔒 Seed with Rollback Protection", "seedAllWithRollback")
+      .addItem("🔐 Seed Thread-Safe", "seedDataThreadSafe"))
     .addSeparator()
     .addItem("📝 Add Sample Feedback Entries", "addSampleFeedbackEntries")
     .addItem("📋 Populate Pending TODOs", "populatePendingTodos")
@@ -46839,7 +46846,8 @@ function createReorganizedMenus(ui) {
       .addItem("🧹 Clear Config Dropdowns Only", "NUKE_CONFIG_DROPDOWNS")
       .addSeparator()
       .addItem("🗑️ Clear ALL Sheet Data (Legacy)", "nukeAllSheetData")
-      .addItem("⚠️ Clear Core Data Only", "clearAllData"))
+      .addItem("⚠️ Clear Core Data Only", "clearAllData")
+      .addItem("🔄 Clear with Rollback Protection", "clearAllDataWithRollback"))
     .addToUi();
 
   // ------------ ADMINISTRATOR MENU ------------
@@ -51222,8 +51230,8 @@ function seedAllWithRollback() {
     'Seed All Data with Rollback Protection?',
     'This will:\n' +
     '1. Take snapshots of Member Directory and Grievance Log\n' +
-    '2. Seed 20,000 members\n' +
-    '3. Seed 5,000 grievances\n' +
+    '2. Seed 500 members\n' +
+    '3. Seed 200 grievances\n' +
     '4. Recalculate all data\n\n' +
     'If any step fails, all changes will be automatically rolled back.\n\n' +
     'Continue?',
@@ -51248,13 +51256,13 @@ function seedAllWithRollback() {
 
     ui.alert('Snapshots created. Starting seeding operations...');
 
-    // Execute seeding operations
-    if (typeof SEED_20K_MEMBERS === 'function') {
-      SEED_20K_MEMBERS();
+    // Execute seeding operations (v3.51 - uses SeedNuke.gs functions)
+    if (typeof SEED_MEMBERS === 'function') {
+      SEED_MEMBERS(500); // Seed 500 members
     }
 
-    if (typeof SEED_5K_GRIEVANCES === 'function') {
-      SEED_5K_GRIEVANCES();
+    if (typeof SEED_GRIEVANCES === 'function') {
+      SEED_GRIEVANCES(200); // Seed 200 grievances
     }
 
     ui.alert('Data seeded. Recalculating...');

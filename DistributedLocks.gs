@@ -214,13 +214,13 @@ function seedDataThreadSafe() {
     if (typeof seedAllWithRollback === 'function') {
       return seedAllWithRollback();
     } else {
-      // Fallback to standard seeding
-      if (typeof SEED_20K_MEMBERS === 'function') {
-        SEED_20K_MEMBERS();
+      // Fallback to standard seeding (v3.51 - uses SeedNuke.gs)
+      if (typeof SEED_MEMBERS === 'function') {
+        SEED_MEMBERS(500);
       }
 
-      if (typeof SEED_5K_GRIEVANCES === 'function') {
-        SEED_5K_GRIEVANCES();
+      if (typeof SEED_GRIEVANCES === 'function') {
+        SEED_GRIEVANCES(200);
       }
     }
   });
