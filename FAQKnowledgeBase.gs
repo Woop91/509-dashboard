@@ -179,7 +179,7 @@ function seedInitialFAQs() {
     {
       category: FAQ_CATEGORIES.AUTOMATION,
       question: 'What are hidden sheets and why does the dashboard use them?',
-      answer: 'Hidden sheets (prefixed with "_") contain self-healing formulas that auto-calculate data. This architecture keeps complex formulas invisible to users while allowing auto-updates. There are 4 hidden sheets: _Grievance_Calc (grievance metrics for Member Directory), _Member_Lookup (member data for Grievance Log), _Steward_Contact_Calc (contact data from Communications Log), and _Engagement_Calc (engagement metrics). Run VERIFY_HIDDEN_SHEETS() to check their status.',
+      answer: 'Hidden sheets (prefixed with "_") contain self-healing formulas that auto-calculate data. This architecture keeps complex formulas invisible to users while allowing auto-updates. There are 5 hidden sheets: _Grievance_Calc (grievance metrics for Member Directory AB-AD, AF-AH), _Member_Lookup (member data for Grievance Log), _Steward_Contact_Calc (contact data from Communications Log), _Engagement_Calc (engagement metrics), and _Steward_Workload_Calc (steward metrics for Steward Workload sheet). Run VERIFY_HIDDEN_SHEETS() to check their status.',
       tags: 'hidden sheets, formulas, auto-update, architecture, _Grievance_Calc, _Member_Lookup'
     },
     {
@@ -209,19 +209,19 @@ function seedInitialFAQs() {
     {
       category: FAQ_CATEGORIES.TROUBLESHOOTING,
       question: 'How do I verify all hidden sheets are working?',
-      answer: 'Run Administrator → Setup & Triggers → Verify Hidden Sheets (or VERIFY_HIDDEN_SHEETS() from Apps Script). This checks: 1) All 4 hidden sheets exist and are hidden, 2) All 4 auto-sync triggers are installed, 3) Formulas are present in hidden sheets, 4) Data is synced to visible sheets. Any issues will be reported with specific fixes.',
+      answer: 'Run Administrator → Setup & Triggers → Verify Hidden Sheets (or VERIFY_HIDDEN_SHEETS() from Apps Script). This checks: 1) All 5 hidden sheets exist and are hidden, 2) All 5 auto-sync triggers are installed, 3) Formulas are present in hidden sheets, 4) Data is synced to visible sheets. Any issues will be reported with specific fixes.',
       tags: 'verify, diagnose, hidden sheets, triggers, check, troubleshoot'
     },
     {
       category: FAQ_CATEGORIES.TROUBLESHOOTING,
       question: 'How do I repair the hidden sheet architecture?',
-      answer: 'Run REPAIR_DASHBOARD() from Apps Script (or use the menu). This function: 1) Recreates all 4 hidden calculation sheets with fresh formulas, 2) Installs all 4 auto-sync triggers, 3) Syncs data to visible sheets. This is the "nuclear option" that fixes most cross-population issues. Individual repairs: setupGrievanceCalcSheet(), setupMemberLookupSheet(), setupStewardContactCalcSheet(), setupEngagementCalcSheet().',
+      answer: 'Run REPAIR_DASHBOARD() from Apps Script (or use the menu). This function: 1) Recreates all 5 hidden calculation sheets with fresh formulas, 2) Installs all 5 auto-sync triggers, 3) Syncs data to visible sheets. This is the "nuclear option" that fixes most cross-population issues. Individual repairs: setupGrievanceCalcSheet(), setupMemberLookupSheet(), setupStewardContactCalcSheet(), setupEngagementCalcSheet(), setupStewardWorkloadCalcSheet().',
       tags: 'repair, fix, hidden sheets, REPAIR_DASHBOARD, recreate, self-healing'
     },
     {
       category: FAQ_CATEGORIES.AUTOMATION,
-      question: 'What are the 4 auto-sync triggers and what do they do?',
-      answer: 'The dashboard uses 4 onEdit triggers: 1) onEditSyncGrievanceData - Grievance Log edits → Member Directory AB-AD, 2) onEditSyncMemberData - Member Directory edits → Grievance Log C, D, X-AA, 3) onEditSyncStewardContact - Communications Log edits → Member Directory Y-AA, 4) onEditSyncEngagementData - Meeting/Volunteer sheet edits → Member Directory Q-T. Each trigger includes debouncing to prevent excessive syncs.',
+      question: 'What are the 5 auto-sync triggers and what do they do?',
+      answer: 'The dashboard uses 5 onEdit triggers: 1) onEditSyncGrievanceData - Grievance Log edits → Member Directory AB-AD, AF-AH, 2) onEditSyncMemberData - Member Directory edits → Grievance Log C, D, X-AA, 3) onEditSyncStewardContact - Communications Log edits → Member Directory Y-AA, 4) onEditSyncEngagementData - Meeting/Volunteer sheet edits → Member Directory Q-T, 5) onEditSyncStewardWorkload - Grievance Log/Member Directory steward edits → Steward Workload sheet. Each trigger includes debouncing to prevent excessive syncs.',
       tags: 'triggers, onEdit, sync, auto-update, debounce'
     }
   ];

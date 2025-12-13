@@ -437,6 +437,24 @@ function REPAIR_DASHBOARD() {
         Logger.log('installEngagementSyncTrigger error: ' + e.message);
       }
     }
+
+    // Set up Steward Workload Calc hidden sheet for steward metrics (v3.45)
+    if (typeof setupStewardWorkloadCalcSheet === 'function') {
+      try {
+        setupStewardWorkloadCalcSheet();
+        logStep('Set up Steward Workload Calc hidden sheet');
+      } catch (e) {
+        Logger.log('setupStewardWorkloadCalcSheet error: ' + e.message);
+      }
+    }
+    if (typeof installStewardWorkloadSyncTrigger === 'function') {
+      try {
+        installStewardWorkloadSyncTrigger();
+        logStep('Installed steward workload auto-sync trigger');
+      } catch (e) {
+        Logger.log('installStewardWorkloadSyncTrigger error: ' + e.message);
+      }
+    }
     SpreadsheetApp.flush();
 
     // Step 4: Set up Interactive Dashboard
@@ -879,7 +897,7 @@ function createMemberDirectory() {
     memberDir = ss.insertSheet(SHEETS.MEMBER_DIR);
   }
 
-  // Member Directory columns (31 total) - Reorganized for logical grouping
+  // Member Directory columns (34 total) - Reorganized for logical grouping
   const headers = [
     // Section 1: Identity & Core Info (A-D)
     "Member ID",                       // A - 1
@@ -915,11 +933,14 @@ function createMemberDirectory() {
     "Most Recent Steward Contact Date",// Y - 25
     "Steward Who Contacted Member",    // Z - 26
     "Notes from Steward Contact",      // AA - 27
-    // Section 8: Grievance Management (AB-AE)
-    "Has Open Grievance?",             // AB - 28
-    "Grievance Status Snapshot",       // AC - 29
-    "Next Grievance Deadline",         // AD - 30
-    "Start Grievance"                  // AE - 31
+    // Section 8: Grievance Management (AB-AH) - Extended in v3.45
+    "Has Open Grievance?",             // AB - 28 (auto-populated)
+    "Grievance Status Snapshot",       // AC - 29 (auto-populated)
+    "Next Grievance Deadline",         // AD - 30 (auto-populated)
+    "Start Grievance",                 // AE - 31 (checkbox)
+    "Total Grievance Count",           // AF - 32 (auto-populated v3.45)
+    "Win Rate (%)",                    // AG - 33 (auto-populated v3.45)
+    "Last Grievance Date"              // AH - 34 (auto-populated v3.45)
   ];
 
   // Update headers (row 1 only - preserves data in rows 2+)
@@ -1555,15 +1576,16 @@ function syncGrievanceCalcToMemberDirectory() {
   // Force formulas to recalculate
   SpreadsheetApp.flush();
 
-  // Read calculated values from hidden sheet (columns A-D, skip header)
+  // Read calculated values from hidden sheet (columns A-G, skip header)
+  // A: Member ID, B: Has Open, C: Status, D: Deadline, E: Total Count, F: Win Rate, G: Last Date
   const calcLastRow = calcSheet.getLastRow();
   if (calcLastRow < 2) {
     return { processed: 0 };
   }
 
-  const calcData = calcSheet.getRange(2, 1, calcLastRow - 1, 4).getValues();
+  const calcData = calcSheet.getRange(2, 1, calcLastRow - 1, 7).getValues();
 
-  // Build lookup map: memberId -> { hasOpen, status, deadline }
+  // Build lookup map: memberId -> { hasOpen, status, deadline, totalCount, winRate, lastDate }
   const calcMap = {};
   for (let i = 0; i < calcData.length; i++) {
     const memberId = String(calcData[i][0] || '');
@@ -1571,7 +1593,10 @@ function syncGrievanceCalcToMemberDirectory() {
       calcMap[memberId] = {
         hasOpen: calcData[i][1] || 'No',
         status: calcData[i][2] || '',
-        deadline: calcData[i][3] || ''
+        deadline: calcData[i][3] || '',
+        totalCount: calcData[i][4] || 0,
+        winRate: calcData[i][5] || '',
+        lastDate: calcData[i][6] || ''
       };
     }
   }
@@ -1588,6 +1613,9 @@ function syncGrievanceCalcToMemberDirectory() {
   const hasOpenArr = [];
   const statusArr = [];
   const deadlineArr = [];
+  const totalCountArr = [];
+  const winRateArr = [];
+  const lastDateArr = [];
 
   for (let i = 0; i < memberIds.length; i++) {
     const memberId = String(memberIds[i][0] || '');
@@ -1597,22 +1625,34 @@ function syncGrievanceCalcToMemberDirectory() {
       hasOpenArr.push([calc.hasOpen]);
       statusArr.push([calc.status]);
       deadlineArr.push([calc.deadline]);
+      totalCountArr.push([calc.totalCount]);
+      winRateArr.push([calc.winRate]);
+      lastDateArr.push([calc.lastDate]);
     } else {
       hasOpenArr.push(['No']);
       statusArr.push(['']);
       deadlineArr.push(['']);
+      totalCountArr.push([0]);
+      winRateArr.push(['']);
+      lastDateArr.push(['']);
     }
   }
 
-  // Write to Member Directory columns AB, AC, AD
+  // Write to Member Directory columns AB, AC, AD (status) and AF, AG, AH (stats)
+  // Note: Column AE (START_GRIEVANCE) is a checkbox - do not overwrite
   const numRows = hasOpenArr.length;
   if (numRows > 0) {
+    // Status columns (AB-AD)
     memberDir.getRange(2, MEMBER_COLS.HAS_OPEN_GRIEVANCE, numRows, 1).setValues(hasOpenArr);
     memberDir.getRange(2, MEMBER_COLS.GRIEVANCE_STATUS, numRows, 1).setValues(statusArr);
     memberDir.getRange(2, MEMBER_COLS.NEXT_DEADLINE, numRows, 1).setValues(deadlineArr);
+    // Stats columns (AF-AH) - v3.45
+    memberDir.getRange(2, MEMBER_COLS.TOTAL_GRIEVANCE_COUNT, numRows, 1).setValues(totalCountArr);
+    memberDir.getRange(2, MEMBER_COLS.GRIEVANCE_WIN_RATE, numRows, 1).setValues(winRateArr);
+    memberDir.getRange(2, MEMBER_COLS.LAST_GRIEVANCE_DATE, numRows, 1).setValues(lastDateArr);
   }
 
-  Logger.log(`syncGrievanceCalcToMemberDirectory: Synced ${numRows} members`);
+  Logger.log(`syncGrievanceCalcToMemberDirectory: Synced ${numRows} members with 6 grievance columns`);
   return { processed: numRows };
 }
 
@@ -5771,10 +5811,11 @@ function VERIFY_HIDDEN_SHEETS() {
   // 1. Check hidden sheets exist
   results.push('📋 HIDDEN SHEETS:');
   const hiddenSheets = [
-    { name: SHEETS.GRIEVANCE_CALC, purpose: 'Grievance metrics → Member Directory AB-AD' },
+    { name: SHEETS.GRIEVANCE_CALC, purpose: 'Grievance metrics → Member Directory AB-AD, AF-AH' },
     { name: SHEETS.MEMBER_LOOKUP, purpose: 'Member data → Grievance Log C,D,X-AA' },
     { name: SHEETS.STEWARD_CONTACT_CALC, purpose: 'Contact data → Member Directory Y-AA' },
-    { name: SHEETS.ENGAGEMENT_CALC, purpose: 'Engagement metrics → Member Directory Q-T' }
+    { name: SHEETS.ENGAGEMENT_CALC, purpose: 'Engagement metrics → Member Directory Q-T' },
+    { name: SHEETS.STEWARD_WORKLOAD_CALC, purpose: 'Steward metrics → Steward Workload sheet (v3.45)' }
   ];
 
   for (const sheet of hiddenSheets) {
@@ -5818,7 +5859,8 @@ function VERIFY_HIDDEN_SHEETS() {
     'onEditSyncGrievanceData',
     'onEditSyncMemberData',
     'onEditSyncStewardContact',
-    'onEditSyncEngagementData'
+    'onEditSyncEngagementData',
+    'onEditSyncStewardWorkload'
   ];
 
   for (const triggerName of expectedTriggers) {
@@ -5865,6 +5907,15 @@ function VERIFY_HIDDEN_SHEETS() {
     const formula = engagementCalc.getRange('A2').getFormula();
     const hasFormula = formula && formula.length > 0;
     results.push('  ' + (hasFormula ? '✅' : '❌') + ' _Engagement_Calc has formulas');
+    if (!hasFormula) allPassed = false;
+  }
+
+  // Check _Steward_Workload_Calc (v3.45)
+  const stewardWorkloadCalc = ss.getSheetByName(SHEETS.STEWARD_WORKLOAD_CALC);
+  if (stewardWorkloadCalc) {
+    const formula = stewardWorkloadCalc.getRange('A2').getFormula();
+    const hasFormula = formula && formula.length > 0;
+    results.push('  ' + (hasFormula ? '✅' : '❌') + ' _Steward_Workload_Calc has formulas');
     if (!hasFormula) allPassed = false;
   }
   results.push('');
@@ -6173,6 +6224,352 @@ function setupEngagementTracking() {
     );
   } catch (error) {
     Logger.log('setupEngagementTracking error: ' + error.message);
+    ui.alert('Error', 'Setup failed: ' + error.message, ui.ButtonSet.OK);
+  }
+}
+
+/* --------------------= STEWARD WORKLOAD HIDDEN SHEET (v3.45) --------------------= */
+
+/**
+ * Creates/repairs the hidden _Steward_Workload_Calc sheet with self-healing formulas
+ * This sheet auto-calculates steward workload metrics from Grievance Log and Member Directory
+ *
+ * Columns calculated:
+ * A: Steward Name
+ * B: Total Cases
+ * C: Active Cases
+ * D: Resolved Cases
+ * E: Won Cases
+ * F: Win Rate (%)
+ * G: Overdue Cases
+ * H: Due This Week
+ * I: Email
+ * J: Phone
+ *
+ * @since v3.45
+ */
+function setupStewardWorkloadCalcSheet() {
+  const ss = SpreadsheetApp.getActive();
+
+  // Get or create the hidden calculation sheet
+  let calcSheet = ss.getSheetByName(SHEETS.STEWARD_WORKLOAD_CALC);
+  if (!calcSheet) {
+    calcSheet = ss.insertSheet(SHEETS.STEWARD_WORKLOAD_CALC);
+    Logger.log('Created hidden calculation sheet: ' + SHEETS.STEWARD_WORKLOAD_CALC);
+  }
+
+  // Hide the sheet (self-healing - re-hide if someone unhid it)
+  calcSheet.hideSheet();
+
+  // Clear and rebuild (self-healing)
+  calcSheet.clear();
+
+  // Set up headers
+  calcSheet.getRange('A1:J1').setValues([[
+    'Steward Name', 'Total Cases', 'Active Cases', 'Resolved Cases', 'Won Cases',
+    'Win Rate (%)', 'Overdue Cases', 'Due This Week', 'Email', 'Phone'
+  ]]);
+  calcSheet.getRange('A1:J1').setFontWeight('bold').setBackground('#E5E7EB');
+
+  // Dynamic column references for Member Directory
+  const mFirstNameCol = getColumnLetter(MEMBER_COLS.FIRST_NAME);
+  const mLastNameCol = getColumnLetter(MEMBER_COLS.LAST_NAME);
+  const mIsStewardCol = getColumnLetter(MEMBER_COLS.IS_STEWARD);
+  const mEmailCol = getColumnLetter(MEMBER_COLS.EMAIL);
+  const mPhoneCol = getColumnLetter(MEMBER_COLS.PHONE);
+  const mSheetName = SHEETS.MEMBER_DIR;
+
+  // Dynamic column references for Grievance Log
+  const gStewardCol = getColumnLetter(GRIEVANCE_COLS.STEWARD);
+  const gStatusCol = getColumnLetter(GRIEVANCE_COLS.STATUS);
+  const gResolutionCol = getColumnLetter(GRIEVANCE_COLS.RESOLUTION);
+  const gDaysToDeadlineCol = getColumnLetter(GRIEVANCE_COLS.DAYS_TO_DEADLINE);
+  const gSheetName = SHEETS.GRIEVANCE_LOG;
+
+  // Column A: List of steward names (combining First + Last where Is Steward = Yes)
+  // Using FILTER + ARRAYFORMULA to get unique steward names
+  calcSheet.getRange('A2').setFormula(
+    `=IFERROR(FILTER('${mSheetName}'!${mFirstNameCol}2:${mFirstNameCol}&" "&'${mSheetName}'!${mLastNameCol}2:${mLastNameCol},'${mSheetName}'!${mIsStewardCol}2:${mIsStewardCol}="Yes"),"")`
+  );
+
+  // Column B: Total Cases per steward
+  // COUNTIF on Grievance Log Steward column matching this steward name
+  calcSheet.getRange('B2').setFormula(
+    `=MAP(A2:A,LAMBDA(s,IF(s="","",COUNTIF('${gSheetName}'!${gStewardCol}:${gStewardCol},s))))`
+  );
+
+  // Column C: Active Cases (Open, Pending Info, Appealed, In Arbitration)
+  calcSheet.getRange('C2').setFormula(
+    `=MAP(A2:A,LAMBDA(s,IF(s="","",SUM(COUNTIFS('${gSheetName}'!${gStewardCol}:${gStewardCol},s,'${gSheetName}'!${gStatusCol}:${gStatusCol},{"Open","Pending Info","Appealed","In Arbitration"})))))`
+  );
+
+  // Column D: Resolved Cases (Settled, Resolved, Closed, Withdrawn)
+  calcSheet.getRange('D2').setFormula(
+    `=MAP(A2:A,LAMBDA(s,IF(s="","",SUM(COUNTIFS('${gSheetName}'!${gStewardCol}:${gStewardCol},s,'${gSheetName}'!${gStatusCol}:${gStatusCol},{"Settled","Resolved","Closed","Withdrawn"})))))`
+  );
+
+  // Column E: Won Cases (Resolution = Won or Partially Won)
+  calcSheet.getRange('E2').setFormula(
+    `=MAP(A2:A,LAMBDA(s,IF(s="","",SUM(COUNTIFS('${gSheetName}'!${gStewardCol}:${gStewardCol},s,'${gSheetName}'!${gResolutionCol}:${gResolutionCol},{"Won","Partially Won"})))))`
+  );
+
+  // Column F: Win Rate (%) = Won / Resolved * 100
+  calcSheet.getRange('F2').setFormula(
+    `=MAP(A2:A,LAMBDA(s,IF(s="","",IF(D2=0,"",ROUND(INDIRECT("E"&ROW())/INDIRECT("D"&ROW())*100,0)))))`
+  );
+
+  // Column G: Overdue Cases (Days to Deadline < 0 AND status is active)
+  calcSheet.getRange('G2').setFormula(
+    `=MAP(A2:A,LAMBDA(s,IF(s="","",SUMPRODUCT(('${gSheetName}'!${gStewardCol}2:${gStewardCol}=s)*REGEXMATCH('${gSheetName}'!${gStatusCol}2:${gStatusCol},"^(Open|Pending Info|Appealed|In Arbitration)$")*('${gSheetName}'!${gDaysToDeadlineCol}2:${gDaysToDeadlineCol}<0)*1))))`
+  );
+
+  // Column H: Due This Week (0 <= Days to Deadline <= 7 AND status is active)
+  calcSheet.getRange('H2').setFormula(
+    `=MAP(A2:A,LAMBDA(s,IF(s="","",SUMPRODUCT(('${gSheetName}'!${gStewardCol}2:${gStewardCol}=s)*REGEXMATCH('${gSheetName}'!${gStatusCol}2:${gStatusCol},"^(Open|Pending Info|Appealed|In Arbitration)$")*('${gSheetName}'!${gDaysToDeadlineCol}2:${gDaysToDeadlineCol}>=0)*('${gSheetName}'!${gDaysToDeadlineCol}2:${gDaysToDeadlineCol}<=7)*1))))`
+  );
+
+  // Column I: Email (lookup from Member Directory)
+  calcSheet.getRange('I2').setFormula(
+    `=MAP(A2:A,LAMBDA(s,IF(s="","",IFERROR(VLOOKUP(LEFT(s,FIND(" ",s)-1)&"*"&MID(s,FIND(" ",s)+1,100),'${mSheetName}'!${mFirstNameCol}:${mEmailCol},COLUMN('${mSheetName}'!${mEmailCol}:${mEmailCol})-COLUMN('${mSheetName}'!${mFirstNameCol}:${mFirstNameCol})+1,FALSE),INDEX(FILTER('${mSheetName}'!${mEmailCol}:${mEmailCol},'${mSheetName}'!${mFirstNameCol}:${mFirstNameCol}&" "&'${mSheetName}'!${mLastNameCol}:${mLastNameCol}=s),1)))))`
+  );
+
+  // Column J: Phone (lookup from Member Directory) - simplified lookup
+  calcSheet.getRange('J2').setFormula(
+    `=MAP(A2:A,LAMBDA(s,IF(s="","",IFERROR(INDEX(FILTER('${mSheetName}'!${mPhoneCol}:${mPhoneCol},'${mSheetName}'!${mFirstNameCol}:${mFirstNameCol}&" "&'${mSheetName}'!${mLastNameCol}:${mLastNameCol}=s),1),""))))`
+  );
+
+  // Format the sheet
+  calcSheet.setColumnWidth(1, 150);
+  for (let i = 2; i <= 8; i++) {
+    calcSheet.setColumnWidth(i, 100);
+  }
+  calcSheet.setColumnWidth(9, 180);
+  calcSheet.setColumnWidth(10, 120);
+
+  Logger.log('setupStewardWorkloadCalcSheet: Hidden calculation sheet configured with 10 metric columns');
+}
+
+/**
+ * Syncs calculated values from hidden _Steward_Workload_Calc sheet to Steward Workload sheet
+ * Reads the formula-calculated values and writes them as static values to Steward Workload.
+ *
+ * @returns {Object} { processed: number }
+ * @since v3.45
+ */
+function syncStewardWorkloadCalcToSheet() {
+  const ss = SpreadsheetApp.getActive();
+  const calcSheet = ss.getSheetByName(SHEETS.STEWARD_WORKLOAD_CALC);
+  const workloadSheet = ss.getSheetByName(SHEETS.STEWARD_WORKLOAD);
+
+  if (!calcSheet) {
+    throw new Error('Steward Workload Calc sheet not found. Run setupStewardWorkloadCalcSheet() first.');
+  }
+  if (!workloadSheet) {
+    // Sheet doesn't exist yet - create it first
+    createStewardWorkloadSheet();
+  }
+
+  // Force formulas to recalculate
+  SpreadsheetApp.flush();
+
+  // Read calculated values from hidden sheet (columns A-J, skip header)
+  const calcLastRow = calcSheet.getLastRow();
+  if (calcLastRow < 2) {
+    return { processed: 0 };
+  }
+
+  const calcData = calcSheet.getRange(2, 1, calcLastRow - 1, 10).getValues();
+
+  // Build output data with capacity status
+  const outputData = [];
+  for (let i = 0; i < calcData.length; i++) {
+    const row = calcData[i];
+    const stewardName = row[0];
+    if (!stewardName) continue;
+
+    const totalCases = row[1] || 0;
+    const activeCases = row[2] || 0;
+    const resolvedCases = row[3] || 0;
+    const winRate = row[5] || 0;
+    const overdueCases = row[6] || 0;
+    const dueThisWeek = row[7] || 0;
+    const email = row[8] || '';
+    const phone = row[9] || '';
+
+    // Calculate capacity status based on active cases
+    let capacityStatus;
+    if (activeCases === 0) {
+      capacityStatus = 'Available';
+    } else if (activeCases <= 5) {
+      capacityStatus = 'Normal';
+    } else if (activeCases <= 10) {
+      capacityStatus = 'Busy';
+    } else {
+      capacityStatus = 'Overloaded';
+    }
+
+    // Avg Days to Resolution is not calculated via formula (would need historical data)
+    // Setting to 0 for now - the batch function can still calculate this if needed
+    const avgDaysToResolution = 0;
+
+    outputData.push([
+      stewardName,
+      totalCases,
+      activeCases,
+      resolvedCases,
+      winRate,
+      avgDaysToResolution,
+      overdueCases,
+      dueThisWeek,
+      capacityStatus,
+      email,
+      phone
+    ]);
+  }
+
+  // Sort by active cases (descending)
+  outputData.sort((a, b) => b[2] - a[2]);
+
+  // Get workload sheet reference
+  const workload = ss.getSheetByName(SHEETS.STEWARD_WORKLOAD);
+  if (!workload) return { processed: 0 };
+
+  // Clear existing data (keep headers at row 3)
+  const lastRow = workload.getLastRow();
+  if (lastRow > 3) {
+    workload.getRange(4, 1, lastRow - 3, 11).clear();
+  }
+
+  // Write new data starting at row 4
+  if (outputData.length > 0) {
+    workload.getRange(4, 1, outputData.length, 11).setValues(outputData);
+  }
+
+  Logger.log(`syncStewardWorkloadCalcToSheet: Synced ${outputData.length} stewards`);
+  return { processed: outputData.length };
+}
+
+/**
+ * Installs the onEdit trigger for auto-syncing steward workload data
+ * Uses a debounce mechanism to avoid excessive updates
+ *
+ * @since v3.45
+ */
+function installStewardWorkloadSyncTrigger() {
+  const ss = SpreadsheetApp.getActive();
+
+  // Check if trigger already exists
+  const triggers = ScriptApp.getProjectTriggers();
+  for (let i = 0; i < triggers.length; i++) {
+    if (triggers[i].getHandlerFunction() === 'onEditSyncStewardWorkload') {
+      Logger.log('Steward workload sync trigger already exists');
+      return;
+    }
+  }
+
+  // Install new onEdit trigger
+  ScriptApp.newTrigger('onEditSyncStewardWorkload')
+    .forSpreadsheet(ss)
+    .onEdit()
+    .create();
+
+  Logger.log('Installed steward workload sync trigger: onEditSyncStewardWorkload');
+}
+
+/**
+ * onEdit trigger handler for auto-syncing steward workload data
+ * Called when any cell is edited. Only acts on Grievance Log or Member Directory changes.
+ *
+ * @param {Object} e - Edit event object
+ * @since v3.45
+ */
+function onEditSyncStewardWorkload(e) {
+  try {
+    const sheet = e.source.getActiveSheet();
+    const sheetName = sheet.getName();
+
+    // Only sync when Grievance Log or Member Directory is edited
+    if (sheetName !== SHEETS.GRIEVANCE_LOG && sheetName !== SHEETS.MEMBER_DIR) {
+      return;
+    }
+
+    // For Member Directory, only sync when Is Steward column is edited
+    if (sheetName === SHEETS.MEMBER_DIR) {
+      const editCol = e.range.getColumn();
+      if (editCol !== MEMBER_COLS.IS_STEWARD &&
+          editCol !== MEMBER_COLS.FIRST_NAME &&
+          editCol !== MEMBER_COLS.LAST_NAME) {
+        return;
+      }
+    }
+
+    // For Grievance Log, only sync when relevant columns are edited
+    if (sheetName === SHEETS.GRIEVANCE_LOG) {
+      const editCol = e.range.getColumn();
+      const relevantCols = [
+        GRIEVANCE_COLS.STEWARD,
+        GRIEVANCE_COLS.STATUS,
+        GRIEVANCE_COLS.RESOLUTION,
+        GRIEVANCE_COLS.DAYS_TO_DEADLINE
+      ];
+      if (!relevantCols.includes(editCol)) {
+        return;
+      }
+    }
+
+    // Simple debounce using cache
+    const cache = CacheService.getScriptCache();
+    const lastSync = cache.get('stewardWorkloadLastSync');
+    const now = Date.now();
+
+    if (lastSync && (now - parseInt(lastSync)) < 2000) {
+      return; // Skip if synced within last 2 seconds
+    }
+
+    cache.put('stewardWorkloadLastSync', now.toString(), 60);
+
+    // Run sync
+    syncStewardWorkloadCalcToSheet();
+
+  } catch (error) {
+    Logger.log('onEditSyncStewardWorkload error: ' + error.message);
+  }
+}
+
+/**
+ * Sets up the complete steward workload auto-calculation system
+ * Creates hidden sheet, installs trigger, and runs initial sync
+ *
+ * @since v3.45
+ */
+function setupStewardWorkloadAutoSync() {
+  const ui = SpreadsheetApp.getUi();
+
+  SpreadsheetApp.getActive().toast('Setting up steward workload auto-sync...', 'Please wait', -1);
+
+  try {
+    // Create/repair the hidden calculation sheet
+    setupStewardWorkloadCalcSheet();
+
+    // Ensure the Steward Workload sheet exists
+    createStewardWorkloadSheet();
+
+    // Install the auto-sync trigger
+    installStewardWorkloadSyncTrigger();
+
+    // Run initial sync
+    syncStewardWorkloadCalcToSheet();
+
+    ui.alert(
+      '✅ Steward Workload Auto-Sync Setup Complete',
+      'Created/verified:\n\n' +
+      '• _Steward_Workload_Calc hidden sheet\n' +
+      '• Auto-sync trigger installed\n\n' +
+      'Steward Workload sheet will now auto-update when you edit Grievance Log or change steward assignments.',
+      ui.ButtonSet.OK
+    );
+  } catch (error) {
+    Logger.log('setupStewardWorkloadAutoSync error: ' + error.message);
     ui.alert('Error', 'Setup failed: ' + error.message, ui.ButtonSet.OK);
   }
 }

@@ -945,9 +945,11 @@ Administrator → Setup & Triggers → Setup Engagement Tracking
 
 ---
 
-## Hidden Sheet Architecture (v3.40+)
+## Hidden Sheet Architecture (v3.40+, Extended v3.45)
 
 The dashboard uses a sophisticated hidden sheet architecture for cross-sheet auto-population. This keeps complex formulas invisible to users while enabling automatic data synchronization.
+
+**v3.45 Updates:** Added extended Member Directory columns (AF-AH: Total Grievance Count, Win Rate, Last Date) and Steward Workload auto-sync with 5th hidden sheet.
 
 ### Architecture Overview
 
@@ -979,26 +981,33 @@ The dashboard uses a sophisticated hidden sheet architecture for cross-sheet aut
 │                               formulas)                  In-Person, Open    │
 │                                                          Rate, Vol Hours)   │
 │                                                                             │
+│   Grievance Log    ──────►   _Steward_Workload ──────►  Steward Workload    │
+│   Member Directory           _Calc (v3.45)              Sheet               │
+│   (Steward assignments)      (COUNTIFS/SUMPRODUCT       (All steward        │
+│                               formulas)                  metrics)           │
+│                                                                             │
 └─────────────────────────────────────────────────────────────────────────────┘
 ```
 
-### The 4 Hidden Calculation Sheets
+### The 5 Hidden Calculation Sheets
 
 | Hidden Sheet | Source | Destination | Columns Updated |
 |--------------|--------|-------------|-----------------|
-| `_Grievance_Calc` | Grievance Log | Member Directory | AB (Has Open Grievance), AC (Status), AD (Deadline), E-G (Count, Win Rate, Last Date) |
+| `_Grievance_Calc` | Grievance Log | Member Directory | AB-AD (Has Open, Status, Deadline), AF-AH (Count, Win Rate, Last Date) |
 | `_Member_Lookup` | Member Directory | Grievance Log | C (First Name), D (Last Name), X (Email), Y (Unit), Z (Location), AA (Steward) |
 | `_Steward_Contact_Calc` | Communications Log | Member Directory | Y (Contact Date), Z (Contact Steward), AA (Contact Notes) |
 | `_Engagement_Calc` | Meeting Attendance, Volunteer Hours | Member Directory | Q (Last Virtual), R (Last In-Person), S (Open Rate), T (Vol Hours) |
+| `_Steward_Workload_Calc` (v3.45) | Grievance Log, Member Directory | Steward Workload | All 11 steward metric columns |
 
-### The 4 Auto-Sync Triggers
+### The 5 Auto-Sync Triggers
 
 | Trigger Function | Watches | Updates | Debounce |
 |-----------------|---------|---------|----------|
-| `onEditSyncGrievanceData` | Grievance Log (Status, Member ID, Next Action) | Member Directory AB-AD | 2 seconds |
+| `onEditSyncGrievanceData` | Grievance Log (Status, Member ID, Next Action) | Member Directory AB-AD, AF-AH | 2 seconds |
 | `onEditSyncMemberData` | Member Directory (Name, Email, Unit, Location, Steward) | Grievance Log C, D, X-AA | 2 seconds |
 | `onEditSyncStewardContact` | Communications Log | Member Directory Y-AA | 2 seconds |
 | `onEditSyncEngagementData` | Meeting Attendance, Volunteer Hours | Member Directory Q-T | 2 seconds |
+| `onEditSyncStewardWorkload` (v3.45) | Grievance Log (Steward, Status), Member Directory (Is Steward) | Steward Workload sheet | 2 seconds |
 
 ### How Auto-Sync Works
 
@@ -1017,7 +1026,8 @@ The dashboard uses a sophisticated hidden sheet architecture for cross-sheet aut
 | `setupMemberLookupSheet()` | Creates/repairs `_Member_Lookup` hidden sheet |
 | `setupStewardContactCalcSheet()` | Creates/repairs `_Steward_Contact_Calc` hidden sheet |
 | `setupEngagementCalcSheet()` | Creates/repairs `_Engagement_Calc` hidden sheet |
-| `REPAIR_DASHBOARD()` | Repairs ALL 4 hidden sheets + installs ALL 4 triggers |
+| `setupStewardWorkloadCalcSheet()` (v3.45) | Creates/repairs `_Steward_Workload_Calc` hidden sheet |
+| `REPAIR_DASHBOARD()` | Repairs ALL 5 hidden sheets + installs ALL 5 triggers |
 | `VERIFY_HIDDEN_SHEETS()` | Diagnoses all hidden sheets and triggers |
 
 ### Source Sheets for Engagement (Optional)
@@ -1034,6 +1044,7 @@ The dashboard uses a sophisticated hidden sheet architecture for cross-sheet aut
 | `setupEngagementTracking()` | One-click setup: creates Meeting Attendance, Volunteer Hours, _Engagement_Calc, and trigger |
 | `createMeetingAttendanceSheet()` | Creates Meeting Attendance source sheet with validations |
 | `createVolunteerHoursSheet()` | Creates Volunteer Hours source sheet with validations |
+| `setupStewardWorkloadAutoSync()` (v3.45) | One-click setup: creates _Steward_Workload_Calc, Steward Workload sheet, and trigger |
 
 ### Menu Access
 
@@ -1042,6 +1053,7 @@ The dashboard uses a sophisticated hidden sheet architecture for cross-sheet aut
 - 📅 Setup Engagement Tracking
 - 📅 Create Meeting Attendance Sheet
 - 🤝 Create Volunteer Hours Sheet
+- 👨‍⚖️ Setup Steward Workload Auto-Sync (v3.45)
 
 ### Troubleshooting Hidden Sheets
 
@@ -1061,8 +1073,8 @@ The dashboard uses a sophisticated hidden sheet architecture for cross-sheet aut
 **VERIFY_HIDDEN_SHEETS()** - Diagnoses the hidden sheet architecture
 
 Checks:
-- All 4 hidden sheets exist and are hidden
-- All 4 auto-sync triggers are installed
+- All 5 hidden sheets exist and are hidden
+- All 5 auto-sync triggers are installed
 - Formulas are present in hidden sheets
 - Data is synced to visible sheets
 - Source sheets exist (optional sheets show warnings)
@@ -1716,7 +1728,33 @@ User-populated columns now use `.setAllowInvalid(true)` to allow blank/custom va
 
 ---
 
-### Version 3.44 (2025-12-13) - LATEST
+### Version 3.45 (2025-12-13) - LATEST
+
+**FEATURE: Extended Hidden Sheet Architecture**
+
+Added 3 new Member Directory columns (AF-AH) and Steward Workload auto-sync.
+
+**Member Directory Extended Columns (AF-AH):**
+- AF: Total Grievance Count - auto-populated from _Grievance_Calc
+- AG: Win Rate (%) - auto-populated from _Grievance_Calc
+- AH: Last Grievance Date - auto-populated from _Grievance_Calc
+
+**Steward Workload Auto-Sync:**
+- New hidden sheet: `_Steward_Workload_Calc` with 10 metric columns
+- Auto-calculates: Total Cases, Active Cases, Resolved, Won, Win Rate %, Overdue, Due This Week
+- New trigger: `onEditSyncStewardWorkload` with 2-second debounce
+- Menu item: Administrator → Setup & Triggers → Setup Steward Workload Auto-Sync
+
+**Files Changed:**
+- Constants.gs: Added MEMBER_COLS for AF-AH, SHEETS.STEWARD_WORKLOAD_CALC
+- Code.gs: Extended syncGrievanceCalcToMemberDirectory(), added steward workload functions
+- ConsolidatedDashboard.gs: Updated createMemberDirectory headers
+- ReorganizedMenu.gs: Added menu item for steward workload auto-sync
+- AIR.md: Updated hidden sheet architecture section (4 → 5 sheets/triggers)
+
+---
+
+### Version 3.44 (2025-12-13)
 
 **DOCUMENTATION: Hidden Sheet Architecture FAQ & Reference**
 

@@ -317,6 +317,8 @@ function createReorganizedMenus(ui) {
       .addItem("📅 Create Meeting Attendance Sheet", "createMeetingAttendanceSheet")
       .addItem("🤝 Create Volunteer Hours Sheet", "createVolunteerHoursSheet")
       .addSeparator()
+      .addItem("👨‍⚖️ Setup Steward Workload Auto-Sync", "setupStewardWorkloadAutoSync")
+      .addSeparator()
       .addItem("📋 Install Menu Trigger", "installOnOpenTrigger")
       .addItem("🗑️ Remove Menu Trigger", "uninstallOnOpenTrigger")
       .addSeparator()
