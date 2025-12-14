@@ -32,7 +32,7 @@ When you execute the **Nuke Seed Data** function, the system will:
    - All SEED_MEMBERS_TOGGLE functions from Code.gs
    - All SEED_GRIEVANCES_TOGGLE functions from Code.gs
    - All seed helper functions (seedMembersWithCount, etc.)
-   - SEED_20K_MEMBERS and SEED_5K_GRIEVANCES functions
+   - SEED_FULL_DEMO, SEED_2K_MEMBERS, SEED_300_GRIEVANCES functions
 6. **COMPLETELY DELETE SeedNuke.gs**: The entire file is removed (not just replaced)
 7. **Remove Seed Menu**: Deletes the "🌱 Seed Demo Data" menu from ReorganizedMenu.gs
 8. **Remove Nuke Menu Item**: Deletes the "🚨 Nuke All Data" menu item itself

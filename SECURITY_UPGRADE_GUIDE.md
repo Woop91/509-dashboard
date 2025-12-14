@@ -327,7 +327,7 @@ const ADMIN_EMAILS = [
 - ✅ `composeGrievanceEmail()` - STEWARD role
 - ✅ `sendGrievanceEmail()` - STEWARD role
 - ⏳ `nukeSeedData()` - ADMIN role (pending)
-- ⏳ `SEED_20K_MEMBERS()` - ADMIN role (pending)
+- ⏳ `SEED_FULL_DEMO()` - ADMIN role (pending)
 - ⏳ `showStartGrievanceDialog()` - STEWARD role (pending)
 - ⏳ All data export functions - STEWARD role (pending)
 

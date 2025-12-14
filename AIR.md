@@ -473,8 +473,8 @@ node build.js --check-duplicates # Verify no duplicate constants
 - All sheet creation functions (createMemberDirectory, createGrievanceLog, etc.)
 - `setupDataValidations()` - Apply all validations
 - `setupFormulasAndCalculations()` - Set formulas for first 100 rows
-- `SEED_20K_MEMBERS()` - Generate member data
-- `SEED_5K_GRIEVANCES()` - Generate grievance data
+- `SEED_FULL_DEMO()` - Generate 2K members + 300 grievances
+- `NUKE_ALL_DATA()` - Clear all data
 - `onOpen()` - Create menu system
 
 **Constants.gs:**
@@ -1100,18 +1100,21 @@ Run this function to diagnose any cross-population issues.
 
 ## Seed Data Functions
 
-**⚠️ Column counts enforced by `npm run verify`**
+**⚠️ Limits: Max 2,000 members, 300 grievances (prevents timeout)**
 
-### SEED_20K_MEMBERS()
-Generate 20,000 member records. Must output **31 columns** (MEMBER_COLS).
-- Cols 28-31: HAS_OPEN_GRIEVANCE, GRIEVANCE_STATUS, NEXT_DEADLINE, START_GRIEVANCE
+### SEED_FULL_DEMO()
+Generate complete demo dataset: 2K members + 300 grievances with all fields populated.
 
-### SEED_5K_GRIEVANCES()
-Generate 5,000 grievance records. Must output **34 columns** (GRIEVANCE_COLS).
-- Cols 29-34: MESSAGE_ALERT, COORDINATOR_MESSAGE, ACKNOWLEDGED_BY, ACKNOWLEDGED_DATE, DRIVE_FOLDER_ID, DRIVE_FOLDER_URL
+### SEED_2K_MEMBERS()
+Generate 2,000 member records with all fields populated.
+- Batch size: 50 rows with 1s delay between batches
 
-### nukeSeedData()
-Exit Demo Mode - Remove seed/test data.
+### SEED_300_GRIEVANCES()
+Generate 300 grievance records with all fields populated.
+- Batch size: 25 rows with 1s delay between batches
+
+### NUKE_ALL_DATA()
+Clear all member and grievance data.
 
 ### DIAGNOSE_SETUP()
 System health check - validates sheets and column counts.
