@@ -63,12 +63,19 @@ function onOpen() {
   // Administrator Menu
   ui.createMenu('⚙️ Administrator')
     .addItem('🔍 DIAGNOSE SETUP', 'DIAGNOSE_SETUP')
-    .addItem('🔍 Verify Hidden Sheets', 'VERIFY_HIDDEN_SHEETS')
+    .addItem('🔍 Verify Hidden Sheets', 'verifyHiddenSheets')
     .addSeparator()
     .addSubMenu(ui.createMenu('🔧 Setup & Triggers')
-      .addItem('📅 Setup Engagement Tracking', 'setupEngagementTracking')
-      .addItem('👨‍⚖️ Setup Steward Workload Auto-Sync', 'setupStewardWorkloadAutoSync')
-      .addItem('🎯 Setup Interactive Dashboard Live-Wire', 'setupInteractiveDashboardLiveSync'))
+      .addItem('🔧 Setup All Hidden Sheets', 'setupAllHiddenSheets')
+      .addItem('🔧 Repair All Hidden Sheets', 'repairAllHiddenSheets')
+      .addItem('⚡ Install Auto-Sync Trigger', 'installAutoSyncTrigger')
+      .addItem('🚫 Remove Auto-Sync Trigger', 'removeAutoSyncTrigger'))
+    .addSeparator()
+    .addSubMenu(ui.createMenu('🔄 Manual Sync')
+      .addItem('🔄 Sync All Data Now', 'syncAllData')
+      .addItem('🔄 Sync Grievance → Members', 'syncGrievanceToMemberDirectory')
+      .addItem('🔄 Sync Members → Grievances', 'syncMemberToGrievanceLog')
+      .addItem('🔄 Sync Steward Workload', 'syncStewardWorkload'))
     .addToUi();
 }
 
@@ -748,25 +755,14 @@ function getOrCreateSheet(ss, name) {
 
 /**
  * Setup hidden calculation sheets for cross-sheet data sync
+ * Calls the full implementation in HiddenSheets.gs
  */
 function setupHiddenSheets(ss) {
-  // Create hidden sheets (simplified - full implementation in separate module)
-  var hiddenSheets = [
-    SHEETS.GRIEVANCE_CALC,
-    SHEETS.MEMBER_LOOKUP,
-    SHEETS.STEWARD_CONTACT_CALC,
-    SHEETS.ENGAGEMENT_CALC,
-    SHEETS.STEWARD_WORKLOAD_CALC,
-    SHEETS.INTERACTIVE_CALC
-  ];
+  // Call the full hidden sheet setup from HiddenSheets.gs
+  setupAllHiddenSheets();
 
-  hiddenSheets.forEach(function(sheetName) {
-    var sheet = ss.getSheetByName(sheetName);
-    if (!sheet) {
-      sheet = ss.insertSheet(sheetName);
-    }
-    sheet.hideSheet();
-  });
+  // Install the auto-sync trigger
+  installAutoSyncTrigger();
 }
 
 // ============================================================================
@@ -932,7 +928,7 @@ function DIAGNOSE_SETUP() {
 // ============================================================================
 
 /**
- * Repair dashboard - recreates hidden sheets and triggers
+ * Repair dashboard - recreates hidden sheets, triggers, and syncs data
  */
 function REPAIR_DASHBOARD() {
   var ss = SpreadsheetApp.getActiveSpreadsheet();
@@ -940,7 +936,11 @@ function REPAIR_DASHBOARD() {
 
   var response = ui.alert(
     '🔧 Repair Dashboard',
-    'This will repair hidden calculation sheets and reinstall triggers.\n\n' +
+    'This will:\n\n' +
+    '• Recreate all 6 hidden calculation sheets with formulas\n' +
+    '• Install auto-sync trigger\n' +
+    '• Sync all cross-sheet data\n' +
+    '• Reapply data validations\n\n' +
     'Your data will NOT be affected.\n\n' +
     'Continue?',
     ui.ButtonSet.YES_NO
@@ -953,11 +953,13 @@ function REPAIR_DASHBOARD() {
   ss.toast('Repairing dashboard...', '🔧 Repair', 3);
 
   try {
-    setupHiddenSheets(ss);
+    // Use the full repair function from HiddenSheets.gs
+    repairAllHiddenSheets();
+
+    // Also reapply data validations
     setupDataValidations();
 
-    ss.toast('Dashboard repaired successfully!', '✅ Success', 5);
-    ui.alert('✅ Success', 'Dashboard has been repaired.\n\nHidden sheets and triggers restored.', ui.ButtonSet.OK);
+    // Final message handled by repairAllHiddenSheets
   } catch (error) {
     Logger.log('Error in REPAIR_DASHBOARD: ' + error.message);
     ui.alert('❌ Error', 'Repair failed: ' + error.message, ui.ButtonSet.OK);
@@ -965,7 +967,7 @@ function REPAIR_DASHBOARD() {
 }
 
 // ============================================================================
-// STUB FUNCTIONS (for menu items - full implementation in separate modules)
+// MENU HANDLER FUNCTIONS
 // ============================================================================
 
 function searchMembers() {
@@ -984,12 +986,30 @@ function startNewGrievance() {
   SpreadsheetApp.getUi().alert('Start New Grievance feature - Coming soon!\n\nFor now, add grievances directly to the Grievance Log sheet.');
 }
 
+/**
+ * Recalculate all grievance deadlines and sync to Member Directory
+ */
 function recalcAllGrievancesBatched() {
-  SpreadsheetApp.getActiveSpreadsheet().toast('Grievance recalculation - Coming soon!', 'Info', 3);
+  var ss = SpreadsheetApp.getActiveSpreadsheet();
+  ss.toast('Recalculating grievances and syncing...', '🔄 Refresh', 3);
+
+  // Sync grievance data to member directory
+  syncGrievanceToMemberDirectory();
+
+  ss.toast('Grievance data refreshed!', '✅ Success', 3);
 }
 
+/**
+ * Refresh Member Directory calculated columns
+ */
 function refreshMemberDirectoryFormulas() {
-  SpreadsheetApp.getActiveSpreadsheet().toast('Member Directory refresh - Coming soon!', 'Info', 3);
+  var ss = SpreadsheetApp.getActiveSpreadsheet();
+  ss.toast('Refreshing Member Directory...', '🔄 Refresh', 3);
+
+  // Sync grievance data to member directory
+  syncGrievanceToMemberDirectory();
+
+  ss.toast('Member Directory refreshed!', '✅ Success', 3);
 }
 
 function rebuildDashboard() {
@@ -998,22 +1018,13 @@ function rebuildDashboard() {
   ss.toast('Dashboard rebuilt!', '✅ Success', 3);
 }
 
+/**
+ * Refresh all formulas and sync all data
+ */
 function refreshAllFormulas() {
-  SpreadsheetApp.getActiveSpreadsheet().toast('Refreshing all formulas...', 'Info', 3);
-}
+  var ss = SpreadsheetApp.getActiveSpreadsheet();
+  ss.toast('Refreshing all formulas and syncing data...', '🔄 Refresh', 3);
 
-function VERIFY_HIDDEN_SHEETS() {
-  DIAGNOSE_SETUP();
-}
-
-function setupEngagementTracking() {
-  SpreadsheetApp.getUi().alert('Engagement Tracking setup - Coming soon!');
-}
-
-function setupStewardWorkloadAutoSync() {
-  SpreadsheetApp.getUi().alert('Steward Workload Auto-Sync setup - Coming soon!');
-}
-
-function setupInteractiveDashboardLiveSync() {
-  SpreadsheetApp.getUi().alert('Interactive Dashboard Live-Wire setup - Coming soon!');
+  // Use the full refresh from HiddenSheets.gs
+  refreshAllHiddenFormulas();
 }

@@ -27,13 +27,14 @@
 
 ## File Architecture
 
-### Project Structure (3 Files)
+### Project Structure (4 Files)
 
 ```
 509-dashboard/
 ├── Constants.gs      # Configuration constants (SHEETS, COLORS, MEMBER_COLS, GRIEVANCE_COLS)
 ├── Code.gs           # Main entry point, setup functions, sheet creation
 ├── SeedNuke.gs       # Demo data seeding and clearing functions
+├── HiddenSheets.gs   # Self-healing hidden calculation sheets with auto-sync
 └── AIR.md            # This document
 ```
 
@@ -75,6 +76,18 @@
 - `generateSingleGrievanceRow()` - Generate one grievance row (34 columns)
 - `NUKE_ALL_DATA()` - Clear all data with confirmation
 - `NUKE_CONFIG_DROPDOWNS()` - Clear only Config dropdowns
+
+**HiddenSheets.gs** (~600 lines)
+- `setupGrievanceCalcSheet()` - Hidden sheet: Grievance → Member Directory
+- `setupMemberLookupSheet()` - Hidden sheet: Member → Grievance Log
+- `setupStewardWorkloadCalcSheet()` - Hidden sheet: Steward workload metrics
+- `setupInteractiveDashboardCalcSheet()` - Hidden sheet: Dashboard metrics
+- `syncGrievanceToMemberDirectory()` - Sync grievance data to members
+- `syncMemberToGrievanceLog()` - Sync member data to grievances
+- `onEditAutoSync()` - Auto-sync trigger handler
+- `installAutoSyncTrigger()` - Install the onEdit trigger
+- `repairAllHiddenSheets()` - Self-healing repair function
+- `verifyHiddenSheets()` - Verification and diagnostics
 
 ---
 
@@ -353,7 +366,59 @@ var sheet = ss.getSheetByName('Member Directory');
 
 ---
 
+## Hidden Sheet Architecture (Self-Healing)
+
+The system uses 6 hidden calculation sheets with auto-sync triggers for cross-sheet data population.
+
+### Hidden Sheets
+
+| Sheet | Source | Destination | Columns Updated |
+|-------|--------|-------------|-----------------|
+| `_Grievance_Calc` | Grievance Log | Member Directory | AB-AD (Has Open, Status, Deadline) |
+| `_Member_Lookup` | Member Directory | Grievance Log | C-D (Name), X-AA (Email, Unit, Location, Steward) |
+| `_Steward_Workload_Calc` | Grievance Log | Steward Workload | All workload metrics |
+| `_Interactive_Dashboard_Calc` | Both | Interactive Dashboard | 8 key metrics |
+| `_Engagement_Calc` | (Future) | Member Directory | Q-T (Engagement metrics) |
+| `_Steward_Contact_Calc` | (Future) | Member Directory | Y-AA (Contact tracking) |
+
+### Auto-Sync Trigger
+
+The `onEditAutoSync` trigger automatically syncs data when:
+- Grievance Log is edited → Updates Member Directory columns AB-AD
+- Member Directory is edited → Updates Grievance Log columns C-D, X-AA
+
+### Key Functions (HiddenSheets.gs)
+
+| Function | Purpose |
+|----------|---------|
+| `setupAllHiddenSheets()` | Create all 6 hidden sheets with formulas |
+| `repairAllHiddenSheets()` | Recreate sheets, install trigger, sync data |
+| `installAutoSyncTrigger()` | Install the onEdit auto-sync trigger |
+| `verifyHiddenSheets()` | Verify all sheets and triggers are working |
+| `syncAllData()` | Manual sync of all cross-sheet data |
+| `syncGrievanceToMemberDirectory()` | Sync grievance data to members |
+| `syncMemberToGrievanceLog()` | Sync member data to grievances |
+
+### Self-Healing
+
+If hidden sheets get corrupted or deleted:
+1. Run `REPAIR_DASHBOARD()` from Setup menu
+2. Or run `repairAllHiddenSheets()` from Administrator menu
+
+This recreates all formulas and reinstalls the auto-sync trigger.
+
+---
+
 ## Changelog
+
+### Version 1.1.0 (2025-12-14) - Hidden Sheet Architecture
+
+Added self-healing hidden formula system:
+
+- HiddenSheets.gs: Full implementation of 6 hidden calculation sheets
+- Auto-sync onEdit trigger for automatic cross-sheet data population
+- Self-healing repair functions
+- Manual sync options in Administrator menu
 
 ### Version 1.0.0 (2025-12-14) - Fresh Start
 
