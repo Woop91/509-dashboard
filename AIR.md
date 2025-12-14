@@ -54,40 +54,60 @@
 - `getMemberHeaders()` - Get all 31 member column headers
 - `getGrievanceHeaders()` - Get all 34 grievance column headers
 
-**Code.gs** (~900 lines)
+**Code.gs** (~1000 lines)
 - `onOpen()` - Creates menu system
 - `CREATE_509_DASHBOARD()` - Main setup function (creates all 22 sheets)
-- `createConfigSheet()` - Config sheet with dropdown values
-- `createMemberDirectory()` - Member Directory (31 columns)
-- `createGrievanceLog()` - Grievance Log (34 columns)
-- `createDashboard()` - Main dashboard with formulas
-- Sheet creation functions for all 22 sheets
-- `setupDataValidations()` - Apply dropdown validations
-- `setupHiddenSheets()` - Create hidden calculation sheets
 - `DIAGNOSE_SETUP()` - System health check
 - `REPAIR_DASHBOARD()` - Repair hidden sheets and triggers
+- `setupDataValidations()` - Apply dropdown validations
+- `setupHiddenSheets()` - Create hidden calculation sheets
+- `setDropdownValidation()` - Helper: apply single dropdown
+- `getOrCreateSheet()` - Helper: get or create sheet
+- `rebuildDashboard()` - Rebuild main dashboard
+- `refreshAllFormulas()` - Refresh all formulas and sync
+- `recalcAllGrievancesBatched()` - Refresh grievance formulas
+- `refreshMemberDirectoryFormulas()` - Refresh member directory
+- `searchMembers()` - Search members (stub)
+- `startNewGrievance()` - Start grievance (stub)
+- `viewActiveGrievances()` - Navigate to Grievance Log
+- Sheet creation (22 functions): `createConfigSheet()`, `createMemberDirectory()`, `createGrievanceLog()`, `createDashboard()`, `createAnalyticsData()`, `createMemberSatisfaction()`, `createFeedback()`, `createInteractiveDashboard()`, `createGettingStarted()`, `createFAQ()`, `createUserSettings()`, `createStewardWorkload()`, `createTrends()`, `createLocationAnalytics()`, `createTypeAnalysis()`, `createExecutiveDashboard()`, `createKPIDashboard()`, `createEngagement()`, `createCostImpact()`, `createArchive()`, `createDiagnostics()`, `createAuditLog()`
 
 **SeedNuke.gs** (~500 lines)
 - `SEED_SAMPLE_DATA()` - Seeds Config + 50 members + 25 grievances
 - `seedConfigData()` - Populate Config dropdowns
 - `SEED_MEMBERS(count)` - Seed N members (max 2000)
 - `SEED_GRIEVANCES(count)` - Seed N grievances (max 300)
+- `SEED_MEMBERS_DIALOG()` - Prompt for member count
+- `SEED_GRIEVANCES_DIALOG()` - Prompt for grievance count
+- `seed50Members()` - Shortcut: seed 50 members
+- `seed25Grievances()` - Shortcut: seed 25 grievances
 - `generateSingleMemberRow()` - Generate one member row (31 columns)
 - `generateSingleGrievanceRow()` - Generate one grievance row (34 columns)
 - `NUKE_ALL_DATA()` - Clear all data with confirmation
 - `NUKE_CONFIG_DROPDOWNS()` - Clear only Config dropdowns
+- `getConfigValues()` - Helper: get values from Config column
+- `randomChoice()` - Helper: pick random array element
+- `randomDate()` - Helper: generate random date
+- `addDays()` - Helper: add days to date
 
 **HiddenSheets.gs** (~600 lines)
+- `setupAllHiddenSheets()` - Create all 6 hidden sheets
 - `setupGrievanceCalcSheet()` - Hidden sheet: Grievance → Member Directory
 - `setupMemberLookupSheet()` - Hidden sheet: Member → Grievance Log
 - `setupStewardWorkloadCalcSheet()` - Hidden sheet: Steward workload metrics
 - `setupInteractiveDashboardCalcSheet()` - Hidden sheet: Dashboard metrics
+- `setupEngagementCalcSheet()` - Hidden sheet: Engagement (placeholder)
+- `setupStewardContactCalcSheet()` - Hidden sheet: Steward contact (placeholder)
+- `syncAllData()` - Sync all cross-sheet data
 - `syncGrievanceToMemberDirectory()` - Sync grievance data to members
 - `syncMemberToGrievanceLog()` - Sync member data to grievances
+- `syncStewardWorkload()` - Sync steward workload data
 - `onEditAutoSync()` - Auto-sync trigger handler
 - `installAutoSyncTrigger()` - Install the onEdit trigger
+- `removeAutoSyncTrigger()` - Remove the onEdit trigger
 - `repairAllHiddenSheets()` - Self-healing repair function
 - `verifyHiddenSheets()` - Verification and diagnostics
+- `refreshAllHiddenFormulas()` - Force recalculation and sync
 
 ---
 
