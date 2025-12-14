@@ -223,8 +223,8 @@ Code.gs
 ├── Data Management
 │   ├── setupDataValidations()
 │   ├── setupFormulasAndCalculations()
-│   ├── SEED_20K_MEMBERS()
-│   └── SEED_5K_GRIEVANCES()
+│   ├── SEED_FULL_DEMO() - Seeds 2K members + 300 grievances
+│   └── NUKE_ALL_DATA() - Clears all data
 └── User Interface
     ├── onOpen() - Menu creation
     ├── refreshCalculations()
@@ -471,29 +471,28 @@ Features include:
 
 **Purpose**: Generate realistic test data for training and testing
 
-**SEED_20K_MEMBERS()** - Generates 20,000 member records
-- Realistic names from common first/last name lists
-- Random but realistic job titles, locations, units
-- Varied engagement history (meetings, surveys, volunteer hours)
-- Random interest levels in organizing activities
-- Valid email addresses (formatted: firstname.lastname###@union.org)
-- Phone numbers in (555) format
-- Batch writes 1000 rows at a time for performance
-- Progress toasts show completion status
+**SEED_FULL_DEMO()** - Seeds complete demo dataset (max 2K members + 300 grievances)
+- Config dropdown values
+- 2,000 members with ALL fields populated
+- 300 grievances with ALL fields populated
+- Batch writes 50 members / 25 grievances at a time
 
-**SEED_5K_GRIEVANCES()** - Generates 5,000 grievance records
+**SEED_2K_MEMBERS()** - Generates 2,000 member records
+- Realistic names, job titles, locations, units
+- Contact tracking (last contact, notes, followup dates)
+- Committee assignments and skills
+- Steward contact history
+- Batch writes 50 rows at a time with 1s delay
+
+**SEED_300_GRIEVANCES()** - Generates 300 grievance records
 - Links to existing members via Member ID
-- Realistic timeline (incidents 0-365 days ago)
-- Various statuses (Open, Pending, Settled, Closed, Withdrawn)
-- Different steps (Informal through Arbitration)
-- Random but appropriate issue categories and articles
-- Closed grievances include resolution summaries
-- Batch writes 500 rows at a time
-- Auto-calculates all deadline fields after insertion
+- Step dates, deadlines, management responses
+- Coordinator messages and resolution notes
+- Batch writes 25 rows at a time with 1s delay
 
-**Performance**:
-- 20k members: ~2-3 minutes
-- 5k grievances: ~1-2 minutes
+**NUKE_ALL_DATA()** - Clears all member and grievance data
+
+**Limits**: Max 2,000 members, 300 grievances (prevents timeout)
 
 ### 6. Hidden Sheet Architecture (v3.40+)
 
