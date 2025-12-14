@@ -14,7 +14,7 @@
  * Build Info:
  * - Version: 2.1.0 (Security Enhanced + Code Review Improvements)
  * - Build ID: 20251202-improvements
- * - Build Date: 2025-12-14T02:44:26.852Z
+ * - Build Date: 2025-12-14T03:10:24.570Z
  * - Build Type: DEVELOPMENT
  * - Modules: 79 files
  * - Tests Included: Yes
@@ -49983,13 +49983,13 @@ function SEED_MEMBERS_DIALOG() {
   const ui = SpreadsheetApp.getUi();
   const response = ui.prompt(
     'Seed Members',
-    'How many members do you want to create? (max 5000)',
+    'How many members do you want to create? (max 2000)',
     ui.ButtonSet.OK_CANCEL
   );
 
   if (response.getSelectedButton() === ui.Button.OK) {
     const count = parseInt(response.getResponseText()) || 50;
-    if (count > 0 && count <= 5000) {
+    if (count > 0 && count <= 2000) {
       const ss = SpreadsheetApp.getActiveSpreadsheet();
       ss.toast('Seeding ' + count + ' members...', 'Processing', -1);
 
@@ -50009,7 +50009,7 @@ function SEED_MEMBERS_DIALOG() {
 
       ss.toast('Created ' + count + ' members', 'Complete', 5);
     } else {
-      ui.alert('Invalid Count', 'Please enter a number between 1 and 5000.', ui.ButtonSet.OK);
+      ui.alert('Invalid Count', 'Please enter a number between 1 and 2000.', ui.ButtonSet.OK);
     }
   }
 }
@@ -50021,13 +50021,13 @@ function SEED_GRIEVANCES_DIALOG() {
   const ui = SpreadsheetApp.getUi();
   const response = ui.prompt(
     'Seed Grievances',
-    'How many grievances do you want to create? (max 1000)',
+    'How many grievances do you want to create? (max 300)',
     ui.ButtonSet.OK_CANCEL
   );
 
   if (response.getSelectedButton() === ui.Button.OK) {
     const count = parseInt(response.getResponseText()) || 25;
-    if (count > 0 && count <= 1000) {
+    if (count > 0 && count <= 300) {
       const ss = SpreadsheetApp.getActiveSpreadsheet();
       ss.toast('Seeding ' + count + ' grievances...', 'Processing', -1);
 
@@ -50047,7 +50047,7 @@ function SEED_GRIEVANCES_DIALOG() {
 
       ss.toast('Created ' + count + ' grievances', 'Complete', 5);
     } else {
-      ui.alert('Invalid Count', 'Please enter a number between 1 and 1000.', ui.ButtonSet.OK);
+      ui.alert('Invalid Count', 'Please enter a number between 1 and 300.', ui.ButtonSet.OK);
     }
   }
 }
