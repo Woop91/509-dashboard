@@ -792,21 +792,21 @@ function SEED_2K_MEMBERS() {
   ss.toast('Seeding 2,000 members... Please wait.', 'Processing', -1);
 
   try {
-    // Seed in batches of 100 to avoid API overload
-    const batchSize = 100;
-    const totalBatches = 20;
+    // Seed in batches of 50 to avoid timeout
+    const batchSize = 50;
+    const totalBatches = 40;
 
     for (let batch = 0; batch < totalBatches; batch++) {
       SEED_MEMBERS(batchSize);
       SpreadsheetApp.flush();
 
-      // Progress update every 5 batches
-      if ((batch + 1) % 5 === 0) {
+      // Progress update every 10 batches
+      if ((batch + 1) % 10 === 0) {
         ss.toast('Progress: ' + ((batch + 1) * batchSize) + ' of 2,000 members...', 'Processing', -1);
       }
 
-      // Brief pause to let API recover
-      Utilities.sleep(500);
+      // Pause to let API recover and prevent timeout
+      Utilities.sleep(1000);
     }
 
     ss.toast('Successfully created 2,000 members!', 'Complete', 5);
@@ -836,17 +836,17 @@ function SEED_300_GRIEVANCES() {
   ss.toast('Seeding 300 grievances... Please wait.', 'Processing', -1);
 
   try {
-    // Seed in batches of 50 to avoid API overload
-    const batchSize = 50;
-    const totalBatches = 6;
+    // Seed in batches of 25 to avoid timeout
+    const batchSize = 25;
+    const totalBatches = 12;
 
     for (let batch = 0; batch < totalBatches; batch++) {
       SEED_GRIEVANCES(batchSize);
       SpreadsheetApp.flush();
       ss.toast('Progress: ' + ((batch + 1) * batchSize) + ' of 300 grievances...', 'Processing', -1);
 
-      // Brief pause to let API recover
-      Utilities.sleep(500);
+      // Pause to let API recover and prevent timeout
+      Utilities.sleep(1000);
     }
 
     ss.toast('Successfully created 300 grievances!', 'Complete', 5);
@@ -884,24 +884,24 @@ function SEED_FULL_DEMO() {
     SpreadsheetApp.flush();
     Utilities.sleep(500);
 
-    // Step 2: Seed Members (in batches of 100)
+    // Step 2: Seed Members (in batches of 50)
     ss.toast('Step 2/3: Seeding 2,000 members...', 'Processing', -1);
-    for (let batch = 0; batch < 20; batch++) {
-      SEED_MEMBERS(100);
+    for (let batch = 0; batch < 40; batch++) {
+      SEED_MEMBERS(50);
       SpreadsheetApp.flush();
-      if ((batch + 1) % 5 === 0) {
-        ss.toast('Members: ' + ((batch + 1) * 100) + ' of 2,000...', 'Processing', -1);
+      if ((batch + 1) % 10 === 0) {
+        ss.toast('Members: ' + ((batch + 1) * 50) + ' of 2,000...', 'Processing', -1);
       }
-      Utilities.sleep(500);
+      Utilities.sleep(1000);
     }
 
-    // Step 3: Seed Grievances (in batches of 50)
+    // Step 3: Seed Grievances (in batches of 25)
     ss.toast('Step 3/3: Seeding 300 grievances...', 'Processing', -1);
-    for (let batch = 0; batch < 6; batch++) {
-      SEED_GRIEVANCES(50);
+    for (let batch = 0; batch < 12; batch++) {
+      SEED_GRIEVANCES(25);
       SpreadsheetApp.flush();
-      ss.toast('Grievances: ' + ((batch + 1) * 50) + ' of 300...', 'Processing', -1);
-      Utilities.sleep(500);
+      ss.toast('Grievances: ' + ((batch + 1) * 25) + ' of 300...', 'Processing', -1);
+      Utilities.sleep(1000);
     }
 
     // Refresh formulas
@@ -948,18 +948,18 @@ function SEED_MEMBERS_DIALOG() {
       const ss = SpreadsheetApp.getActiveSpreadsheet();
       ss.toast('Seeding ' + count + ' members...', 'Processing', -1);
 
-      // Seed in batches of 100 to avoid API overload
-      const batchSize = 100;
+      // Seed in batches of 50 to avoid timeout
+      const batchSize = 50;
       const batches = Math.ceil(count / batchSize);
 
       for (let i = 0; i < batches; i++) {
         const batchCount = Math.min(batchSize, count - (i * batchSize));
         SEED_MEMBERS(batchCount);
         SpreadsheetApp.flush();
-        if (batches > 1 && (i + 1) % 5 === 0) {
+        if (batches > 1 && (i + 1) % 10 === 0) {
           ss.toast('Progress: ' + ((i + 1) * batchSize) + ' of ' + count + '...', 'Processing', -1);
         }
-        Utilities.sleep(500);
+        Utilities.sleep(1000);
       }
 
       ss.toast('Created ' + count + ' members', 'Complete', 5);
@@ -986,8 +986,8 @@ function SEED_GRIEVANCES_DIALOG() {
       const ss = SpreadsheetApp.getActiveSpreadsheet();
       ss.toast('Seeding ' + count + ' grievances...', 'Processing', -1);
 
-      // Seed in batches of 50 to avoid API overload
-      const batchSize = 50;
+      // Seed in batches of 25 to avoid timeout
+      const batchSize = 25;
       const batches = Math.ceil(count / batchSize);
 
       for (let i = 0; i < batches; i++) {
@@ -997,7 +997,7 @@ function SEED_GRIEVANCES_DIALOG() {
         if (batches > 1) {
           ss.toast('Progress: ' + ((i + 1) * batchSize) + ' of ' + count + '...', 'Processing', -1);
         }
-        Utilities.sleep(500);
+        Utilities.sleep(1000);
       }
 
       ss.toast('Created ' + count + ' grievances', 'Complete', 5);
