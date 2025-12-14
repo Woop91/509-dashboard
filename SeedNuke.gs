@@ -243,75 +243,91 @@ function SEED_MEMBERS(count) {
     throw new Error('Member Directory not found. Run CREATE_509_DASHBOARD first.');
   }
 
-  // Get config values for dropdowns
+  // Get config values for dropdowns - fall back to SEED_DATA if empty
   const configSheet = ss.getSheetByName(SHEETS.CONFIG);
-  const jobTitles = getConfigColumnValues(configSheet, 1) || SEED_DATA.JOB_TITLES;
-  const locations = getConfigColumnValues(configSheet, 2) || SEED_DATA.OFFICE_LOCATIONS;
-  const units = getConfigColumnValues(configSheet, 3) || SEED_DATA.UNITS;
-  const supervisors = getConfigColumnValues(configSheet, 6) || SEED_DATA.SUPERVISORS;
-  const managers = getConfigColumnValues(configSheet, 7) || SEED_DATA.MANAGERS;
-  const stewards = getConfigColumnValues(configSheet, 8) || SEED_DATA.STEWARDS;
+  const jobTitles = getConfigColumnValues(configSheet, 1);
+  const locations = getConfigColumnValues(configSheet, 2);
+  const units = getConfigColumnValues(configSheet, 3);
+  const supervisors = getConfigColumnValues(configSheet, 6);
+  const managers = getConfigColumnValues(configSheet, 7);
+  const stewards = getConfigColumnValues(configSheet, 8);
+
+  // Use SEED_DATA as fallback for ALL fields
+  const useJobTitles = (jobTitles && jobTitles.length > 0) ? jobTitles : SEED_DATA.JOB_TITLES;
+  const useLocations = (locations && locations.length > 0) ? locations : SEED_DATA.OFFICE_LOCATIONS;
+  const useUnits = (units && units.length > 0) ? units : SEED_DATA.UNITS;
+  const useSupervisors = (supervisors && supervisors.length > 0) ? supervisors : SEED_DATA.SUPERVISORS;
+  const useManagers = (managers && managers.length > 0) ? managers : SEED_DATA.MANAGERS;
+  const useStewards = (stewards && stewards.length > 0) ? stewards : SEED_DATA.STEWARDS;
 
   const memberData = [];
   const usedEmails = new Set();
 
+  // Find the starting ID based on existing data
+  const lastRow = memberSheet.getLastRow();
+  const startId = lastRow > 1 ? lastRow : 1;
+
   for (let i = 1; i <= count; i++) {
+    const memberId = startId + i - 1;
     const firstName = randomChoice(SEED_DATA.FIRST_NAMES);
     const lastName = randomChoice(SEED_DATA.LAST_NAMES);
-    const isSteward = i <= stewards.length; // First N members are stewards
+    const isSteward = (i % 10) === 0; // Every 10th member is a steward
 
     // Generate unique email
     let email = generateEmail(firstName, lastName);
     let emailAttempts = 0;
     while (usedEmails.has(email) && emailAttempts < 10) {
-      email = generateEmail(firstName, lastName, i);
+      email = generateEmail(firstName, lastName, memberId);
       emailAttempts++;
     }
     usedEmails.add(email);
 
-    // Generate member row (34 columns to match MEMBER_COLS)
+    // Generate random dates for contact tracking
+    const recentContactDate = randomPastDate(60);
+    const contactSteward = randomChoice(useStewards);
+
+    // Generate member row (34 columns to match MEMBER_COLS) - ALL FIELDS POPULATED
     const memberRow = [
-      'M' + String(i).padStart(6, '0'),           // A: Member ID
-      firstName,                                   // B: First Name
-      lastName,                                    // C: Last Name
-      randomChoice(jobTitles),                     // D: Job Title
-      randomChoice(locations),                     // E: Work Location
-      randomChoice(units),                         // F: Unit
+      'M' + String(memberId).padStart(6, '0'),     // A: Member ID
+      firstName,                                    // B: First Name
+      lastName,                                     // C: Last Name
+      randomChoice(useJobTitles),                   // D: Job Title
+      randomChoice(useLocations),                   // E: Work Location
+      randomChoice(useUnits),                       // F: Unit
       randomChoice(['Monday-Friday', 'Mon/Wed/Fri', 'Tue/Thu', 'Flexible']), // G: Office Days
-      email,                                       // H: Email
-      generatePhone(),                             // I: Phone
-      randomChoice(['Email', 'Phone', 'Text']),   // J: Preferred Comm
-      randomChoice(['Morning', 'Afternoon', 'Evening', 'Anytime']), // K: Best Time
-      randomChoice(supervisors),                   // L: Supervisor
-      randomChoice(managers),                      // M: Manager
-      isSteward ? 'Yes' : 'No',                   // N: Is Steward
-      isSteward ? randomChoice(SEED_DATA.COMMITTEES) : '', // O: Committees
-      isSteward ? '' : randomChoice(stewards),    // P: Assigned Steward
-      randomPastDate(180),                         // Q: Last Virtual Mtg
-      randomPastDate(90),                          // R: Last In-Person Mtg
-      Math.floor(Math.random() * 60) + 40,        // S: Open Rate (40-100%)
-      Math.floor(Math.random() * 50),             // T: Volunteer Hours
-      randomChoice(['Yes', 'No', 'Maybe']),       // U: Interest Local
-      randomChoice(['Yes', 'No', 'Maybe']),       // V: Interest Chapter
-      randomChoice(['Yes', 'No']),                // W: Interest Allied
-      randomChoice(SEED_DATA.HOME_TOWNS),          // X: Home Town
-      '',                                          // Y: Recent Contact Date (steward tracking)
-      '',                                          // Z: Contact Steward
-      '',                                          // AA: Contact Notes
-      '',                                          // AB: Has Open Grievance (formula)
-      '',                                          // AC: Grievance Status (formula)
-      '',                                          // AD: Next Deadline (formula)
-      false,                                       // AE: Start Grievance (checkbox)
-      '',                                          // AF: Total Grievance Count (formula)
-      '',                                          // AG: Grievance Win Rate (formula)
-      ''                                           // AH: Last Grievance Date (formula)
+      email,                                        // H: Email
+      generatePhone(),                              // I: Phone
+      randomChoice(['Email', 'Phone', 'Text', 'Email, Text', 'Phone, Text']), // J: Preferred Comm
+      randomChoice(['Morning (8am-12pm)', 'Afternoon (12pm-5pm)', 'Evening (5pm-8pm)', 'Anytime']), // K: Best Time
+      randomChoice(useSupervisors),                 // L: Supervisor
+      randomChoice(useManagers),                    // M: Manager
+      isSteward ? 'Yes' : 'No',                    // N: Is Steward
+      isSteward ? randomChoice(SEED_DATA.COMMITTEES) : randomChoice(SEED_DATA.COMMITTEES), // O: Committees (all get one)
+      randomChoice(useStewards),                    // P: Assigned Steward (everyone gets one)
+      randomPastDate(180),                          // Q: Last Virtual Mtg
+      randomPastDate(90),                           // R: Last In-Person Mtg
+      Math.floor(Math.random() * 60) + 40,         // S: Open Rate (40-100%)
+      Math.floor(Math.random() * 100),             // T: Volunteer Hours (0-100)
+      randomChoice(['Yes', 'No', 'Maybe']),        // U: Interest Local
+      randomChoice(['Yes', 'No', 'Maybe']),        // V: Interest Chapter
+      randomChoice(['Yes', 'No']),                 // W: Interest Allied
+      randomChoice(SEED_DATA.HOME_TOWNS),           // X: Home Town
+      recentContactDate,                            // Y: Recent Contact Date
+      contactSteward,                               // Z: Contact Steward
+      generateContactNote(firstName),               // AA: Contact Notes
+      '',                                           // AB: Has Open Grievance (formula - leave empty)
+      '',                                           // AC: Grievance Status (formula - leave empty)
+      '',                                           // AD: Next Deadline (formula - leave empty)
+      false,                                        // AE: Start Grievance (checkbox)
+      '',                                           // AF: Total Grievance Count (formula - leave empty)
+      '',                                           // AG: Grievance Win Rate (formula - leave empty)
+      ''                                            // AH: Last Grievance Date (formula - leave empty)
     ];
 
     memberData.push(memberRow);
   }
 
   // Find the next empty row
-  const lastRow = memberSheet.getLastRow();
   const startRow = Math.max(lastRow + 1, 2);
 
   // Write all member data
@@ -344,20 +360,30 @@ function SEED_GRIEVANCES(count) {
     members = memberData.filter(function(row) { return row[0] && row[0].toString().trim() !== ''; });
   }
 
-  // Get config values
+  // Get config values - fall back to SEED_DATA
   const configSheet = ss.getSheetByName(SHEETS.CONFIG);
-  const locations = getConfigColumnValues(configSheet, 2) || SEED_DATA.OFFICE_LOCATIONS;
-  const units = getConfigColumnValues(configSheet, 3) || SEED_DATA.UNITS;
-  const stewards = getConfigColumnValues(configSheet, 8) || SEED_DATA.STEWARDS;
+  const locations = getConfigColumnValues(configSheet, 2);
+  const units = getConfigColumnValues(configSheet, 3);
+  const stewards = getConfigColumnValues(configSheet, 8);
+
+  const useLocations = (locations && locations.length > 0) ? locations : SEED_DATA.OFFICE_LOCATIONS;
+  const useUnits = (units && units.length > 0) ? units : SEED_DATA.UNITS;
+  const useStewards = (stewards && stewards.length > 0) ? stewards : SEED_DATA.STEWARDS;
 
   const grievanceData = [];
 
+  // Find starting ID
+  const lastRow = grievanceSheet.getLastRow();
+  const startId = lastRow > 1 ? lastRow : 1;
+
   for (let i = 1; i <= count; i++) {
+    const grievanceId = startId + i - 1;
+
     // Use existing member or generate one
     let memberId, firstName, lastName, memberEmail;
 
     if (members.length > 0) {
-      const member = members[i % members.length];
+      const member = members[(i - 1) % members.length];
       memberId = member[0];
       firstName = member[1];
       lastName = member[2];
@@ -372,51 +398,68 @@ function SEED_GRIEVANCES(count) {
     const incidentDate = randomPastDate(120);
     const dateFiled = addDays(incidentDate, Math.floor(Math.random() * 14) + 1);
     const status = randomChoice(SEED_DATA.STATUSES);
+    const currentStep = randomChoice(SEED_DATA.STEPS);
     const isClosed = ['Settled', 'Withdrawn', 'Closed'].includes(status);
+    const isAdvanced = ['Step II', 'Step III', 'Arbitration'].includes(currentStep);
 
-    // Generate grievance row (34 columns to match GRIEVANCE_COLS)
+    // Calculate realistic dates based on step
+    const step1Rcvd = addDays(dateFiled, Math.floor(Math.random() * 25) + 5);
+    const step2AppealFiled = isAdvanced ? addDays(step1Rcvd, Math.floor(Math.random() * 8) + 2) : '';
+    const step2Rcvd = isAdvanced ? addDays(step2AppealFiled, Math.floor(Math.random() * 25) + 5) : '';
+    const step3AppealFiled = currentStep === 'Step III' || currentStep === 'Arbitration' ? addDays(step2Rcvd, Math.floor(Math.random() * 25) + 5) : '';
+    const dateClosed = isClosed ? addDays(dateFiled, Math.floor(Math.random() * 90) + 10) : '';
+
+    // Generate resolution notes for closed cases
+    const resolutionNotes = isClosed ? generateResolutionNote(status) : generatePendingNote(currentStep);
+
+    // Generate coordinator message for some grievances
+    const hasCoordinatorMessage = Math.random() > 0.7;
+    const coordinatorMessage = hasCoordinatorMessage ? generateCoordinatorMessage() : '';
+    const acknowledgedBy = hasCoordinatorMessage && Math.random() > 0.5 ? randomChoice(useStewards) : '';
+    const acknowledgedDate = acknowledgedBy ? randomPastDate(14) : '';
+
+    // Generate grievance row (34 columns to match GRIEVANCE_COLS) - ALL FIELDS POPULATED
     const grievanceRow = [
-      'G-' + String(i).padStart(6, '0'),          // A: Grievance ID
-      memberId,                                    // B: Member ID
-      firstName,                                   // C: First Name
-      lastName,                                    // D: Last Name
-      status,                                      // E: Status
-      isClosed ? randomChoice(['Step I', 'Step II', 'Step III']) : randomChoice(SEED_DATA.STEPS), // F: Current Step
-      incidentDate,                                // G: Incident Date
-      '',                                          // H: Filing Deadline (formula)
-      dateFiled,                                   // I: Date Filed
-      '',                                          // J: Step I Due (formula)
-      isClosed || status === 'Pending Info' ? addDays(dateFiled, 20) : '', // K: Step I Rcvd
-      '',                                          // L: Step II Appeal Due (formula)
-      '',                                          // M: Step II Appeal Filed
-      '',                                          // N: Step II Decision Due (formula)
-      '',                                          // O: Step II Decision Rcvd
-      '',                                          // P: Step III Appeal Due (formula)
-      '',                                          // Q: Step III Appeal Filed
-      isClosed ? addDays(dateFiled, Math.floor(Math.random() * 60) + 10) : '', // R: Date Closed
-      '',                                          // S: Days Open (formula)
-      '',                                          // T: Next Action Due (formula)
-      '',                                          // U: Days to Deadline (formula)
-      randomChoice(SEED_DATA.ARTICLES),            // V: Articles Violated
-      randomChoice(SEED_DATA.ISSUE_CATEGORIES),    // W: Issue Category
-      memberEmail,                                 // X: Member Email
-      randomChoice(units),                         // Y: Unit
-      randomChoice(locations),                     // Z: Location
-      randomChoice(stewards),                      // AA: Steward
-      isClosed ? 'Resolved through ' + status.toLowerCase() + ' process.' : '', // AB: Resolution
-      false,                                       // AC: Message Alert
-      '',                                          // AD: Coordinator Message
-      '',                                          // AE: Acknowledged By
-      '',                                          // AF: Acknowledged Date
-      '',                                          // AG: Drive Folder ID
-      ''                                           // AH: Drive Folder URL
+      'G-' + String(grievanceId).padStart(6, '0'), // A: Grievance ID
+      memberId,                                     // B: Member ID
+      firstName,                                    // C: First Name
+      lastName,                                     // D: Last Name
+      status,                                       // E: Status
+      currentStep,                                  // F: Current Step
+      incidentDate,                                 // G: Incident Date
+      '',                                           // H: Filing Deadline (formula - leave empty)
+      dateFiled,                                    // I: Date Filed
+      '',                                           // J: Step I Due (formula - leave empty)
+      step1Rcvd,                                    // K: Step I Rcvd
+      '',                                           // L: Step II Appeal Due (formula - leave empty)
+      step2AppealFiled,                             // M: Step II Appeal Filed
+      '',                                           // N: Step II Decision Due (formula - leave empty)
+      step2Rcvd,                                    // O: Step II Decision Rcvd
+      '',                                           // P: Step III Appeal Due (formula - leave empty)
+      step3AppealFiled,                             // Q: Step III Appeal Filed
+      dateClosed,                                   // R: Date Closed
+      '',                                           // S: Days Open (formula - leave empty)
+      '',                                           // T: Next Action Due (formula - leave empty)
+      '',                                           // U: Days to Deadline (formula - leave empty)
+      randomChoice(SEED_DATA.ARTICLES),             // V: Articles Violated
+      randomChoice(SEED_DATA.ISSUE_CATEGORIES),     // W: Issue Category
+      memberEmail,                                  // X: Member Email
+      randomChoice(useUnits),                       // Y: Unit
+      randomChoice(useLocations),                   // Z: Location
+      randomChoice(useStewards),                    // AA: Steward
+      resolutionNotes,                              // AB: Resolution/Notes
+      hasCoordinatorMessage,                        // AC: Message Alert
+      coordinatorMessage,                           // AD: Coordinator Message
+      acknowledgedBy,                               // AE: Acknowledged By
+      acknowledgedDate,                             // AF: Acknowledged Date
+      '',                                           // AG: Drive Folder ID (leave empty - created on demand)
+      ''                                            // AH: Drive Folder URL (leave empty - created on demand)
     ];
 
     grievanceData.push(grievanceRow);
   }
 
   // Find the next empty row
-  const lastRow = grievanceSheet.getLastRow();
   const startRow = Math.max(lastRow + 1, 2);
 
   // Write all grievance data
@@ -619,6 +662,248 @@ function addDays(date, days) {
   return result;
 }
 
+/**
+ * Generates a contact note for a member
+ */
+function generateContactNote(firstName) {
+  const notes = [
+    'Discussed upcoming contract negotiations',
+    'Followed up on workplace concerns',
+    'Provided information about union benefits',
+    'Discussed grievance process',
+    'Check-in call - member satisfied',
+    'Addressed scheduling conflict',
+    'Discussed volunteer opportunities',
+    'Provided update on open grievance',
+    'Member expressed interest in becoming a steward',
+    'Followed up on safety concerns',
+    'Discussed health insurance questions',
+    'Provided information about training opportunities',
+    'Member requested information about FMLA',
+    'Discussed workload concerns',
+    'Check-in - no issues reported'
+  ];
+  return randomChoice(notes);
+}
+
+/**
+ * Generates a resolution note for closed grievances
+ */
+function generateResolutionNote(status) {
+  const notes = {
+    'Settled': [
+      'Settled at Step I - management agreed to corrective action',
+      'Settled at Step II - member received back pay',
+      'Settlement reached - policy clarification provided',
+      'Resolved through mediation - satisfactory outcome',
+      'Management agreed to modify scheduling',
+      'Settled with written warning removed from file'
+    ],
+    'Withdrawn': [
+      'Withdrawn by member - issue resolved informally',
+      'Member transferred to different department',
+      'Withdrawn - member found alternative solution',
+      'Withdrawn at member\'s request after discussion with supervisor',
+      'Issue addressed through other channels'
+    ],
+    'Closed': [
+      'Closed - insufficient evidence to proceed',
+      'Closed after arbitration decision',
+      'Closed - time limits expired',
+      'Closed - member no longer employed',
+      'Closed per CBA requirements'
+    ]
+  };
+  return randomChoice(notes[status] || notes['Closed']);
+}
+
+/**
+ * Generates a pending note for open grievances
+ */
+function generatePendingNote(currentStep) {
+  const notes = {
+    'Informal': [
+      'Attempting informal resolution with supervisor',
+      'Scheduled meeting with management',
+      'Gathering documentation'
+    ],
+    'Step I': [
+      'Awaiting Step I response from management',
+      'Step I meeting scheduled',
+      'Preparing Step I documentation'
+    ],
+    'Step II': [
+      'Appealed to Step II - awaiting hearing date',
+      'Step II hearing scheduled',
+      'Preparing for Step II presentation'
+    ],
+    'Step III': [
+      'Appealed to Step III',
+      'Awaiting arbitration date',
+      'Compiling evidence for arbitration'
+    ],
+    'Arbitration': [
+      'Arbitration hearing scheduled',
+      'Awaiting arbitrator decision',
+      'Post-hearing brief submitted'
+    ]
+  };
+  return randomChoice(notes[currentStep] || ['In progress']);
+}
+
+/**
+ * Generates a coordinator message
+ */
+function generateCoordinatorMessage() {
+  const messages = [
+    'Please prioritize this case - approaching deadline',
+    'Member has requested status update',
+    'Need additional documentation ASAP',
+    'Management has requested meeting - please confirm availability',
+    'Important: Review attached policy before next hearing',
+    'Please contact member to discuss settlement offer',
+    'Reminder: Step deadline approaching in 3 days',
+    'Please update case notes after your meeting',
+    'New evidence received - please review',
+    'Union attorney has reviewed - see attached notes'
+  ];
+  return randomChoice(messages);
+}
+
+/* ============================================================================
+ * PRESET SEED FUNCTIONS (for common use cases)
+ * ============================================================================ */
+
+/**
+ * Seeds 2000 members with all fields populated
+ */
+function SEED_2K_MEMBERS() {
+  const ui = SpreadsheetApp.getUi();
+  const response = ui.alert(
+    'Seed 2,000 Members',
+    'This will create 2,000 sample members with ALL fields populated.\n\n' +
+    'This may take 1-2 minutes. Continue?',
+    ui.ButtonSet.YES_NO
+  );
+
+  if (response !== ui.Button.YES) return;
+
+  const ss = SpreadsheetApp.getActiveSpreadsheet();
+  ss.toast('Seeding 2,000 members... Please wait.', 'Processing', -1);
+
+  try {
+    // Seed in batches of 500 to avoid timeout
+    for (let batch = 0; batch < 4; batch++) {
+      SEED_MEMBERS(500);
+      SpreadsheetApp.flush();
+      ss.toast('Completed batch ' + (batch + 1) + ' of 4...', 'Processing', -1);
+    }
+
+    ss.toast('Successfully created 2,000 members!', 'Complete', 5);
+    ui.alert('Success', '2,000 members have been created with all fields populated.', ui.ButtonSet.OK);
+  } catch (error) {
+    Logger.log('SEED_2K_MEMBERS error: ' + error.toString());
+    ui.alert('Error', 'Failed to seed members: ' + error.message, ui.ButtonSet.OK);
+  }
+}
+
+/**
+ * Seeds 300 grievances with all fields populated
+ */
+function SEED_300_GRIEVANCES() {
+  const ui = SpreadsheetApp.getUi();
+  const response = ui.alert(
+    'Seed 300 Grievances',
+    'This will create 300 sample grievances with ALL fields populated.\n\n' +
+    'Make sure you have members in the Member Directory first!\n\n' +
+    'Continue?',
+    ui.ButtonSet.YES_NO
+  );
+
+  if (response !== ui.Button.YES) return;
+
+  const ss = SpreadsheetApp.getActiveSpreadsheet();
+  ss.toast('Seeding 300 grievances... Please wait.', 'Processing', -1);
+
+  try {
+    // Seed in batches of 100 to avoid timeout
+    for (let batch = 0; batch < 3; batch++) {
+      SEED_GRIEVANCES(100);
+      SpreadsheetApp.flush();
+      ss.toast('Completed batch ' + (batch + 1) + ' of 3...', 'Processing', -1);
+    }
+
+    ss.toast('Successfully created 300 grievances!', 'Complete', 5);
+    ui.alert('Success', '300 grievances have been created with all fields populated.', ui.ButtonSet.OK);
+  } catch (error) {
+    Logger.log('SEED_300_GRIEVANCES error: ' + error.toString());
+    ui.alert('Error', 'Failed to seed grievances: ' + error.message, ui.ButtonSet.OK);
+  }
+}
+
+/**
+ * Seeds full demo dataset: 2K members + 300 grievances
+ */
+function SEED_FULL_DEMO() {
+  const ui = SpreadsheetApp.getUi();
+  const response = ui.alert(
+    'Seed Full Demo Dataset',
+    'This will create:\n\n' +
+    '• 2,000 members\n' +
+    '• 300 grievances\n' +
+    '• Config dropdown values\n\n' +
+    'ALL fields will be populated with realistic data.\n\n' +
+    'This may take 2-3 minutes. Continue?',
+    ui.ButtonSet.YES_NO
+  );
+
+  if (response !== ui.Button.YES) return;
+
+  const ss = SpreadsheetApp.getActiveSpreadsheet();
+
+  try {
+    // Step 1: Seed Config
+    ss.toast('Step 1/3: Seeding Config...', 'Processing', -1);
+    seedConfigData();
+    SpreadsheetApp.flush();
+
+    // Step 2: Seed Members (in batches)
+    ss.toast('Step 2/3: Seeding 2,000 members...', 'Processing', -1);
+    for (let batch = 0; batch < 4; batch++) {
+      SEED_MEMBERS(500);
+      SpreadsheetApp.flush();
+    }
+
+    // Step 3: Seed Grievances (in batches)
+    ss.toast('Step 3/3: Seeding 300 grievances...', 'Processing', -1);
+    for (let batch = 0; batch < 3; batch++) {
+      SEED_GRIEVANCES(100);
+      SpreadsheetApp.flush();
+    }
+
+    // Refresh formulas
+    ss.toast('Finalizing...', 'Processing', -1);
+    if (typeof refreshAllFormulas === 'function') {
+      refreshAllFormulas();
+    }
+
+    ss.toast('Full demo dataset created!', 'Complete', 5);
+    ui.alert(
+      'Success',
+      'Full demo dataset created:\n\n' +
+      '• 2,000 members\n' +
+      '• 300 grievances\n' +
+      '• Config populated\n\n' +
+      'All fields have realistic data.',
+      ui.ButtonSet.OK
+    );
+
+  } catch (error) {
+    Logger.log('SEED_FULL_DEMO error: ' + error.toString());
+    ui.alert('Error', 'Failed to seed data: ' + error.message, ui.ButtonSet.OK);
+  }
+}
+
 /* ============================================================================
  * MENU WRAPPERS (for UI access)
  * ============================================================================ */
@@ -630,17 +915,32 @@ function SEED_MEMBERS_DIALOG() {
   const ui = SpreadsheetApp.getUi();
   const response = ui.prompt(
     'Seed Members',
-    'How many members do you want to create?',
+    'How many members do you want to create? (max 5000)',
     ui.ButtonSet.OK_CANCEL
   );
 
   if (response.getSelectedButton() === ui.Button.OK) {
     const count = parseInt(response.getResponseText()) || 50;
-    if (count > 0 && count <= 1000) {
-      SEED_MEMBERS(count);
-      SpreadsheetApp.getActiveSpreadsheet().toast('Created ' + count + ' members', 'Complete', 5);
+    if (count > 0 && count <= 5000) {
+      const ss = SpreadsheetApp.getActiveSpreadsheet();
+      ss.toast('Seeding ' + count + ' members...', 'Processing', -1);
+
+      // Seed in batches of 500 for large counts
+      const batchSize = 500;
+      const batches = Math.ceil(count / batchSize);
+
+      for (let i = 0; i < batches; i++) {
+        const batchCount = Math.min(batchSize, count - (i * batchSize));
+        SEED_MEMBERS(batchCount);
+        SpreadsheetApp.flush();
+        if (batches > 1) {
+          ss.toast('Completed batch ' + (i + 1) + ' of ' + batches, 'Processing', -1);
+        }
+      }
+
+      ss.toast('Created ' + count + ' members', 'Complete', 5);
     } else {
-      ui.alert('Invalid Count', 'Please enter a number between 1 and 1000.', ui.ButtonSet.OK);
+      ui.alert('Invalid Count', 'Please enter a number between 1 and 5000.', ui.ButtonSet.OK);
     }
   }
 }
@@ -652,17 +952,32 @@ function SEED_GRIEVANCES_DIALOG() {
   const ui = SpreadsheetApp.getUi();
   const response = ui.prompt(
     'Seed Grievances',
-    'How many grievances do you want to create?',
+    'How many grievances do you want to create? (max 1000)',
     ui.ButtonSet.OK_CANCEL
   );
 
   if (response.getSelectedButton() === ui.Button.OK) {
     const count = parseInt(response.getResponseText()) || 25;
-    if (count > 0 && count <= 500) {
-      SEED_GRIEVANCES(count);
-      SpreadsheetApp.getActiveSpreadsheet().toast('Created ' + count + ' grievances', 'Complete', 5);
+    if (count > 0 && count <= 1000) {
+      const ss = SpreadsheetApp.getActiveSpreadsheet();
+      ss.toast('Seeding ' + count + ' grievances...', 'Processing', -1);
+
+      // Seed in batches of 100 for large counts
+      const batchSize = 100;
+      const batches = Math.ceil(count / batchSize);
+
+      for (let i = 0; i < batches; i++) {
+        const batchCount = Math.min(batchSize, count - (i * batchSize));
+        SEED_GRIEVANCES(batchCount);
+        SpreadsheetApp.flush();
+        if (batches > 1) {
+          ss.toast('Completed batch ' + (i + 1) + ' of ' + batches, 'Processing', -1);
+        }
+      }
+
+      ss.toast('Created ' + count + ' grievances', 'Complete', 5);
     } else {
-      ui.alert('Invalid Count', 'Please enter a number between 1 and 500.', ui.ButtonSet.OK);
+      ui.alert('Invalid Count', 'Please enter a number between 1 and 1000.', ui.ButtonSet.OK);
     }
   }
 }
