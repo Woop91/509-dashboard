@@ -17,6 +17,7 @@ const path = require('path');
 
 const CONSTANTS_FILE = path.join(__dirname, 'Constants.gs');
 const CODE_FILE = path.join(__dirname, 'Code.gs');
+const SEEDNUKE_FILE = path.join(__dirname, 'SeedNuke.gs');
 
 let errors = [];
 let warnings = [];
@@ -26,11 +27,12 @@ console.log('🔍 COLUMN VERIFICATION CHECK\n');
 // Read files
 const constantsContent = fs.readFileSync(CONSTANTS_FILE, 'utf8');
 const codeContent = fs.readFileSync(CODE_FILE, 'utf8');
+const seedNukeContent = fs.existsSync(SEEDNUKE_FILE) ? fs.readFileSync(SEEDNUKE_FILE, 'utf8') : '';
 
 // === CHECK 1: Count MEMBER_COLS entries ===
 console.log('1️⃣  Checking MEMBER_COLS...');
 
-const memberColsMatch = constantsContent.match(/const MEMBER_COLS\s*=\s*\{([^}]+)\}/s);
+const memberColsMatch = constantsContent.match(/(?:const|var)\s+MEMBER_COLS\s*=\s*\{([^}]+)\}/s);
 if (memberColsMatch) {
   const memberColsBody = memberColsMatch[1];
   // Count actual column assignments (not aliases, not comments)
@@ -53,7 +55,7 @@ if (memberColsMatch) {
 // === CHECK 2: Count GRIEVANCE_COLS entries ===
 console.log('\n2️⃣  Checking GRIEVANCE_COLS...');
 
-const grievanceColsMatch = constantsContent.match(/const GRIEVANCE_COLS\s*=\s*\{([^}]+(?:\{[^}]*\}[^}]*)*)\}/s);
+const grievanceColsMatch = constantsContent.match(/(?:const|var)\s+GRIEVANCE_COLS\s*=\s*\{([^}]+(?:\{[^}]*\}[^}]*)*)\}/s);
 if (grievanceColsMatch) {
   const grievanceColsBody = grievanceColsMatch[1];
   const grievanceNumbers = grievanceColsBody.match(/:\s*(\d+)/g).map(m => parseInt(m.replace(/:\s*/, '')));
@@ -73,7 +75,9 @@ if (grievanceColsMatch) {
 // === CHECK 3: Count elements in generateSingleMemberRow return array ===
 console.log('\n3️⃣  Checking generateSingleMemberRow()...');
 
-const memberRowMatch = codeContent.match(/function generateSingleMemberRow[\s\S]*?const row\s*=\s*\[([\s\S]*?)\];\s*\n\s*return/);
+// Look in both Code.gs and SeedNuke.gs for the generate functions
+const combinedContent = codeContent + '\n' + seedNukeContent;
+const memberRowMatch = combinedContent.match(/function generateSingleMemberRow[\s\S]*?return\s*\[([\s\S]*?)\];\s*\n\}/);
 if (memberRowMatch) {
   const arrayContent = memberRowMatch[1];
   // Count array elements by counting commas at the top level + 1
@@ -108,7 +112,7 @@ if (memberRowMatch) {
 // === CHECK 4: Count elements in generateSingleGrievanceRow return array ===
 console.log('\n4️⃣  Checking generateSingleGrievanceRow()...');
 
-const grievanceRowMatch = codeContent.match(/function generateSingleGrievanceRow[\s\S]*?return\s*\[([\s\S]*?)\];\s*\n\}/);
+const grievanceRowMatch = combinedContent.match(/function generateSingleGrievanceRow[\s\S]*?return\s*\[([\s\S]*?)\];\s*\n\}/);
 if (grievanceRowMatch) {
   const arrayContent = grievanceRowMatch[1];
 
