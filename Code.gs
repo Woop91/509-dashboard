@@ -21,6 +21,8 @@ function onOpen() {
   ui.createMenu('👤 Dashboard')
     .addItem('🔍 Search Members', 'searchMembers')
     .addItem('📋 View Active Grievances', 'viewActiveGrievances')
+    .addItem('📱 Mobile Dashboard', 'showMobileDashboard')
+    .addItem('⚡ Quick Actions', 'showQuickActionsMenu')
     .addSeparator()
     .addSubMenu(ui.createMenu('📋 Grievance Tools')
       .addItem('➕ Start New Grievance', 'startNewGrievance')
@@ -32,14 +34,57 @@ function onOpen() {
   ui.createMenu('📊 Sheet Manager')
     .addItem('📊 Rebuild Dashboard', 'rebuildDashboard')
     .addItem('🔄 Refresh All Formulas', 'refreshAllFormulas')
+    .addSeparator()
+    .addSubMenu(ui.createMenu('📁 Google Drive')
+      .addItem('📁 Setup Folder for Grievance', 'setupDriveFolderForGrievance')
+      .addItem('📁 View Grievance Files', 'showGrievanceFiles')
+      .addItem('📁 Batch Create Folders', 'batchCreateGrievanceFolders'))
+    .addSubMenu(ui.createMenu('📅 Calendar')
+      .addItem('📅 Sync Deadlines to Calendar', 'syncDeadlinesToCalendar')
+      .addItem('📅 View Upcoming Deadlines', 'showUpcomingDeadlinesFromCalendar')
+      .addItem('🗑️ Clear Calendar Events', 'clearAllCalendarEvents'))
+    .addSubMenu(ui.createMenu('📬 Notifications')
+      .addItem('⚙️ Notification Settings', 'showNotificationSettings')
+      .addItem('🧪 Test Notifications', 'testDeadlineNotifications'))
+    .addToUi();
+
+  // Tools Menu (NEW)
+  ui.createMenu('🔧 Tools')
+    .addSubMenu(ui.createMenu('♿ ADHD & Accessibility')
+      .addItem('♿ ADHD Control Panel', 'showADHDControlPanel')
+      .addItem('🎯 Focus Mode', 'activateFocusMode')
+      .addItem('🔲 Toggle Zebra Stripes', 'toggleZebraStripes')
+      .addItem('📝 Quick Capture', 'showQuickCaptureNotepad')
+      .addItem('🍅 Pomodoro Timer', 'startPomodoroTimer'))
+    .addSubMenu(ui.createMenu('🎨 Theming')
+      .addItem('🎨 Theme Manager', 'showThemeManager')
+      .addItem('🌙 Toggle Dark Mode', 'quickToggleDarkMode')
+      .addItem('🔄 Reset Theme', 'resetToDefaultTheme'))
+    .addSeparator()
+    .addSubMenu(ui.createMenu('↩️ Undo/Redo')
+      .addItem('↩️ Undo Last Action', 'undoLastAction')
+      .addItem('↪️ Redo Action', 'redoLastAction')
+      .addItem('📋 View History', 'showUndoRedoPanel')
+      .addItem('🗑️ Clear History', 'clearUndoHistory'))
+    .addSubMenu(ui.createMenu('🗄️ Cache & Performance')
+      .addItem('🗄️ Cache Status', 'showCacheStatusDashboard')
+      .addItem('🔥 Warm Up Caches', 'warmUpCaches')
+      .addItem('🗑️ Clear All Caches', 'invalidateAllCaches'))
+    .addSeparator()
+    .addSubMenu(ui.createMenu('✅ Validation')
+      .addItem('🔍 Run Bulk Validation', 'runBulkValidation')
+      .addItem('⚙️ Validation Settings', 'showValidationSettings')
+      .addItem('🧹 Clear Indicators', 'clearValidationIndicators')
+      .addItem('⚡ Install Validation Trigger', 'installValidationTrigger'))
     .addToUi();
 
   // Setup Menu
-  ui.createMenu('🔧 Setup')
+  ui.createMenu('🏗️ Setup')
     .addItem('🏗️ CREATE 509 DASHBOARD', 'CREATE_509_DASHBOARD')
     .addItem('🔧 REPAIR DASHBOARD', 'REPAIR_DASHBOARD')
     .addSeparator()
     .addItem('⚙️ Setup Data Validations', 'setupDataValidations')
+    .addItem('🎨 Setup ADHD Defaults', 'setupADHDDefaults')
     .addToUi();
 
   // Demo Menu
@@ -58,6 +103,14 @@ function onOpen() {
     .addSubMenu(ui.createMenu('🗑️ Nuke Data')
       .addItem('☢️ NUKE ALL DATA', 'NUKE_ALL_DATA')
       .addItem('🧹 Clear Config Dropdowns Only', 'NUKE_CONFIG_DROPDOWNS'))
+    .addToUi();
+
+  // Testing Menu (NEW)
+  ui.createMenu('🧪 Testing')
+    .addItem('🧪 Run All Tests', 'runAllTests')
+    .addItem('⚡ Run Quick Tests', 'runQuickTests')
+    .addSeparator()
+    .addItem('📊 View Test Results', 'viewTestResults')
     .addToUi();
 
   // Administrator Menu
@@ -1027,4 +1080,14 @@ function refreshAllFormulas() {
 
   // Use the full refresh from HiddenSheets.gs
   refreshAllHiddenFormulas();
+}
+
+function viewTestResults() {
+  var ss = SpreadsheetApp.getActiveSpreadsheet();
+  var sheet = ss.getSheetByName(SHEETS.TEST_RESULTS);
+  if (sheet) {
+    ss.setActiveSheet(sheet);
+  } else {
+    SpreadsheetApp.getUi().alert('No test results yet. Run tests first using 🧪 Testing menu.');
+  }
 }

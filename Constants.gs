@@ -48,7 +48,9 @@ var SHEETS = {
   INTERACTIVE_CALC: '_Interactive_Dashboard_Calc',
   // Optional source sheets
   MEETING_ATTENDANCE: '📅 Meeting Attendance',
-  VOLUNTEER_HOURS: '🤝 Volunteer Hours'
+  VOLUNTEER_HOURS: '🤝 Volunteer Hours',
+  // Test Results
+  TEST_RESULTS: 'Test Results'
 };
 
 // ============================================================================

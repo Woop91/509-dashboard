@@ -27,15 +27,20 @@
 
 ## File Architecture
 
-### Project Structure (4 Files)
+### Project Structure (9 Files)
 
 ```
 509-dashboard/
-├── Constants.gs      # Configuration constants (SHEETS, COLORS, MEMBER_COLS, GRIEVANCE_COLS)
-├── Code.gs           # Main entry point, setup functions, sheet creation
-├── SeedNuke.gs       # Demo data seeding and clearing functions
-├── HiddenSheets.gs   # Self-healing hidden calculation sheets with auto-sync
-└── AIR.md            # This document
+├── Constants.gs           # Configuration constants (SHEETS, COLORS, MEMBER_COLS, GRIEVANCE_COLS)
+├── Code.gs                # Main entry point, setup functions, sheet creation
+├── SeedNuke.gs            # Demo data seeding and clearing functions
+├── HiddenSheets.gs        # Self-healing hidden calculation sheets with auto-sync
+├── ADHDFeatures.gs        # ADHD accessibility & theming (focus mode, themes, pomodoro)
+├── DriveCalendarEmail.gs  # Google Drive, Calendar, Email notifications
+├── TestingValidation.gs   # Test framework & data validation
+├── PerformanceUndo.gs     # Caching layer & undo/redo system
+├── MobileQuickActions.gs  # Mobile interface & quick actions menu
+└── AIR.md                 # This document
 ```
 
 ### File Descriptions
@@ -108,6 +113,107 @@
 - `repairAllHiddenSheets()` - Self-healing repair function
 - `verifyHiddenSheets()` - Verification and diagnostics
 - `refreshAllHiddenFormulas()` - Force recalculation and sync
+
+**ADHDFeatures.gs** (~400 lines) - ADHD Accessibility & Theming
+- `showADHDControlPanel()` - Main ADHD settings panel
+- `getADHDSettings()`, `saveADHDSettings()`, `resetADHDSettings()` - Settings management
+- `applyADHDSettings()` - Apply visual settings
+- `activateFocusMode()`, `deactivateFocusMode()` - Focus mode (hide non-essential sheets)
+- `toggleZebraStripes()`, `applyZebraStripes()`, `removeZebraStripes()` - Row banding
+- `toggleGridlinesADHD()`, `hideAllGridlines()`, `showAllGridlines()` - Gridline control
+- `toggleReducedMotion()` - Animation preferences
+- `showQuickCaptureNotepad()` - Quick note-taking dialog
+- `startPomodoroTimer()` - Built-in pomodoro timer
+- `setBreakReminders()`, `showBreakReminder()` - Break notification system
+- `showThemeManager()` - Theme selection UI
+- `applyTheme()`, `applyThemeToSheet()`, `previewTheme()` - Theme application
+- `getCurrentTheme()`, `resetToDefaultTheme()`, `quickToggleDarkMode()` - Theme utilities
+- `setupADHDDefaults()` - Initialize ADHD-friendly defaults
+
+**DriveCalendarEmail.gs** (~500 lines) - Google Drive, Calendar & Email
+- Google Drive:
+  - `createRootFolder()` - Create base folder for grievance files
+  - `createGrievanceFolder()` - Create folder for specific grievance
+  - `linkFolderToGrievance()` - Link folder ID to grievance row
+  - `setupDriveFolderForGrievance()` - Menu handler for folder creation
+  - `listFolderFiles()` - List files in a folder
+  - `showGrievanceFiles()` - Show files for selected grievance
+  - `batchCreateGrievanceFolders()` - Create folders for all grievances
+- Calendar:
+  - `syncDeadlinesToCalendar()` - Sync all deadlines to Google Calendar
+  - `checkCalendarEventExists()` - Check if event already exists
+  - `clearAllCalendarEvents()` - Remove all dashboard calendar events
+  - `showUpcomingDeadlinesFromCalendar()` - View upcoming deadlines
+- Email Notifications:
+  - `setupDailyDeadlineNotifications()` - Enable daily email reminders
+  - `disableDailyDeadlineNotifications()` - Disable notifications
+  - `checkDeadlinesAndNotify()` - Main notification check (runs daily)
+  - `sendDeadlineNotification()` - Send individual notification
+  - `showNotificationSettings()` - Notification configuration UI
+  - `testDeadlineNotifications()` - Test notification system
+
+**TestingValidation.gs** (~500 lines) - Testing Framework & Data Validation
+- Testing Framework:
+  - `Assert` - Assertion library (assertEquals, assertTrue, assertFalse, etc.)
+  - `runAllTests()` - Run complete test suite
+  - `runQuickTests()` - Run fast unit tests only
+  - `generateTestReport()` - Create test results sheet
+  - `getTestFunctionRegistry()` - Test function registry
+  - Unit tests: `testMemberColsConstants()`, `testGrievanceColsConstants()`, `testColumnLetterConversion()`, etc.
+- Validation Framework:
+  - `VALIDATION_PATTERNS` - Regex patterns for email, phone, IDs
+  - `validateEmailAddress()` - Email format validation with typo detection
+  - `validatePhoneNumber()` - Phone validation with auto-formatting
+  - `formatUSPhone()` - Format phone to (XXX) XXX-XXXX
+  - `validateRequired()` - Required field validation
+  - `checkDuplicateMemberID()`, `checkDuplicateGrievanceID()` - Duplicate detection
+  - `runBulkValidation()` - Validate all data
+  - `showValidationReport()` - Display validation issues
+  - `showValidationSettings()` - Validation configuration UI
+  - `installValidationTrigger()` - Real-time validation on edit
+  - `onEditValidation()` - Validation trigger handler
+
+**PerformanceUndo.gs** (~500 lines) - Caching Layer & Undo/Redo
+- Caching:
+  - `getCachedData()` - Get data from cache or load
+  - `setCachedData()` - Store data in cache
+  - `invalidateCache()` - Clear specific cache
+  - `invalidateAllCaches()` - Clear all caches
+  - `warmUpCaches()` - Pre-populate caches
+  - `getCachedGrievances()`, `getCachedMembers()`, `getCachedStewards()` - Cached data getters
+  - `getCachedDashboardMetrics()` - Cached dashboard metrics
+  - `showCacheStatusDashboard()` - Cache status UI
+- Undo/Redo:
+  - `getUndoHistory()`, `saveUndoHistory()` - History management
+  - `recordAction()` - Record an action for undo
+  - `recordCellEdit()`, `recordRowAddition()`, `recordRowDeletion()` - Specific action recording
+  - `undoLastAction()`, `redoLastAction()` - Undo/redo operations
+  - `undoToIndex()`, `redoToIndex()` - Jump to specific point
+  - `applyState()` - Apply state snapshot
+  - `clearUndoHistory()` - Clear all history
+  - `showUndoRedoPanel()` - Undo/redo UI
+  - `exportUndoHistoryToSheet()` - Export history to sheet
+  - `createGrievanceSnapshot()`, `restoreFromSnapshot()` - Full snapshot backup
+
+**MobileQuickActions.gs** (~600 lines) - Mobile Interface & Quick Actions
+- Mobile Interface:
+  - `showMobileDashboard()` - Touch-optimized dashboard
+  - `getMobileDashboardStats()` - Dashboard statistics
+  - `getRecentGrievancesForMobile()` - Recent grievances (limit)
+  - `showMobileGrievanceList()` - Mobile grievance list
+  - `showMobileUnifiedSearch()` - Mobile search UI
+  - `getMobileSearchData()` - Search handler
+  - `showMyAssignedGrievances()` - View user's assigned cases
+- Quick Actions:
+  - `showQuickActionsMenu()` - Context-aware quick actions
+  - `showMemberQuickActions()` - Quick actions for member row
+  - `showGrievanceQuickActions()` - Quick actions for grievance row
+  - `quickUpdateGrievanceStatus()` - One-click status update
+  - `composeEmailForMember()` - Email composition dialog
+  - `sendQuickEmail()` - Send email via MailApp
+  - `showMemberGrievanceHistory()` - Member's grievance history
+  - `openGrievanceFormForMember()` - Start grievance for member
+  - `syncSingleGrievanceToCalendar()` - Sync single grievance to calendar
 
 ---
 
