@@ -1866,16 +1866,16 @@ Updated grievance log timeline visual progress bar, added resolution column colo
 - Denied: Light Red (#FECACA)
 - Pending: Light Orange (#FED7AA)
 
-**Auto-Sort Feature (GrievanceFloatToggle.gs):**
-- Grievances with status Closed/Settled/Withdrawn automatically move to bottom of list
-- Added `onEditGrievanceAutoSort()` - onEdit trigger handler
-- Added `installGrievanceAutoSortTrigger()` - installs the trigger
-- Added `removeGrievanceAutoSortTrigger()` - removes the trigger
-- Trigger auto-installed during CREATE_509_DASHBOARD()
+**Auto-Sort Feature (Code.gs):**
+- Grievances auto-sort by status priority when Status column is edited
+- Sort order: Open → Appealed → Pending Info → In Arbitration → Settled → Won → Denied → Withdrawn → Closed
+- Secondary sort by incident date (most recent first within same status)
+- `sortGrievanceLogByStatus()` - Manual sort function
+- `onEdit()` - Triggers auto-sort when Status column is edited
+- Menu: Dashboard > Grievance Tools > Sort Grievances by Status
 
 **Files Changed:**
-- Code.gs: Updated setupGrievanceProgressBar(), added setupResolutionColumnColors(), added trigger installation to CREATE_509_DASHBOARD()
-- GrievanceFloatToggle.gs: Added auto-sort onEdit handler and trigger management functions
+- Code.gs: Updated setupGrievanceProgressBar(), added setupResolutionColumnColors(), added auto-sort functions
 
 ---
 

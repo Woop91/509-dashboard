@@ -13,10 +13,10 @@
 
 All requested features were successfully implemented:
 
-1. ✅ **Grievance Float/Sort Toggle** - GrievanceFloatToggle.gs
-   - Sends closed/settled/inactive to bottom
-   - Prioritizes Step 3 > Step 2 > Step 1
-   - Sorts by soonest due date within each step
+1. ✅ **Grievance Auto-Sort** - Code.gs
+   - Auto-sorts by status priority when Status column is edited
+   - Sort order: Open → Appealed → Pending Info → In Arbitration → Settled → Won → Denied → Withdrawn → Closed
+   - Secondary sort by incident date (most recent first)
    - Uses GRIEVANCE_COLS constants correctly
 
 2. ✅ **Google Drive Auto-Folder Creation** - GoogleDriveIntegration.gs, GrievanceWorkflow.gs
@@ -110,7 +110,6 @@ grep "'Grievance Log'![A-Z]:[A-Z]" Code.gs GoogleDriveIntegration.gs → 0 match
 ## Files Modified
 
 ### Commit 045120b (Original Implementation)
-- ✅ GrievanceFloatToggle.gs (new)
 - ✅ MemberDirectoryDropdowns.gs (new)
 - ✅ MemberDirectoryGoogleFormLink.gs (new)
 - ✅ ReorganizedMenu.gs (new)

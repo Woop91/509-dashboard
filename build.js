@@ -110,7 +110,6 @@ const CORE_MODULES = [
   'GmailIntegration.gs',
   'GoogleDriveIntegration.gs',
   'GracefulDegradation.gs',
-  'GrievanceFloatToggle.gs',
   'GrievanceWorkflow.gs',
   'IdempotentOperations.gs',
   'IncrementalBackupSystem.gs',
