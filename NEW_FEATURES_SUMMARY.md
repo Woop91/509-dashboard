@@ -2,27 +2,7 @@
 
 This document summarizes the new features added to the 509 Dashboard.
 
-## 1. Grievance Float/Sort Toggle Feature
-
-**File:** `GrievanceFloatToggle.gs`
-
-**Description:**
-A toggle feature that reorganizes the Grievance Log based on priority:
-- Sends closed/settled/inactive grievances to the bottom
-- Prioritizes by step: Step 3 > Step 2 > Step 1
-- Within each step, sorts by soonest due date
-
-**Functions:**
-- `toggleGrievanceFloat()` - Toggle the feature on/off
-- `applyGrievanceFloat()` - Apply the sorting immediately
-- `showGrievanceFloatPanel()` - Show control panel dialog
-- `getGrievanceFloatState()` / `setGrievanceFloatState()` - State management
-
-**Menu Location:**
-- Average User > Grievance Tools > Grievance Float Toggle
-- Average User > Grievance Tools > Float Control Panel
-
-## 2. Google Drive Folder Auto-Creation
+## 1. Google Drive Folder Auto-Creation
 
 **Files Modified:**
 - `GoogleDriveIntegration.gs` - Updated `createGrievanceFolder()` to accept grievant name
@@ -343,7 +323,6 @@ node build.js --check-duplicates
 - All 78 modules concatenated in dependency order
 - Duplicate declaration detection
 - All feature files automatically included:
-  - GrievanceFloatToggle.gs
   - MemberDirectoryDropdowns.gs
   - MemberDirectoryGoogleFormLink.gs
   - ReorganizedMenu.gs

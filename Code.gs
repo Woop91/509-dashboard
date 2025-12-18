@@ -25,7 +25,8 @@ function onOpen() {
     .addSubMenu(ui.createMenu('📋 Grievance Tools')
       .addItem('➕ Start New Grievance', 'startNewGrievance')
       .addItem('🔄 Refresh Grievance Formulas', 'recalcAllGrievancesBatched')
-      .addItem('🔄 Refresh Member Directory Data', 'refreshMemberDirectoryFormulas'))
+      .addItem('🔄 Refresh Member Directory Data', 'refreshMemberDirectoryFormulas')
+      .addItem('📊 Sort Grievances by Status', 'sortGrievanceLogByStatus'))
     .addToUi();
 
   // Sheet Manager Menu
@@ -1364,4 +1365,95 @@ function setupInteractiveDashboardLiveSync() {
 
   ss.toast('Interactive dashboard setup complete!', '✅ Success', 3);
   ui.alert('✅ Setup Complete', 'Interactive Dashboard live-wire has been configured.\n\nMetrics will update in real-time.', ui.ButtonSet.OK);
+}
+
+// ============================================================================
+// AUTO-SORT GRIEVANCE LOG BY STATUS
+// ============================================================================
+
+/**
+ * Status priority order for sorting (lower = higher priority / appears first)
+ * Active grievances at top, closed at bottom
+ * Per AIR.md v3.23: Open → Appealed → Pending Info → In Arbitration → Settled → Won → Denied → Withdrawn → Closed
+ */
+var GRIEVANCE_STATUS_PRIORITY = {
+  'Open': 1,
+  'Appealed': 2,
+  'Pending Info': 3,
+  'In Arbitration': 4,
+  'Settled': 5,
+  'Won': 6,
+  'Denied': 7,
+  'Withdrawn': 8,
+  'Closed': 9
+};
+
+/**
+ * Sorts the Grievance Log by status priority
+ * Active grievances (Open, Pending Info) appear at top
+ */
+function sortGrievanceLogByStatus() {
+  var ss = SpreadsheetApp.getActiveSpreadsheet();
+  var sheet = ss.getSheetByName(SHEETS.GRIEVANCE_LOG);
+
+  if (!sheet) {
+    return;
+  }
+
+  var lastRow = sheet.getLastRow();
+  if (lastRow < 2) {
+    return; // No data to sort
+  }
+
+  var lastCol = sheet.getLastColumn();
+  var dataRange = sheet.getRange(2, 1, lastRow - 1, lastCol);
+  var data = dataRange.getValues();
+
+  // Sort by status priority, then by incident date (most recent first)
+  var statusCol = GRIEVANCE_COLS.STATUS - 1;
+  var incidentDateCol = GRIEVANCE_COLS.INCIDENT_DATE - 1;
+
+  data.sort(function(a, b) {
+    var priorityA = GRIEVANCE_STATUS_PRIORITY[a[statusCol]] || 99;
+    var priorityB = GRIEVANCE_STATUS_PRIORITY[b[statusCol]] || 99;
+
+    if (priorityA !== priorityB) {
+      return priorityA - priorityB;
+    }
+
+    // Secondary sort by incident date (most recent first)
+    var dateA = a[incidentDateCol] ? new Date(a[incidentDateCol]).getTime() : 0;
+    var dateB = b[incidentDateCol] ? new Date(b[incidentDateCol]).getTime() : 0;
+    return dateB - dateA;
+  });
+
+  dataRange.setValues(data);
+}
+
+/**
+ * onEdit trigger - auto-sorts Grievance Log when status is changed
+ * @param {Object} e - Edit event object
+ */
+function onEdit(e) {
+  if (!e || !e.range) {
+    return;
+  }
+
+  var sheet = e.range.getSheet();
+  var sheetName = sheet.getName();
+
+  // Only process edits to Grievance Log
+  if (sheetName !== SHEETS.GRIEVANCE_LOG) {
+    return;
+  }
+
+  var editedCol = e.range.getColumn();
+  var editedRow = e.range.getRow();
+
+  // Only trigger sort when Status column (E) is edited, and not the header
+  if (editedCol === GRIEVANCE_COLS.STATUS && editedRow > 1) {
+    // Use a slight delay to allow the edit to complete
+    Utilities.sleep(100);
+    sortGrievanceLogByStatus();
+  }
 }
