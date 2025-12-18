@@ -1374,12 +1374,13 @@ function setupInteractiveDashboardLiveSync() {
 /**
  * Status priority order for sorting (lower = higher priority / appears first)
  * Active grievances at top, closed at bottom
+ * Per AIR.md v3.23: Open → Appealed → Pending Info → In Arbitration → Settled → Won → Denied → Withdrawn → Closed
  */
 var GRIEVANCE_STATUS_PRIORITY = {
   'Open': 1,
-  'Pending Info': 2,
-  'In Arbitration': 3,
-  'Appealed': 4,
+  'Appealed': 2,
+  'Pending Info': 3,
+  'In Arbitration': 4,
   'Settled': 5,
   'Won': 6,
   'Denied': 7,
