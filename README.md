@@ -1,12 +1,29 @@
-# 509 Dashboard - Google Apps Script v3.44
+# 509 Dashboard - Google Apps Script v3.51
 
 Complete union member database and grievance tracking system for Local 509.
 
-## 🆕 What's New in v3.44
+## 🆕 What's New in v3.51
 
-### Latest Updates (v3.40-3.44 - December 2025)
+### Latest Updates (v3.45-3.51 - December 2025)
 
-**Hidden Sheet Architecture** ⭐ NEW:
+**Complete Seed & Nuke System** (v3.51):
+- New `SeedNuke.gs` with comprehensive data seeding and clearing functions
+- Custom count dialogs for seeding members and grievances
+- Config dropdown seeding (Job Titles, Locations, Units, Supervisors, etc.)
+
+**Live-Wire Dashboard Architecture** (v3.46-3.50):
+- Interactive Dashboard now auto-updates within 3 seconds of source changes
+- 20 metrics auto-calculated in hidden sheet
+- Dropdown changes rebuild charts instantly (1-second response)
+- Theme switching with 5 color palettes
+
+**Extended Member Directory** (v3.45):
+- 3 new auto-populated columns (AF-AH): Total Grievance Count, Win Rate %, Last Grievance Date
+- Steward Workload auto-sync with hidden calculation sheet
+
+### Previous Updates (v3.40-3.44 - December 2025)
+
+**Hidden Sheet Architecture:**
 - **4 Hidden Calculation Sheets** - Auto-synchronize data between sheets invisibly
 - **Auto-Population** - Member Directory columns AB-AD auto-update from Grievance Log
 - **Cross-Sheet Sync** - Grievance Log columns C-D, X-AA auto-update from Member Directory

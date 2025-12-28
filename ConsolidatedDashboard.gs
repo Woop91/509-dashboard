@@ -14,10 +14,10 @@
  * Build Info:
  * - Version: 2.0.0 (Unknown)
  * - Build ID: unknown
- * - Build Date: 2025-12-15T02:57:02.548Z
- * - Build Type: PRODUCTION
- * - Modules: 76 files
- * - Tests Included: No
+ * - Build Date: 2025-12-28T22:45:23.918Z
+ * - Build Type: DEVELOPMENT
+ * - Modules: 78 files
+ * - Tests Included: Yes
  *
  * ============================================================================
  */
@@ -493,7 +493,8 @@ function onOpen() {
     .addSubMenu(ui.createMenu('📋 Grievance Tools')
       .addItem('➕ Start New Grievance', 'startNewGrievance')
       .addItem('🔄 Refresh Grievance Formulas', 'recalcAllGrievancesBatched')
-      .addItem('🔄 Refresh Member Directory Data', 'refreshMemberDirectoryFormulas'))
+      .addItem('🔄 Refresh Member Directory Data', 'refreshMemberDirectoryFormulas')
+      .addItem('📊 Sort Grievances by Status', 'sortGrievanceLogByStatus'))
     .addToUi();
 
   // Sheet Manager Menu
@@ -1834,6 +1835,97 @@ function setupInteractiveDashboardLiveSync() {
   ui.alert('✅ Setup Complete', 'Interactive Dashboard live-wire has been configured.\n\nMetrics will update in real-time.', ui.ButtonSet.OK);
 }
 
+// ============================================================================
+// AUTO-SORT GRIEVANCE LOG BY STATUS
+// ============================================================================
+
+/**
+ * Status priority order for sorting (lower = higher priority / appears first)
+ * Active grievances at top, closed at bottom
+ * Per AIR.md v3.23: Open → Appealed → Pending Info → In Arbitration → Settled → Won → Denied → Withdrawn → Closed
+ */
+var GRIEVANCE_STATUS_PRIORITY = {
+  'Open': 1,
+  'Appealed': 2,
+  'Pending Info': 3,
+  'In Arbitration': 4,
+  'Settled': 5,
+  'Won': 6,
+  'Denied': 7,
+  'Withdrawn': 8,
+  'Closed': 9
+};
+
+/**
+ * Sorts the Grievance Log by status priority
+ * Active grievances (Open, Pending Info) appear at top
+ */
+function sortGrievanceLogByStatus() {
+  var ss = SpreadsheetApp.getActiveSpreadsheet();
+  var sheet = ss.getSheetByName(SHEETS.GRIEVANCE_LOG);
+
+  if (!sheet) {
+    return;
+  }
+
+  var lastRow = sheet.getLastRow();
+  if (lastRow < 2) {
+    return; // No data to sort
+  }
+
+  var lastCol = sheet.getLastColumn();
+  var dataRange = sheet.getRange(2, 1, lastRow - 1, lastCol);
+  var data = dataRange.getValues();
+
+  // Sort by status priority, then by incident date (most recent first)
+  var statusCol = GRIEVANCE_COLS.STATUS - 1;
+  var incidentDateCol = GRIEVANCE_COLS.INCIDENT_DATE - 1;
+
+  data.sort(function(a, b) {
+    var priorityA = GRIEVANCE_STATUS_PRIORITY[a[statusCol]] || 99;
+    var priorityB = GRIEVANCE_STATUS_PRIORITY[b[statusCol]] || 99;
+
+    if (priorityA !== priorityB) {
+      return priorityA - priorityB;
+    }
+
+    // Secondary sort by incident date (most recent first)
+    var dateA = a[incidentDateCol] ? new Date(a[incidentDateCol]).getTime() : 0;
+    var dateB = b[incidentDateCol] ? new Date(b[incidentDateCol]).getTime() : 0;
+    return dateB - dateA;
+  });
+
+  dataRange.setValues(data);
+}
+
+/**
+ * onEdit trigger - auto-sorts Grievance Log when status is changed
+ * @param {Object} e - Edit event object
+ */
+function onEdit(e) {
+  if (!e || !e.range) {
+    return;
+  }
+
+  var sheet = e.range.getSheet();
+  var sheetName = sheet.getName();
+
+  // Only process edits to Grievance Log
+  if (sheetName !== SHEETS.GRIEVANCE_LOG) {
+    return;
+  }
+
+  var editedCol = e.range.getColumn();
+  var editedRow = e.range.getRow();
+
+  // Only trigger sort when Status column (E) is edited, and not the header
+  if (editedCol === GRIEVANCE_COLS.STATUS && editedRow > 1) {
+    // Use a slight delay to allow the edit to complete
+    Utilities.sleep(100);
+    sortGrievanceLogByStatus();
+  }
+}
+
 
 
 // ================================================================================
@@ -2004,8 +2096,31 @@ function SEED_MEMBERS(count) {
   if (managers.length === 0) managers = ['John Manager'];
   if (stewards.length === 0) stewards = ['Mary Steward'];
 
-  var firstNames = ['James', 'Mary', 'John', 'Patricia', 'Robert', 'Jennifer', 'Michael', 'Linda', 'William', 'Elizabeth', 'David', 'Barbara', 'Richard', 'Susan', 'Joseph', 'Jessica', 'Thomas', 'Sarah', 'Charles', 'Karen'];
-  var lastNames = ['Smith', 'Johnson', 'Williams', 'Brown', 'Jones', 'Garcia', 'Miller', 'Davis', 'Rodriguez', 'Martinez', 'Hernandez', 'Lopez', 'Gonzalez', 'Wilson', 'Anderson', 'Thomas', 'Taylor', 'Moore', 'Jackson', 'Martin'];
+  // Expanded name pools for better variety (100 first names, 100 last names)
+  var firstNames = [
+    'James', 'Mary', 'John', 'Patricia', 'Robert', 'Jennifer', 'Michael', 'Linda', 'William', 'Elizabeth',
+    'David', 'Barbara', 'Richard', 'Susan', 'Joseph', 'Jessica', 'Thomas', 'Sarah', 'Charles', 'Karen',
+    'Christopher', 'Nancy', 'Daniel', 'Lisa', 'Matthew', 'Betty', 'Anthony', 'Margaret', 'Mark', 'Sandra',
+    'Donald', 'Ashley', 'Steven', 'Kimberly', 'Paul', 'Emily', 'Andrew', 'Donna', 'Joshua', 'Michelle',
+    'Kenneth', 'Dorothy', 'Kevin', 'Carol', 'Brian', 'Amanda', 'George', 'Melissa', 'Timothy', 'Deborah',
+    'Ronald', 'Stephanie', 'Edward', 'Rebecca', 'Jason', 'Sharon', 'Jeffrey', 'Laura', 'Ryan', 'Cynthia',
+    'Jacob', 'Kathleen', 'Gary', 'Amy', 'Nicholas', 'Angela', 'Eric', 'Shirley', 'Jonathan', 'Anna',
+    'Stephen', 'Brenda', 'Larry', 'Pamela', 'Justin', 'Emma', 'Scott', 'Nicole', 'Brandon', 'Helen',
+    'Benjamin', 'Samantha', 'Samuel', 'Katherine', 'Raymond', 'Christine', 'Gregory', 'Debra', 'Frank', 'Rachel',
+    'Alexander', 'Carolyn', 'Patrick', 'Janet', 'Jack', 'Catherine', 'Dennis', 'Maria', 'Jerry', 'Heather'
+  ];
+  var lastNames = [
+    'Smith', 'Johnson', 'Williams', 'Brown', 'Jones', 'Garcia', 'Miller', 'Davis', 'Rodriguez', 'Martinez',
+    'Hernandez', 'Lopez', 'Gonzalez', 'Wilson', 'Anderson', 'Thomas', 'Taylor', 'Moore', 'Jackson', 'Martin',
+    'Lee', 'Perez', 'Thompson', 'White', 'Harris', 'Sanchez', 'Clark', 'Ramirez', 'Lewis', 'Robinson',
+    'Walker', 'Young', 'Allen', 'King', 'Wright', 'Scott', 'Torres', 'Nguyen', 'Hill', 'Flores',
+    'Green', 'Adams', 'Nelson', 'Baker', 'Hall', 'Rivera', 'Campbell', 'Mitchell', 'Carter', 'Roberts',
+    'Gomez', 'Phillips', 'Evans', 'Turner', 'Diaz', 'Parker', 'Cruz', 'Edwards', 'Collins', 'Reyes',
+    'Stewart', 'Morris', 'Morales', 'Murphy', 'Cook', 'Rogers', 'Gutierrez', 'Ortiz', 'Morgan', 'Cooper',
+    'Peterson', 'Bailey', 'Reed', 'Kelly', 'Howard', 'Ramos', 'Kim', 'Cox', 'Ward', 'Richardson',
+    'Watson', 'Brooks', 'Chavez', 'Wood', 'James', 'Bennett', 'Gray', 'Mendoza', 'Ruiz', 'Hughes',
+    'Price', 'Alvarez', 'Castillo', 'Sanders', 'Patel', 'Myers', 'Long', 'Ross', 'Foster', 'Jimenez'
+  ];
   var officeDays = DEFAULT_CONFIG.OFFICE_DAYS;
   var commMethods = DEFAULT_CONFIG.COMM_METHODS;
 
@@ -2020,7 +2135,7 @@ function SEED_MEMBERS(count) {
     var firstName = randomChoice(firstNames);
     var lastName = randomChoice(lastNames);
     var email = firstName.toLowerCase() + '.' + lastName.toLowerCase() + (existingCount + i + 1) + '@example.org';
-    var phone = '617-555-' + String(1000 + i).padStart(4, '0');
+    var phone = '617-555-' + String(Math.floor(Math.random() * 9000) + 1000);
     var isSteward = Math.random() < 0.1 ? 'Yes' : 'No';
 
     var row = generateSingleMemberRow(
