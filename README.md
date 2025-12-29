@@ -226,27 +226,23 @@ Dashboard (Real-time metrics and visualizations)
 ### File Structure
 
 ```
-Code.gs
-├── Configuration Constants (SHEETS object)
-├── Main Setup Function (CREATE_509_DASHBOARD)
-├── Sheet Creation Functions
-│   ├── createConfigTab()
-│   ├── createMemberDirectory()
-│   ├── createGrievanceLog()
-│   ├── createMainDashboard()
-│   ├── createAnalyticsDataSheet()
-│   ├── createMemberSatisfactionSheet()
-│   └── createFeedbackSheet()
-├── Data Management
-│   ├── setupDataValidations()
-│   ├── setupFormulasAndCalculations()
-│   ├── SEED_FULL_DEMO() - Seeds 2K members + 300 grievances
-│   └── NUKE_ALL_DATA() - Clears all data
-└── User Interface
-    ├── onOpen() - Menu creation
-    ├── refreshCalculations()
-    ├── goToDashboard()
-    └── showHelp()
+509-dashboard/
+├── Code.gs                    # Core application (48KB)
+│   ├── Configuration Constants (SHEETS object)
+│   ├── Main Setup Function (CREATE_509_DASHBOARD)
+│   ├── Sheet Creation Functions
+│   ├── Data Management & Validation
+│   └── User Interface & Menus
+├── Constants.gs               # Column definitions, colors, config (17KB)
+├── SeedNuke.gs                # Data seeding & clearing functions (23KB)
+├── ADHDFeatures.gs            # ADHD accessibility & theming (14KB)
+├── HiddenSheets.gs            # Hidden sheet architecture (76KB)
+├── MobileQuickActions.gs      # Mobile interface & quick actions (28KB)
+├── PerformanceUndo.gs         # Performance caching & undo/redo (16KB)
+├── TestingValidation.gs       # Testing framework & validation (25KB)
+├── ConsolidatedDashboard.gs   # Auto-generated build output (250KB)
+├── build.js                   # Build script for consolidation
+└── verify-columns.js          # Column verification tool
 ```
 
 ### Technical Details

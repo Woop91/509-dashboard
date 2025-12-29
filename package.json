@@ -1,6 +1,6 @@
 {
   "name": "509-dashboard",
-  "version": "3.51.0",
+  "version": "3.52.0",
   "description": "SEIU Local 509 Union Grievance Tracking Dashboard - Security Enhanced + Code Review Improvements",
   "main": "Code.gs",
   "scripts": {
