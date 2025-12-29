@@ -144,7 +144,14 @@ const CORE_MODULES = [
   'UndoRedoSystem.gs',
   'UnifiedOperationsMonitor.gs',
   'UtilityService.gs',
-  'WorkflowStateMachine.gs'
+  'WorkflowStateMachine.gs',
+
+  // ===== LEVEL 4: ADDITIONAL FEATURE MODULES (from dashboard-second) =====
+  'ADHDFeatures.gs',          // ADHD accessibility & theming
+  'HiddenSheets.gs',          // Hidden sheet architecture setup
+  'MobileQuickActions.gs',    // Mobile interface & quick actions
+  'PerformanceUndo.gs',       // Performance caching & undo/redo
+  'TestingValidation.gs'      // Testing framework & validation
 ];
 
 // TEST_MODULES - Test modules (excluded in production builds)
