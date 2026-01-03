@@ -545,59 +545,7 @@ function syncGrievanceFormulasToLog() {
   Logger.log('Synced grievance formulas to ' + nameUpdates.length + ' grievances');
 }
 
-/**
- * Auto-sort the Grievance Log by status priority
- * Active cases (Open, Pending Info, In Arbitration, Appealed) appear first,
- * resolved cases (Settled, Won, Denied, Withdrawn, Closed) appear last
- */
-function sortGrievanceLogByStatus() {
-  var ss = SpreadsheetApp.getActiveSpreadsheet();
-  var sheet = ss.getSheetByName(SHEETS.GRIEVANCE_LOG);
-
-  if (!sheet) return;
-
-  var lastRow = sheet.getLastRow();
-  if (lastRow < 3) return; // Need at least 2 data rows to sort
-
-  // Get all data (excluding header row)
-  var dataRange = sheet.getRange(2, 1, lastRow - 1, 34);
-  var data = dataRange.getValues();
-
-  // Sort by status priority (column E = index 4)
-  data.sort(function(a, b) {
-    var statusA = a[GRIEVANCE_COLS.STATUS - 1] || '';
-    var statusB = b[GRIEVANCE_COLS.STATUS - 1] || '';
-
-    // Get priority (default to 99 for unknown statuses)
-    var priorityA = GRIEVANCE_STATUS_PRIORITY[statusA] || 99;
-    var priorityB = GRIEVANCE_STATUS_PRIORITY[statusB] || 99;
-
-    // Primary sort: by status priority (lower number = higher priority)
-    if (priorityA !== priorityB) {
-      return priorityA - priorityB;
-    }
-
-    // Secondary sort: by Days to Deadline (column U = index 20) - most urgent first
-    var daysA = a[GRIEVANCE_COLS.DAYS_TO_DEADLINE - 1];
-    var daysB = b[GRIEVANCE_COLS.DAYS_TO_DEADLINE - 1];
-
-    // Handle empty/non-numeric values
-    if (daysA === '' || daysA === null) daysA = 9999;
-    if (daysB === '' || daysB === null) daysB = 9999;
-
-    return daysA - daysB;
-  });
-
-  // Write sorted data back
-  dataRange.setValues(data);
-
-  // Re-apply checkboxes to Message Alert column (AC) - setValues overwrites them
-  if (lastRow >= 2) {
-    sheet.getRange(2, GRIEVANCE_COLS.MESSAGE_ALERT, lastRow - 1, 1).insertCheckboxes();
-  }
-
-  Logger.log('Grievance Log sorted by status priority');
-}
+// NOTE: sortGrievanceLogByStatus() is defined in Code.gs - not duplicated here
 
 // ============================================================================
 // HIDDEN SHEET 3: _Member_Lookup

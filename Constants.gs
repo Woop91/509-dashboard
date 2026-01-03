@@ -46,6 +46,15 @@ var SHEETS = {
   ENGAGEMENT_CALC: '_Engagement_Calc',
   STEWARD_WORKLOAD_CALC: '_Steward_Workload_Calc',
   INTERACTIVE_CALC: '_Interactive_Dashboard_Calc',
+  GRIEVANCE_FORMULAS: '_Grievance_Formulas',
+  DASHBOARD_CALC: '_Dashboard_Calc',
+  DASHBOARD_SUMMARY_CALC: '_Dashboard_Summary_Calc',
+  COST_IMPACT_CALC: '_Cost_Impact_Calc',
+  LOCATION_ANALYTICS_CALC: '_Location_Analytics_Calc',
+  STEWARD_PERFORMANCE_CALC: '_Steward_Performance_Calc',
+  TRENDS_CALC: '_Trends_Calc',
+  TYPE_ANALYSIS_CALC: '_Type_Analysis_Calc',
+  TEST_RESULTS: 'Test Results',
   // Optional source sheets
   MEETING_ATTENDANCE: '📅 Meeting Attendance',
   VOLUNTEER_HOURS: '🤝 Volunteer Hours'
