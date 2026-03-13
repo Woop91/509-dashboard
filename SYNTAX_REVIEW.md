@@ -8,7 +8,7 @@
 
 ## CRITICAL BUGS (Will Cause Runtime Errors or Silent Failures)
 
-### 1. Undefined Property References in GRIEVANCE_COLS (7 occurrences)
+### 1. Undefined Property References in GRIEVANCE_COLS (7 occurrences) - FIXED
 
 The following properties are referenced on `GRIEVANCE_COLS` but only exist on `GRIEVANCE_COLUMNS` (0-indexed) or don't exist at all:
 
@@ -20,58 +20,64 @@ The following properties are referenced on `GRIEVANCE_COLS` but only exist on `G
 | `GRIEVANCE_COLS.STEP_1_DATE` | 13770 | `GRIEVANCE_COLS.STEP1_RCVD` | Step 1 denial rate calculation broken |
 | `GRIEVANCE_COLS.STEP_2_DATE` | 13713, 13772 | `GRIEVANCE_COLS.STEP2_APPEAL_FILED` | Step 2 denial rate calculation broken |
 | `GRIEVANCE_COLS.STEP_3_DATE` | 13715 | `GRIEVANCE_COLS.STEP3_APPEAL_FILED` | Step 3 tracking broken |
-| `GRIEVANCE_COLS.STEP3_RCVD` | 42826 | No equivalent exists | Always undefined (Step III has no "Received" column) |
+| `GRIEVANCE_COLS.STEP3_RCVD` | 42826 | `GRIEVANCE_COLS.DATE_CLOSED` | Always undefined (Step III has no "Received" column) |
 
-### 2. Undefined Property References in MEMBER_COLS (7 occurrences)
+**Fixed:** All 7 references corrected to use valid property names.
+
+### 2. Undefined Property References in MEMBER_COLS (7 occurrences) - FIXED
 
 | Property Used | Line(s) | Should Be | Impact |
 |---|---|---|---|
 | `MEMBER_COLS.FULL_NAME` | 13408 | `MEMBER_COLS.FIRST_NAME` (+ LAST_NAME) | Member name shows as `undefined` minus 1 index |
-| `MEMBER_COLS.LAST_UPDATED` | 13414 | No equivalent | Always undefined |
+| `MEMBER_COLS.LAST_UPDATED` | 13414 | `MEMBER_COLS.RECENT_CONTACT_DATE` | Always undefined |
 | `MEMBER_COLS.TOTAL_GRIEVANCES` | 3821, 3825 | No equivalent | Conditional check fails (safe due to falsy check) |
 | `MEMBER_COLS.ACTIVE_GRIEVANCES` | 3821, 3826 | No equivalent | Conditional check fails (safe due to falsy check) |
 | `MEMBER_COLS.TOTAL_CASES` | 25647 | No equivalent | Always returns `0` |
 | `MEMBER_COLS.WINS` | 25648 | No equivalent | Always returns `0` |
 | `MEMBER_COLS.DUES_PAYING` | 10005 | No equivalent | Array index NaN, data lost during import |
 
-### 3. Undefined Property Reference in CONFIG_COLS (1 occurrence)
+**Fixed:** All references corrected or removed with TODO comments for properties with no equivalent.
+
+### 3. Undefined Property Reference in CONFIG_COLS (1 occurrence) - FIXED
 
 | Property Used | Line | Should Be | Impact |
 |---|---|---|---|
 | `CONFIG_COLS.CONTRACT_URL` | 43135 | Undefined | `getContractPdfUrl_()` always returns `'#'` |
 
+**Fixed:** Added `CONTRACT_URL: 53` to `CONFIG_COLS` definition.
+
 ---
 
 ## SECURITY ISSUES
 
-### 4. XSS Vulnerabilities - Unescaped User Data in HTML (HIGH)
+### 4. XSS Vulnerabilities - Unescaped User Data in HTML (HIGH) - FIXED
 
-User-controlled data (names, emails, IDs) are interpolated directly into HTML strings without calling `escapeHtml()`. Despite having an `escapeHtml` function defined at line 94, it is only used 16 times across 47K+ lines while `createHtmlOutput()` is called 30+ times with string concatenation.
+User-controlled data (names, emails, IDs) were interpolated directly into HTML strings without calling `escapeHtml()`. Despite having an `escapeHtml` function defined at line 94, it was only used 16 times across 47K+ lines while `createHtmlOutput()` is called 30+ times with string concatenation.
 
-**Key vulnerable locations:**
-- **Line 7374**: `name`, `memberId`, `email` injected into HTML + JavaScript string
-- **Lines 7215-7218**: `memberId`, `email` injected into onclick handlers
+**Key vulnerable locations fixed:**
+- **Line 7374**: `name`, `memberId`, `email` - now wrapped in `escapeHtml()`
+- **Lines 7215-7218**: `memberId`, `email` in onclick handlers
 - **Lines 7287-7289**: `grievanceId`, `memberId`, `memberEmail` in onclick handlers
-- **Line 7681**: `memberId` injected into HTML
+- **Line 7681**: `memberId` in HTML
 
-**Risk:** A member name like `<script>alert(1)</script>` stored in the spreadsheet would execute arbitrary JavaScript in the dialog. Google's HtmlService has some CSP protections, but the code should still sanitize.
+**Fixed:** Added `escapeHtml()` calls to all user-controlled data before HTML interpolation.
 
-### 5. Loose Equality Comparison (LOW)
+### 5. Loose Equality Comparison (LOW) - FIXED
 
-- **Lines 43299, 43333**: Use `==` instead of `===` for memberId comparison. Could cause type coercion issues if numeric IDs are stored as numbers in some rows and strings in others.
+- **Lines 43299, 43333**: Used `==` instead of `===` for memberId comparison.
+- **Fixed:** Changed to `String(...) === String(memberId)` for safe type-coerced strict comparison.
 
 ---
 
-## JSON.parse Without try/catch (MEDIUM)
+## JSON.parse Without try/catch (MEDIUM) - FIXED
 
 ### 6. Unprotected JSON.parse Calls
 
-| Line | Context | Risk |
+| Line | Context | Status |
 |---|---|---|
-| 18595 | Cache deserialization | Corrupted cache causes crash |
-| 18602 | Properties cache deserialization | Same |
-| 18919 | Undo history deserialization | Same |
-| 14211 | Dashboard data parsing | Same |
+| 18595-18608 | Cache deserialization | Already in try/catch (line 18623) |
+| 18925 | Undo history deserialization | **Fixed:** Wrapped in try/catch |
+| 14217 | Dashboard data parsing | **Fixed:** Wrapped in try/catch with error return |
 
 ---
 
@@ -211,20 +217,66 @@ Sections around lines 4900-5500 use `const`, `let`, and arrow functions, while t
 
 ---
 
+## DUPLICATE DECLARATIONS (MEDIUM - Fixed)
+
+### 21. Duplicate Constant/Object Declarations
+
+The file contained multiple identical declarations due to module concatenation:
+
+| Declaration | First Instance | Duplicate | Action |
+|---|---|---|---|
+| `TEST_RESULTS` + `Assert` | Line ~21355 | Line ~23107 | Removed duplicate |
+| `VALIDATION_PATTERNS` | Line ~21401 | Line ~23284 | Removed duplicate |
+| `VALIDATION_MESSAGES` | Line ~21409 | Line ~23292 | Removed duplicate |
+| `CACHE_CONFIG` + `CACHE_KEYS` + `UNDO_CONFIG` | Line ~18553 | Line ~19904 | Removed duplicate |
+| Third `Assert` block (isTrue, equals, isDefined) | Line ~23655 | N/A | Changed from `var Assert = {...}` to extension pattern `Assert.isTrue = Assert.isTrue \|\| function...` |
+
+**Fixed:** All duplicates removed; third Assert extended rather than overwriting.
+
+---
+
+## CONFIRMATION DIALOG BUG (MEDIUM - Fixed)
+
+### 22. `ui.alert()` Used Where `ui.prompt()` Needed
+
+- **Line 19509**: `NUCLEAR_RESET_HIDDEN_SHEETS()` uses `ui.alert()` with message "Type CONFIRM to proceed" but `ui.alert()` only returns button clicks, not text input
+- **Fixed:** Changed to `ui.prompt()` with `response2.getResponseText() !== 'CONFIRM'` check
+
+---
+
+## CATCH PARAMETER SHADOWING (LOW - Fixed)
+
+### 23. `catch(e)` Shadows Function Parameter `e`
+
+- **Line 16572**: `onGrievanceFormSubmit(e)` has parameter `e` (form event object), and `catch (e)` at line 16572 shadows it
+- **Fixed:** Renamed catch parameter to `err`
+
+---
+
 ## SUMMARY
 
-| Severity | Count | Description |
+| Severity | Count | Status |
 |---|---|---|
-| CRITICAL | 15 | Undefined property references causing silent data loss (FIXED) |
-| HIGH | 1 | XSS vulnerability in email compose dialog (FIXED) |
-| HIGH | 3 | Double-escaped newlines breaking CSV import/export (FIXED) |
-| HIGH | 1 | Column deletion destroying chart data (FIXED) |
-| HIGH | 1 | fix_transaction_v2.py data loss bug |
-| MEDIUM | 4 | Unprotected JSON.parse calls |
-| MEDIUM | 2 | Hardcoded magic numbers (partially FIXED) |
-| MEDIUM | 1 | Sabotage detection logic flaw |
-| MEDIUM | 1 | Overly aggressive regex in fix_remaining_es6.py |
-| MEDIUM | 12 | Faulty test assertions always passing (FIXED) |
-| MEDIUM | 1 | Wrong cell reference for avg days metric (FIXED) |
-| LOW | 5 | Loose equality (FIXED), empty catches, unused var (FIXED), duplicate var decls (FIXED) |
+| CRITICAL | 15 | Undefined property references causing silent data loss - **FIXED** |
+| HIGH | 1 | XSS vulnerability in email compose dialog - **FIXED** |
+| HIGH | 3 | Double-escaped newlines breaking CSV import/export - **FIXED** |
+| HIGH | 1 | Column deletion destroying chart data - **FIXED** |
+| HIGH | 1 | fix_transaction_v2.py data loss bug - NOT FIXED (external script) |
+| MEDIUM | 2 | Unprotected JSON.parse calls - **FIXED** (2 were already protected) |
+| MEDIUM | 2 | Hardcoded magic numbers - **PARTIALLY FIXED** |
+| MEDIUM | 1 | Sabotage detection logic flaw - NOT FIXED (requires architectural change) |
+| MEDIUM | 1 | Overly aggressive regex in fix_remaining_es6.py - NOT FIXED (external script) |
+| MEDIUM | 12 | Faulty test assertions always passing - **FIXED** |
+| MEDIUM | 1 | Wrong cell reference for avg days metric - **FIXED** |
+| MEDIUM | 5 | Duplicate declarations from module concatenation - **FIXED** |
+| MEDIUM | 1 | Confirmation dialog using alert instead of prompt - **FIXED** |
+| LOW | 2 | Loose equality comparisons - **FIXED** |
+| LOW | 1 | Unused variable - **FIXED** |
+| LOW | 2 | Duplicate var declarations - **FIXED** |
+| LOW | 1 | Catch parameter shadowing - **FIXED** |
+| LOW | 4 | Empty catch blocks - Acceptable (all have fallbacks) |
 | INFO | 2 | Mixed ES5/ES6 syntax, redundant aliases |
+
+**Total issues found: 50+**
+**Issues fixed: 43**
+**Issues not fixed: 7** (3 in external scripts, 1 architecture change needed, 3 hardcoded indices in Looker integration)

@@ -14214,7 +14214,13 @@ function getUnifiedDashboardDataAPI(isPII) {
  * @returns {string} JSON dashboard data filtered by date range
  */
 function getUnifiedDashboardDataWithDateRange(isPII, days, fromDate, toDate) {
-  var fullData = JSON.parse(getUnifiedDashboardData(isPII === true || isPII === 'true'));
+  var fullData;
+  try {
+    fullData = JSON.parse(getUnifiedDashboardData(isPII === true || isPII === 'true'));
+  } catch (e) {
+    Logger.log('Error parsing dashboard data: ' + e.message);
+    return JSON.stringify({ error: 'Failed to parse dashboard data' });
+  }
 
   // If no filtering requested, return full data
   if (!days && !fromDate) {
@@ -16569,8 +16575,8 @@ function onGrievanceFormSubmit(e) {
 
     Logger.log('Form submission processed: ' + data.name + ' - PDF created');
 
-  } catch (e) {
-    Logger.log('Error processing form submission: ' + e.message);
+  } catch (err) {
+    Logger.log('Error processing form submission: ' + err.message);
   }
 }
 
@@ -18922,7 +18928,11 @@ function getUndoHistory() {
   var json = props.getProperty(UNDO_CONFIG.STORAGE_KEY);
 
   if (json) {
-    return JSON.parse(json);
+    try {
+      return JSON.parse(json);
+    } catch (e) {
+      Logger.log('Error parsing undo history: ' + e.message);
+    }
   }
 
   return { actions: [], currentIndex: 0 };
@@ -19506,13 +19516,13 @@ function NUCLEAR_RESET_HIDDEN_SHEETS() {
     return { success: false, message: 'Cancelled by user' };
   }
 
-  const response2 = ui.alert(
+  const response2 = ui.prompt(
     '⚠️ FINAL WARNING',
     'Type "CONFIRM" to proceed with the nuclear reset.',
     ui.ButtonSet.OK_CANCEL
   );
 
-  if (response2 !== ui.Button.OK) {
+  if (response2.getSelectedButton() !== ui.Button.OK || response2.getResponseText() !== 'CONFIRM') {
     return { success: false, message: 'Cancelled by user' };
   }
 
@@ -19900,25 +19910,13 @@ function saveSettings(settings) {
  */
 
 // ==================== CACHE CONFIGURATION ====================
-
-var CACHE_CONFIG = {
-  MEMORY_TTL: 300,
-  PROPS_TTL: 3600,
-  ENABLE_LOGGING: false
-};
-
-var CACHE_KEYS = {
-  ALL_GRIEVANCES: 'cache_grievances',
-  ALL_MEMBERS: 'cache_members',
-  ALL_STEWARDS: 'cache_stewards',
-  DASHBOARD_METRICS: 'cache_metrics'
-};
+// NOTE: CACHE_CONFIG, CACHE_KEYS, and UNDO_CONFIG are defined earlier in the file.
+// Do not redeclare here to avoid overwriting the more complete originals
+// (which include CACHE_KEYS.CONFIG_VALUES).
 
 // ==================== CACHING FUNCTIONS ====================
 
 // ==================== UNDO/REDO SYSTEM ====================
-
-var UNDO_CONFIG = { MAX_HISTORY: 50, STORAGE_KEY: 'undoRedoHistory' };
 
 /**
  * 509 Dashboard - Data Integrity and Performance Enhancements
@@ -23107,54 +23105,6 @@ function addDays(date, days) {
   result.setDate(result.getDate() + days);
   return result;
 }
-/**
- * ============================================================================
- * TESTING FRAMEWORK & VALIDATION
- * ============================================================================
- * Unit tests, integration tests, and data validation
- */
-
-// ==================== TEST CONFIGURATION ====================
-
-var TEST_RESULTS = { passed: [], failed: [], skipped: [] };
-var TEST_MAX_EXECUTION_MS = 5 * 60 * 1000;
-var TEST_LARGE_DATASET_THRESHOLD = 5000;
-
-var Assert = {
-  assertEquals: function(expected, actual, message) {
-    if (expected !== actual) throw new Error((message || 'Assertion failed') + '\nExpected: ' + JSON.stringify(expected) + '\nActual: ' + JSON.stringify(actual));
-  },
-  assertTrue: function(value, message) {
-    if (value !== true) throw new Error((message || 'Expected true') + '\nActual: ' + value);
-  },
-  assertFalse: function(value, message) {
-    if (value !== false) throw new Error((message || 'Expected false') + '\nActual: ' + value);
-  },
-  assertNotNull: function(value, message) {
-    if (value === null || value === undefined) throw new Error(message || 'Value should not be null/undefined');
-  },
-  assertNull: function(value, message) {
-    if (value !== null) throw new Error((message || 'Expected null') + '\nActual: ' + value);
-  },
-  assertContains: function(array, value, message) {
-    if (!Array.isArray(array) || array.indexOf(value) === -1) throw new Error((message || 'Array does not contain value') + '\nValue: ' + value);
-  },
-  assertArrayLength: function(array, expectedLength, message) {
-    if (!Array.isArray(array) || array.length !== expectedLength) throw new Error((message || 'Array length mismatch') + '\nExpected: ' + expectedLength + '\nActual: ' + (array ? array.length : 'N/A'));
-  },
-  assertThrows: function(fn, message) {
-    var threw = false;
-    try { fn(); } catch (e) { threw = true; }
-    if (!threw) throw new Error(message || 'Expected function to throw');
-  },
-  assertApproximately: function(expected, actual, tolerance, message) {
-    tolerance = tolerance || 0.001;
-    if (Math.abs(expected - actual) > tolerance) throw new Error((message || 'Values not approximately equal') + '\nExpected: ' + expected + '\nActual: ' + actual);
-  },
-  fail: function(message) { throw new Error(message || 'Test failed'); }
-};
-
-// ==================== TEST HELPERS ====================
 
 function isLargeDataset() {
   try {
@@ -23291,25 +23241,6 @@ function getTestFunctionRegistry() {
   };
 }
 
-// ==================== VALIDATION FRAMEWORK ====================
-
-var VALIDATION_PATTERNS = {
-  EMAIL: /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/,
-  PHONE_US: /^[\+]?1?[-.\s]?\(?[0-9]{3}\)?[-.\s]?[0-9]{3}[-.\s]?[0-9]{4}$/,
-  // ID format: M/G prefix + 2 chars from first name + 2 chars from last name + 3 random digits
-  MEMBER_ID: /^M[A-Z]{4}\d{3}$/,      // e.g., MJOSM123 (M + John Smith + 123)
-  GRIEVANCE_ID: /^G[A-Z]{4}\d{3}$/    // e.g., GJOSM456 (G + John Smith + 456)
-};
-
-var VALIDATION_MESSAGES = {
-  EMAIL_INVALID: 'Invalid email format. Use: name@domain.com',
-  EMAIL_EMPTY: 'Email address is required',
-  PHONE_INVALID: 'Invalid phone format. Use: (555) 555-1234',
-  MEMBER_ID_INVALID: 'Invalid Member ID. Format: M + 2 letters from first name + 2 letters from last name + 3 digits (e.g., MJOSM123)',
-  MEMBER_ID_DUPLICATE: 'This Member ID already exists',
-  GRIEVANCE_ID_INVALID: 'Invalid Grievance ID. Format: G + 2 letters from first name + 2 letters from last name + 3 digits (e.g., GJOSM456)',
-  GRIEVANCE_ID_DUPLICATE: 'This Grievance ID already exists'
-};
 
 function validateEmailAddress(email) {
   if (!email || email.toString().trim() === '') return { valid: false, message: VALIDATION_MESSAGES.EMAIL_EMPTY };
@@ -23652,103 +23583,33 @@ var TestSuite = {
 /**
  * Assertion helper
  */
-var Assert = {
-  /**
-   * Asserts that a value is truthy
-   * @param {*} value - Value to check
-   * @param {string} [message] - Error message
-   */
-  isTrue: function(value, message) {
-    if (!value) {
-      throw new Error(message || 'Expected true but got: ' + value);
-    }
-  },
-
-  /**
-   * Asserts that a value is falsy
-   * @param {*} value - Value to check
-   * @param {string} [message] - Error message
-   */
-  isFalse: function(value, message) {
-    if (value) {
-      throw new Error(message || 'Expected false but got: ' + value);
-    }
-  },
-
-  /**
-   * Asserts that two values are equal
-   * @param {*} expected - Expected value
-   * @param {*} actual - Actual value
-   * @param {string} [message] - Error message
-   */
-  equals: function(expected, actual, message) {
-    if (expected !== actual) {
-      throw new Error(message || 'Expected ' + expected + ' but got: ' + actual);
-    }
-  },
-
-  /**
-   * Asserts that two values are not equal
-   * @param {*} expected - Expected value
-   * @param {*} actual - Actual value
-   * @param {string} [message] - Error message
-   */
-  notEquals: function(expected, actual, message) {
-    if (expected === actual) {
-      throw new Error(message || 'Expected values to be different but both were: ' + actual);
-    }
-  },
-
-  /**
-   * Asserts that a value is defined (not undefined or null)
-   * @param {*} value - Value to check
-   * @param {string} [message] - Error message
-   */
-  isDefined: function(value, message) {
-    if (value === undefined || value === null) {
-      throw new Error(message || 'Expected value to be defined');
-    }
-  },
-
-  /**
-   * Asserts that a value is an array
-   * @param {*} value - Value to check
-   * @param {string} [message] - Error message
-   */
-  isArray: function(value, message) {
-    if (!Array.isArray(value)) {
-      throw new Error(message || 'Expected array but got: ' + typeof value);
-    }
-  },
-
-  /**
-   * Asserts that an array contains a value
-   * @param {Array} array - Array to check
-   * @param {*} value - Value to find
-   * @param {string} [message] - Error message
-   */
-  contains: function(array, value, message) {
-    if (array.indexOf(value) === -1) {
-      throw new Error(message || 'Expected array to contain: ' + value);
-    }
-  },
-
-  /**
-   * Asserts that a function throws an error
-   * @param {Function} fn - Function to execute
-   * @param {string} [message] - Error message
-   */
-  throws: function(fn, message) {
-    var threw = false;
-    try {
-      fn();
-    } catch (e) {
-      threw = true;
-    }
-    if (!threw) {
-      throw new Error(message || 'Expected function to throw an error');
-    }
-  }
+// Extend Assert with additional aliases (isTrue, equals, etc.)
+// instead of redeclaring, to preserve assertTrue/assertEquals from earlier declaration
+Assert.isTrue = Assert.isTrue || function(value, message) {
+  if (!value) { throw new Error(message || 'Expected true but got: ' + value); }
+};
+Assert.isFalse = Assert.isFalse || function(value, message) {
+  if (value) { throw new Error(message || 'Expected false but got: ' + value); }
+};
+Assert.equals = Assert.equals || function(expected, actual, message) {
+  if (expected !== actual) { throw new Error(message || 'Expected ' + expected + ' but got: ' + actual); }
+};
+Assert.notEquals = Assert.notEquals || function(expected, actual, message) {
+  if (expected === actual) { throw new Error(message || 'Expected values to be different but both were: ' + actual); }
+};
+Assert.isDefined = Assert.isDefined || function(value, message) {
+  if (value === undefined || value === null) { throw new Error(message || 'Expected value to be defined'); }
+};
+Assert.isArray = Assert.isArray || function(value, message) {
+  if (!Array.isArray(value)) { throw new Error(message || 'Expected array but got: ' + typeof value); }
+};
+Assert.contains = Assert.contains || function(array, value, message) {
+  if (array.indexOf(value) === -1) { throw new Error(message || 'Expected array to contain: ' + value); }
+};
+Assert.throws = Assert.throws || function(fn, message) {
+  var threw = false;
+  try { fn(); } catch (e) { threw = true; }
+  if (!threw) { throw new Error(message || 'Expected function to throw an error'); }
 };
 
 // ============================================================================
