@@ -132,14 +132,59 @@ Sections around lines 4900-5500 use `const`, `let`, and arrow functions, while t
 
 ---
 
+## ESCAPED NEWLINES (HIGH - Fixed)
+
+### 13. Double-Escaped Newlines Producing Literal `\n`
+
+| Line | Context | Impact |
+|---|---|---|
+| 39741 | `text.split('\\n')` in `importMembersFromText` | CSV import splits on literal `\n` instead of newlines - imports fail |
+| 39877 | `data.map(...).join('\\n')` in `exportMemberDirectory` | CSV export contains literal `\n` instead of newlines |
+| 39890-39891 | `'Export\\n\\n'` in email body | Email body shows literal `\n` instead of line breaks |
+
+**Fixed:** Changed `'\\n'` to `'\n'` in all locations.
+
+---
+
+## HARDCODED MAGIC NUMBERS (MEDIUM - Partially Fixed)
+
+### 14. Satisfaction Column Indices
+
+| Line | Code | Fix |
+|---|---|---|
+| 43058 | `data[i][7]` | Changed to `data[i][SATISFACTION_COLS.Q7_TRUST_UNION - 1]` |
+| 43059 | `data[i][6]` | Changed to `data[i][SATISFACTION_COLS.Q6_SATISFIED_REP - 1]` |
+| 46505-46527 | Many hardcoded indices in Looker integration | Not fixed (large scope) |
+
+---
+
+## UNUSED VARIABLES (LOW - Fixed)
+
+### 15. Unused `ss` Variable
+
+- **Line 42041**: `var ss = SpreadsheetApp.getActiveSpreadsheet()` in `calculateUnitHealth()` - never used. Removed.
+
+---
+
+## SABOTAGE DETECTION LOGIC FLAW (MEDIUM - Not Fixed)
+
+### 16. `onEdit` Trigger Limitation
+
+- **Line 38323**: `if (e.oldValue && !e.value && numCells > 15)` - `e.oldValue` and `e.value` are only populated for single-cell edits. For multi-cell edits (which `numCells > 15` implies), both are always `undefined`, so this condition can never be true.
+
+---
+
 ## SUMMARY
 
 | Severity | Count | Description |
 |---|---|---|
-| CRITICAL | 15 | Undefined property references causing silent data loss |
-| HIGH | 1 | XSS vulnerabilities in HTML construction |
+| CRITICAL | 15 | Undefined property references causing silent data loss (FIXED) |
+| HIGH | 1 | XSS vulnerability in email compose dialog (FIXED) |
+| HIGH | 3 | Double-escaped newlines breaking CSV import/export (FIXED) |
 | HIGH | 1 | fix_transaction_v2.py data loss bug |
 | MEDIUM | 4 | Unprotected JSON.parse calls |
+| MEDIUM | 2 | Hardcoded magic numbers (partially FIXED) |
+| MEDIUM | 1 | Sabotage detection logic flaw |
 | MEDIUM | 1 | Overly aggressive regex in fix_remaining_es6.py |
-| LOW | 2 | Loose equality, empty catch blocks |
+| LOW | 3 | Loose equality (FIXED), empty catch blocks, unused variable (FIXED) |
 | INFO | 2 | Mixed ES5/ES6 syntax, redundant aliases |

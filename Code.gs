@@ -39738,7 +39738,7 @@ function importMembersFromText(text) {
     throw new Error('Member Directory sheet not found');
   }
 
-  const lines = text.split('\\n').filter(line => line.trim());
+  const lines = text.split('\n').filter(line => line.trim());
   let imported = 0;
 
   for (const line of lines) {
@@ -39874,7 +39874,7 @@ function exportMemberDirectory(format) {
   switch (format) {
     case 'csv':
       // Create CSV content
-      const csv = data.map(row => row.join(',')).join('\\n');
+      const csv = data.map(row => row.join(',')).join('\n');
       const blob = Utilities.newBlob(csv, 'text/csv', 'MemberDirectory.csv');
       const file = DriveApp.createFile(blob);
       return {
@@ -39887,8 +39887,8 @@ function exportMemberDirectory(format) {
       // Send email with summary
       const email = Session.getActiveUser().getEmail();
       const subject = '509 Member Directory Export - ' + new Date().toLocaleDateString();
-      let body = 'Member Directory Export\\n\\n';
-      body += 'Total Members: ' + (data.length - 1) + '\\n\\n';
+      let body = 'Member Directory Export\n\n';
+      body += 'Total Members: ' + (data.length - 1) + '\n\n';
       body += 'Spreadsheet: ' + ss.getUrl();
       GmailApp.sendEmail(email, subject, body);
       return { success: true, message: 'Report sent to ' + email };
@@ -42038,8 +42038,6 @@ function transcribeHandwrittenForm(fileId) {
  * @returns {Object} Unit health analysis result
  */
 function calculateUnitHealth(unitName) {
-  var ss = SpreadsheetApp.getActiveSpreadsheet();
-
   // Count grievances for this unit
   var grievanceCount = getGrievanceCountForUnit(unitName);
 
@@ -43057,8 +43055,8 @@ function getSecureSatisfactionStats_() {
     var satScores = [];
 
     for (var i = 1; i < data.length; i++) {
-      var trustVal = parseFloat(data[i][7]); // SATISFACTION_COLS.Q7_TRUST_UNION - 1
-      var satVal = parseFloat(data[i][6]);   // SATISFACTION_COLS.Q6_SATISFIED_REP - 1
+      var trustVal = parseFloat(data[i][SATISFACTION_COLS.Q7_TRUST_UNION - 1]);
+      var satVal = parseFloat(data[i][SATISFACTION_COLS.Q6_SATISFIED_REP - 1]);
 
       if (!isNaN(trustVal) && trustVal >= 1 && trustVal <= 10) {
         trustScores.push(trustVal);
