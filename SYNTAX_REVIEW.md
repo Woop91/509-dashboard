@@ -174,6 +174,43 @@ Sections around lines 4900-5500 use `const`, `let`, and arrow functions, while t
 
 ---
 
+## COLUMN DELETION DESTROYS CHART DATA (HIGH - Fixed)
+
+### 17. Satisfaction Sheet Column Deletion
+
+- **Line 34659**: `sheet.deleteColumns(89, maxCols - 88)` deletes all columns after 88
+- But chart data was just written to columns 90-91 (`chartStart` = 90) at line 34493
+- **Fixed**: Changed to delete only after `chartStart + 1` (column 91)
+
+---
+
+## FAULTY TEST ASSERTIONS (MEDIUM - Fixed)
+
+### 18. `typeof` in `Assert.isDefined` Always Passes
+
+- **Lines 24098-24121**: Tests like `Assert.isDefined(typeof someFunction, ...)` always pass because `typeof` returns a string (`"function"` or `"undefined"`), which is always defined/truthy
+- **Fixed**: Changed to `Assert.isTrue(typeof someFunction === 'function', ...)`
+
+---
+
+## WRONG CELL REFERENCE (MEDIUM - Fixed)
+
+### 19. Average Days Reads Overdue Count
+
+- **Line 25609**: `var avgDays = sheet.getRange('E6').getValue()` reads from E6 which contains overdue cases count (per line 33663), not average resolution days
+- **Fixed**: Changed to `sheet.getRange('D21').getValue()` which contains `metrics.avgResolutionDays`
+
+---
+
+## DUPLICATE VAR DECLARATIONS (LOW - Fixed)
+
+### 20. Redeclared Variables in Same Scope
+
+- **Line 26033**: `var memberId` redeclared (first at ~26008) - changed to assignment
+- **Line 26230**: `var match` redeclared (first at 26221) - changed to assignment
+
+---
+
 ## SUMMARY
 
 | Severity | Count | Description |
@@ -181,10 +218,13 @@ Sections around lines 4900-5500 use `const`, `let`, and arrow functions, while t
 | CRITICAL | 15 | Undefined property references causing silent data loss (FIXED) |
 | HIGH | 1 | XSS vulnerability in email compose dialog (FIXED) |
 | HIGH | 3 | Double-escaped newlines breaking CSV import/export (FIXED) |
+| HIGH | 1 | Column deletion destroying chart data (FIXED) |
 | HIGH | 1 | fix_transaction_v2.py data loss bug |
 | MEDIUM | 4 | Unprotected JSON.parse calls |
 | MEDIUM | 2 | Hardcoded magic numbers (partially FIXED) |
 | MEDIUM | 1 | Sabotage detection logic flaw |
 | MEDIUM | 1 | Overly aggressive regex in fix_remaining_es6.py |
-| LOW | 3 | Loose equality (FIXED), empty catch blocks, unused variable (FIXED) |
+| MEDIUM | 12 | Faulty test assertions always passing (FIXED) |
+| MEDIUM | 1 | Wrong cell reference for avg days metric (FIXED) |
+| LOW | 5 | Loose equality (FIXED), empty catches, unused var (FIXED), duplicate var decls (FIXED) |
 | INFO | 2 | Mixed ES5/ES6 syntax, redundant aliases |

@@ -24095,29 +24095,29 @@ function test_CacheKeys_Defined() {
  * Tests SearchEngine module functions exist
  */
 function test_SearchEngine_Functions() {
-  Assert.isDefined(typeof getDesktopSearchLocations, 'getDesktopSearchLocations should be defined');
-  Assert.isDefined(typeof getDesktopSearchData, 'getDesktopSearchData should be defined');
-  Assert.isDefined(typeof navigateToSearchResult, 'navigateToSearchResult should be defined');
-  Assert.isDefined(typeof searchDashboard, 'searchDashboard should be defined');
+  Assert.isTrue(typeof getDesktopSearchLocations === 'function', 'getDesktopSearchLocations should be defined');
+  Assert.isTrue(typeof getDesktopSearchData === 'function', 'getDesktopSearchData should be defined');
+  Assert.isTrue(typeof navigateToSearchResult === 'function', 'navigateToSearchResult should be defined');
+  Assert.isTrue(typeof searchDashboard === 'function', 'searchDashboard should be defined');
 }
 
 /**
  * Tests ThemeService module functions exist
  */
 function test_ThemeService_Functions() {
-  Assert.isDefined(typeof APPLY_SYSTEM_THEME, 'APPLY_SYSTEM_THEME should be defined');
-  Assert.isDefined(typeof resetToDefaultTheme, 'resetToDefaultTheme should be defined');
-  Assert.isDefined(typeof getADHDSettings, 'getADHDSettings should be defined');
-  Assert.isDefined(typeof applyZebraStripes, 'applyZebraStripes should be defined');
+  Assert.isTrue(typeof APPLY_SYSTEM_THEME === 'function', 'APPLY_SYSTEM_THEME should be defined');
+  Assert.isTrue(typeof resetToDefaultTheme === 'function', 'resetToDefaultTheme should be defined');
+  Assert.isTrue(typeof getADHDSettings === 'function', 'getADHDSettings should be defined');
+  Assert.isTrue(typeof applyZebraStripes === 'function', 'applyZebraStripes should be defined');
 }
 
 /**
  * Tests MenuBuilder module functions exist
  */
 function test_MenuBuilder_Functions() {
-  Assert.isDefined(typeof createDashboardMenu, 'createDashboardMenu should be defined');
-  Assert.isDefined(typeof navigateToSheet, 'navigateToSheet should be defined');
-  Assert.isDefined(typeof showToast, 'showToast should be defined');
+  Assert.isTrue(typeof createDashboardMenu === 'function', 'createDashboardMenu should be defined');
+  Assert.isTrue(typeof navigateToSheet === 'function', 'navigateToSheet should be defined');
+  Assert.isTrue(typeof showToast === 'function', 'showToast should be defined');
 }
 
 // ============================================================================
@@ -25606,7 +25606,7 @@ function createSummaryTableChart_(sheet) {
   var openCases = sheet.getRange('A16').getValue() || 0;
   var resolvedCases = sheet.getRange('D16').getValue() || 0;
   var winRate = sheet.getRange('D6').getValue() || '0%';
-  var avgDays = sheet.getRange('E6').getValue() || 'N/A';
+  var avgDays = sheet.getRange('D21').getValue() || 'N/A';
 
   var tableText = '╔═══════════════════════════════════════════════════════╗\n' +
                   '║            📋 KPI SUMMARY TABLE                       ║\n' +
@@ -26030,7 +26030,7 @@ function onContactFormSubmit(e) {
         var id = data[k][MEMBER_COLS.MEMBER_ID - 1];
         if (id) existingIds[id] = true;
       }
-      var memberId = generateNameBasedId('M', firstName, lastName, existingIds);
+      memberId = generateNameBasedId('M', firstName, lastName, existingIds);
 
       // Build new row array
       var newRow = [];
@@ -26227,7 +26227,7 @@ function setupGrievanceFormTrigger() {
     } else {
       // Use configured form
       var configFormUrl = GRIEVANCE_FORM_CONFIG.FORM_URL;
-      var match = configFormUrl.match(/\/d\/e\/([a-zA-Z0-9-_]+)/);
+      match = configFormUrl.match(/\/d\/e\/([a-zA-Z0-9-_]+)/);
       if (!match) {
         ui.alert('No Form Configured',
           'No form URL provided and could not extract ID from config.\n\n' +
@@ -34654,10 +34654,11 @@ function createSatisfactionSheet(ss) {
   sheet.setColumnWidth(dashStart + 3, 80);   // Type
   sheet.setColumnWidth(dashStart + 4, 200);  // Options
 
-  // Delete excess columns after CJ (column 88)
+  // Delete excess columns after chart data (column 91 = chartStart + 1)
+  var lastUsedCol = chartStart + 1; // Chart data occupies chartStart and chartStart+1
   var maxCols = sheet.getMaxColumns();
-  if (maxCols > 88) {
-    sheet.deleteColumns(89, maxCols - 88);
+  if (maxCols > lastUsedCol) {
+    sheet.deleteColumns(lastUsedCol + 1, maxCols - lastUsedCol);
   }
 
   // Populate computed values (no formulas in visible sheet)
