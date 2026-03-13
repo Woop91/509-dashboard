@@ -14489,6 +14489,14 @@ function getUnifiedDashboardHtml(isPII) {
     'body.large-text .tab{font-size:13px;padding:16px 20px}' +
     'body.large-text .list-item{font-size:15px;padding:16px}' +
 
+    // Collapsible Sections
+    '.collapsible-header{display:flex;justify-content:space-between;align-items:center;cursor:pointer;padding:10px 0;margin:20px 0 8px;user-select:none;-webkit-tap-highlight-color:transparent;touch-action:manipulation}' +
+    '.collapsible-header h3{color:#e2e8f0;font-size:14px;display:flex;align-items:center;gap:8px;margin:0}' +
+    '.collapsible-header .collapse-icon{color:#64748b;font-size:20px;transition:transform 0.3s}' +
+    '.collapsible-header.collapsed .collapse-icon{transform:rotate(-90deg)}' +
+    '.collapsible-body{overflow:hidden;transition:max-height 0.3s ease,opacity 0.2s ease;max-height:2000px;opacity:1}' +
+    '.collapsible-body.hidden{max-height:0;opacity:0;margin:0;padding:0}' +
+
     // Keyboard Shortcut Hint
     '.shortcut-hint{position:fixed;bottom:80px;left:50%;transform:translateX(-50%);background:rgba(0,0,0,0.9);color:white;padding:12px 24px;border-radius:8px;font-size:13px;z-index:300;display:none}' +
     '.shortcut-hint.show{display:block;animation:fadeInOut 2s forwards}' +
@@ -14566,6 +14574,19 @@ function getUnifiedDashboardHtml(isPII) {
     '<div class="setting-row"><span class="setting-label">Win Rate Target</span><input type="number" id="goalWinRate" value="75" min="0" max="100" style="width:60px;padding:6px;border-radius:6px;background:#334155;color:#e2e8f0;border:none;text-align:center" onchange="saveGoals()">%</div>' +
     '<div class="setting-row"><span class="setting-label">Morale Target</span><input type="number" id="goalMorale" value="8" min="1" max="10" step="0.1" style="width:60px;padding:6px;border-radius:6px;background:#334155;color:#e2e8f0;border:none;text-align:center" onchange="saveGoals()">/10</div>' +
     '<div class="setting-row"><span class="setting-label">Response Rate Target</span><input type="number" id="goalResponse" value="50" min="0" max="100" style="width:60px;padding:6px;border-radius:6px;background:#334155;color:#e2e8f0;border:none;text-align:center" onchange="saveGoals()">%</div>' +
+    '</div>' +
+    '<div class="settings-section"><div class="settings-title">Section Visibility</div>' +
+    '<div style="font-size:11px;color:#94a3b8;margin-bottom:8px">Toggle sections on/off. Collapsed sections can be expanded by clicking their header.</div>' +
+    '<div class="setting-row"><span class="setting-label">Secondary Metrics</span><div class="toggle" id="secToggle_overview_secondary" onclick="toggleSectionDefault(\\x27overview_secondary\\x27,this)"></div></div>' +
+    '<div class="setting-row"><span class="setting-label">Location Charts</span><div class="toggle" id="secToggle_overview_charts2" onclick="toggleSectionDefault(\\x27overview_charts2\\x27,this)"></div></div>' +
+    '<div class="setting-row"><span class="setting-label">Engagement Metrics</span><div class="toggle" id="secToggle_analytics_engagement" onclick="toggleSectionDefault(\\x27analytics_engagement\\x27,this)"></div></div>' +
+    '<div class="setting-row"><span class="setting-label">Contact Updates</span><div class="toggle" id="secToggle_directory_contact" onclick="toggleSectionDefault(\\x27directory_contact\\x27,this)"></div></div>' +
+    '<div class="setting-row"><span class="setting-label">Meeting Attendees</span><div class="toggle" id="secToggle_directory_meeting" onclick="toggleSectionDefault(\\x27directory_meeting\\x27,this)"></div></div>' +
+    '<div class="setting-row"><span class="setting-label">Recent Grievances</span><div class="toggle" id="secToggle_bargaining_recent" onclick="toggleSectionDefault(\\x27bargaining_recent\\x27,this)"></div></div>' +
+    '<div class="setting-row"><span class="setting-label">Satisfaction Insights</span><div class="toggle" id="secToggle_satisfaction_insights" onclick="toggleSectionDefault(\\x27satisfaction_insights\\x27,this)"></div></div>' +
+    '<div class="setting-row"><span class="setting-label">Hotspot Detail</span><div class="toggle" id="secToggle_hotspots_overdue" onclick="toggleSectionDefault(\\x27hotspots_overdue\\x27,this)"></div></div>' +
+    '<button class="btn btn-secondary" style="width:100%;margin-top:8px" onclick="expandAllSections()"><i class="material-icons" style="font-size:14px;vertical-align:middle;margin-right:4px">unfold_more</i>Expand All Sections</button>' +
+    '<button class="btn btn-secondary" style="width:100%;margin-top:4px" onclick="collapseAllSections()"><i class="material-icons" style="font-size:14px;vertical-align:middle;margin-right:4px">unfold_less</i>Collapse All Sections</button>' +
     '</div>' +
     '<div class="settings-section"><div class="settings-title">Actions</div>' +
     '<button class="btn btn-secondary" style="width:100%;margin-bottom:8px" onclick="printDashboard()"><i class="material-icons" style="font-size:14px;vertical-align:middle;margin-right:4px">print</i>Print Dashboard</button>' +
@@ -14652,6 +14673,14 @@ function getUnifiedDashboardHtml(isPII) {
     // JavaScript
     '<script>' +
     'var dashData=null;var isPII=' + isPII + ';' +
+
+    // Section collapse/expand functionality
+    'var sectionDefaults={overview_secondary:true,overview_charts2:true,directory_contact:true,directory_meeting:true,hotspots_overdue:true,bargaining_recent:true,satisfaction_insights:true,analytics_engagement:true};' +
+    'function getSectionState(id){var stored=localStorage.getItem("509_section_"+id);if(stored!==null)return stored==="true";return !!sectionDefaults[id]}' +
+    'function toggleSection(id){var body=document.getElementById("body_"+id);var header=document.getElementById("hdr_"+id);if(!body||!header)return;var isHidden=!body.classList.contains("hidden");body.classList.toggle("hidden",isHidden);header.classList.toggle("collapsed",isHidden);localStorage.setItem("509_section_"+id,isHidden?"true":"false")}' +
+    'function collapsibleSection(id,icon,title,iconColor){var collapsed=getSectionState(id);return"<div class=\\"collapsible-header"+(collapsed?" collapsed":"")+ "\\" id=\\"hdr_"+id+"\\" onclick=\\"toggleSection(\\x27"+id+"\\x27)\\"><h3><i class=\\"material-icons\\" style=\\"color:"+(iconColor||"#60a5fa")+"\\">"+icon+"</i>"+title+"</h3><i class=\\"material-icons collapse-icon\\">expand_more</i></div><div class=\\"collapsible-body"+(collapsed?" hidden":"")+ "\\" id=\\"body_"+id+"\\">"}' +
+    'function endSection(){return"</div>"}' +
+
     'window.onload=function(){google.script.run.withSuccessHandler(render).withFailureHandler(showError).getUnifiedDashboardDataAPI(isPII)};' +
     'function showError(e){document.getElementById("main-content").innerHTML="<div class=\\"loading\\">Error: "+e.message+"</div>"}' +
     'function showTab(tab){document.querySelectorAll(".tab").forEach(function(t){t.classList.remove("active")});document.querySelector(".tab[onclick*=\\x27"+tab+"\\x27]").classList.add("active");renderTab(tab)}' +
@@ -14710,7 +14739,8 @@ function getUnifiedDashboardHtml(isPII) {
     'var bargainColor=d.step1DenialRate>60?"#ef4444":d.step1DenialRate>40?"#f59e0b":"#22c55e";' +
     'html+="<div style=\\"padding:12px;background:rgba("+(d.step1DenialRate>60?"239,68,68":d.step1DenialRate>40?"245,158,11":"34,197,94")+",0.1);border-radius:8px;border-left:3px solid "+bargainColor+"\\"><div style=\\"font-size:11px;color:"+bargainColor+";font-weight:600\\">BARGAINING POSITION</div><div style=\\"font-size:13px;color:#e2e8f0;margin-top:4px\\">Step 1 Denial: "+d.step1DenialRate+"% | Avg "+d.avgSettlementDays+" days</div><div style=\\"font-size:10px;color:#94a3b8;margin-top:2px\\">"+(d.step1DenialRate>60?"High management hostility":"Normal bargaining environment")+"</div></div>";' +
     'html+="</div></div>";' +
-    // Secondary Metrics Row
+    // Secondary Metrics Row (collapsible, hidden by default)
+    'html+=collapsibleSection("overview_secondary","grid_view","Secondary Metrics","#a78bfa");' +
     'html+="<div class=\\"kpi-grid\\" style=\\"grid-template-columns:repeat(auto-fit,minmax(100px,1fr));margin-bottom:16px\\">";' +
     'html+="<div class=\\"kpi-card\\"><div class=\\"kpi-label\\">Total Grievances</div><div class=\\"kpi-value blue\\">"+d.totalGrievances+"</div></div>";' +
     'html+="<div class=\\"kpi-card\\"><div class=\\"kpi-label\\">Member:Steward</div><div class=\\"kpi-value purple\\">"+d.stewardRatio+"</div></div>";' +
@@ -14719,11 +14749,15 @@ function getUnifiedDashboardHtml(isPII) {
     'html+="<div class=\\"kpi-card\\"><div class=\\"kpi-label\\">Step 1 Denial</div><div class=\\"kpi-value "+(d.step1DenialRate>60?"red":"yellow")+"\\">"+d.step1DenialRate+"%</div></div>";' +
     'html+="<div class=\\"kpi-card\\"><div class=\\"kpi-label\\">Avg Settlement</div><div class=\\"kpi-value blue\\">"+d.avgSettlementDays+" days</div></div>";' +
     'html+="</div>";' +
-    // Charts
+    'html+=endSection();' +
+    // Charts - Primary row (always visible)
     'html+="<div class=\\"charts-row\\"><div class=\\"chart-card\\"><div class=\\"chart-title\\"><i class=\\"material-icons\\">pie_chart</i>Case Status <span style=\\"font-size:10px;color:#64748b\\">(click segment)</span></div><canvas id=\\"statusChart\\"></canvas></div>";' +
     'html+="<div class=\\"chart-card\\"><div class=\\"chart-title\\"><i class=\\"material-icons\\">trending_up</i>Morale Trend</div><canvas id=\\"trendChart\\"></canvas></div></div>";' +
+    // Charts - Secondary row (collapsible, hidden by default)
+    'html+=collapsibleSection("overview_charts2","bar_chart","Location & Filing Charts","#22c55e");' +
     'html+="<div class=\\"charts-row\\"><div class=\\"chart-card\\"><div class=\\"chart-title\\"><i class=\\"material-icons\\">location_on</i>Members by Location <span style=\\"font-size:10px;color:#64748b\\">(click bar)</span></div><canvas id=\\"locationChart\\"></canvas></div>";' +
     'html+="<div class=\\"chart-card\\"><div class=\\"chart-title\\"><i class=\\"material-icons\\">show_chart</i>Filed vs Resolved</div><canvas id=\\"filingChart\\"></canvas></div></div>";' +
+    'html+=endSection();' +
     'document.getElementById("main-content").innerHTML=html;renderOverviewCharts()' +
     '}' +
 
@@ -14775,14 +14809,15 @@ function getUnifiedDashboardHtml(isPII) {
     'html+="<div class=\\"kpi-card\\"><div class=\\"kpi-label\\">Settled</div><div class=\\"kpi-value purple\\">"+d.settled+"</div></div>";' +
     'var responseTarget=(JSON.parse(localStorage.getItem("509_goals")||"{}").response)||50;' +
     'html+="<div class=\\"kpi-card\\"><div class=\\"kpi-label\\">Survey Response <span style=\\"font-size:9px;color:#64748b\\">(Goal: "+responseTarget+"%)</span></div><div class=\\"kpi-value yellow\\">"+d.engagement.surveyResponseRate+"%</div>"+getGoalBar(d.engagement.surveyResponseRate,responseTarget)+"</div></div>";' +
-    // Engagement Metrics Section
-    'html+="<h3 style=\\"color:#e2e8f0;font-size:14px;margin:20px 0 12px;display:flex;align-items:center;gap:8px\\"><i class=\\"material-icons\\" style=\\"color:#60a5fa\\">trending_up</i>Member Engagement Metrics</h3>";' +
+    // Engagement Metrics Section (collapsible, hidden by default)
+    'html+=collapsibleSection("analytics_engagement","trending_up","Member Engagement Metrics","#60a5fa");' +
     'html+="<div class=\\"kpi-grid\\" style=\\"grid-template-columns:repeat(auto-fit,minmax(120px,1fr))\\"><div class=\\"kpi-card\\"><div class=\\"kpi-label\\">Email Open Rate</div><div class=\\"kpi-value "+(d.engagement.emailOpenRate>=50?"green":d.engagement.emailOpenRate>=30?"yellow":"red")+"\\">"+d.engagement.emailOpenRate+"%</div></div>";' +
     'html+="<div class=\\"kpi-card\\"><div class=\\"kpi-label\\">Virtual Mtg Att.</div><div class=\\"kpi-value "+(d.engagement.virtualMeetingRate>=40?"green":d.engagement.virtualMeetingRate>=20?"yellow":"red")+"\\">"+d.engagement.virtualMeetingRate+"%</div></div>";' +
     'html+="<div class=\\"kpi-card\\"><div class=\\"kpi-label\\">In-Person Mtg Att.</div><div class=\\"kpi-value "+(d.engagement.inPersonMeetingRate>=30?"green":d.engagement.inPersonMeetingRate>=15?"yellow":"red")+"\\">"+d.engagement.inPersonMeetingRate+"%</div></div>";' +
     'html+="<div class=\\"kpi-card\\"><div class=\\"kpi-label\\">Total Vol. Hours</div><div class=\\"kpi-value purple\\">"+d.engagement.totalVolunteerHours+"</div></div>";' +
     'html+="<div class=\\"kpi-card\\"><div class=\\"kpi-label\\">Local Interest</div><div class=\\"kpi-value blue\\">"+d.engagement.unionInterestLocal+"%</div></div>";' +
     'html+="<div class=\\"kpi-card\\"><div class=\\"kpi-label\\">Chapter Interest</div><div class=\\"kpi-value blue\\">"+d.engagement.unionInterestChapter+"%</div></div></div>";' +
+    'html+=endSection();' +
     'html+="<div class=\\"charts-row\\"><div class=\\"chart-card\\"><div class=\\"chart-title\\"><i class=\\"material-icons\\">donut_large</i>Unit Distribution</div><canvas id=\\"unitChart\\"></canvas></div>";' +
     'html+="<div class=\\"chart-card\\"><div class=\\"chart-title\\"><i class=\\"material-icons\\">bar_chart</i>Outcomes</div><canvas id=\\"outcomeChart\\"></canvas></div></div>";' +
     'html+="<div class=\\"charts-row\\"><div class=\\"chart-card\\"><div class=\\"chart-title\\"><i class=\\"material-icons\\">category</i>Cases by Category</div><canvas id=\\"categoryChart\\"></canvas></div>";' +
@@ -14839,8 +14874,8 @@ function getUnifiedDashboardHtml(isPII) {
     'html+="</table></div>"}' +
     'else{html+="<p style=\\"color:#64748b;text-align:center;padding:30px\\">Not enough satisfaction data for matrix view</p>"}' +
     'html+="</div>";' +
-    // Contact Updates Section
-    'html+="<h3 style=\\"color:#e2e8f0;font-size:14px;margin:24px 0 12px;display:flex;align-items:center;gap:8px\\"><i class=\\"material-icons\\" style=\\"color:#f59e0b\\">contact_phone</i>Contact Updates</h3>";' +
+    // Contact Updates Section (collapsible, hidden by default)
+    'html+=collapsibleSection("directory_contact","contact_phone","Contact Updates","#f59e0b");' +
     'html+="<div class=\\"charts-row\\">";' +
     'html+="<div class=\\"trend-card\\"><div class=\\"trend-header\\"><span class=\\"trend-title\\"><i class=\\"material-icons\\" style=\\"color:#22c55e\\">update</i>Recent Updates (30 days)</span><span class=\\"trend-value green\\">"+fmt(dt.recentUpdates.length)+"</span></div><div class=\\"trend-list\\">";' +
     'dt.recentUpdates.slice(0,10).forEach(function(m){html+="<div class=\\"trend-item\\"><span>"+m.name+" ("+m.id+")</span><span style=\\"color:#64748b\\">"+new Date(m.date).toLocaleDateString()+"</span></div>"});' +
@@ -14850,11 +14885,14 @@ function getUnifiedDashboardHtml(isPII) {
     'dt.staleContacts.slice(0,10).forEach(function(m){html+="<div class=\\"trend-item\\"><span>"+m.name+" ("+m.id+")</span><span style=\\"color:#64748b\\">"+new Date(m.lastUpdate).toLocaleDateString()+"</span></div>"});' +
     'if(dt.staleContacts.length===0)html+="<p style=\\"color:#64748b;text-align:center;padding:20px\\">All contacts up to date!</p>";' +
     'html+="</div></div></div>";' +
-    // Meeting Attendees
+    'html+=endSection();' +
+    // Meeting Attendees (collapsible, hidden by default)
+    'html+=collapsibleSection("directory_meeting","groups","Meeting Attendees","#a78bfa");' +
     'html+="<div class=\\"charts-row\\"><div class=\\"trend-card\\"><div class=\\"trend-header\\"><span class=\\"trend-title\\"><i class=\\"material-icons\\" style=\\"color:#a78bfa\\">groups</i>Recent Meeting Attendees</span><span class=\\"trend-value purple\\">"+fmt(eng.recentMeetingAttendees.length)+"</span></div><div class=\\"trend-list\\">";' +
     'eng.recentMeetingAttendees.slice(0,8).forEach(function(m){html+="<div class=\\"trend-item\\"><span>"+m.name+"</span><span style=\\"color:"+(m.type==="Virtual"?"#60a5fa":"#22c55e")+"\\">"+m.type+"</span></div>"});' +
     'if(eng.recentMeetingAttendees.length===0)html+="<p style=\\"color:#64748b;text-align:center;padding:20px\\">No recent meeting attendance data</p>";' +
     'html+="</div></div><div class=\\"chart-card\\"></div></div>";' +
+    'html+=endSection();' +
     'document.getElementById("main-content").innerHTML=html;renderDirectoryCharts()' +
     '}' +
 
@@ -14892,13 +14930,15 @@ function getUnifiedDashboardHtml(isPII) {
     'if(!hs.dissatisfaction||hs.dissatisfaction.length===0){html+="<div style=\\"text-align:center;padding:30px;color:#22c55e\\"><i class=\\"material-icons\\" style=\\"font-size:36px\\">sentiment_satisfied</i><p style=\\"margin-top:8px;font-size:13px\\">No dissatisfaction hot spots - Members are satisfied!</p></div>"}' +
     'else{html+="<div style=\\"display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:10px;margin-top:12px\\">";hs.dissatisfaction.forEach(function(h){var scoreColor=h.score<3?"#ef4444":"#f59e0b";html+="<div style=\\"background:#1e293b;padding:12px;border-radius:8px;border-left:3px solid "+scoreColor+"\\"><div style=\\"font-weight:600;color:#e2e8f0;font-size:13px\\">"+h.name+"</div><div style=\\"display:flex;justify-content:space-between;margin-top:6px\\"><span style=\\"color:#94a3b8;font-size:11px\\">"+h.count+" responses</span><span style=\\"color:"+scoreColor+";font-weight:700\\">"+h.score+"/10</span></div></div>"});html+="</div>"}' +
     'html+="</div>";' +
-    // Low Engagement Hot Spots
-    'html+="<div class=\\"chart-card\\" style=\\"margin-top:16px\\"><div class=\\"chart-title\\"><i class=\\"material-icons\\" style=\\"color:#a78bfa\\">trending_down</i>Low Engagement Hot Spots (< 30%)</div>";' +
+    // Low Engagement & Cases by Location (collapsible, hidden by default)
+    'html+=collapsibleSection("hotspots_overdue","trending_down","Low Engagement & Location Detail","#a78bfa");' +
+    'html+="<div class=\\"chart-card\\" style=\\"margin-top:0\\"><div class=\\"chart-title\\"><i class=\\"material-icons\\" style=\\"color:#a78bfa\\">trending_down</i>Low Engagement Hot Spots (< 30%)</div>";' +
     'if(!hs.lowEngagement||hs.lowEngagement.length===0){html+="<div style=\\"text-align:center;padding:30px;color:#22c55e\\"><i class=\\"material-icons\\" style=\\"font-size:36px\\">groups</i><p style=\\"margin-top:8px;font-size:13px\\">No low engagement areas - Good outreach!</p></div>"}' +
     'else{html+="<div style=\\"display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:10px;margin-top:12px\\">";hs.lowEngagement.forEach(function(h){var engColor=h.engagement<15?"#ef4444":"#a78bfa";html+="<div style=\\"background:#1e293b;padding:12px;border-radius:8px;border-left:3px solid "+engColor+"\\"><div style=\\"font-weight:600;color:#e2e8f0;font-size:13px\\">"+h.name+"</div><div style=\\"color:#64748b;font-size:10px\\">"+h.type+"</div><div style=\\"display:flex;justify-content:space-between;margin-top:6px\\"><span style=\\"color:#94a3b8;font-size:11px\\">"+h.count+" members</span><span style=\\"color:"+engColor+";font-weight:700\\">"+h.engagement+"%</span></div></div>"});html+="</div>"}' +
     'html+="</div>";' +
     // Cases by Location chart
     'html+="<div class=\\"chart-card\\" style=\\"margin-top:16px\\"><div class=\\"chart-title\\"><i class=\\"material-icons\\">location_on</i>Cases by Location</div><canvas id=\\"hotspotChart\\"></canvas></div>";' +
+    'html+=endSection();' +
     'document.getElementById("main-content").innerHTML=html;renderHotspotChart()' +
     '}' +
 
@@ -14931,10 +14971,12 @@ function getUnifiedDashboardHtml(isPII) {
     // Charts row
     'html+="<div class=\\"charts-row\\"><div class=\\"chart-card\\"><div class=\\"chart-title\\"><i class=\\"material-icons\\">article</i>Violations by Article</div><canvas id=\\"bargainChart\\"></canvas></div>";' +
     'html+="<div class=\\"chart-card\\"><div class=\\"chart-title\\"><i class=\\"material-icons\\">donut_large</i>Step Distribution</div><canvas id=\\"stepDistChart\\"></canvas></div></div>";' +
-    // Recent Grievances
-    'html+="<div class=\\"chart-card\\" style=\\"margin-top:16px\\"><div class=\\"chart-title\\"><i class=\\"material-icons\\">history</i>Recent Grievances</div><div class=\\"list-container\\" style=\\"max-height:250px\\">";' +
+    // Recent Grievances (collapsible, hidden by default)
+    'html+=collapsibleSection("bargaining_recent","history","Recent Grievances","#f59e0b");' +
+    'html+="<div class=\\"chart-card\\" style=\\"margin-top:0\\"><div class=\\"chart-title\\"><i class=\\"material-icons\\">history</i>Recent Grievances</div><div class=\\"list-container\\" style=\\"max-height:250px\\">";' +
     'if(d.recentGrievances&&d.recentGrievances.length>0){d.recentGrievances.forEach(function(g){var statusColor=g.status.toLowerCase()==="won"?"#22c55e":g.status.toLowerCase()==="denied"?"#ef4444":g.status.toLowerCase()==="settled"?"#a78bfa":"#f59e0b";html+="<div class=\\"list-item\\" style=\\"flex-wrap:wrap\\"><div style=\\"display:flex;justify-content:space-between;width:100%\\"><span style=\\"font-weight:600\\">"+g.id+"</span><span class=\\"badge\\" style=\\"background:"+statusColor+";color:white\\">"+g.status+"</span></div><div style=\\"width:100%;margin-top:4px;font-size:11px;color:#94a3b8\\">"+g.member+" | "+g.category+" | "+g.location+"</div></div>"})}else{html+="<p style=\\"color:#64748b;text-align:center;padding:20px\\">No recent grievances</p>"}' +
     'html+="</div></div>";' +
+    'html+=endSection();' +
     'document.getElementById("main-content").innerHTML=html;renderBargainCharts()' +
     '}' +
 
@@ -14956,13 +14998,15 @@ function getUnifiedDashboardHtml(isPII) {
     'html+="<div class=\\"kpi-card\\"><div class=\\"kpi-label\\">Best Area</div><div style=\\"font-size:14px;font-weight:700;color:#22c55e\\">"+best.name+"</div><div style=\\"font-size:10px;color:#64748b\\">"+best.score+"/10</div></div>";' +
     'html+="<div class=\\"kpi-card\\"><div class=\\"kpi-label\\">Needs Focus</div><div style=\\"font-size:14px;font-weight:700;color:"+(worst.score<5?"#ef4444":"#f59e0b")+"\\">"+worst.name+"</div><div style=\\"font-size:10px;color:#64748b\\">"+worst.score+"/10</div></div>";' +
     'html+="<div class=\\"kpi-card\\"><div class=\\"kpi-label\\">Morale Score</div><div class=\\"kpi-value\\" style=\\"color:"+(d.moraleScore>=7?"#22c55e":d.moraleScore>=5?"#f59e0b":"#ef4444")+"\\">"+d.moraleScore+"</div><div style=\\"font-size:10px;color:#64748b\\">Trust Index</div></div></div>";' +
-    // Insights box
+    // Insights box (collapsible, hidden by default)
+    'html+=collapsibleSection("satisfaction_insights","lightbulb","Key Insights","#fbbf24");' +
     'html+="<div class=\\"chart-card\\" style=\\"margin-bottom:16px;background:linear-gradient(135deg,rgba(96,165,250,0.1),rgba(139,92,246,0.1))\\"><div class=\\"chart-title\\"><i class=\\"material-icons\\">lightbulb</i>Key Insights</div><div style=\\"display:grid;grid-template-columns:1fr 1fr;gap:12px\\">";' +
     'html+="<div style=\\"padding:12px;background:rgba(34,197,94,0.1);border-radius:8px;border-left:3px solid #22c55e\\"><div style=\\"font-size:11px;color:#22c55e;font-weight:600\\">STRENGTH</div><div style=\\"font-size:13px;color:#e2e8f0;margin-top:4px\\">"+best.name+" rated highest at "+best.score+"/10</div></div>";' +
     'html+="<div style=\\"padding:12px;background:rgba("+(worst.score<5?"239,68,68":"245,158,11")+",0.1);border-radius:8px;border-left:3px solid "+(worst.score<5?"#ef4444":"#f59e0b")+"\\"><div style=\\"font-size:11px;color:"+(worst.score<5?"#ef4444":"#f59e0b")+";font-weight:600\\">OPPORTUNITY</div><div style=\\"font-size:13px;color:#e2e8f0;margin-top:4px\\">"+worst.name+" at "+worst.score+"/10 needs attention</div></div>";' +
     'var highCount=sat.sections.filter(function(s){return s.score>=7}).length;var lowCount=sat.sections.filter(function(s){return s.score<5}).length;' +
     'html+="<div style=\\"padding:12px;background:rgba(96,165,250,0.1);border-radius:8px;border-left:3px solid #60a5fa\\"><div style=\\"font-size:11px;color:#60a5fa;font-weight:600\\">SUMMARY</div><div style=\\"font-size:13px;color:#e2e8f0;margin-top:4px\\">"+highCount+" of 8 areas rated Good (7+)</div></div>";' +
     'html+="<div style=\\"padding:12px;background:rgba(139,92,246,0.1);border-radius:8px;border-left:3px solid #8b5cf6\\"><div style=\\"font-size:11px;color:#8b5cf6;font-weight:600\\">ACTION ITEMS</div><div style=\\"font-size:13px;color:#e2e8f0;margin-top:4px\\">"+(lowCount>0?lowCount+" areas need immediate improvement":"All areas above minimum threshold")+"</div></div></div></div>";' +
+    'html+=endSection();' +
     // Section details grid with individual question breakdown
     'html+="<h3 style=\\"color:#e2e8f0;font-size:14px;margin:16px 0 12px;display:flex;align-items:center;gap:8px\\"><i class=\\"material-icons\\" style=\\"color:#60a5fa\\">assessment</i>Section Breakdown with Question Scores</h3>";' +
     'html+="<div class=\\"sat-grid\\">";' +
@@ -15392,7 +15436,26 @@ function getUnifiedDashboardHtml(isPII) {
     // Settings Panel Functions
     'function toggleSettings(){' +
     'document.getElementById("settingsPanel").classList.toggle("open");' +
-    'document.querySelector(".settings-overlay").classList.toggle("open")' +
+    'document.querySelector(".settings-overlay").classList.toggle("open");' +
+    'initSectionToggles()' +
+    '}' +
+    // Section Visibility Settings
+    'function initSectionToggles(){' +
+    'var ids=Object.keys(sectionDefaults);' +
+    'ids.forEach(function(id){var el=document.getElementById("secToggle_"+id);if(el){var isHidden=getSectionState(id);el.classList.toggle("on",!isHidden)}})' +
+    '}' +
+    'function toggleSectionDefault(id,el){' +
+    'var isCurrentlyHidden=getSectionState(id);' +
+    'localStorage.setItem("509_section_"+id,isCurrentlyHidden?"false":"true");' +
+    'el.classList.toggle("on",isCurrentlyHidden);' +
+    'var body=document.getElementById("body_"+id);var hdr=document.getElementById("hdr_"+id);' +
+    'if(body){body.classList.toggle("hidden",!isCurrentlyHidden);if(hdr)hdr.classList.toggle("collapsed",!isCurrentlyHidden)}' +
+    '}' +
+    'function expandAllSections(){' +
+    'Object.keys(sectionDefaults).forEach(function(id){localStorage.setItem("509_section_"+id,"false");var b=document.getElementById("body_"+id);var h=document.getElementById("hdr_"+id);if(b){b.classList.remove("hidden")}if(h){h.classList.remove("collapsed")}});initSectionToggles()' +
+    '}' +
+    'function collapseAllSections(){' +
+    'Object.keys(sectionDefaults).forEach(function(id){localStorage.setItem("509_section_"+id,"true");var b=document.getElementById("body_"+id);var h=document.getElementById("hdr_"+id);if(b){b.classList.add("hidden")}if(h){h.classList.add("collapsed")}});initSectionToggles()' +
     '}' +
     // View Mode Toggle
     'function setViewMode(mode){' +
