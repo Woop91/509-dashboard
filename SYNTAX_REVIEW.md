@@ -253,14 +253,71 @@ The file contained multiple identical declarations due to module concatenation:
 
 ---
 
+## UNDEFINED REFERENCE: GRIEVANCE_OUTCOMES (CRITICAL - Fixed)
+
+### 24. `GRIEVANCE_OUTCOMES` Never Declared
+
+- **Lines 4742, 28547**: `GRIEVANCE_OUTCOMES.PENDING` and `Object.values(GRIEVANCE_OUTCOMES)` used but `GRIEVANCE_OUTCOMES` was never declared — causes `ReferenceError` at runtime when creating a new grievance
+- **Fixed:** Added `GRIEVANCE_OUTCOMES` constant with `PENDING`, `WON`, `DENIED`, `SETTLED`, `WITHDRAWN` values
+
+---
+
+## UNDEFINED FUNCTION: generateGrievanceId (CRITICAL - Fixed)
+
+### 25. `generateGrievanceId()` Called But Never Defined
+
+- **Line 4886**: `getNextGrievanceId()` calls `generateGrievanceId(maxSequence + 1)` which doesn't exist — `ReferenceError` at runtime
+- **Fixed:** Inlined the ID generation logic: `'GRV-' + currentYear + '-' + paddedSequence`
+
+---
+
+## INCONSISTENT CONFIG ROW (HIGH - Fixed)
+
+### 26. Config Sheet Reads Row 2 vs Row 3
+
+- **Line 7789**: Reads `CONFIG_COLS.ORG_NAME` from row 2, while 24 other config reads use row 3
+- **Fixed:** Changed to row 3 for consistency
+
+---
+
+## HIDDEN SHEET PREFIX CHECK (MEDIUM - Fixed)
+
+### 27. `_Calc` Prefix Check Never Matches Hidden Sheets
+
+- **Lines 6383, 6442, 6650, 6834**: `indexOf('_Calc') === 0` checks if name STARTS with `_Calc`, but hidden sheets are named `_Dashboard_Calc`, `_Grievance_Calc`, etc. — they contain `_Calc` but don't start with it
+- **Fixed:** Changed to `indexOf('_Calc') !== -1` (contains) and `indexOf('_Calc') === -1` for the inverted checks
+
+---
+
+## DUPLICATE CSS (LOW - Fixed)
+
+### 28. Duplicate `@keyframes spin` Definition
+
+- **Lines 10642, 10649**: Identical `@keyframes spin` CSS rule defined twice in same HTML string
+- **Fixed:** Removed duplicate at line 10649
+
+---
+
+## ORPHANED JSDOC BLOCKS (LOW - Fixed)
+
+### 29. JSDoc Comments With No Function Body
+
+- **Lines 8844-8910**: ~10 JSDoc comment blocks documenting functions that were removed or never implemented (saveVisualSetting, applyDashboardTheme, navigation helpers, styling helpers)
+- **Fixed:** Removed all orphaned JSDoc blocks
+
+---
+
 ## SUMMARY
 
 | Severity | Count | Status |
 |---|---|---|
 | CRITICAL | 15 | Undefined property references causing silent data loss - **FIXED** |
+| CRITICAL | 1 | `GRIEVANCE_OUTCOMES` never declared - **FIXED** |
+| CRITICAL | 1 | `generateGrievanceId()` never defined - **FIXED** |
 | HIGH | 1 | XSS vulnerability in email compose dialog - **FIXED** |
 | HIGH | 3 | Double-escaped newlines breaking CSV import/export - **FIXED** |
 | HIGH | 1 | Column deletion destroying chart data - **FIXED** |
+| HIGH | 1 | Inconsistent config row reading - **FIXED** |
 | HIGH | 1 | fix_transaction_v2.py data loss bug - NOT FIXED (external script) |
 | MEDIUM | 2 | Unprotected JSON.parse calls - **FIXED** (2 were already protected) |
 | MEDIUM | 2 | Hardcoded magic numbers - **PARTIALLY FIXED** |
@@ -270,13 +327,16 @@ The file contained multiple identical declarations due to module concatenation:
 | MEDIUM | 1 | Wrong cell reference for avg days metric - **FIXED** |
 | MEDIUM | 5 | Duplicate declarations from module concatenation - **FIXED** |
 | MEDIUM | 1 | Confirmation dialog using alert instead of prompt - **FIXED** |
+| MEDIUM | 4 | Hidden sheet prefix check never matching - **FIXED** |
 | LOW | 2 | Loose equality comparisons - **FIXED** |
 | LOW | 1 | Unused variable - **FIXED** |
 | LOW | 2 | Duplicate var declarations - **FIXED** |
 | LOW | 1 | Catch parameter shadowing - **FIXED** |
+| LOW | 1 | Duplicate CSS @keyframes rule - **FIXED** |
+| LOW | 10 | Orphaned JSDoc blocks - **FIXED** |
 | LOW | 4 | Empty catch blocks - Acceptable (all have fallbacks) |
 | INFO | 2 | Mixed ES5/ES6 syntax, redundant aliases |
 
-**Total issues found: 50+**
-**Issues fixed: 43**
+**Total issues found: 59**
+**Issues fixed: 52**
 **Issues not fixed: 7** (3 in external scripts, 1 architecture change needed, 3 hardcoded indices in Looker integration)

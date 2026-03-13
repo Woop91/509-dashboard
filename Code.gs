@@ -2969,6 +2969,14 @@ var GRIEVANCE_STATUS_PRIORITY = {
  * Use these constants instead of hardcoded strings
  * @const {Object}
  */
+var GRIEVANCE_OUTCOMES = {
+  PENDING: 'Pending',
+  WON: 'Won',
+  DENIED: 'Denied',
+  SETTLED: 'Settled',
+  WITHDRAWN: 'Withdrawn'
+};
+
 var GRIEVANCE_STATUS = {
   OPEN: 'Open',
   PENDING: 'Pending Info',
@@ -4883,7 +4891,9 @@ function getNextGrievanceId(sheet) {
     }
   }
 
-  return generateGrievanceId(maxSequence + 1);
+  var seq = String(maxSequence + 1);
+  while (seq.length < 4) seq = '0' + seq;
+  return 'GRV-' + currentYear + '-' + seq;
 }
 
 // ============================================================================
@@ -6380,7 +6390,7 @@ function APPLY_SYSTEM_THEME() {
   sheets.forEach(function(sheet) {
     var sheetName = sheet.getName();
     // Skip hidden calculation sheets
-    if (sheetName.indexOf('_Calc') === 0) return;
+    if (sheetName.indexOf('_Calc') !== -1) return;
 
     applyThemeToSheet_(sheet);
   });
@@ -6439,7 +6449,7 @@ function resetToDefaultTheme() {
 
   sheets.forEach(function(sheet) {
     var sheetName = sheet.getName();
-    if (sheetName.indexOf('_Calc') === 0) return;
+    if (sheetName.indexOf('_Calc') !== -1) return;
 
     var lastCol = sheet.getLastColumn();
     var lastRow = sheet.getLastRow();
@@ -6637,7 +6647,7 @@ function applyZebraStripesToAllSheets_() {
   var ss = SpreadsheetApp.getActiveSpreadsheet();
   var sheets = ss.getSheets();
   sheets.forEach(function(sheet) {
-    if (sheet.getName().indexOf('_Calc') !== 0) {
+    if (sheet.getName().indexOf('_Calc') === -1) {
       applyZebraStripes(sheet);
     }
   });
@@ -6821,7 +6831,7 @@ function undoADHDDefaults() {
   var sheets = ss.getSheets();
 
   sheets.forEach(function(sheet) {
-    if (sheet.getName().indexOf('_Calc') !== 0) {
+    if (sheet.getName().indexOf('_Calc') === -1) {
       removeZebraStripes(sheet);
       sheet.setHiddenGridlines(false);
     }
@@ -7786,7 +7796,7 @@ function emailDashboardLink_UIService_() {
   try {
     var configSheet = ss.getSheetByName(SHEETS.CONFIG);
     if (configSheet) {
-      var configOrgName = configSheet.getRange(2, CONFIG_COLS.ORG_NAME).getValue();
+      var configOrgName = configSheet.getRange(3, CONFIG_COLS.ORG_NAME).getValue();
       if (configOrgName) orgName = configOrgName;
     }
   } catch (e) {
@@ -8832,17 +8842,6 @@ function getVisualControlPanelHtml() {
 }
 
 /**
- * Saves a visual setting to user properties
- * @param {string} setting - Setting name
- * @param {boolean} value - Setting value
- */
-
-/**
- * Applies a dashboard theme
- * @param {string} theme - Theme name (default, dark, light, contrast)
- */
-
-/**
  * Helper functions for navigation
  * Note: Dashboards are now modal-based for better UX
  */
@@ -8856,48 +8855,6 @@ function showStewardDirectory() {
   navigateToSheet(SHEETS.MEMBER_DIR);
   SpreadsheetApp.getActive().toast('Filter by "Is Steward = Yes" to see steward directory', 'Steward Directory', 5);
 }
-
-// ============================================================================
-// NAVIGATION HELPERS (Strategic Command Center)
-// ============================================================================
-
-/**
- * Navigate to Executive Dashboard (now launches modal)
- */
-
-/**
- * Navigate to Mobile View (if exists)
- * NOTE: Duplicate exists in 10_CommandCenter.gs - this version kept for compatibility
- */
-
-/**
- * Navigate to a specific sheet by name
- * @param {string} sheetName - The sheet name to navigate to
- */
-
-// ============================================================================
-// GLOBAL STYLING (Strategic Command Center)
-// ============================================================================
-
-/**
- * Applies the system theme to all visible sheets
- * Includes header styling, zebra striping, and font standardization
- */
-
-/**
- * Applies theme styling to a single sheet
- * For data sheets (Member Directory, Grievance Log), applies to ALL rows in the sheet
- * @param {Sheet} sheet - The sheet to style
- * @private
- */
-
-/**
- * Applies global styling to all visible sheets (alias for APPLY_SYSTEM_THEME)
- */
-
-/**
- * Resets all visible sheets to default styling
- */
 
 /**
  * Refreshes visual elements - simple version
@@ -10636,7 +10593,6 @@ function getInteractiveDashboardHtml() {
     '.error-state::before{content:"⚠️ ";font-size:20px}' +
     '.loading-state{text-align:center;padding:40px;color:#6b7280}' +
     '.loading-spinner{display:inline-block;width:24px;height:24px;border:3px solid #e5e7eb;border-top-color:#7c3aed;border-radius:50%;animation:spin 1s linear infinite;margin-bottom:10px}' +
-    '@keyframes spin{to{transform:rotate(360deg)}}' +
     '.debug-info{font-size:10px;color:#9ca3af;margin-top:5px;font-family:monospace}' +
 
     // Sankey Diagram
