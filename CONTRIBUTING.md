@@ -7,15 +7,16 @@ This document explains the development workflow for the 509 Dashboard Google App
 ```
 509-dashboard/
 ├── Constants.gs              # All configuration constants (SHEETS, COLORS, etc.)
-├── SecurityUtils.gs          # Security roles, admin emails, RBAC functions
-├── SecurityService.gs        # Advanced RBAC with detailed permissions
-├── Code.gs                   # Main entry point, setup functions
-├── [Feature].gs              # Feature modules (59 files total)
-├── TestFramework.gs          # Testing infrastructure
-├── Code.test.gs              # Unit tests
-├── Integration.test.gs       # Integration tests
+├── Code.gs                   # Main entry point, setup functions (48KB)
+├── SeedNuke.gs               # Data seeding & clearing functions (23KB)
+├── ADHDFeatures.gs           # ADHD accessibility & theming (14KB)
+├── HiddenSheets.gs           # Hidden sheet architecture (76KB)
+├── MobileQuickActions.gs     # Mobile interface & quick actions (28KB)
+├── PerformanceUndo.gs        # Performance caching & undo/redo (16KB)
+├── TestingValidation.gs      # Testing framework & validation (25KB)
 ├── build.js                  # Build script (generates consolidated file)
-└── ConsolidatedDashboard.gs  # AUTO-GENERATED - DO NOT EDIT
+├── verify-columns.js         # Column verification tool
+└── ConsolidatedDashboard.gs  # AUTO-GENERATED - DO NOT EDIT (250KB)
 ```
 
 ## Golden Rule: Single Source of Truth

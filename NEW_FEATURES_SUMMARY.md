@@ -339,26 +339,111 @@ node build.js --check-duplicates
 - Make changes to individual module files (e.g., Code.gs, Constants.gs)
 - Complete509Dashboard.gs has been **removed** (was deprecated legacy version)
 
+## New Modules Added (v3.51)
+
+The following feature modules were added from 509-dashboard-second:
+
+### ADHDFeatures.gs (14KB)
+**ADHD Accessibility & Theming**
+
+Features:
+- Focus mode with reduced visual noise
+- Multiple theme options (Light, Dark, 509 Purple, Union Green)
+- Zebra stripe row formatting
+- Adjustable font sizing
+- High contrast mode
+- Break interval reminders
+
+Functions:
+- `getADHDSettings()` / `saveADHDSettings()` - Manage user preferences
+- `applyADHDSettings()` - Apply settings to all sheets
+- `applyZebraStripes()` - Apply alternating row colors
+
+### HiddenSheets.gs (76KB)
+**Hidden Sheet Architecture**
+
+Comprehensive hidden calculation sheet system for auto-sync:
+- `_Grievance_Calc` - Syncs grievance data to Member Directory
+- `_Member_Lookup` - Syncs member data to Grievance Log
+- `_Steward_Contact_Calc` - Syncs steward contact info
+- `_Engagement_Calc` - Syncs meeting/volunteer data
+- `_Steward_Workload_Calc` - Calculates steward workloads
+- `_Interactive_Dashboard_Calc` - Powers interactive dashboards
+
+Functions:
+- `setupGrievanceCalcSheet()` - Create grievance calculation sheet
+- `setupMemberLookupSheet()` - Create member lookup sheet
+- `syncGrievanceCalcToMemberDirectory()` - Sync calculated values
+- `VERIFY_HIDDEN_SHEETS()` - Diagnose sync issues
+- `REPAIR_DASHBOARD()` - Recreate all hidden sheets
+
+### MobileQuickActions.gs (28KB)
+**Mobile Interface & Quick Actions**
+
+Mobile-optimized dashboard and touch-friendly controls:
+- Card-based stat display
+- Touch-friendly action buttons (44px targets)
+- Quick search and filtering
+- Responsive layout
+
+Functions:
+- `showMobileDashboard()` - Display mobile-optimized view
+- `getMobileDashboardStats()` - Get dashboard statistics
+- `showMobileGrievanceList()` - Mobile grievance browser
+- `showMobileUnifiedSearch()` - Mobile search interface
+- `showMyAssignedGrievances()` - View assigned cases
+
+### PerformanceUndo.gs (16KB)
+**Performance Caching & Undo/Redo**
+
+Data caching layer for improved performance:
+- In-memory caching with configurable TTL
+- Script properties fallback
+- Cache invalidation on data changes
+
+Undo/Redo system:
+- Action history tracking
+- State snapshots
+- Rollback capability
+
+Functions:
+- `getCachedData()` / `setCachedData()` - Cache operations
+- `invalidateCache()` - Clear stale data
+- `undo()` / `redo()` - History navigation
+
+### TestingValidation.gs (25KB)
+**Testing Framework & Validation**
+
+Assert library for unit testing:
+- `Assert.assertEquals()`, `assertTrue()`, `assertFalse()`
+- `Assert.assertNotNull()`, `assertNull()`
+- `Assert.assertContains()`, `assertArrayLength()`
+- `Assert.assertThrows()`, `assertApproximately()`
+
+Test framework:
+- Test suite management
+- Pass/fail tracking
+- Execution timing
+- Large dataset detection
+
+Functions:
+- `runAllTests()` - Execute all test suites
+- `runTestSuite()` - Run specific test suite
+- `getTestResults()` - Get test results
+
+---
+
 ## Testing Checklist
 
-- [ ] Run `node build.js --production` to generate fresh ConsolidatedDashboard.gs
+- [ ] Run `npm run build` to generate fresh ConsolidatedDashboard.gs
 - [ ] Deploy to Google Apps Script
-- [ ] Test Grievance Float Toggle (enable/disable/sort)
+- [ ] Test auto-sort for Grievance Log (replaced Float Toggle)
 - [ ] Test Google Drive folder auto-creation on new grievance
 - [ ] Test Member Directory dropdowns (all fields)
 - [ ] Test steward dropdown auto-population
-- [ ] Test emergency contact column removal
 - [ ] Test Member Google Form link (requires form configuration)
 - [ ] Test reorganized menu navigation
+- [ ] Test mobile dashboard view
+- [ ] Test ADHD accessibility features
 - [ ] Run DIAGNOSE_SETUP() to verify system health
-
-## Pending Features Added
-
-The following features have been added to the Feedback & Development sheet:
-
-1. **Grievance Float/Sort Toggle** - Status: Completed
-2. **Member Directory Google Form Link** - Status: Planned
-
-Use the following functions to add these to your Feedback sheet:
-- `addGrievanceFloatToPendingFeatures()`
-- `addMemberFormLinkToPendingFeatures()`
+- [ ] Run VERIFY_HIDDEN_SHEETS() to check sync status

@@ -434,16 +434,17 @@ const openCases = grievances.filter(g => g.status === 'Open');
 ```
 509-dashboard/
 ├── Constants.gs                 # Configuration constants (SHEETS, COLORS, MEMBER_COLS, GRIEVANCE_COLS)
-├── SecurityUtils.gs             # Security roles, admin emails, RBAC functions
-├── SecurityService.gs           # Advanced RBAC with detailed permissions
-├── Code.gs                      # Main entry point, setup functions
-├── [Feature].gs                 # 59 feature modules (alphabetical)
-├── TestFramework.gs             # Testing infrastructure
-├── Code.test.gs                 # Unit tests
-├── Integration.test.gs          # Integration tests
+├── Code.gs                      # Main entry point, setup functions (48KB)
+├── SeedNuke.gs                  # Data seeding & clearing functions (23KB)
+├── ADHDFeatures.gs              # ADHD accessibility & theming (14KB)
+├── HiddenSheets.gs              # Hidden sheet architecture & auto-sync (76KB)
+├── MobileQuickActions.gs        # Mobile interface & quick actions (28KB)
+├── PerformanceUndo.gs           # Performance caching & undo/redo (16KB)
+├── TestingValidation.gs         # Testing framework & validation (25KB)
 ├── build.js                     # Build script (generates consolidated file)
-├── ConsolidatedDashboard.gs     # AUTO-GENERATED - DO NOT EDIT
-└── AI_REFERENCE.md              # This document
+├── verify-columns.js            # Column verification tool
+├── ConsolidatedDashboard.gs     # AUTO-GENERATED - DO NOT EDIT (250KB)
+└── AIR.md                       # This document
 ```
 
 ### Build System
@@ -462,7 +463,8 @@ node build.js --check-duplicates # Verify no duplicate constants
 
 **Important:**
 - ConsolidatedDashboard.gs is auto-generated - never edit directly
-- All 59 modules are concatenated in dependency order
+- All 8 active modules are concatenated in dependency order
+- Run `npm run verify` before building to check column consistency
 - Duplicate constant declarations will fail the build
 
 ### Key Functions by File
@@ -1177,7 +1179,33 @@ const COLORS = {
 
 ## Appendix: Changelog
 
-### Version 3.51 (2025-12-13) - LATEST
+### Version 3.52 (2025-12-29) - LATEST
+
+**FEATURE: Added Feature Modules from dashboard-second**
+
+Merged 5 feature modules from the 509-dashboard-second repository:
+
+| Module | Size | Features |
+|--------|------|----------|
+| `ADHDFeatures.gs` | 14KB | ADHD accessibility, themes (Light/Dark/Purple/Green), focus modes |
+| `HiddenSheets.gs` | 76KB | Hidden sheet architecture with 6 auto-sync calculation sheets |
+| `MobileQuickActions.gs` | 28KB | Mobile-optimized dashboard, touch-friendly quick actions |
+| `PerformanceUndo.gs` | 16KB | Data caching layer, undo/redo system |
+| `TestingValidation.gs` | 25KB | Assert library, unit test framework, validation |
+
+**Build Impact:**
+- Modules: 3 → 8 active modules
+- ConsolidatedDashboard.gs: 89KB → 250KB
+
+**Files Changed:**
+- build.js: Added new modules to CORE_MODULES list
+- README.md: Updated file structure documentation
+- NEW_FEATURES_SUMMARY.md: Added new module documentation
+- AIR.md: Updated project structure and changelog
+
+---
+
+### Version 3.51 (2025-12-13)
 
 **FEATURE: Complete Seed & Nuke System**
 
