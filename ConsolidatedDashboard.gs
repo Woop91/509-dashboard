@@ -434,7 +434,7 @@ function getGrievanceHeaders() {
 var DEFAULT_CONFIG = {
   OFFICE_DAYS: ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'],
   YES_NO: ['Yes', 'No'],
-  GRIEVANCE_STATUS: ['Open', 'Pending Info', 'Settled', 'Withdrawn', 'Denied', 'Won', 'Appealed', 'In Arbitration', 'Closed'],
+  GRIEVANCE_STATUS: ['Open', 'Appealed', 'Pending Info', 'In Arbitration', 'Settled', 'Won', 'Denied', 'Withdrawn', 'Closed'],
   GRIEVANCE_STEP: ['Informal', 'Step I', 'Step II', 'Step III', 'Mediation', 'Arbitration'],
   ISSUE_CATEGORY: ['Discipline', 'Workload', 'Scheduling', 'Pay', 'Benefits', 'Safety', 'Harassment', 'Discrimination', 'Contract Violation', 'Other'],
   ARTICLES: [
